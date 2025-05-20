@@ -1,8 +1,9 @@
 @import "tailwindcss";
-
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap");
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --background-login: #f4f7feff;
 }
 
 @theme inline {
@@ -12,15 +13,18 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: "DM Sans", sans-serif;
+}
+
+.login {
+  background: var(--background-login);
+  color: var(--foreground);
+  font-family: "DM Sans", sans-serif;
+}
+
+.login .second-part {
+  background: linear-gradient(135deg, #1f2e61 0%, #a6acc2 50%, #1f2e61 100%);
 }
