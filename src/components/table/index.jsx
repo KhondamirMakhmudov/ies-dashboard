@@ -113,7 +113,19 @@ const EnhancedTable = ({ columns, rows }) => {
             {paginatedRows.map((row, index) => (
               <TableRow key={index}>
                 {columns.map((col) => (
-                  <TableCell key={col.id}>{row[col.id]}</TableCell>
+                  <TableCell
+                    sx={{
+                      fontFamily: "DM Sans, sans-serif",
+
+                      color: "#2D3748",
+                      "&:hover": {
+                        cursor: "pointer",
+                      },
+                    }}
+                    key={col.id}
+                  >
+                    {row[col.id]}
+                  </TableCell>
                 ))}
               </TableRow>
             ))}
@@ -130,6 +142,11 @@ const EnhancedTable = ({ columns, rows }) => {
       </TableContainer>
 
       <TablePagination
+        sx={{
+          fontFamily: "DM Sans, sans-serif",
+
+          color: "#2D3748",
+        }}
         component="div"
         count={filteredRows.length}
         page={page}

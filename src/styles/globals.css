@@ -19,6 +19,10 @@ body {
   font-family: "DM Sans", sans-serif;
 }
 
+* {
+  font-family: "DM Sans", sans-serif;
+}
+
 .login {
   background: var(--background-login);
   color: var(--foreground);
@@ -27,4 +31,8 @@ body {
 
 .login .second-part {
   background: linear-gradient(135deg, #1f2e61 0%, #a6acc2 50%, #1f2e61 100%);
+}
+
+.user-rectangle {
+  background: linear-gradient(to right, #b4d9f7, #fefae0);
 }

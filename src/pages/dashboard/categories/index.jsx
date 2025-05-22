@@ -93,7 +93,7 @@ const Index = () => {
                       >
                         {cat.icon}
                       </ListItemIcon>
-                      <Typography variant="body1" sx={{ fontSize: "22px" }}>
+                      <Typography variant="body1" sx={{ fontSize: "19px" }}>
                         {cat.title}
                       </Typography>
                     </ListItem>
@@ -115,8 +115,8 @@ const Index = () => {
                               backgroundColor: bg,
                               display: "flex",
                               justifyContent: "center",
-                              width: "60px",
-                              height: "60px",
+                              width: "55px",
+                              height: "55px",
                               borderRadius: "100%",
                               alignItems: "center",
                               color: "#FFFFFF",
@@ -125,7 +125,14 @@ const Index = () => {
                           >
                             {cat.icon}
                           </IconButton>
-                          <Typography variant="h6">{cat.title}</Typography>
+                          <Typography
+                            sx={{
+                              fontSize: "16px",
+                              fontFamily: "DM Sans, sans-serif",
+                            }}
+                          >
+                            {cat.title}
+                          </Typography>
                         </CardContent>
                       </div>
                     </div>

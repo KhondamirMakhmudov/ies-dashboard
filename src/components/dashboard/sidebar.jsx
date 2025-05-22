@@ -50,9 +50,12 @@ export default function Sidebar({ isOpen = true }) {
       >
         <Image src="/icons/logo.svg" alt="logo" width={53} height={76} />
         {isOpen && (
-          <p className="text-[28px] font-medium whitespace-nowrap">
-            TM va SITI
-          </p>
+          <div className="flex flex-col">
+            <p className="text-[28px] font-medium whitespace-nowrap">
+              TM va SITI
+            </p>
+            <p className="text-base text-gray-400">Inventarizatsiya</p>
+          </div>
         )}
       </div>
 

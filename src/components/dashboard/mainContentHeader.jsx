@@ -1,8 +1,46 @@
-import { Typography } from "@mui/material";
+import { Button, Typography } from "@mui/material";
 import { IconButton } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import NotificationsIcon from "@mui/icons-material/Notifications";
+import Avatar from "@mui/material/Avatar";
+import { useState } from "react";
+import Link from "next/link";
+
 const MainContentHeader = ({ children, toggleSidebar }) => {
+  const [openProfile, setOpenProfile] = useState(false);
+
+  const handleClickProfile = () => {
+    setOpenProfile(!openProfile);
+  };
+
+  function stringToColor(string) {
+    let hash = 0;
+    let i;
+
+    /* eslint-disable no-bitwise */
+    for (i = 0; i < string.length; i += 1) {
+      hash = string.charCodeAt(i) + ((hash << 5) - hash);
+    }
+
+    let color = "#";
+
+    for (i = 0; i < 3; i += 1) {
+      const value = (hash >> (i * 8)) & 0xff;
+      color += `00${value.toString(16)}`.slice(-2);
+    }
+    /* eslint-enable no-bitwise */
+
+    return color;
+  }
+
+  function stringAvatar(name) {
+    return {
+      sx: {
+        bgcolor: stringToColor(name),
+      },
+      children: `${name.split(" ")[0][0]}${name.split(" ")[1][0]}`,
+    };
+  }
   return (
     <div className="bg-white p-[12px] rounded-md flex justify-between items-center gap-4">
       <div className="flex items-center gap-4">
@@ -20,10 +58,51 @@ const MainContentHeader = ({ children, toggleSidebar }) => {
         </Typography>
       </div>
 
-      <div>
+      <div className="flex items-center relative">
         <IconButton>
           <NotificationsIcon />
         </IconButton>
+        <IconButton onClick={handleClickProfile}>
+          <Avatar {...stringAvatar("Otavali Saksonov")} />
+        </IconButton>
+
+        {openProfile && (
+          <div className="w-60 h-50 bg-white absolute border border-gray-200 overflow-hidden right-0 z-50 top-18 rounded-lg ">
+            <p className="text-base font-medium p-[18px]">
+              👋 Otavali Saksonov
+            </p>
+
+            <div className="bg-gray-200 w-full h-[1px]"></div>
+
+            <div className="p-[18px] text-[17px] flex flex-col gap-[12px]">
+              <Link href={"/dashboard/user-profile"}>
+                <Button
+                  sx={{
+                    width: "100%",
+                    border: "none",
+                    textTransform: "none",
+                    borderRadius: "16px",
+                    bgcolor: "#ECF3FF",
+                  }}
+                >
+                  <p>Profil sozlamalari</p>
+                </Button>
+              </Link>
+
+              <Button
+                sx={{
+                  width: "100%",
+                  border: "none",
+                  textTransform: "none",
+                  borderRadius: "16px",
+                  bgcolor: "#ECF3FF",
+                }}
+              >
+                <p>Profil sozlamalari</p>
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
