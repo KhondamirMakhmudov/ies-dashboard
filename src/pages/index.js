@@ -1,13 +1,11 @@
 import Brand from "@/components/brand";
 import Button from "@/components/button";
 import Input from "@/components/input";
-import Image from "next/image";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import { useState } from "react";
-import InputLabel from "@mui/material/InputLabel";
 import { FormControl } from "@mui/material";
-import { Button as MuiButton } from "@mui/material";
+
 export default function Home() {
   const [age, setAge] = useState("");
 
