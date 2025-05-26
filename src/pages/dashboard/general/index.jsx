@@ -139,12 +139,29 @@ const Index = () => {
                 classNames={"w-1/2"}
               />
             </div>
+            <Input
+              type={"text"}
+              label={"Texnik xususiyatlari"}
+              placeholder={"Kiriting"}
+            />
 
             <Input
               type={"number"}
               label={"Sotib olish qiymati"}
               placeholder={"Kiriting"}
             />
+
+            <Button
+              onClick={() => setModal(false)}
+              variant="contained"
+              sx={{
+                float: "right",
+                textTransform: "initial",
+                fontFamily: "DM Sans, sans-serifs",
+              }}
+            >
+              Yakunlash
+            </Button>
           </form>
         </HalfModal>
       )}
