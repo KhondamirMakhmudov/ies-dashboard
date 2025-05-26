@@ -17,7 +17,7 @@ const Index = () => {
       id: 1,
       name: "Vali",
       role: "User",
-      email: "ali@example.com",
+      email: "vali@example.com",
       registeredAt: "2024-01-15",
       status: "active",
       avatar: "/images/profile-default.jpg",

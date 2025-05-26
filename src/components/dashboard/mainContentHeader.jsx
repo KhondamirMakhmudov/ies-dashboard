@@ -90,32 +90,18 @@ const MainContentHeader = ({ children, toggleSidebar }) => {
 
             <div className="bg-gray-200 w-full h-[1px]"></div>
 
-            <div className="p-[18px] text-[17px] flex flex-col gap-[12px]">
-              <Link href={"/dashboard/user-profile"}>
-                <Button
-                  sx={{
-                    width: "100%",
-                    border: "none",
-                    textTransform: "none",
-                    borderRadius: "16px",
-                    bgcolor: "#ECF3FF",
-                  }}
-                >
-                  <p>Profil sozlamalari</p>
-                </Button>
-              </Link>
+            <div className="p-[18px] text-[17px] flex flex-col gap-[12px] ">
+              <div className="flex items-center gap-4">
+                <div className="bg-[#4182F9]  p-[12px] rounded-md w-12 h-12 flex items-center justify-center">
+                  <MarkUnreadChatAltOutlinedIcon
+                    sx={{ color: "white", width: "20px", height: "20px" }}
+                  />
+                </div>
 
-              <Button
-                sx={{
-                  width: "100%",
-                  border: "none",
-                  textTransform: "none",
-                  borderRadius: "16px",
-                  bgcolor: "#ECF3FF",
-                }}
-              >
-                <p>Chiqish</p>
-              </Button>
+                <div>
+                  <Typography variant="h6">hello</Typography>
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -149,7 +135,8 @@ const MainContentHeader = ({ children, toggleSidebar }) => {
                   border: "none",
                   textTransform: "none",
                   borderRadius: "16px",
-                  bgcolor: "#ECF3FF",
+                  bgcolor: "#FCD8D3",
+                  color: "#991300",
                 }}
               >
                 <p>Chiqish</p>
