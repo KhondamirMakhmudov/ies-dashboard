@@ -6,6 +6,7 @@ import MenuItem from "@mui/material/MenuItem";
 import { useState } from "react";
 import { FormControl } from "@mui/material";
 import Image from "next/image";
+import Link from "next/link";
 
 export default function Home() {
   const [age, setAge] = useState("");
@@ -62,7 +63,9 @@ export default function Home() {
                   <MenuItem value={20}>Moderator</MenuItem>
                   <MenuItem value={30}>ATK</MenuItem>
                 </Select>
-                <Button>Kirish</Button>
+                <Button>
+                  <Link href={"/dashboard/main"}>Kirish</Link>
+                </Button>
               </FormControl>
             </div>
           </div>

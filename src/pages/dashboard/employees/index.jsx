@@ -13,14 +13,17 @@ import { useState } from "react";
 import SimpleModal from "@/components/modal/simple-modal";
 import HalfModal from "@/components/modal/half-modal";
 import Input from "@/components/input";
+import employees from "@/dummy-data/employees";
 const Index = () => {
   const [modal, setModal] = useState(false);
   const [category, setCategory] = useState("");
+  const [gender, setGender] = useState("");
+  const [rank, setRank] = useState("");
   const handleClose = () => setModal(false);
   const columns = [
-    { id: "name", label: "Nomi" },
-    { id: "category", label: "Kategoriya" },
-    { id: "price", label: "Narxi" },
+    { id: "fullName", label: "ФИО" },
+    { id: "position", label: "Должность" },
+    { id: "department", label: "Отдел" },
   ];
 
   const handleChange = (event) => {
@@ -28,12 +31,31 @@ const Index = () => {
   };
 
   const rows = [
-    { name: "Kompyuter", category: "Texnika", price: "1200$" },
-    { name: "Printer", category: "Ofis", price: "300$" },
-    { name: "Monitor", category: "Texnika", price: "400$" },
-    { name: "Telefon", category: "Aloqa", price: "700$" },
-    { name: "Proyektor", category: "Ofis", price: "600$" },
-    { name: "Avtomobil", category: "Transport", price: "15000$" },
+    {
+      fullName: "Ибрагимов Шерзод",
+      position: "Инженер",
+      department: "Производственный отдел",
+    },
+    {
+      fullName: "Саидова Лола",
+      position: "Бухгалтер",
+      department: "Финансовый отдел",
+    },
+    {
+      fullName: "Каримов Азиз",
+      position: "Оператор",
+      department: "Цех №1",
+    },
+    {
+      fullName: "Абдурахманова Зулайхо",
+      position: "HR-менеджер",
+      department: "Кадровый отдел",
+    },
+    {
+      fullName: "Нурматов Дониёр",
+      position: "Электрик",
+      department: "Отдел по техническому обслуживанию",
+    },
   ];
 
   const categories = [
@@ -64,12 +86,12 @@ const Index = () => {
                 boxShadow: "none",
                 color: "white",
                 display: "flex",
-                gap: "8px",
-                fontSize: "17px",
+                gap: "4px",
+                fontSize: "14px",
               }}
               variant="contained"
             >
-              <PersonAddAlt1Icon />
+              <PersonAddAlt1Icon sx={{ fontSize: "18px" }} />
               <p>Добавить</p>
             </Button>
           </div>
@@ -113,61 +135,65 @@ const Index = () => {
                 classNames={"w-1/3"}
               />
             </div>
-            <InputLabel
-              id="category-select-label"
-              sx={{
-                color: "black",
-                fontFamily: "DM Sans, sans-serif",
-                mb: "2px",
-              }}
-            >
-              Kategoriyani tanlang
-            </InputLabel>
-            <Select
-              labelId="category-select-label"
-              id="category-select"
-              sx={{
-                width: "100%",
-                textAlign: "left",
-                fontFamily: "DM Sans, sans-serif",
-                color: "#000",
-              }}
-              value={category}
-              label="Kategoriyani tanlang"
-              onChange={handleChange}
-            >
-              {categories.map((cat) => (
-                <MenuItem key={cat} value={cat}>
-                  {cat}
-                </MenuItem>
-              ))}
-            </Select>
 
-            <Input label={"Sseriya raqami"} placeholder={"Nomini kiriting"} />
-
-            {category === "Kompyuterlar" && (
+            <div className="flex gap-4">
               <Input
-                label={"MAC address"}
-                placeholder={"MAC addressni kiriting"}
+                label={"Телефон номер"}
+                placeholder={"Nomini kiriting"}
+                classNames={"w-1/2"}
+                type={"tel"}
               />
-            )}
 
-            <Input label={"Biriktirilgan xodim"} placeholder={"Kiriting"} />
+              <Input
+                label={"Электронная почта"}
+                placeholder={"Nomini kiriting"}
+                classNames={"w-1/2"}
+                type={"email"}
+              />
+            </div>
 
             <div className="flex gap-4">
               <Input
                 type={"date"}
-                label={"Sotib olish sanasi"}
                 placeholder={"Kiriting"}
                 classNames={"w-1/2"}
               />
 
-              <Input
-                label={"Holati"}
-                placeholder={"Kiriting"}
-                classNames={"w-1/2"}
-              />
+              <FormControl fullWidth sx={{ minWidth: 200 }}>
+                <InputLabel id="gender-label">Jins</InputLabel>
+                <Select
+                  labelId="gender-label"
+                  value={gender}
+                  label="Jins"
+                  onChange={(e) => setGender(e.target.value)}
+                >
+                  <MenuItem value="male">Erkak</MenuItem>
+                  <MenuItem value="female">Ayol</MenuItem>
+                </Select>
+              </FormControl>
+
+              <FormControl fullWidth sx={{ minWidth: 200 }}>
+                <InputLabel id="rank-label">Razryad</InputLabel>
+                <Select
+                  labelId="rank-label"
+                  value={rank}
+                  label="Razryad"
+                  onChange={(e) => setRank(e.target.value)}
+                >
+                  {Array.from({ length: 16 }, (_, i) => (
+                    <MenuItem key={i + 1} value={i + 1}>
+                      {i + 1}-razryad
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
             </div>
+
+            <div>
+              <p>Адресс</p>
+              <textarea className="w-full h-[75px] border border-gray-400 rounded-[5px] p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 "></textarea>
+            </div>
+
             <Input
               type={"text"}
               label={"Texnik xususiyatlari"}

@@ -11,6 +11,10 @@ import DashboardIcon from "@mui/icons-material/Dashboard";
 import SettingsIcon from "@mui/icons-material/Settings";
 import TableChartIcon from "@mui/icons-material/TableChart";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import MediationIcon from "@mui/icons-material/Mediation";
+import ControlCameraIcon from "@mui/icons-material/ControlCamera";
+import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
+import SchoolRoundedIcon from "@mui/icons-material/SchoolRounded";
 import LockPersonIcon from "@mui/icons-material/LockPerson";
 import { useRouter } from "next/router";
 const menuItems = [
@@ -26,19 +30,24 @@ const menuItems = [
     path: "/dashboard/employees",
   },
   {
-    text: "Сотрудники",
-    icon: <TableChartIcon />,
-    path: "/dashboard/settings",
+    text: "Структура организации",
+    icon: <MediationIcon />,
+    path: "/dashboard/structure-organizations",
   },
   {
-    text: "Foydalanuvchi profili",
-    icon: <AccountCircleIcon />,
+    text: "Должности",
+    icon: <ControlCameraIcon />,
+    path: "/dashboard/positions",
+  },
+  {
+    text: "Обучение и квалификация",
+    icon: <SchoolRoundedIcon />,
     path: "/dashboard/user-profile",
   },
   {
-    text: "Ruxsat etilganlar",
-    icon: <LockPersonIcon />,
-    path: "/dashboard/who-has-access",
+    text: "Настройки",
+    icon: <SettingsRoundedIcon />,
+    path: "/dashboard/settings",
   },
 ];
 
@@ -47,7 +56,7 @@ export default function Sidebar({ isOpen = true }) {
   return (
     <aside
       className={`${
-        isOpen ? "w-[300px]" : "w-[80px]"
+        isOpen ? "w-[330px]" : "w-[80px]"
       } h-screen bg-white px-[16px] py-[25px] transition-all duration-300 overflow-hidden`}
     >
       <div
