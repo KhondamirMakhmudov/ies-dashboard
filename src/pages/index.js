@@ -5,6 +5,7 @@ import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import { useState } from "react";
 import { FormControl } from "@mui/material";
+import Image from "next/image";
 
 export default function Home() {
   const [age, setAge] = useState("");
@@ -14,46 +15,56 @@ export default function Home() {
   };
   return (
     <div className={"login h-screen"}>
-      <div className="container mx-auto h-full flex items-center justify-center">
+      <div className="">
         <div className="grid grid-cols-12 w-full gap-[30px] place-items-center">
-          <div className="col-span-12 max-w-[700px] w-full bg-white border border-gray-200 rounded-md p-[24px]">
-            <Brand />
-            <div className="w-full h-[1px] bg-gray-200 my-[10px]"></div>
-            <div className="mb-[20px]">
-              <h1 className="text-[36px] mb-[12px] font-semibold">
-                Tizimga kirish
-              </h1>
-              <p className="text-gray-400">
-                Tizimga kirish uchun emailingiz va parolingizni kiriting!
-              </p>
+          <div className="col-span-6">
+            <Image
+              src={"/icons/login.svg"}
+              alt="login"
+              width={600}
+              height={300}
+            />
+          </div>
+          <div className="col-span-6  w-full flex flex-col items-center justify-center  h-screen bg-white  rounded-md p-[24px]">
+            <div className="max-w-[600px] flex flex-col items-start justify-center">
+              <Brand />
+              <div className="w-full h-[1px] bg-gray-200 my-[10px]"></div>
+              <div className="mb-[20px]">
+                <h1 className="text-[36px] mb-[12px] font-semibold">
+                  Tizimga kirish
+                </h1>
+                <p className="text-gray-400">
+                  Tizimga kirish uchun emailingiz va parolingizni kiriting!
+                </p>
+              </div>
+              <FormControl fullWidth className="py-[40px] space-y-[10px]">
+                <Input
+                  label="Email"
+                  type="email"
+                  placeholder="example@mail.com"
+                />
+                <Input
+                  label="Password"
+                  type="password"
+                  placeholder="Enter the password"
+                />
+                <Select
+                  className="w-full text-black mt-[15px]"
+                  id="demo-simple-select"
+                  value={age}
+                  onChange={handleChange}
+                  displayEmpty
+                >
+                  <MenuItem value="" disabled>
+                    Role ni tanlang
+                  </MenuItem>
+                  <MenuItem value={10}>Adminstrator</MenuItem>
+                  <MenuItem value={20}>Moderator</MenuItem>
+                  <MenuItem value={30}>ATK</MenuItem>
+                </Select>
+                <Button>Kirish</Button>
+              </FormControl>
             </div>
-            <FormControl fullWidth className="py-[40px] space-y-[10px]">
-              <Input
-                label="Email"
-                type="email"
-                placeholder="example@mail.com"
-              />
-              <Input
-                label="Password"
-                type="password"
-                placeholder="Enter the password"
-              />
-              <Select
-                className="w-full text-black mt-[15px]"
-                id="demo-simple-select"
-                value={age}
-                onChange={handleChange}
-                displayEmpty
-              >
-                <MenuItem value="" disabled>
-                  Role ni tanlang
-                </MenuItem>
-                <MenuItem value={10}>Adminstrator</MenuItem>
-                <MenuItem value={20}>Moderator</MenuItem>
-                <MenuItem value={30}>ATK</MenuItem>
-              </Select>
-              <Button>Kirish</Button>
-            </FormControl>
           </div>
         </div>
       </div>

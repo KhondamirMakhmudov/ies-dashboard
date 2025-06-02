@@ -6,7 +6,7 @@ import {
   ListItemText,
   Typography,
 } from "@mui/material";
-import CategoryIcon from "@mui/icons-material/Category";
+import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import SettingsIcon from "@mui/icons-material/Settings";
 import TableChartIcon from "@mui/icons-material/TableChart";
@@ -15,14 +15,20 @@ import LockPersonIcon from "@mui/icons-material/LockPerson";
 import { useRouter } from "next/router";
 const menuItems = [
   {
-    text: "Kategoriyalar",
-    icon: <CategoryIcon />,
-    path: "/dashboard/categories",
+    text: "Обзор",
+    icon: <DashboardIcon />,
+    path: "/dashboard/main",
+  },
+
+  {
+    text: "Сотрудники",
+    icon: <PeopleAltIcon />,
+    path: "/dashboard/employees",
   },
   {
-    text: "Umumiy jadval",
+    text: "Сотрудники",
     icon: <TableChartIcon />,
-    path: "/dashboard/general",
+    path: "/dashboard/settings",
   },
   {
     text: "Foydalanuvchi profili",
@@ -46,13 +52,13 @@ export default function Sidebar({ isOpen = true }) {
     >
       <div
         onClick={() => router.push("/")}
-        className="my-[32px] flex justify-center items-center gap-4 cursor-pointer"
+        className="my-[32px] flex justify-center items-start gap-4 cursor-pointer"
       >
-        <Image src="/icons/logo.svg" alt="logo" width={53} height={76} />
+        <Image src="/icons/ies_brand.svg" alt="logo" width={53} height={76} />
         {isOpen && (
           <div className="flex flex-col">
-            <p className="text-[28px] font-medium whitespace-nowrap">
-              TM va SITI
+            <p className="text-[18px] font-medium ">
+              "ISSIQLIK ELЕKTR STANSIYALARI" AJ
             </p>
             <p className="text-base text-gray-400">Inventarizatsiya</p>
           </div>

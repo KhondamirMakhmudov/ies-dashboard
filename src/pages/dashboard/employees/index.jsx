@@ -1,5 +1,6 @@
 import DashboardLayout from "@/layouts/dashboard/DashboardLayout";
 import EnhancedTable from "@/components/table";
+import PersonAddAlt1Icon from "@mui/icons-material/PersonAddAlt1";
 import {
   FormControl,
   InputLabel,
@@ -46,10 +47,14 @@ const Index = () => {
     "Maxsus uskunalar",
   ];
   return (
-    <DashboardLayout headerTitle={"Umumiy jadval"}>
+    <DashboardLayout headerTitle={"Сотрудники"}>
       <div className="bg-white p-[12px] my-[50px] rounded-md">
-        <div className="grid grid-cols-12 gap-[12px]">
-          <div className="col-span-12 flex justify-end">
+        <div className="grid grid-cols-12 gap-[12px] p-2">
+          <div className="col-span-12 flex justify-between ">
+            <Typography variant="h6">
+              Просмотр и управление сотрудниками
+            </Typography>
+
             <Button
               onClick={() => setModal(true)}
               sx={{
@@ -57,12 +62,18 @@ const Index = () => {
                 fontFamily: "DM Sans, sans-serif",
                 backgroundColor: "#4182F9",
                 boxShadow: "none",
+                color: "white",
+                display: "flex",
+                gap: "8px",
+                fontSize: "17px",
               }}
               variant="contained"
             >
-              Element qo&apos;shish
+              <PersonAddAlt1Icon />
+              <p>Добавить</p>
             </Button>
           </div>
+          <div className="col-span-12 flex justify-end"></div>
           <div className="col-span-12">
             <EnhancedTable columns={columns} rows={rows} />
           </div>
@@ -79,11 +90,29 @@ const Index = () => {
               marginBottom: "16px",
             }}
           >
-            Element qo&apos;shish
+            Добавление сотрудника
           </Typography>
 
           <form className="space-y-[20px]">
-            <Input label={"Nomi"} placeholder={"Nomini kiriting"} />
+            <div className="flex gap-4">
+              <Input
+                label={"Имя"}
+                placeholder={"Nomini kiriting"}
+                classNames={"w-1/3"}
+              />
+
+              <Input
+                label={"Фамилия"}
+                placeholder={"Nomini kiriting"}
+                classNames={"w-1/3"}
+              />
+
+              <Input
+                label={"Отчество"}
+                placeholder={"Nomini kiriting"}
+                classNames={"w-1/3"}
+              />
+            </div>
             <InputLabel
               id="category-select-label"
               sx={{
