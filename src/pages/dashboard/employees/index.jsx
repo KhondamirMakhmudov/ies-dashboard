@@ -1,6 +1,7 @@
 import DashboardLayout from "@/layouts/dashboard/DashboardLayout";
 import EnhancedTable from "@/components/table";
 import PersonAddAlt1Icon from "@mui/icons-material/PersonAddAlt1";
+import PictureAsPdfRoundedIcon from "@mui/icons-material/PictureAsPdfRounded";
 import {
   FormControl,
   InputLabel,
@@ -10,10 +11,9 @@ import {
   Typography,
 } from "@mui/material";
 import { useState } from "react";
-import SimpleModal from "@/components/modal/simple-modal";
 import HalfModal from "@/components/modal/half-modal";
 import Input from "@/components/input";
-import employees from "@/dummy-data/employees";
+import Image from "next/image";
 const Index = () => {
   const [modal, setModal] = useState(false);
   const [category, setCategory] = useState("");
@@ -77,23 +77,46 @@ const Index = () => {
               Просмотр и управление сотрудниками
             </Typography>
 
-            <Button
-              onClick={() => setModal(true)}
-              sx={{
-                textTransform: "initial",
-                fontFamily: "DM Sans, sans-serif",
-                backgroundColor: "#4182F9",
-                boxShadow: "none",
-                color: "white",
-                display: "flex",
-                gap: "4px",
-                fontSize: "14px",
-              }}
-              variant="contained"
-            >
-              <PersonAddAlt1Icon sx={{ fontSize: "18px" }} />
-              <p>Добавить</p>
-            </Button>
+            <div className="flex gap-2">
+              <button className="flex gap-x-[10px] bg-[#00733B] hover:bg-[#00733bf1] scale-100 active:scale-90  lg:py-[9px] py-[10px] lg:px-[15px] px-[10px] items-center rounded-[8px] transform-all duration-200">
+                <Image
+                  src={"/icons/excel.svg"}
+                  alt="excel"
+                  width={20}
+                  height={20}
+                  className=""
+                />
+                <p className="text-xs lg:text-sm font-gilroy text-white ">
+                  Excel
+                </p>
+              </button>
+
+              <button className="flex gap-x-[10px] bg-[#F73E2E] hover:bg-[#E43A2A] scale-100 active:scale-90  lg:py-[9px] py-[10px] lg:px-[15px] px-[10px] items-center rounded-[8px] transform-all duration-200">
+                <PictureAsPdfRoundedIcon sx={{ color: "white" }} />
+                <p className="text-xs lg:text-sm font-gilroy text-white ">
+                  PDF
+                </p>
+              </button>
+
+              <Button
+                onClick={() => setModal(true)}
+                sx={{
+                  textTransform: "initial",
+                  fontFamily: "DM Sans, sans-serif",
+                  backgroundColor: "#4182F9",
+                  boxShadow: "none",
+                  color: "white",
+                  display: "flex",
+                  gap: "4px",
+                  fontSize: "14px",
+                  borderRadius: "8px",
+                }}
+                variant="contained"
+              >
+                <PersonAddAlt1Icon sx={{ fontSize: "18px" }} />
+                <p>Добавить</p>
+              </Button>
+            </div>
           </div>
           <div className="col-span-12 flex justify-end"></div>
           <div className="col-span-12">
