@@ -19,6 +19,7 @@ const Index = () => {
   const [category, setCategory] = useState("");
   const [gender, setGender] = useState("");
   const [rank, setRank] = useState("");
+  const [education, setEducation] = useState("");
   const handleClose = () => setModal(false);
   const columns = [
     { id: "fullName", label: "ФИО" },
@@ -58,16 +59,15 @@ const Index = () => {
     },
   ];
 
-  const categories = [
-    "Kompyuterlar",
-    "Printerlar va skanerlar",
-    "Monitorlar",
-    "Telefonlar va mobil qurilmalar",
-    "Proyektorlar",
-    "Transport vositalari",
-    "Ofis uskunalari",
-    "Maxsus uskunalar",
+  const educationLevels = [
+    "O'rta",
+    "O'rta maxsus",
+    "Bakalavr",
+    "Magistratura",
+    "PhD",
+    "Doktorantura",
   ];
+
   return (
     <DashboardLayout headerTitle={"Сотрудники"}>
       <div className="bg-white p-[12px] my-[50px] rounded-md">
@@ -194,17 +194,31 @@ const Index = () => {
               <textarea className="w-full h-[75px] border border-gray-400 rounded-[5px] p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 "></textarea>
             </div>
 
-            <Input
-              type={"text"}
-              label={"Texnik xususiyatlari"}
-              placeholder={"Kiriting"}
-            />
+            <FormControl fullWidth sx={{ marginBottom: "10px" }}>
+              <InputLabel id="education-label">Степень образования </InputLabel>
+              <Select
+                labelId="education-label"
+                value={education}
+                label="Степень образования "
+                onChange={(e) => setEducation(e.target.value)}
+              >
+                {educationLevels.map((level, index) => (
+                  <MenuItem key={index} value={level}>
+                    {level}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
 
-            <Input
-              type={"number"}
-              label={"Sotib olish qiymati"}
-              placeholder={"Kiriting"}
-            />
+            {education === "Bakalavr" && (
+              <Input
+                type={"text"}
+                label={"Место образование"}
+                placeholder={"Kiriting"}
+              />
+            )}
+
+            <Input label={"Работа отдел"} placeholder={"Kiriting"} />
 
             <Button
               onClick={() => setModal(false)}
