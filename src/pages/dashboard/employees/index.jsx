@@ -2,24 +2,54 @@ import DashboardLayout from "@/layouts/dashboard/DashboardLayout";
 import EnhancedTable from "@/components/table";
 import PersonAddAlt1Icon from "@mui/icons-material/PersonAddAlt1";
 import PictureAsPdfRoundedIcon from "@mui/icons-material/PictureAsPdfRounded";
+
+import { useState } from "react";
+import HalfModal from "@/components/modal/half-modal";
+import Input from "@/components/input";
+import Image from "next/image";
+
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  IconButton,
+  Modal,
+  Box,
+  Typography,
   FormControl,
   InputLabel,
   MenuItem,
   Select,
   Button,
-  Typography,
+  TextField,
 } from "@mui/material";
-import { useState } from "react";
-import HalfModal from "@/components/modal/half-modal";
-import Input from "@/components/input";
-import Image from "next/image";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import { employees } from "@/dummy-data/employees";
+import EmployeeDetailsTabs from "@/components/tab";
+
 const Index = () => {
   const [modal, setModal] = useState(false);
   const [category, setCategory] = useState("");
   const [gender, setGender] = useState("");
   const [rank, setRank] = useState("");
   const [education, setEducation] = useState("");
+
+  const [open, setOpen] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
+
+  const handleOpen = (employee) => {
+    setSelectedEmployee(employee);
+    setOpen(true);
+  };
+
+  const handleCloseEmployeeModal = () => {
+    setOpen(false);
+    setSelectedEmployee(null);
+  };
   const handleClose = () => setModal(false);
   const columns = [
     { id: "fullName", label: "ФИО" },
@@ -31,33 +61,17 @@ const Index = () => {
     setCategory(event.target.value);
   };
 
-  const rows = [
-    {
-      fullName: "Ибрагимов Шерзод",
-      position: "Инженер",
-      department: "Производственный отдел",
-    },
-    {
-      fullName: "Саидова Лола",
-      position: "Бухгалтер",
-      department: "Финансовый отдел",
-    },
-    {
-      fullName: "Каримов Азиз",
-      position: "Оператор",
-      department: "Цех №1",
-    },
-    {
-      fullName: "Абдурахманова Зулайхо",
-      position: "HR-менеджер",
-      department: "Кадровый отдел",
-    },
-    {
-      fullName: "Нурматов Дониёр",
-      position: "Электрик",
-      department: "Отдел по техническому обслуживанию",
-    },
-  ];
+  const style = {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    transform: "translate(-50%, -50%)",
+
+    bgcolor: "#F4F7FE",
+    borderRadius: 2,
+    boxShadow: 24,
+    p: 4,
+  };
 
   const educationLevels = [
     "O'rta",
@@ -120,10 +134,96 @@ const Index = () => {
           </div>
           <div className="col-span-12 flex justify-end"></div>
           <div className="col-span-12">
-            <EnhancedTable columns={columns} rows={rows} />
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell sx={{ fontWeight: "600" }}>ФИО</TableCell>
+                    <TableCell sx={{ fontWeight: "600" }}>Должность</TableCell>
+                    <TableCell sx={{ fontWeight: "600" }}>Отдел</TableCell>
+                    <TableCell align="center" sx={{ fontWeight: "600" }}>
+                      Действие
+                    </TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {employees.map((emp) => (
+                    <TableRow key={emp.id}>
+                      <TableCell sx={{ fontFamily: "DM Sans, sans-serif" }}>
+                        <Box
+                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                        >
+                          <Image
+                            src="/images/emloyee.png"
+                            alt="profile"
+                            width={30}
+                            height={30}
+                            style={{ borderRadius: "50%" }}
+                          />
+                          <Typography variant="body1">
+                            {emp.fullName}
+                          </Typography>
+                        </Box>
+                      </TableCell>
+                      <TableCell sx={{ fontFamily: "DM Sans, sans-serif" }}>
+                        {emp.position}
+                      </TableCell>
+                      <TableCell sx={{ fontFamily: "DM Sans, sans-serif" }}>
+                        {emp.department}
+                      </TableCell>
+                      <TableCell align="center">
+                        <IconButton
+                          onClick={() => handleOpen(emp)}
+                          color="primary"
+                        >
+                          <VisibilityIcon />
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
           </div>
         </div>
       </div>
+
+      <Modal open={open} onClose={handleCloseEmployeeModal}>
+        <Box sx={style}>
+          {selectedEmployee && (
+            <div className="grid grid-cols-12 gap-3 w-[1200px]">
+              <div className="col-span-3 rounded-md bg-white p-5 flex flex-col gap-5 items-center justify-center">
+                <Image
+                  src="/images/employee-img.png"
+                  alt="profile"
+                  width={203}
+                  height={203}
+                />
+                <TextField
+                  fullWidth
+                  label="Имя"
+                  value=" Наубетов Дастан Ниятович"
+                />
+
+                <TextField
+                  fullWidth
+                  label="Телефоный номер"
+                  value="+998(90)-232-23-23"
+                />
+
+                <TextField
+                  fullWidth
+                  label="Электронная почта"
+                  value="example@gmail.com"
+                />
+              </div>
+              <div className="col-span-9 rounded-md bg-white p-2 flex items-center justify-center">
+                <EmployeeDetailsTabs />
+              </div>
+            </div>
+          )}
+        </Box>
+      </Modal>
 
       {modal && (
         <HalfModal isOpen={modal} onClose={handleClose}>
