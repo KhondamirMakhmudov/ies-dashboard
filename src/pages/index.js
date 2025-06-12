@@ -59,9 +59,9 @@ export default function Home() {
                   <MenuItem value="" disabled>
                     Role ni tanlang
                   </MenuItem>
-                  <MenuItem value={10}>Adminstrator</MenuItem>
-                  <MenuItem value={20}>Moderator</MenuItem>
-                  <MenuItem value={30}>ATK</MenuItem>
+                  <MenuItem value={10}>HR</MenuItem>
+                  <MenuItem value={20}>Админ</MenuItem>
+                  <MenuItem value={30}>Руководитель</MenuItem>
                 </Select>
                 <Button>
                   <Link href={"/dashboard/main"}>Kirish</Link>
