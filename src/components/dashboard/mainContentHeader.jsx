@@ -6,10 +6,18 @@ import Avatar from "@mui/material/Avatar";
 import { useState } from "react";
 import Link from "next/link";
 import MarkUnreadChatAltOutlinedIcon from "@mui/icons-material/MarkUnreadChatAltOutlined";
+import { useRouter } from "next/router";
+import ExitModal from "../modal/exit-modal";
 
 const MainContentHeader = ({ children, toggleSidebar }) => {
   const [openProfile, setOpenProfile] = useState(false);
   const [openNotification, setOpenNotification] = useState(false);
+  const [openExitModal, setOpenExitModal] = useState(false);
+  const router = useRouter();
+
+
+  const handleLogOut = () => router.push("/");
+  const handleOpenExitModal = () => setOpenExitModal(false);
 
   const handleClickProfile = () => {
     setOpenProfile(!openProfile);
@@ -130,6 +138,7 @@ const MainContentHeader = ({ children, toggleSidebar }) => {
               </Link>
 
               <Button
+                onClick={() => setOpenExitModal(true)}
                 sx={{
                   width: "100%",
                   border: "none",
@@ -137,14 +146,17 @@ const MainContentHeader = ({ children, toggleSidebar }) => {
                   borderRadius: "16px",
                   bgcolor: "#FCD8D3",
                   color: "#991300",
+                  fontFamily: "DM Sans, sans-serif",
                 }}
               >
-                <p>Chiqish</p>
+                <p>Выход</p>
               </Button>
             </div>
           </div>
         )}
       </div>
+
+      <ExitModal open={openExitModal} onClose={handleOpenExitModal} handleLogout={handleLogOut}/>
     </div>
   );
 };

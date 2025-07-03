@@ -9,6 +9,7 @@ import SignalCellularAltIcon from "@mui/icons-material/SignalCellularAlt";
 import HiredFiredBarChart from "@/components/charts/HiredFiredBarChart";
 import NewHiresOverTimeChart from "@/components/charts/LineChartHiredByMonth";
 import EmployeesByDepartment from "@/components/charts/EmployeesByDepartment";
+import {motion} from "framer-motion";
 
 const data = [
   { month: "Янв", hires: 5 },
@@ -30,7 +31,7 @@ const Index = () => {
   return (
     <DashboardLayout headerTitle={"Обзор"}>
       <div className="grid grid-cols-12 gap-4 my-[50px]">
-        <div className="col-span-2 bg-white p-4 rounded-md flex items-center justify-start flex-col space-y-[15px]">
+        <motion.div initial={{opacity: 0, scale: 0}} animate={{ opacity: 1, scale: 1}} className="col-span-2 bg-white p-4 rounded-md flex items-center justify-start flex-col space-y-[15px]">
           <div className="inline p-4 rounded-full bg-[#5C90FF] ">
             <GroupsIcon
               sx={{ width: "40px", height: "40px", color: "white" }}
@@ -46,9 +47,9 @@ const Index = () => {
           >
             Общее количество сотрудников
           </Typography>
-        </div>
+        </motion.div>
 
-        <div className="col-span-2 bg-white p-4 rounded-md flex items-center justify-start flex-col space-y-[15px]">
+        <motion.div initial={{opacity: 0, scale: 0}} animate={{ opacity: 1, scale: 1}} className="col-span-2 bg-white p-4 rounded-md flex items-center justify-start flex-col space-y-[15px]">
           <div className=" inline p-5 rounded-full bg-[#5C90FF] ">
             <ContactMailIcon
               sx={{ width: "30px", height: "30px", color: "white" }}
@@ -64,9 +65,9 @@ const Index = () => {
           >
             Новые сотрудники за месяц
           </Typography>
-        </div>
+        </motion.div>
 
-        <div className="col-span-2 bg-white p-4 rounded-md flex items-center justify-start flex-col space-y-[15px]">
+        <motion.div initial={{opacity: 0, scale: 0}} animate={{ opacity: 1, scale: 1}} className="col-span-2 bg-white p-4 rounded-md flex items-center justify-start flex-col space-y-[15px]">
           <div className=" inline p-5 rounded-full bg-[#5C90FF] ">
             <BusinessCenterIcon
               sx={{ width: "30px", height: "30px", color: "white" }}
@@ -82,9 +83,9 @@ const Index = () => {
           >
             Открытые вакансии
           </Typography>
-        </div>
+        </motion.div>
 
-        <div className="col-span-6 bg-white rounded-md flex p-4 flex-col">
+        <motion.div initial={{opacity: 0, scale: 0}} animate={{ opacity: 1, scale: 1}} className="col-span-6 bg-white rounded-md flex p-4 flex-col">
           <h3 className="text-xl font-medium mb-1 text-gray-800">
             <SignalCellularAltIcon
               sx={{
@@ -102,13 +103,13 @@ const Index = () => {
             Количество принятых и уволенных сотрудников за текущий месяц
           </p>
           <HiredFiredBarChart hired={12} fired={5} />
-        </div>
-        <div className="col-span-6 p-4 bg-white rounded-md">
+        </motion.div>
+        <motion.div initial={{opacity: 0, scale: 0}} animate={{ opacity: 1, scale: 1}} transition={{duration: .3}} className="col-span-6 p-4 bg-white rounded-md">
           <NewHiresOverTimeChart data={data} />
-        </div>
-        <div className="col-span-6 p-4 bg-white rounded-md">
+        </motion.div>
+        <motion.div initial={{opacity: 0, scale: 0}} animate={{ opacity: 1, scale: 1}} transition={{duration: .3}} className="col-span-6 p-4 bg-white rounded-md">
           <EmployeesByDepartment data={dataDepartment} />
-        </div>
+        </motion.div>
       </div>
     </DashboardLayout>
   );

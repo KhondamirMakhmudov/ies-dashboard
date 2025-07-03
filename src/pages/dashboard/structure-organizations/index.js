@@ -11,6 +11,7 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { useState } from "react";
 import EditIcon from "@mui/icons-material/Edit";
 import AddIcon from "@mui/icons-material/Add";
+import {motion} from "framer-motion"
 
 const departments = [
   { id: 1, name: "Котельный цех" },
@@ -148,7 +149,7 @@ const Index = () => {
   return (
     <DashboardLayout headerTitle={"Структура организации"}>
       <div className="grid grid-cols-12 gap-4 my-[50px]">
-        <div className="col-span-3 self-start bg-white p-[24px] rounded-md ">
+        <motion.div initial={{opacity: 0, translateY: "-30px"}} animate={{ opacity: 1, translateY: 0}} className="col-span-3 self-start bg-white p-[24px] rounded-md ">
           <div>
             <div className="flex justify-between">
               <Typography variant="h6" className="mb-4">
@@ -193,8 +194,8 @@ const Index = () => {
               </ul>
             )}
           </div>
-        </div>
-        <div className="col-span-9 bg-white p-[24px] rounded-md ">
+        </motion.div >
+        <motion.div initial={{opacity: 0, translateY: "30px"}} animate={{ opacity: 1, translateY: 0}} className="col-span-9 bg-white p-[24px] rounded-md ">
           <Typography variant="h6" className="mb-4">
             Список сотрудников
           </Typography>
@@ -227,7 +228,7 @@ const Index = () => {
               <p>Пожалуйста, выберите отдел.</p>
             )}
           </div>
-        </div>
+        </motion.div>
       </div>
       {/* <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between"></div>
