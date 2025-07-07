@@ -107,25 +107,14 @@ export default function Sidebar({ isOpen = true }) {
               <p className="text-[18px] font-medium">
                 "ISSIQLIK ELЕKTR STANSIYALARI" AJ
               </p>
-              <p className="text-base text-gray-400">Inventarizatsiya</p>
+              {/* <p className="text-base text-gray-400">Inventarizatsiya</p> */}
             </div>
           )}
         </div>
 
         <div className="w-full h-[1px] bg-gray-200 my-[10px]"></div>
 
-        {isOpen && (
-          <div className="mb-2">
-            <Typography
-              sx={{
-                fontFamily: "DM Sans, sans-serif",
-                color: "#A0AEC0FF",
-              }}
-            >
-              Asosiy
-            </Typography>
-          </div>
-        )}
+
 
         <List sx={{ fontFamily: "DM Sans, sans-serif", color: "#A0AEC0FF" }}>
           {menuItems.map((item, index) => (

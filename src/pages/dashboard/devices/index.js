@@ -1,5 +1,5 @@
 // pages/CameraTablePage.jsx
-import React, { act, useState } from "react";
+import React, { useState } from "react";
 import CommonTable from "@/components/table";
 import CustomTable from "@/components/table";
 import DashboardLayout from "@/layouts/dashboard/DashboardLayout";
@@ -8,17 +8,43 @@ import PersonAddAlt1Icon from "@mui/icons-material/PersonAddAlt1";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DeleteModal from "@/components/modal/delete-modal";
+import useGetQuery from "@/hooks/java/useGetQuery";
+import { KEYS } from "@/constants/key";
+import { URLS } from "@/constants/url";
+import { motion } from "framer-motion";
+import { get } from "lodash";
+import ContentLoader from "@/components/loader";
+import SimpleModal from "@/components/modal/simple-modal";
+import HalfModal from "@/components/modal/half-modal";
 
+const token = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsImlhdCI6MTc1MTg4MTk5NSwiZXhwIjoxNzUxOTY4Mzk1fQ.U778Fj0r4eD9bY5KYBvdreyfrv7MuHD74A0t4suTOAc"
 const Index = () => {
   const [createCameraModal, setCreateCameraModal] = useState(false);
 
   const [editCameraModal, setEditCameraModal] = useState(false);
   const [deleteCameraModal, setDeleteCameraModal] = useState(false);
+
+  const {data: allCameras, isLoading, isFetching} = useGetQuery({
+    key: KEYS.allCameras,
+    url: URLS.allCameras,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: "application/json",
+    },
+    enabled: !!token,
+  })
+
+  if (!allCameras) {
+    return <DashboardLayout><ContentLoader/></DashboardLayout>; // ma'lumot kelyapti
+  }
+
   const columns = [
     { accessorKey: "id", header: "№" },
-    { accessorKey: "ip", header: "IP-адрес" },
-    { accessorKey: "type", header: "Тип камеры" },
-    { accessorKey: "location", header: "Расположение" },
+    { accessorKey: "ipAddress", header: "IP-адрес" },
+    { accessorKey: "doorType", header: "Тип двери" },
+    { accessorKey: "depName", header: "Подразделение" },
+    { accessorKey: "checkPointName", header: "Контрольная точка" },
+    { accessorKey: "entryPointName", header: "Входная точка" },
     { accessorKey: "status", header: "Статус" },
     { accessorKey: "note", header: "Примечание" },
     {
@@ -56,39 +82,12 @@ const Index = () => {
     },
   ];
 
-  const data = [
-    {
-      id: 1,
-      ip: "192.168.1.101",
-      type: "IP-камера",
-      location: "Главный вход",
-      status: "Активна",
-      note: "Вход для сотрудников",
-    },
-    {
-      id: 2,
-      ip: "192.168.1.102",
-      type: "IP-камера",
-      location: "Ворота для грузовиков",
-      status: "Неактивна",
-      note: "На обслуживании",
-    },
-  ];
+
   return (
     <DashboardLayout headerTitle={"Устройства"}>
-      <div className="bg-white p-[12px] my-[50px] rounded-md">
-        <div className="col-span-12 space-y-[20px]">
-          <div className="flex justify-between">
-            <h1
-              style={{
-                fontSize: "20px",
-                fontWeight: "bold",
-                marginBottom: "16px",
-              }}
-            >
-              Камеры наблюдения
-            </h1>
-
+      <motion.div initial={{opacity: 0, scale: 0}} animate={{ opacity: 1, scale: 1}} className="bg-white p-[12px] my-[50px] rounded-md">
+        <div className="col-span-12 space-y-[15px]">
+          <div className="">  
             <Button
               onClick={() => setCreateCameraModal(true)}
               sx={{
@@ -104,10 +103,10 @@ const Index = () => {
               }}
               variant="contained"
             >
-              <p>Добавить</p>
+              <p>Создать</p>
             </Button>
           </div>
-          <CustomTable data={data} columns={columns} />
+          <CustomTable data={get(allCameras, "data")} columns={columns} />
         </div>
         {/* delete modal */}
 
@@ -116,7 +115,11 @@ const Index = () => {
           onClose={() => setDeleteCameraModal(false)}
           title="Вы уверены, что хотите удалить эту камеру?"
         />
-      </div>
+      </motion.div>
+
+      {
+        createCameraModal && <HalfModal isOpen={createCameraModal} onClose={() => setCreateCameraModal(false)}></HalfModal>
+      }
     </DashboardLayout>
   );
 };

@@ -4,7 +4,7 @@ const SimpleModal = ({ children, classname }) => {
   return (
     <AnimatePresence>
       <motion.div
-        className={`fixed  top-0 right-0  z-50 transition-all w-1/2 bg-opacity-70 duration-300 ${classname}`}
+        className={`fixed  top-0 right-0 z-50 transition-all w-1/2 bg-opacity-70 duration-300 ${classname}`}
       >
         <motion.div
           initial={{ opacity: 0, y: 50 }}

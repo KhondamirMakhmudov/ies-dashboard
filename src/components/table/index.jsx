@@ -1,5 +1,6 @@
 // components/CustomTable.jsx
 import React from "react";
+import { useState } from "react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -10,6 +11,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import UnfoldMoreIcon from "@mui/icons-material/UnfoldMore";
+
 
 const CustomTable = ({ data, columns }) => {
   const table = useReactTable({
@@ -28,7 +30,7 @@ const CustomTable = ({ data, columns }) => {
               {headerGroup.headers.map((header) => (
                 <th
                   key={header.id}
-                  className="px-4 py-2 font-semibold cursor-pointer select-none"
+                  className="px-4 py-2 font-medium cursor-pointer select-none"
                   onClick={header.column.getToggleSortingHandler()}
                 >
                   <span className="flex items-center gap-1">
@@ -66,7 +68,7 @@ const CustomTable = ({ data, columns }) => {
                 className="hover:bg-gray-50"
               >
                 {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id} className="px-4 py-2 border-t">
+                  <td key={cell.id} className="px-4 py-2 border-t border-t-[#E9E9E9]">
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </td>
                 ))}
