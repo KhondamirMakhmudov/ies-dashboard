@@ -6,11 +6,13 @@ const Input = ({
   onChange,
   classNames,
   inputClass,
+  ...props
 }) => {
   return (
     <div className={`${classNames}`}>
       <label>{label}</label>
       <input
+        {...props}
         type={type}
         placeholder={placeholder}
         value={value}
