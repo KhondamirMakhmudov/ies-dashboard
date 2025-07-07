@@ -3,11 +3,7 @@ import { ThemeProvider, createTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import "@/styles/globals.css";
 import "@/styles/loader.css";
-const theme = createTheme({
-  palette: {
-    mode: "light", // yoki 'dark'
-  },
-});
+import theme from "@/components/theme/theme";
 
 export default function MyApp({ Component, pageProps }) {
   return (

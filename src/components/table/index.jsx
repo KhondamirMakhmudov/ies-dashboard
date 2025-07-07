@@ -1,162 +1,82 @@
-import { useState } from "react";
+// components/CustomTable.jsx
+import React from "react";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TableSortLabel,
-  TablePagination,
-  Paper,
-  TextField,
-} from "@mui/material";
+  useReactTable,
+  getCoreRowModel,
+  getSortedRowModel,
+  flexRender,
+} from "@tanstack/react-table";
+import { motion, AnimatePresence } from "framer-motion";
+import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
+import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
+import UnfoldMoreIcon from "@mui/icons-material/UnfoldMore";
 
-function descendingComparator(a, b, orderBy) {
-  if (b[orderBy] < a[orderBy]) return -1;
-  if (b[orderBy] > a[orderBy]) return 1;
-  return 0;
-}
-
-function getComparator(order, orderBy) {
-  return order === "desc"
-    ? (a, b) => descendingComparator(a, b, orderBy)
-    : (a, b) => -descendingComparator(a, b, orderBy);
-}
-
-function stableSort(array, comparator) {
-  const stabilized = array.map((el, index) => [el, index]);
-  stabilized.sort((a, b) => {
-    const result = comparator(a[0], b[0]);
-    return result !== 0 ? result : a[1] - b[1];
+const CustomTable = ({ data, columns }) => {
+  const table = useReactTable({
+    data,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
   });
-  return stabilized.map((el) => el[0]);
-}
-
-const EnhancedTable = ({ columns, rows }) => {
-  const [order, setOrder] = useState("asc");
-  const [orderBy, setOrderBy] = useState(columns[0].id);
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
-  const [filter, setFilter] = useState("");
-
-  const handleRequestSort = (property) => {
-    const isAsc = orderBy === property && order === "asc";
-    setOrder(isAsc ? "desc" : "asc");
-    setOrderBy(property);
-  };
-
-  const handleChangePage = (_, newPage) => setPage(newPage);
-
-  const handleChangeRowsPerPage = (e) => {
-    setRowsPerPage(parseInt(e.target.value, 10));
-    setPage(0);
-  };
-
-  const filteredRows = rows.filter((row) =>
-    Object.values(row).join(" ").toLowerCase().includes(filter.toLowerCase())
-  );
-
-  const sortedRows = stableSort(filteredRows, getComparator(order, orderBy));
-  const paginatedRows = sortedRows.slice(
-    page * rowsPerPage,
-    page * rowsPerPage + rowsPerPage
-  );
 
   return (
-    <Paper
-      sx={{
-        width: "100%",
-        border: "1px solid #C4C4C4",
-        padding: 2,
-        boxShadow: "none",
-        fontFamily: "DM Sans, sans-serif",
-      }}
-    >
-      <TextField
-        variant="outlined"
-        placeholder="Qidirish..."
-        fullWidth
-        size="small"
-        onChange={(e) => setFilter(e.target.value)}
-        sx={{ mb: 2 }}
-      />
+    <div className="overflow-x-auto border-none rounded-lg">
+      <table className="min-w-full text-sm text-left ">
+        <thead className="bg-[#F4F7FE]">
+          {table.getHeaderGroups().map((headerGroup) => (
+            <tr key={headerGroup.id}>
+              {headerGroup.headers.map((header) => (
+                <th
+                  key={header.id}
+                  className="px-4 py-2 font-semibold cursor-pointer select-none"
+                  onClick={header.column.getToggleSortingHandler()}
+                >
+                  <span className="flex items-center gap-1">
+                    {flexRender(
+                      header.column.columnDef.header,
+                      header.getContext()
+                    )}
 
-      <TableContainer>
-        <Table>
-          <TableHead>
-            <TableRow>
-              {columns.map((column) => (
-                <TableCell key={column.id}>
-                  <TableSortLabel
-                    active={orderBy === column.id}
-                    direction={orderBy === column.id ? order : "asc"}
-                    onClick={() => handleRequestSort(column.id)}
-                    sx={{
-                      fontFamily: "DM Sans, sans-serif",
-                      fontWeight: "600",
-                      fontSize: "18px",
-                      color: "#2D3748",
-                      "&:hover": {
-                        cursor: "pointer",
-                      },
-                    }}
-                  >
-                    {column.label}
-                  </TableSortLabel>
-                </TableCell>
+                    {header.column.getIsSorted() === "asc" ? (
+                      <ArrowUpwardIcon fontSize="small" className="inline" />
+                    ) : header.column.getIsSorted() === "desc" ? (
+                      <ArrowDownwardIcon fontSize="small" className="inline" />
+                    ) : (
+                      <UnfoldMoreIcon
+                        fontSize="small"
+                        className="inline text-gray-400"
+                      />
+                    )}
+                  </span>
+                </th>
               ))}
-            </TableRow>
-          </TableHead>
-
-          <TableBody>
-            {paginatedRows.map((row, index) => (
-              <TableRow key={index}>
-                {columns.map((col) => (
-                  <TableCell
-                    sx={{
-                      fontFamily: "DM Sans, sans-serif",
-
-                      color: "#2D3748",
-                      "&:hover": {
-                        cursor: "pointer",
-                      },
-                    }}
-                    key={col.id}
-                  >
-                    {row[col.id]}
-                  </TableCell>
+            </tr>
+          ))}
+        </thead>
+        <motion.tbody layout>
+          <AnimatePresence>
+            {table.getRowModel().rows.map((row) => (
+              <motion.tr
+                layout
+                key={row.id}
+                initial={{ opacity: 0, y: -5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 5 }}
+                transition={{ duration: 0.2 }}
+                className="hover:bg-gray-50"
+              >
+                {row.getVisibleCells().map((cell) => (
+                  <td key={cell.id} className="px-4 py-2 border-t">
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </td>
                 ))}
-              </TableRow>
+              </motion.tr>
             ))}
-
-            {paginatedRows.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={columns.length} align="center">
-                  Ma'lumot topilmadi
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
-
-      <TablePagination
-        sx={{
-          fontFamily: "DM Sans, sans-serif",
-
-          color: "#2D3748",
-        }}
-        component="div"
-        count={filteredRows.length}
-        page={page}
-        onPageChange={handleChangePage}
-        rowsPerPage={rowsPerPage}
-        rowsPerPageOptions={[5, 10, 25]}
-        onRowsPerPageChange={handleChangeRowsPerPage}
-      />
-    </Paper>
+          </AnimatePresence>
+        </motion.tbody>
+      </table>
+    </div>
   );
 };
 
-export default EnhancedTable;
+export default CustomTable;
