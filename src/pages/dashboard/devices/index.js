@@ -16,16 +16,20 @@ import Input from "@/components/input";
 import toast from "react-hot-toast";
 import Image from "next/image";
 import MethodModal from "@/components/modal/method-modal";
+import usePostQuery from "@/hooks/java/usePostQuery";
 const ipRegex =
   /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
 
 const token =
-  "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsImlhdCI6MTc1MTg4MTk5NSwiZXhwIjoxNzUxOTY4Mzk1fQ.U778Fj0r4eD9bY5KYBvdreyfrv7MuHD74A0t4suTOAc";
+  "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsImlhdCI6MTc1MTk2ODcyMiwiZXhwIjoxNzUyMDU1MTIyfQ.4vySSuX4YTL0lujqCqkGoAXIKB8UFM6wAPCBv0B1qS0";
 const Index = () => {
   const [createCameraModal, setCreateCameraModal] = useState(false);
   const [editCameraModal, setEditCameraModal] = useState(false);
   const [deleteCameraModal, setDeleteCameraModal] = useState(false);
-  const [formData, setFormData] = useState({
+  const [selectedDepartment, setSelectedDepartment] = useState("");
+  const [selectedEntryPoint, setSelectedEntryPoint] = useState("");
+  const [selectedCheckPoint, setSelectedCheckPoint] = useState("")
+    const [formData, setFormData] = useState({
     ipAddress: "",
     building: "",
     login: "",
@@ -35,7 +39,7 @@ const Index = () => {
     doorTypeId: "",
     isActive: "",
   });
-
+  
   const {
     data: allCameras,
     isLoading,
@@ -50,40 +54,65 @@ const Index = () => {
     enabled: !!token,
   });
 
-  if (!allCameras) {
-    return (
-      <DashboardLayout>
-        <ContentLoader />
-      </DashboardLayout>
-    ); // ma'lumot kelyapti
+  // department get
+  const {
+    data: departments,
+  } = useGetQuery({
+    key: KEYS.departments,
+    url: URLS.departments,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: "application/json",
+    },
+    enabled: !!token, 
+  });
+
+  // entrypoint get
+
+  const {data: entrypoints} = useGetQuery({
+    key: KEYS.entrypoints,
+    url: URLS.entrypoints,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: "application/json",
+    },
+    enabled: !!token,
+  })
+
+  // checkpoint get 
+  const { data: checkpoints } = useGetQuery({
+    key: KEYS.checkpoints,
+    url: URLS.checkpoints,
+        headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: "application/json",
+    },
+    enabled: !!token,
+  })
+  const {mutate: createCamera} = usePostQuery({
+    listKeyId: "create-camera"
+  })
+
+  const onSubmitCreateCamera = () => { 
+    createCamera({
+      url: URLS.createCamera,
+      attributes: {
+        ipAddress: "198.52.2.4",
+        building: "Главный офис",
+        login: "iesqwerty",
+        password: "ies2025",
+        departmentId: 1,
+        checkPointId: 1,
+        doorTypeId: 1,
+        isActive: 1,
+      },
+      config: {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+      },
+    })
   }
-
-  // const {
-  //   data: departments,
-  // } = useGetQuery({
-  //   key: KEYS.departments,
-  //   url: URLS.departments,
-  //   headers: {
-  //     Authorization: `Bearer ${token}`,
-  //     Accept: "application/json",
-  //   },
-  //   enabled: !!token, // 👈 faqat bu yerda token tekshiriladi!
-  // });
-
-  // if (!departments) {
-  //   return (
-  //     <DashboardLayout>
-  //       <ContentLoader />
-  //     </DashboardLayout>
-  //   ); // ma'lumot kelyapti
-  // }
-
-
-
-
-  
-
-
 
   const columns = [
     { accessorKey: "id", header: "№" },
@@ -130,14 +159,11 @@ const Index = () => {
   ];
 
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+  const handleChange = (event) => {
+    setSelectedDepartment(event.target.value);
   };
 
-  // const handleChangeDepartment = () => {
 
-  // }
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -149,8 +175,28 @@ const Index = () => {
     // You can send it to your API here
   };
 
+    if (!allCameras) {
+    return (
+      <DashboardLayout>
+        <ContentLoader />
+      </DashboardLayout>
+    );
+  }
+
+
+
+  if (!departments) {
+    return (
+      <DashboardLayout>
+        <ContentLoader />
+      </DashboardLayout>
+    );
+  }
   return (
     <DashboardLayout headerTitle={"Устройства"}>
+      <button onClick={onSubmitCreateCamera}>
+        hello
+      </button>
       <motion.div
         initial={{ opacity: 0, scale: 0 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -202,7 +248,6 @@ const Index = () => {
             </Typography>
 
             <form
-              onSubmit={handleSubmit}
               className="grid grid-cols-4 my-[30px] gap-[15px]"
             >
               <Input
@@ -211,55 +256,102 @@ const Index = () => {
                 name="ipAddress"
                 placeholder="Введите IP адрес"
                 classNames="col-span-4"
-                value={formData.ipAddress}
-                onChange={handleChange}
+                inputClass={"!h-[45px] rounded-[12px] text-[15px]"}
+                labelClass={"text-sm"}
                 pattern={ipRegex.source}
                 required
               />
-
-                {/* <Select
-                  className="w-full text-black mt-[15px] col-span-4"
-                  id="demo-simple-select"
-                  onChange={handleChange}
-                  displayEmpty
-                >
-                  <MenuItem value="" disabled>
-                    Role ni tanlang
-                  </MenuItem>
-                  {get(departments, "data", []).map((department, index) => <MenuItem key={index}>
-                    {get(department, "nameDep")}
-                  </MenuItem>)  }
-                </Select> */}
 
               <Input
                 label="Имя пользователя"
                 name="login"
                 placeholder="Введите имя пользователя"
                 classNames="col-span-2"
-                value={formData.login}
-                onChange={handleChange}
+                inputClass={"!h-[45px] rounded-[12px] text-[15px]"}
+                labelClass={"text-sm"}
+
                 required
               />
 
               <Input
                 label="Пароль"
                 name="password"
-                type="password"
+                type="text"
                 placeholder="Введите пароль"
+                inputClass={"!h-[45px] rounded-[12px] text-[15px]"}
+                labelClass={"text-sm"}
                 classNames="col-span-2"
-                value={formData.password}
-                onChange={handleChange}
                 required
               />
 
+              <Select
+                className="w-full text-black mt-[15px] col-span-4"
+                id="demo-simple-select"
+                value={selectedDepartment}
+                onChange={handleChange}
+                displayEmpty
+              >
+                <MenuItem value="" disabled>
+                  Выберите департамент
+                </MenuItem>
+                {get(departments, "data", []).map((department, index) => (
+                  <MenuItem key={index} value={get(department, "id")}>
+                    {get(department, "nameDep")}
+                  </MenuItem>
+                ))}
+              </Select>
+
+              
+              <Select
+                className="w-full text-black mt-[15px] col-span-4"
+                id="demo-simple-select"
+                value={selectedEntryPoint}
+                onChange={(e) => {
+                  e.preventDefault();
+                  setSelectedEntryPoint(e.target.value)
+                }}
+                displayEmpty
+              >
+                <MenuItem value="" disabled>
+                  Выберите контрольную точку
+                </MenuItem>
+                {get(entrypoints, "data", []).map((entry, index) => (
+                  <MenuItem key={index} value={get(entry, "id")}>
+                    {get(entry, "entryPointName")}
+                  </MenuItem>
+                ))}
+              </Select>
+
+              <Select
+                className="w-full text-black mt-[15px] col-span-4"
+                id="demo-simple-select"
+                value={selectedCheckPoint}
+                onChange={(e) => {
+                  e.preventDefault();
+                  setSelectedCheckPoint(e.target.value)
+                }}
+                displayEmpty
+              >
+                <MenuItem value="" disabled>
+                  Выберите точки доступа
+                </MenuItem>
+                {get(checkpoints, "data", []).map((entry, index) => (
+                  <MenuItem key={index} value={get(entry, "id")}>
+                    {get(entry, "checkPointName")}
+                  </MenuItem>
+                ))}
+              </Select>
+
+
+
               <button
                 type="submit"
-                className="col-span-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded transition-all duration-200"
+                className="col-span-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-xl transition-all duration-200"
               >
                 Создать
               </button>
 
-              <div className="col-span-4 flex justify-center mt-4">
+              {/* <div className="col-span-4 flex justify-center mt-4">
                 <Image
                   src="/images/secure-img.png"
                   alt="secure"
@@ -267,7 +359,7 @@ const Index = () => {
                   height={300}
                   className="w-full max-w-[350px] h-auto object-cover"
                 />
-              </div>
+              </div> */}
             </form>
           </div>
         </MethodModal>
@@ -297,7 +389,7 @@ const Index = () => {
                 name="ipAddress"
                 placeholder="Введите IP адрес"
                 classNames="col-span-4"
-                value={formData.ipAddress}
+
                 onChange={handleChange}
                 pattern={ipRegex.source}
                 required
@@ -308,7 +400,7 @@ const Index = () => {
                 name="building"
                 placeholder="Введите название здания"
                 classNames="col-span-4"
-                value={formData.building}
+  
                 onChange={handleChange}
                 required
               />
@@ -318,7 +410,7 @@ const Index = () => {
                 name="login"
                 placeholder="Введите имя пользователя"
                 classNames="col-span-2"
-                value={formData.login}
+ 
                 onChange={handleChange}
                 required
               />
@@ -329,7 +421,7 @@ const Index = () => {
                 type="password"
                 placeholder="Введите пароль"
                 classNames="col-span-2"
-                value={formData.password}
+
                 onChange={handleChange}
                 required
               />
