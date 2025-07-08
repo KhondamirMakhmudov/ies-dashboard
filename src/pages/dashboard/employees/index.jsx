@@ -7,7 +7,7 @@ import { useState } from "react";
 import HalfModal from "@/components/modal/half-modal";
 import Input from "@/components/input";
 import Image from "next/image";
-
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import {
   Table,
   TableBody,
@@ -30,6 +30,8 @@ import {
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import { employees } from "@/dummy-data/employees";
 import EmployeeDetailsTabs from "@/components/tab";
+import {motion} from "framer-motion";
+import ImageUploader from "@/components/image-uploader";
 
 const Index = () => {
   const [modal, setModal] = useState(false);
@@ -37,7 +39,8 @@ const Index = () => {
   const [gender, setGender] = useState("");
   const [rank, setRank] = useState("");
   const [education, setEducation] = useState("");
-
+  const [showDropdownMain, setShowDropdownMain] = useState(false);
+  const [showDropdownLabor, setShowDropDownLabor] = useState(false);
   const [open, setOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
 
@@ -226,7 +229,7 @@ const Index = () => {
       </Modal>
 
       {modal && (
-        <HalfModal isOpen={modal} onClose={handleClose}>
+        <HalfModal width="w-1/3" isOpen={modal} onClose={handleClose}>
           <Typography
             sx={{
               fontFamily: "DM Sans, sans-serif",
@@ -238,110 +241,228 @@ const Index = () => {
             Добавление сотрудника
           </Typography>
 
-          <form className="space-y-[20px]">
-            <div className="flex gap-4">
-              <Input
-                label={"Имя"}
-                placeholder={"Nomini kiriting"}
-                classNames={"w-1/3"}
-              />
+          <form className="space-y-[20px] py-[30px]">
+            {/* Asosiy ma'lumotlar */}
+            <div className="border border-[#E9E9E9] p-3 rounded-xl">
+              <div onClick={() => setShowDropdownMain(!showDropdownMain)} className="flex justify-between items-center cursor-pointer">
+                <Typography variant="h7">Основные данные</Typography>
+                
+                <IconButton>
+                  <KeyboardArrowDownIcon/>
+                </IconButton>
+              </div>
 
-              <Input
-                label={"Фамилия"}
-                placeholder={"Nomini kiriting"}
-                classNames={"w-1/3"}
-              />
+              {!showDropdownMain &&               
+                <motion.div initial={{ opacity: 0, translateY: "-30px" }} animate={{ opacity: 1, translateY: 0 }} className="cursor-pointer">
+                  <Input
+                    label="Имя"
+                    placeholder="Имя пользователя"
+                    classNames="w-full my-[10px]"
+                    inputClass="!h-[40px] text-sm !border-[#E9E9E9]"
+                    labelClass="text-sm"
+                  />
 
-              <Input
-                label={"Отчество"}
-                placeholder={"Nomini kiriting"}
-                classNames={"w-1/3"}
-              />
+                  <Input
+                    label="Фамилия"
+                    placeholder="Фамилия пользователя"
+                    classNames="w-full my-[10px]"
+                    inputClass="!h-[40px] text-sm !border-[#E9E9E9]"
+                    labelClass="text-sm"
+                  />
+
+                  <Input
+                    label="Отчество"
+                    placeholder="Отчество пользователя"
+                    classNames="w-full my-[10px]"
+                    inputClass="!h-[40px] text-sm !border-[#E9E9E9]"
+                    labelClass="text-sm"
+                  />
+
+                  <Input
+                    label="Телефон номер"
+                    placeholder="Введите номер телефона"
+                    classNames="w-full my-[10px]"
+                    inputClass="!h-[40px] text-sm !border-[#E9E9E9]"
+                    labelClass="text-sm"
+                    type="tel"
+                  />
+
+                  <Input
+                    label="Электронная почта"
+                    placeholder="example@mail.ru"
+                    classNames="w-full my-[10px]"
+                    inputClass="!h-[40px] text-sm !border-[#E9E9E9]"
+                    labelClass="text-sm"
+                    type="email"
+                  />
+
+                  <Input
+                    type="date"
+                    label="Дата рождения"
+                    placeholder="Выберите дату рождения"
+                    classNames="w-full my-[10px]"
+                    inputClass="!h-[40px] text-sm !border-[#E9E9E9]"
+                    labelClass="text-sm"
+                  />
+
+                  <FormControl fullWidth sx={{ minWidth: 200 }}>
+                    <InputLabel                       sx={{
+                        fontSize: "14px",
+                        backgroundColor: "#fff",
+                        px: "4px",
+                        mx: "4px",
+                      }} id="gender-label">Jins</InputLabel>
+                    <Select
+                                          sx={{
+                        height: "45px",
+                        borderRadius: "5px",
+                        backgroundColor: "#fff",
+                       
+                        fontSize: "14px",
+                        "& fieldset": {
+                          border: "1px solid #E9E9E9", // border style
+                          borderRadius: "8px",         // radius
+                        },
+                      }}
+                      MenuProps={{
+                        PaperProps: {
+                          sx: {
+                            borderRadius: "8px",
+                          },
+                        },
+                      }}
+                      labelId="gender-label"
+                      value={gender}
+                      label="Jins"
+                      onChange={(e) => setGender(e.target.value)}
+                    >
+                      <MenuItem value="male">Erkak</MenuItem>
+                      <MenuItem value="female">Ayol</MenuItem>
+                    </Select>
+                </FormControl>
+                </motion.div>
+              }
             </div>
 
-            <div className="flex gap-4">
-              <Input
-                label={"Телефон номер"}
-                placeholder={"Nomini kiriting"}
-                classNames={"w-1/2"}
-                type={"tel"}
-              />
+            {/* Ishlash joyi va o'qigan joyi */}
+            <div className="border border-[#E9E9E9] p-3 rounded-xl">
+                <div onClick={() => setShowDropDownLabor(!showDropdownLabor)} className="flex justify-between items-center cursor-pointer">
+                  <Typography variant="h7">Место учебы и место работы</Typography>
+                  
+                  <IconButton>
+                    <KeyboardArrowDownIcon/>
+                  </IconButton>
 
-              <Input
-                label={"Электронная почта"}
-                placeholder={"Nomini kiriting"}
-                classNames={"w-1/2"}
-                type={"email"}
-              />
-            </div>
 
-            <div className="flex gap-4">
-              <Input
-                type={"date"}
-                placeholder={"Kiriting"}
-                classNames={"w-1/2"}
-              />
+              </div>
+                {showDropdownLabor && 
+                <motion.div initial={{ opacity: 0, translateY: "-30px" }} animate={{ opacity: 1, translateY: 0 }} className="mt-[15px]">
+                  <FormControl fullWidth sx={{ mb: "10px" }}>
+                    <InputLabel
+                      id="education-label"
+                      sx={{
+                        fontSize: "14px",
+                        backgroundColor: "#fff",
+                        px: "4px",
+                        mx: "4px",
+                      }}
+                    >
+                      Степень образования
+                    </InputLabel>
 
-              <FormControl fullWidth sx={{ minWidth: 200 }}>
-                <InputLabel id="gender-label">Jins</InputLabel>
-                <Select
-                  labelId="gender-label"
-                  value={gender}
-                  label="Jins"
-                  onChange={(e) => setGender(e.target.value)}
-                >
-                  <MenuItem value="male">Erkak</MenuItem>
-                  <MenuItem value="female">Ayol</MenuItem>
-                </Select>
-              </FormControl>
+                    <Select
+                      labelId="education-label"
+                      value={education}
+                      onChange={(e) => setEducation(e.target.value)}
+                      label="Степень образования"
+                      sx={{
+                        height: "45px",
+                        borderRadius: "8px",
+                        backgroundColor: "#fff",
+                        fontSize: "14px",
+                        "& fieldset": {
+                          border: "1px solid #E9E9E9", // border style
+                          borderRadius: "8px",         // radius
+                        },
+                      }}
+                      MenuProps={{
+                        PaperProps: {
+                          sx: {
+                            borderRadius: "8px",
+                          },
+                        },
+                      }}
+                    >
+                      {educationLevels.map((level, index) => (
+                        <MenuItem key={index} value={level}>
+                          {level}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
 
-              <FormControl fullWidth sx={{ minWidth: 200 }}>
-                <InputLabel id="rank-label">Razryad</InputLabel>
-                <Select
-                  labelId="rank-label"
-                  value={rank}
-                  label="Razryad"
-                  onChange={(e) => setRank(e.target.value)}
-                >
-                  {Array.from({ length: 16 }, (_, i) => (
-                    <MenuItem key={i + 1} value={i + 1}>
-                      {i + 1}-razryad
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+
+                    {education === "Bakalavr" && (
+                      <Input
+                          type={"text"}
+                          label={"Место образование"}
+                          placeholder={"Kiriting"}
+                          classNames="w-full my-[10px]"
+                          inputClass="!h-[40px] text-sm !border-[#E9E9E9]"
+                          labelClass="text-sm"
+                      />
+                    )}
+
+                  <FormControl fullWidth sx={{ my: "10px" }}>
+                    <InputLabel 
+                      id="rank-label"
+                      sx={{
+                        fontSize: "14px",
+                        backgroundColor: "#fff",
+                        px: "4px",
+                        mx: "3px",
+                      }}
+                    >Razryad</InputLabel>
+                    <Select
+                      labelId="rank-label"
+                      value={rank}
+                      label="Razryad"
+                      sx={{
+                        height: "45px",
+                        borderRadius: "8px",
+                        backgroundColor: "#fff",
+                        fontSize: "14px",
+                        "& fieldset": {
+                          border: "1px solid #E9E9E9", // border style
+                          borderRadius: "8px",         // radius
+                        },
+                      }}
+                      onChange={(e) => setRank(e.target.value)}
+                    >
+                      {Array.from({ length: 16 }, (_, i) => (
+                        <MenuItem key={i + 1} value={i + 1}>
+                          {i + 1}-razryad
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </motion.div>
+                }
             </div>
 
             <div>
+              <ImageUploader/>
+            </div>
+
+
+            {/* <div>
               <p>Адресс</p>
               <textarea className="w-full h-[75px] border border-gray-400 rounded-[5px] p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 "></textarea>
             </div>
 
-            <FormControl fullWidth sx={{ marginBottom: "10px" }}>
-              <InputLabel id="education-label">Степень образования </InputLabel>
-              <Select
-                labelId="education-label"
-                value={education}
-                label="Степень образования "
-                onChange={(e) => setEducation(e.target.value)}
-              >
-                {educationLevels.map((level, index) => (
-                  <MenuItem key={index} value={level}>
-                    {level}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
 
-            {education === "Bakalavr" && (
-              <Input
-                type={"text"}
-                label={"Место образование"}
-                placeholder={"Kiriting"}
-              />
-            )}
 
-            <Input label={"Работа отдел"} placeholder={"Kiriting"} />
+            <Input label={"Работа отдел"} placeholder={"Kiriting"} /> */}
 
             <Button
               onClick={() => setModal(false)}

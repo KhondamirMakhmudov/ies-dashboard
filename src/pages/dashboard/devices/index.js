@@ -1,10 +1,7 @@
-// pages/CameraTablePage.jsx
 import React, { useState } from "react";
-import CommonTable from "@/components/table";
 import CustomTable from "@/components/table";
 import DashboardLayout from "@/layouts/dashboard/DashboardLayout";
 import Button from "@mui/material/Button";
-import PersonAddAlt1Icon from "@mui/icons-material/PersonAddAlt1";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DeleteModal from "@/components/modal/delete-modal";
@@ -14,9 +11,7 @@ import { URLS } from "@/constants/url";
 import { motion } from "framer-motion";
 import { get } from "lodash";
 import ContentLoader from "@/components/loader";
-import SimpleModal from "@/components/modal/simple-modal";
-import HalfModal from "@/components/modal/half-modal";
-import { Typography } from "@mui/material";
+import { Typography, Select, MenuItem } from "@mui/material";
 import Input from "@/components/input";
 import toast from "react-hot-toast";
 import Image from "next/image";
@@ -28,6 +23,8 @@ const token =
   "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsImlhdCI6MTc1MTg4MTk5NSwiZXhwIjoxNzUxOTY4Mzk1fQ.U778Fj0r4eD9bY5KYBvdreyfrv7MuHD74A0t4suTOAc";
 const Index = () => {
   const [createCameraModal, setCreateCameraModal] = useState(false);
+  const [editCameraModal, setEditCameraModal] = useState(false);
+  const [deleteCameraModal, setDeleteCameraModal] = useState(false);
   const [formData, setFormData] = useState({
     ipAddress: "",
     building: "",
@@ -38,8 +35,6 @@ const Index = () => {
     doorTypeId: "",
     isActive: "",
   });
-  const [editCameraModal, setEditCameraModal] = useState(false);
-  const [deleteCameraModal, setDeleteCameraModal] = useState(false);
 
   const {
     data: allCameras,
@@ -62,6 +57,33 @@ const Index = () => {
       </DashboardLayout>
     ); // ma'lumot kelyapti
   }
+
+  // const {
+  //   data: departments,
+  // } = useGetQuery({
+  //   key: KEYS.departments,
+  //   url: URLS.departments,
+  //   headers: {
+  //     Authorization: `Bearer ${token}`,
+  //     Accept: "application/json",
+  //   },
+  //   enabled: !!token, // 👈 faqat bu yerda token tekshiriladi!
+  // });
+
+  // if (!departments) {
+  //   return (
+  //     <DashboardLayout>
+  //       <ContentLoader />
+  //     </DashboardLayout>
+  //   ); // ma'lumot kelyapti
+  // }
+
+
+
+
+  
+
+
 
   const columns = [
     { accessorKey: "id", header: "№" },
@@ -107,29 +129,15 @@ const Index = () => {
     },
   ];
 
-  // const data = [
-  //   {
-  //     id: 1,
-  //     ip: "192.168.1.101",
-  //     type: "IP-камера",
-  //     location: "Главный вход",
-  //     status: "Активна",
-  //     note: "Вход для сотрудников",
-  //   },
-  //   {
-  //     id: 2,
-  //     ip: "192.168.1.102",
-  //     type: "IP-камера",
-  //     location: "Ворота для грузовиков",
-  //     status: "Неактивна",
-  //     note: "На обслуживании",
-  //   },
-  // ];
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
+
+  // const handleChangeDepartment = () => {
+
+  // }
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -209,15 +217,19 @@ const Index = () => {
                 required
               />
 
-              <Input
-                label="Здание"
-                name="building"
-                placeholder="Введите название здания"
-                classNames="col-span-4"
-                value={formData.building}
-                onChange={handleChange}
-                required
-              />
+                {/* <Select
+                  className="w-full text-black mt-[15px] col-span-4"
+                  id="demo-simple-select"
+                  onChange={handleChange}
+                  displayEmpty
+                >
+                  <MenuItem value="" disabled>
+                    Role ni tanlang
+                  </MenuItem>
+                  {get(departments, "data", []).map((department, index) => <MenuItem key={index}>
+                    {get(department, "nameDep")}
+                  </MenuItem>)  }
+                </Select> */}
 
               <Input
                 label="Имя пользователя"

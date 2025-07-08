@@ -1,3 +1,4 @@
 export const KEYS = {
-    allCameras: "allCameras"
+    allCameras: "allCameras",
+    departments: "departments"
 }

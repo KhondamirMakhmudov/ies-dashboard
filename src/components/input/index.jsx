@@ -6,11 +6,12 @@ const Input = ({
   onChange,
   classNames,
   inputClass,
+  labelClass,
   ...props
 }) => {
   return (
     <div className={`${classNames}`}>
-      <label>{label}</label>
+      <label className={labelClass}>{label}</label>
       <input
         {...props}
         type={type}

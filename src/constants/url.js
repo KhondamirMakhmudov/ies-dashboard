@@ -1,4 +1,5 @@
 export const URLS = {
     allCameras: "api/cameras",
-    authenticate: "authenticate"
+    authenticate: "authenticate",
+    departments: "api/departments"
 }
