@@ -19,6 +19,7 @@
     "@tanstack/react-table": "^8.21.3",
     "axios": "^1.10.0",
     "clsx": "^2.1.1",
+    "dayjs": "^1.11.13",
     "framer-motion": "^12.12.2",
     "lodash": "^4.17.21",
     "next": "15.3.2",

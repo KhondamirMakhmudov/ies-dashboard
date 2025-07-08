@@ -2,5 +2,6 @@ export const KEYS = {
     allCameras: "allCameras",
     departments: "departments",
     checkpoints: "checkpoints",
-    entrypoints: "entrypoints"
+    entrypoints: "entrypoints",
+    logEntersOfEmployees: "logEntersOfEmployees"
 }

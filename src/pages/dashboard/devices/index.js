@@ -21,7 +21,7 @@ const ipRegex =
   /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
 
 const token =
-  "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsImlhdCI6MTc1MTk2ODcyMiwiZXhwIjoxNzUyMDU1MTIyfQ.4vySSuX4YTL0lujqCqkGoAXIKB8UFM6wAPCBv0B1qS0";
+  "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsImlhdCI6MTc1MTk5NjYxMywiZXhwIjoxNzUyMDgzMDEzfQ.XUQpIWiyBcqsQSqUYLDCcb9iZaoudLuQq0U042mtcQ0";
 const Index = () => {
   const [createCameraModal, setCreateCameraModal] = useState(false);
   const [editCameraModal, setEditCameraModal] = useState(false);
