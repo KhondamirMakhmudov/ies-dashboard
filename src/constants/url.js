@@ -4,5 +4,6 @@ export const URLS = {
     departments: "api/departments",
     checkpoints: "api/checkpoints",
     entrypoints: "api/entry-points",
-    createCamera: "api/cameras/create"
+    createCamera: "api/cameras/create",
+    logEntersOfEmployeeById: "api/log_enters/"
 }

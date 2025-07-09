@@ -11,7 +11,7 @@ const Input = ({
 }) => {
   return (
     <div className={`${classNames}`}>
-      <label className={labelClass}>{label}</label>
+      <label className={`${labelClass}`}>{label}</label>
       <input
         {...props}
         type={type}

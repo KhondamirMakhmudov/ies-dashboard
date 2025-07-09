@@ -1,119 +1,110 @@
 import { useState, useEffect } from "react";
-import { KEYS } from "@/constants/key";
-import { URLS } from "@/constants/url";
-import useGetQuery from "@/hooks/java/useGetQuery";
+import { motion } from "framer-motion";
+import Input from "@/components/input";
+import Image from "next/image";
 import DashboardLayout from "@/layouts/dashboard/DashboardLayout";
-import dayjs from "dayjs";
-import { motion } from "framer-motion"
-import { Typography } from "@mui/material";
+import { exportToExcelStyled } from "@/utils/exportToExcelStyled";
+import { getEmployeesLogsByRange } from "@/utils/getEmployeesLogsByRange";
+import { toast } from "react-hot-toast";
 import ContentLoader from "@/components/loader";
 
-const token =
-  "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsImlhdCI6MTc1MTk5NjYxMywiZXhwIjoxNzUyMDgzMDEzfQ.XUQpIWiyBcqsQSqUYLDCcb9iZaoudLuQq0U042mtcQ0";
+const token = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsImlhdCI6MTc1MjA1NjMzMSwiZXhwIjoxNzUyMTQyNzMxfQ.6OG6Hpj1scXZY0MYcjgFxKb_GXt9sHDnRe5Rn0eGo6E"; // 🔐 Tokeningizni real holatda oling
 
 const Index = () => {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [employeeId, setEmployeeId] = useState("");
+  const [isClient, setIsClient] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
-  const { data: employees, isLoading, isFetching } = useGetQuery({
-    key: [KEYS.logEntersOfEmployees, startDate, endDate],
-    url: URLS.logEntersOfEmployees,
-    params: {
-      startDate: startDate,
-      endDate: endDate,
-    },
-    headers: {
-      Authorization: `Bearer ${token}`,
-      Accept: "application/json",
-    },
-    enabled: !!token,
-  });
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
-  const setToday = () => {
-    const today = dayjs().format("YYYY-MM-DD");
-    setStartDate(today);
-    setEndDate(today);
-  };
+const handleExport = async () => {
+  setIsExporting(true); // 👈 Loadingni yoqamiz
+  try {
+    const data = await getEmployeesLogsByRange({
+      token,
+      rangeString: employeeId,
+      startDate,
+      endDate,
+    });
 
-  const setYesterday = () => {
-    const yesterday = dayjs().subtract(1, "day").format("YYYY-MM-DD");
-    setStartDate(yesterday);
-    setEndDate(yesterday);
-  };
+    if (!data || data.length === 0) {
+      toast.error("Ma'lumot topilmadi.");
+      return;
+    }
+
+    exportToExcelStyled(data);
+    toast.success("Excel файл успешно загружен.");
+  } catch (error) {
+    console.error("Export error:", error);
+    toast.error("Ошибка при загрузке Excel файла.");
+  } finally {
+    setIsExporting(false); // 👈 Loadingni o‘chiramiz
+  }
+};
+
+
+  if (!isClient) return null;
 
   return (
     <DashboardLayout headerTitle={"Отчеты"}>
-            <motion.div
-              initial={{ opacity: 0, scale: 0 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="bg-white p-[12px] my-[50px] rounded-md"
-            >
+      <div className="grid grid-cols-12 gap-[12px]">
+        {isExporting ? <div className="col-span-12"><ContentLoader/></div> :         <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.3 }}
+          className="bg-white col-span-12 p-6 my-[50px] rounded-md shadow-md w-full"
+        >
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-1">
+              Сотрудники (диапазон ID ##-##)
+            </label>
+            <Input
+              type="text"
+              value={employeeId}
+              onChange={(e) => setEmployeeId(e.target.value)}
+              inputClass={"!h-[44px] border !border-[#C9C9C9]"}
+              labelClass={"!font-semibold !text-[#C9C9C9]"}
+              placeholder="например, 1-10 или 5"
+            />
+          </div>
 
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={setToday}
-                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                  >
-                    Сегодня
-                  </button>
-                  <button
-                    onClick={setYesterday}
-                    className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
-                  >
-                    Вчера
-                  </button>
-                </div>
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-1">Дата начала:</label>
+            <Input
+              type="datetime-local"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              inputClass={"!h-[44px] border !border-[#C9C9C9]"}
+              labelClass={"!font-semibold !text-[#C9C9C9]"}
+            />
+          </div>
 
-                <div className="flex items-center gap-2">
-                  <Typography>Выберите дату</Typography>
-                  <input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className="border px-3 py-2 rounded"
-                  />
-                  <input
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    className="border px-3 py-2 rounded"
-                  />
-                </div>
-              </div>
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-1">Дата окончания:</label>
+            <Input
+              type="datetime-local"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              inputClass={"!h-[44px] border !border-[#C9C9C9]"}
+              labelClass={"!font-semibold !text-[#C9C9C9]"}
+            />
+          </div>
 
-              <div className="mt-6">
-                {isLoading ? (
-                  <ContentLoader/>
-                ) : employees?.length ? (
-                  <table className="min-w-full table-auto border-collapse border border-gray-300">
-                    <thead className="bg-gray-100">
-                      <tr>
-                        <th className="border px-4 py-2 text-left">ID</th>
-                        <th className="border px-4 py-2 text-left">Имя</th>
-                        <th className="border px-4 py-2 text-left">Время входа</th>
-                        <th className="border px-4 py-2 text-left">IP адрес</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {employees.map((emp) => (
-                        <tr key={emp.id}>
-                          <td className="border px-4 py-2">{emp.id}</td>
-                          <td className="border px-4 py-2">{emp.name}</td>
-                          <td className="border px-4 py-2">{emp.enteredAt}</td>
-                          <td className="border px-4 py-2">{emp.ipAddress}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                ) : (
-                  <p>Нет данных за выбранный период.</p>
-                )}
-              </div>
-
-
-            </motion.div>
-
+          <button
+            onClick={handleExport}
+            className="flex gap-x-[10px] bg-[#00733B] hover:bg-[#00733bf1] scale-100 active:scale-90 lg:py-[9px] py-[10px] lg:px-[15px] px-[10px] items-center rounded-[8px] transform-all duration-200 cursor-pointer"
+          >
+            <Image src={"/icons/excel.svg"} alt="excel" width={28} height={28} />
+            <p className="text-xs lg:text-sm font-gilroy text-white">
+              Выгрузить в Excel
+            </p>
+          </button>
+        </motion.div>}
+      </div>
     </DashboardLayout>
   );
 };

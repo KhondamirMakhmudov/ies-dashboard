@@ -3,5 +3,6 @@ export const KEYS = {
     departments: "departments",
     checkpoints: "checkpoints",
     entrypoints: "entrypoints",
-    logEntersOfEmployees: "logEntersOfEmployees"
+    logEntersOfEmployees: "logEntersOfEmployees",
+    logEntersOfEmployeeById: "logEntersOfEmployeeById"
 }
