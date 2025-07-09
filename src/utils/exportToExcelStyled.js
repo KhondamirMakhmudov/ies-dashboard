@@ -12,7 +12,7 @@ export const exportToExcelStyled = (data) => {
   const merges = [];
 
   const groupedData = data.reduce((acc, item) => {
-    const key = `${item.empName} (таб.№${item.empCode})`;
+    const key = `${item.empName} (таб.№${item.empId})`;
     if (!acc[key]) acc[key] = [];
     acc[key].push(item);
     return acc;
@@ -74,7 +74,10 @@ export const exportToExcelStyled = (data) => {
           alignment: { horizontal: "center", vertical: "center" },
         },
       },
-      {}, {}, {}, {}, // 5 ta ustun
+      {},
+      {},
+      {},
+      {}, // 5 ta ustun
     ]);
 
     merges.push({
@@ -100,7 +103,12 @@ export const exportToExcelStyled = (data) => {
           s: { alignment: { horizontal: "left" } },
         },
         {
-          v: item.errorCode === 0 ? "доступ разрешен" : item.errorCode === 32 ? "отказ в доступе" : "",
+          v:
+            item.errorCode === 0
+              ? "доступ разрешен"
+              : item.errorCode === 32
+              ? "отказ в доступе"
+              : "",
           s: { alignment: { horizontal: "left" } },
         },
         {
