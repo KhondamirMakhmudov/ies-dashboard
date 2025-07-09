@@ -101,8 +101,8 @@ const Index = () => {
         building: "Главный офис",
         login: "iesqwerty",
         password: "ies2025",
-        departmentId: 1,
-        checkPointId: 1,
+        // departmentId: 1,
+        checkPointId: 2,
         doorTypeId: 1,
         isActive: 1,
       },
@@ -194,9 +194,7 @@ const Index = () => {
   }
   return (
     <DashboardLayout headerTitle={"Устройства"}>
-      <button onClick={onSubmitCreateCamera}>
-        hello
-      </button>
+
       <motion.div
         initial={{ opacity: 0, scale: 0 }}
         animate={{ opacity: 1, scale: 1 }}
