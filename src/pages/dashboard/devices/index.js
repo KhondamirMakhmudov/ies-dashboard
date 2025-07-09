@@ -21,15 +21,15 @@ const ipRegex =
   /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
 
 const token =
-  "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsImlhdCI6MTc1MTk5NjYxMywiZXhwIjoxNzUyMDgzMDEzfQ.XUQpIWiyBcqsQSqUYLDCcb9iZaoudLuQq0U042mtcQ0";
+  "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsImlhdCI6MTc1MjA4NTk1MSwiZXhwIjoxNzUyMTcyMzUxfQ.0nST-uDSUASCSBCpkU10_PCLTzwR6XEKYlmJd9TsD5o";
 const Index = () => {
   const [createCameraModal, setCreateCameraModal] = useState(false);
   const [editCameraModal, setEditCameraModal] = useState(false);
   const [deleteCameraModal, setDeleteCameraModal] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState("");
   const [selectedEntryPoint, setSelectedEntryPoint] = useState("");
-  const [selectedCheckPoint, setSelectedCheckPoint] = useState("")
-    const [formData, setFormData] = useState({
+  const [selectedCheckPoint, setSelectedCheckPoint] = useState("");
+  const [formData, setFormData] = useState({
     ipAddress: "",
     building: "",
     login: "",
@@ -39,7 +39,7 @@ const Index = () => {
     doorTypeId: "",
     isActive: "",
   });
-  
+
   const {
     data: allCameras,
     isLoading,
@@ -55,21 +55,19 @@ const Index = () => {
   });
 
   // department get
-  const {
-    data: departments,
-  } = useGetQuery({
+  const { data: departments } = useGetQuery({
     key: KEYS.departments,
     url: URLS.departments,
     headers: {
       Authorization: `Bearer ${token}`,
       Accept: "application/json",
     },
-    enabled: !!token, 
+    enabled: !!token,
   });
 
   // entrypoint get
 
-  const {data: entrypoints} = useGetQuery({
+  const { data: entrypoints } = useGetQuery({
     key: KEYS.entrypoints,
     url: URLS.entrypoints,
     headers: {
@@ -77,23 +75,23 @@ const Index = () => {
       Accept: "application/json",
     },
     enabled: !!token,
-  })
+  });
 
-  // checkpoint get 
+  // checkpoint get
   const { data: checkpoints } = useGetQuery({
     key: KEYS.checkpoints,
     url: URLS.checkpoints,
-        headers: {
+    headers: {
       Authorization: `Bearer ${token}`,
       Accept: "application/json",
     },
     enabled: !!token,
-  })
-  const {mutate: createCamera} = usePostQuery({
-    listKeyId: "create-camera"
-  })
+  });
+  const { mutate: createCamera } = usePostQuery({
+    listKeyId: "create-camera",
+  });
 
-  const onSubmitCreateCamera = () => { 
+  const onSubmitCreateCamera = () => {
     createCamera({
       url: URLS.createCamera,
       attributes: {
@@ -107,12 +105,12 @@ const Index = () => {
         isActive: 1,
       },
       config: {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       },
-    })
-  }
+    });
+  };
 
   const columns = [
     { accessorKey: "id", header: "№" },
@@ -158,12 +156,9 @@ const Index = () => {
     },
   ];
 
-
   const handleChange = (event) => {
     setSelectedDepartment(event.target.value);
   };
-
-
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -175,15 +170,13 @@ const Index = () => {
     // You can send it to your API here
   };
 
-    if (!allCameras) {
+  if (!allCameras) {
     return (
       <DashboardLayout>
         <ContentLoader />
       </DashboardLayout>
     );
   }
-
-
 
   if (!departments) {
     return (
@@ -194,7 +187,6 @@ const Index = () => {
   }
   return (
     <DashboardLayout headerTitle={"Устройства"}>
-
       <motion.div
         initial={{ opacity: 0, scale: 0 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -245,9 +237,7 @@ const Index = () => {
               Основная информация
             </Typography>
 
-            <form
-              className="grid grid-cols-4 my-[30px] gap-[15px]"
-            >
+            <form className="grid grid-cols-4 my-[30px] gap-[15px]">
               <Input
                 label="IP адрес"
                 type="text"
@@ -267,7 +257,6 @@ const Index = () => {
                 classNames="col-span-2"
                 inputClass={"!h-[45px] rounded-[12px] text-[15px]"}
                 labelClass={"text-sm"}
-
                 required
               />
 
@@ -299,14 +288,13 @@ const Index = () => {
                 ))}
               </Select>
 
-              
               <Select
                 className="w-full text-black mt-[15px] col-span-4"
                 id="demo-simple-select"
                 value={selectedEntryPoint}
                 onChange={(e) => {
                   e.preventDefault();
-                  setSelectedEntryPoint(e.target.value)
+                  setSelectedEntryPoint(e.target.value);
                 }}
                 displayEmpty
               >
@@ -326,7 +314,7 @@ const Index = () => {
                 value={selectedCheckPoint}
                 onChange={(e) => {
                   e.preventDefault();
-                  setSelectedCheckPoint(e.target.value)
+                  setSelectedCheckPoint(e.target.value);
                 }}
                 displayEmpty
               >
@@ -339,8 +327,6 @@ const Index = () => {
                   </MenuItem>
                 ))}
               </Select>
-
-
 
               <button
                 type="submit"
@@ -387,7 +373,6 @@ const Index = () => {
                 name="ipAddress"
                 placeholder="Введите IP адрес"
                 classNames="col-span-4"
-
                 onChange={handleChange}
                 pattern={ipRegex.source}
                 required
@@ -398,7 +383,6 @@ const Index = () => {
                 name="building"
                 placeholder="Введите название здания"
                 classNames="col-span-4"
-  
                 onChange={handleChange}
                 required
               />
@@ -408,7 +392,6 @@ const Index = () => {
                 name="login"
                 placeholder="Введите имя пользователя"
                 classNames="col-span-2"
- 
                 onChange={handleChange}
                 required
               />
@@ -419,7 +402,6 @@ const Index = () => {
                 type="password"
                 placeholder="Введите пароль"
                 classNames="col-span-2"
-
                 onChange={handleChange}
                 required
               />

@@ -57,7 +57,7 @@ const CustomTable = ({ data, columns }) => {
         </thead>
         <motion.tbody layout>
           <AnimatePresence>
-            {table.getRowModel().rows.map((row) => (
+            {table?.getRowModel().rows?.map((row) => (
               <motion.tr
                 layout
                 key={row.id}

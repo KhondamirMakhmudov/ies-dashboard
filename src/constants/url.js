@@ -1,9 +1,16 @@
 export const URLS = {
-    allCameras: "api/cameras",
-    authenticate: "authenticate",
-    departments: "api/departments",
-    checkpoints: "api/checkpoints",
-    entrypoints: "api/entry-points",
-    createCamera: "api/cameras/create",
-    logEntersOfEmployeeById: "api/log_enters/"
-}
+  authenticate: "authenticate",
+  departments: "api/departments",
+  // CheckPoints
+  checkpoints: "api/checkpoints",
+  createCheckpoint: "/api/checkpoints",
+  editOrDeleteCheckpoint: "/api/checkpoints/",
+
+  // EntryPoints
+  entrypoints: "api/entry-points",
+
+  // Cameras
+  allCameras: "api/cameras",
+  createCamera: "api/cameras/create",
+  logEntersOfEmployeeById: "api/log_enters/",
+};
