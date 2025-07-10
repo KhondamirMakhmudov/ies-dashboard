@@ -17,7 +17,7 @@ const Index = () => {
   const [isClient, setIsClient] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
-  const token = session.accessToken;
+  const token = session?.accessToken;
   useEffect(() => {
     setIsClient(true);
   }, []);

@@ -8,6 +8,7 @@ export const URLS = {
   createCheckpoint: "/api/checkpoints",
   editOrDeleteCheckpoint: "/api/checkpoints/",
 
+
   // EntryPoints
   entrypoints: "api/entry-points",
 
