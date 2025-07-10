@@ -1,6 +1,8 @@
 export const URLS = {
   authenticate: "authenticate",
   departments: "api/departments",
+  // structure of organizations
+  structureOfOrganizations: "/api/structures",
   // CheckPoints
   checkpoints: "api/checkpoints",
   createCheckpoint: "/api/checkpoints",

@@ -17,12 +17,13 @@ import toast from "react-hot-toast";
 import Image from "next/image";
 import MethodModal from "@/components/modal/method-modal";
 import usePostQuery from "@/hooks/java/usePostQuery";
+import { config } from "@/config";
+import { useSession } from "next-auth/react";
 const ipRegex =
   /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
 
-const token =
-  "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsImlhdCI6MTc1MjA4NTk1MSwiZXhwIjoxNzUyMTcyMzUxfQ.0nST-uDSUASCSBCpkU10_PCLTzwR6XEKYlmJd9TsD5o";
 const Index = () => {
+  const { data: session } = useSession();
   const [createCameraModal, setCreateCameraModal] = useState(false);
   const [editCameraModal, setEditCameraModal] = useState(false);
   const [deleteCameraModal, setDeleteCameraModal] = useState(false);
@@ -48,10 +49,10 @@ const Index = () => {
     key: KEYS.allCameras,
     url: URLS.allCameras,
     headers: {
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${session.accessToken}`,
       Accept: "application/json",
     },
-    enabled: !!token,
+    enabled: !!session.accessToken,
   });
 
   // department get
@@ -59,10 +60,10 @@ const Index = () => {
     key: KEYS.departments,
     url: URLS.departments,
     headers: {
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${session.accessToken}`,
       Accept: "application/json",
     },
-    enabled: !!token,
+    enabled: !!session.accessToken,
   });
 
   // entrypoint get
@@ -71,10 +72,10 @@ const Index = () => {
     key: KEYS.entrypoints,
     url: URLS.entrypoints,
     headers: {
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${session.accessToken}`,
       Accept: "application/json",
     },
-    enabled: !!token,
+    enabled: !!session.accessToken,
   });
 
   // checkpoint get
@@ -82,10 +83,10 @@ const Index = () => {
     key: KEYS.checkpoints,
     url: URLS.checkpoints,
     headers: {
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${session.accessToken}`,
       Accept: "application/json",
     },
-    enabled: !!token,
+    enabled: !!session.accessToken,
   });
   const { mutate: createCamera } = usePostQuery({
     listKeyId: "create-camera",
@@ -106,7 +107,7 @@ const Index = () => {
       },
       config: {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${session.accessToken}`,
         },
       },
     });

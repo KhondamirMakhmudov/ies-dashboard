@@ -6,17 +6,17 @@ import MenuItem from "@mui/material/MenuItem";
 import { useState } from "react";
 import { FormControl } from "@mui/material";
 import Image from "next/image";
-import Link from "next/link";
-import usePostQuery from "@/hooks/java/usePostQuery";
-import { URLS } from "@/constants/url";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/router";
 import toast from "react-hot-toast";
 
 export default function Home() {
-  const [age, setAge] = useState("");
+  const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
-  const onSubmit = async (data) => {
+  const onSubmit = async (e) => {
+    e.preventDefault(); // Qo‘shing
     try {
       const response = await signIn("credentials", {
         username: username,
@@ -24,23 +24,22 @@ export default function Home() {
         redirect: false,
         callbackUrl: "/",
       });
+      console.log("Sending login:", { username, password });
 
-      if (response.ok) {
+      if (response?.ok && !response?.error) {
         toast.success("Kirish muvaffaqiyatli yakunlandi!");
         router.push("/dashboard/main");
       } else {
         toast.error(
-          "Kirish muvaffaqiyatsiz yakunlandi! Iltimos, ma'lumotlaringizni tekshiring."
+          "Login xato! " +
+            (response?.error || "Iltimos, ma'lumotlaringizni tekshiring.")
         );
       }
     } catch (error) {
-      toast.error("An error occurred during login.");
+      toast.error("Tizimga kirishda xatolik yuz berdi.");
     }
   };
 
-  const handleChange = (event) => {
-    setAge(event.target.value);
-  };
   return (
     <div className={"login h-screen"}>
       <div className="">
@@ -65,35 +64,25 @@ export default function Home() {
                   Для входа в систему введите ваше имя пользователя и пароль!
                 </p>
               </div>
-              <FormControl fullWidth className="py-[40px] space-y-[10px]" sx={{fontFamily: "DM Sans, sans-serif",}}>
+              <form
+                onSubmit={onSubmit}
+                className="py-[40px] space-y-[10px] w-full"
+              >
                 <Input
                   label="Имя пользователя"
-                  type="email"
+                  type="text"
+                  onChange={(e) => setUsername(e.target.value)}
                   placeholder="Введите имя пользователя"
                 />
                 <Input
                   label="Пароль"
                   type="password"
+                  onChange={(e) => setPassword(e.target.value)}
                   placeholder="Введите пароль"
                 />
-                <Select
-                  className="w-full text-black mt-[15px]"
-                  id="demo-simple-select"
-                  value={age}
-                  onChange={handleChange}
-                  displayEmpty
-                >
-                  <MenuItem value="" disabled>
-                    Role ni tanlang
-                  </MenuItem>
-                  <MenuItem value={10}>HR</MenuItem>
-                  <MenuItem value={20}>Админ</MenuItem>
-                  <MenuItem value={30}>Руководитель</MenuItem>
-                </Select>
-                <Button onClick={onSubmit}>
-                  Kirish
-                </Button>
-              </FormControl>
+
+                <Button>Kirish</Button>
+              </form>
             </div>
           </div>
         </div>

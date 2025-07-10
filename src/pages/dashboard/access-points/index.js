@@ -1,14 +1,306 @@
 import DashboardLayout from "@/layouts/dashboard/DashboardLayout";
-
+import useGetQuery from "@/hooks/java/useGetQuery";
+import { KEYS } from "@/constants/key";
+import { URLS } from "@/constants/url";
+import { config } from "@/config";
+import { motion } from "framer-motion";
+import { Button, Typography } from "@mui/material";
+import CustomTable from "@/components/table";
+import { get } from "lodash";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import { useState } from "react";
+import MethodModal from "@/components/modal/method-modal";
+import Input from "@/components/input";
+import usePostQuery from "@/hooks/java/usePostQuery";
+import CustomSelect from "@/components/select";
+import ContentLoader from "@/components/loader";
+import toast from "react-hot-toast";
+import DeleteModal from "@/components/modal/delete-modal";
+import { useSession } from "next-auth/react";
 const Index = () => {
+  const { data: session } = useSession();
+  const [createAccessPoint, setCreateAccessPoint] = useState(false);
+  const [editAccessPoint, setEditAccessPoint] = useState(false);
+  const [deleteAccessPoint, setDeleteAccessPoint] = useState(false);
+  const [entryPointName, setEntryPointName] = useState("");
+  const [entryPointShortName, setEntryPointShortName] = useState("");
+  const [selectedStructureOfOrg, setSelectedStructureOfOrg] = useState(null);
+  const [selectedEntryPointId, setSelectedEntryPointId] = useState(null);
+  // get structure of organization
+  const { data: structureOfOrganizations } = useGetQuery({
+    key: KEYS.structureOfOrganizations,
+    url: URLS.structureOfOrganizations,
+    headers: {
+      Authorization: `Bearer ${session.accessToken}`,
+      Accept: "application/json",
+    },
+    enabled: !!session.accessToken,
+  });
+
+  const options = get(structureOfOrganizations, "data", []).map((entry) => ({
+    value: entry.id,
+    label: entry.nameDep,
+  }));
+
+  // get entrypoints
+  const {
+    data: entrypoints,
+    isLoading: isLoadingEntryPoints,
+    isFetching: isFetchingEntryPoints,
+  } = useGetQuery({
+    key: KEYS.entrypoints,
+    url: URLS.entrypoints,
+    headers: {
+      Authorization: `Bearer ${config.JAVA_TEMP_TOKEN}`,
+      Accept: "application/json",
+    },
+    enabled: !!config.JAVA_TEMP_TOKEN,
+  });
+  // create entrypoints
+
+  const { mutate: createEntryPoint } = usePostQuery({
+    key: "create-EntryPoint",
+  });
+
+  const submitCreateEntryPoint = () => {
+    createEntryPoint(
+      {
+        url: URLS.entrypoints,
+        attributes: {
+          entryPointName: entryPointName,
+          entryPointShortName: entryPointShortName,
+          structureId: selectedStructureOfOrg,
+        },
+        config: {
+          headers: {
+            Authorization: `Bearer ${config.JAVA_TEMP_TOKEN}`,
+          },
+        },
+      },
+      {
+        onSuccess: () => {
+          toast.success("Checkpoint muvaffaqiyatli joylandi", {
+            position: "top-center",
+          });
+          setCreateAccessPoint(false);
+        },
+        onError: (error) => {
+          toast.error(`Error is ${error}`, { position: "top-right" });
+        },
+      }
+    );
+  };
+
+  // delete accesspoint
+
+  const handleDeleteCheckPoint = async (id) => {
+    try {
+      const response = await fetch(
+        `${config.JAVA_API_URL}${URLS.entrypoints}/${id}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${config.JAVA_TEMP_TOKEN}`,
+          },
+          body: JSON.stringify({ id }), // agar server bodyda kutsa
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Ошибка при удалении");
+      }
+
+      const result = await response.json();
+      console.log("Deleted:", result);
+      toast.success("Успешно удалено");
+    } catch (error) {
+      console.error(error);
+      toast.error("Не удалось удалить");
+    }
+  };
+
+  const columns = [
+    { accessorKey: "id", header: "№" },
+    { accessorKey: "entryPointName", header: "Имя точки входа" },
+    {
+      accessorKey: "entryPointShortName",
+      header: "Краткое название точки входа.",
+    },
+
+    {
+      accessorKey: "actions",
+      header: "Действия",
+      cell: ({ row }) => (
+        <div className="flex gap-2">
+          <Button
+            onClick={() => {
+              setSelectedCheckpointId(row);
+              setEditCheckpoints(true);
+            }}
+            sx={{
+              width: "32px",
+              height: "32px",
+              minWidth: "32px",
+              background: "#F0D8C8",
+              color: "#FF6200",
+            }}
+          >
+            <EditIcon fontSize="small" />
+          </Button>
+          <Button
+            // onClick={() => handleDeleteCheckPoint(row.id)}
+            onClick={() => {
+              setSelectedEntryPointId(row.original.id);
+              setDeleteAccessPoint(true);
+            }}
+            sx={{
+              width: "32px",
+              height: "32px",
+              minWidth: "32px",
+              background: "#FCD8D3",
+              color: "#FF1E00",
+            }}
+          >
+            <DeleteIcon fontSize="small" />
+          </Button>
+        </div>
+      ),
+      enableSorting: false,
+    },
+  ];
+
+  if (isFetchingEntryPoints || isLoadingEntryPoints) {
+    return (
+      <DashboardLayout>
+        <ContentLoader />
+      </DashboardLayout>
+    );
+  }
   return (
     <DashboardLayout headerTitle={"Точки доступа"}>
-      <div className="flex flex-col items-center justify-center h-full">
-        <h1 className="text-2xl font-bold">Точки доступа</h1>
-        <p className="text-gray-500 mt-4">
-          Здесь будут отображаться точки доступа.
-        </p>
-      </div>
+      <motion.div
+        initial={{ opacity: 0, scale: 0 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="bg-white p-[12px] my-[50px] rounded-md"
+      >
+        <div className="col-span-12 space-y-[15px]">
+          <div className="max-w-[100px]">
+            <Button
+              onClick={() => setCreateAccessPoint(true)}
+              sx={{
+                textTransform: "initial",
+                fontFamily: "DM Sans, sans-serif",
+                backgroundColor: "#4182F9",
+                boxShadow: "none",
+                color: "white",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "4px",
+                fontSize: "14px",
+                minWidth: "100px",
+                borderRadius: "8px",
+              }}
+              variant="contained"
+            >
+              Создать
+            </Button>
+          </div>
+          <CustomTable data={get(entrypoints, "data")} columns={columns} />
+        </div>
+        {/* create modal */}
+
+        {createAccessPoint && (
+          <MethodModal
+            open={createAccessPoint}
+            onClose={() => setCreateAccessPoint(false)}
+          >
+            <Typography variant="h6" className="mb-2">
+              Добавить точку доступа
+            </Typography>
+
+            <div className="my-[30px] space-y-[15px]">
+              <Input
+                name="login"
+                onChange={(e) => {
+                  setEntryPointName(e.target.value);
+                }}
+                label={"Имя точки входа"}
+                placeholder="введите имя точки входа"
+                classNames="col-span-2"
+                inputClass={
+                  "!h-[45px] rounded-[8px] !border-gray-300 text-[15px]"
+                }
+                labelClass={"text-sm"}
+                required
+              />
+              <Input
+                name="login"
+                onChange={(e) => {
+                  setEntryPointShortName(e.target.value);
+                }}
+                label={"Краткое название точки входа."}
+                placeholder="Введите краткое название точки входа."
+                classNames="col-span-2"
+                inputClass={
+                  "!h-[45px] rounded-[8px] !border-gray-300 text-[15px]"
+                }
+                labelClass={"text-sm"}
+                required
+              />
+              <CustomSelect
+                options={options}
+                value={selectedStructureOfOrg}
+                placeholder="Выберите структурное подразделение"
+                onChange={(val) => setSelectedStructureOfOrg(val)}
+              />
+
+              <Button
+                sx={{
+                  textTransform: "initial",
+                  fontFamily: "DM Sans, sans-serif",
+                  backgroundColor: "#4182F9",
+                  boxShadow: "none",
+                  color: "white",
+                  display: "flex", // inline-block emas
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "4px",
+                  fontSize: "14px",
+                  minWidth: "100px", // yoki widthni kengroq bering
+                  borderRadius: "8px",
+                  marginTop: "15px",
+                }}
+                variant="contained"
+                onClick={submitCreateEntryPoint}
+                type="submit"
+              >
+                Создать
+              </Button>
+            </div>
+          </MethodModal>
+        )}
+
+        {/* delete modal */}
+
+        {deleteAccessPoint && (
+          <DeleteModal
+            open={deleteAccessPoint}
+            onClose={() => {
+              setDeleteAccessPoint(false);
+              setSelectedEntryPointId(null);
+            }}
+            deleting={() => {
+              handleDeleteCheckPoint(selectedEntryPointId); // 👈 DELETE so‘rov
+              setDeleteAccessPoint(false);
+              setSelectedEntryPointId(null);
+            }}
+            title="Вы уверены, что хотите удалить эту чекпоинт?"
+          />
+        )}
+      </motion.div>
     </DashboardLayout>
   );
 };

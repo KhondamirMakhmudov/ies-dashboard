@@ -18,6 +18,8 @@ import useDeleteQuery from "@/hooks/java/useDeleteQuery";
 import { config } from "@/config";
 import toast from "react-hot-toast";
 import usePutQuery from "@/hooks/java/usePutQuery";
+import CustomSelect from "@/components/select";
+import { set } from "react-hook-form";
 
 const token =
   "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsImlhdCI6MTc1MjA4NTk1MSwiZXhwIjoxNzUyMTcyMzUxfQ.0nST-uDSUASCSBCpkU10_PCLTzwR6XEKYlmJd9TsD5o";
@@ -54,23 +56,41 @@ const Index = () => {
     enabled: !!token,
   });
 
+  const options = get(entrypoints, "data", []).map((entry) => ({
+    value: entry.id,
+    label: entry.entryPointName,
+  }));
+
   const { mutate: createCheckpoint } = usePostQuery({
     listKeyId: "create-checkpoint",
   });
   // checkpoint yaratish
   const submitCreateCheckPoint = () => {
-    createCheckpoint({
-      url: URLS.createCheckpoint,
-      attributes: {
-        checkPointName: nameOfCheckpointName,
-        entryPointId: selectedEntryPoint,
-      },
-      config: {
-        headers: {
-          Authorization: `Bearer ${token}`,
+    createCheckpoint(
+      {
+        url: URLS.createCheckpoint,
+        attributes: {
+          checkPointName: nameOfCheckpointName,
+          entryPointId: selectedEntryPoint,
+        },
+        config: {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
       },
-    });
+      {
+        onSuccess: () => {
+          toast.success("Checkpoint muvaffaqiyatli joylandi", {
+            position: "top-center",
+          });
+          setCreateCheckpoints(false);
+        },
+        onError: (error) => {
+          toast.error(`Error is ${error}`, { position: "top-right" });
+        },
+      }
+    );
   };
 
   // checkpoint edit qilish
@@ -98,7 +118,7 @@ const Index = () => {
   const handleDeleteCheckPoint = async (id) => {
     try {
       const response = await fetch(
-        `${config.JAVA_API_URL}${URLS.deleteCheckpoint}${id}`,
+        `${config.JAVA_API_URL}${URLS.editOrDeleteCheckpoint}${id}`,
         {
           method: "DELETE",
           headers: {
@@ -218,50 +238,52 @@ const Index = () => {
           onClose={() => setCreateCheckpoints(false)}
         >
           <Typography variant="h6" className="mb-2">
-            Добавить checkpoint
+            Добавить контрольно-пропускной пункт
           </Typography>
 
-          <div>
+          <div className="my-[30px]">
             <Input
-              label="Имя чекпоинта"
               name="login"
               onChange={(e) => {
                 setNameOfCheckpointName(e.target.value);
               }}
               placeholder="Введите имя чекпоинта"
               classNames="col-span-2"
-              inputClass={"!h-[45px] rounded-[12px] text-[15px]"}
+              inputClass={
+                "!h-[45px] rounded-[8px] !border-gray-300 text-[15px]"
+              }
               labelClass={"text-sm"}
               required
             />
 
-            <Select
-              className="w-full text-black mt-[15px] col-span-4"
-              id="demo-simple-select"
+            <CustomSelect
+              options={options}
               value={selectedEntryPoint}
-              onChange={(e) => {
-                e.preventDefault();
-                setSelectedEntryPoint(e.target.value);
-              }}
-              displayEmpty
-            >
-              <MenuItem value="" disabled>
-                Выберите контрольную точку
-              </MenuItem>
-              {get(entrypoints, "data", []).map((entry, index) => (
-                <MenuItem key={index} value={get(entry, "id")}>
-                  {get(entry, "entryPointName")}
-                </MenuItem>
-              ))}
-            </Select>
+              onChange={(val) => setSelectedEntryPoint(val)}
+            />
 
-            <button
+            <Button
+              sx={{
+                textTransform: "initial",
+                fontFamily: "DM Sans, sans-serif",
+                backgroundColor: "#4182F9",
+                boxShadow: "none",
+                color: "white",
+                display: "flex", // inline-block emas
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "4px",
+                fontSize: "14px",
+                minWidth: "100px", // yoki widthni kengroq bering
+                borderRadius: "8px",
+                marginTop: "15px",
+              }}
+              variant="contained"
               onClick={submitCreateCheckPoint}
               type="submit"
-              className="col-span-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-xl transition-all duration-200"
             >
               Создать
-            </button>
+            </Button>
           </div>
         </MethodModal>
       )}
@@ -272,44 +294,52 @@ const Index = () => {
           onClose={() => setEditCheckpoints(false)}
         >
           <Typography variant="h6" className="mb-2">
-            Изменить checkpoint
+            Изменить контрольно-пропускной пункт
           </Typography>
 
-          <div>
+          <div className="my-[30px]">
             <Input
-              label="Имя чекпоинта"
-              onChange={(e) => setNameOfCheckpointName(e.target.value)}
-              value={nameOfCheckpointName}
+              name="login"
+              onChange={(e) => {
+                setNameOfCheckpointName(e.target.value);
+              }}
               placeholder="Введите имя чекпоинта"
               classNames="col-span-2"
-              inputClass={"!h-[45px] rounded-[12px] text-[15px]"}
+              inputClass={
+                "!h-[45px] rounded-[8px] !border-gray-300 text-[15px]"
+              }
               labelClass={"text-sm"}
               required
             />
 
-            <Select
-              className="w-full text-black mt-[15px] col-span-4"
+            <CustomSelect
+              options={options}
               value={selectedEntryPoint}
-              onChange={(e) => setSelectedEntryPoint(e.target.value)}
-              displayEmpty
-            >
-              <MenuItem value="" disabled>
-                Выберите контрольную точку
-              </MenuItem>
-              {get(entrypoints, "data", []).map((entry, index) => (
-                <MenuItem key={index} value={entry.id}>
-                  {entry.entryPointName}
-                </MenuItem>
-              ))}
-            </Select>
+              onChange={(val) => setSelectedEntryPoint(val)}
+            />
 
-            <button
-              onClick={submitCreateCheckPoint}
+            <Button
+              sx={{
+                textTransform: "initial",
+                fontFamily: "DM Sans, sans-serif",
+                backgroundColor: "#F07427",
+                boxShadow: "none",
+                color: "white",
+                display: "flex", // inline-block emas
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "4px",
+                fontSize: "14px",
+                minWidth: "100px", // yoki widthni kengroq bering
+                borderRadius: "8px",
+                marginTop: "15px",
+              }}
+              variant="contained"
+              onClick={submitEditCheckPoint}
               type="submit"
-              className="col-span-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-xl transition-all duration-200"
             >
-              Создать
-            </button>
+              Изменить
+            </Button>
           </div>
         </MethodModal>
       )}
