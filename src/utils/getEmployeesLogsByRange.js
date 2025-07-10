@@ -2,7 +2,12 @@ import axios from "axios";
 import { URLS } from "@/constants/url";
 import { config } from "@/config";
 
-export const getEmployeesLogsByRange = async ({ token, rangeString, startDate, endDate }) => {
+export const getEmployeesLogsByRange = async ({
+  token,
+  rangeString,
+  startDate,
+  endDate,
+}) => {
   if (!rangeString || !startDate || !endDate) return [];
 
   const ids = parseEmployeeIdRange(rangeString);
@@ -10,13 +15,16 @@ export const getEmployeesLogsByRange = async ({ token, rangeString, startDate, e
 
   const requests = ids.map((id) =>
     axios
-      .get(`${config.JAVA_API_URL}${URLS.logEntersOfEmployeeById}${id}/dates/new-output`, {
-        params: { startDate, endDate },
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/json",
-        },
-      })
+      .get(
+        `${config.JAVA_API_URL}${URLS.logEntersOfEmployeeById}${id}/dates/new-output`,
+        {
+          params: { startDate, endDate },
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: "application/json",
+          },
+        }
+      )
       .then((res) => res.data.map((item) => ({ ...item, empId: id })))
       .catch(() => [])
   );
