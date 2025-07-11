@@ -20,10 +20,10 @@ import toast from "react-hot-toast";
 import usePutQuery from "@/hooks/java/usePutQuery";
 import CustomSelect from "@/components/select";
 import { set } from "react-hook-form";
+import { useSession } from "next-auth/react";
 
-const token =
-  "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsImlhdCI6MTc1MjA4NTk1MSwiZXhwIjoxNzUyMTcyMzUxfQ.0nST-uDSUASCSBCpkU10_PCLTzwR6XEKYlmJd9TsD5o";
 const Index = () => {
+  const { data: session } = useSession();
   const [createCheckpoints, setCreateCheckpoints] = useState(false);
   const [editCheckpoints, setEditCheckpoints] = useState(false);
   const [selectedEntryPoint, setSelectedEntryPoint] = useState("");
@@ -38,10 +38,10 @@ const Index = () => {
     key: KEYS.checkpoints,
     url: URLS.checkpoints,
     headers: {
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${session?.accessToken}`,
       Accept: "application/json",
     },
-    enabled: !!token,
+    enabled: !!session?.accessToken,
   });
 
   // entrypoint get
@@ -50,10 +50,10 @@ const Index = () => {
     key: KEYS.entrypoints,
     url: URLS.entrypoints,
     headers: {
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${session?.accessToken}`,
       Accept: "application/json",
     },
-    enabled: !!token,
+    enabled: !!session?.accessToken,
   });
 
   const options = get(entrypoints, "data", []).map((entry) => ({
@@ -75,7 +75,7 @@ const Index = () => {
         },
         config: {
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${session?.accessToken}`,
           },
         },
       },
@@ -108,7 +108,7 @@ const Index = () => {
       },
       config: {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${session?.accessToken}`,
         },
       },
     });
@@ -123,7 +123,7 @@ const Index = () => {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${session?.accessToken}`,
           },
           body: JSON.stringify({ id }), // agar server bodyda kutsa
         }

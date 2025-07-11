@@ -8,15 +8,21 @@ import Link from "next/link";
 import MarkUnreadChatAltOutlinedIcon from "@mui/icons-material/MarkUnreadChatAltOutlined";
 import { useRouter } from "next/router";
 import ExitModal from "../modal/exit-modal";
+import { signOut, useSession } from "next-auth/react";
 
 const MainContentHeader = ({ children, toggleSidebar }) => {
+  const { data: session } = useSession();
   const [openProfile, setOpenProfile] = useState(false);
   const [openNotification, setOpenNotification] = useState(false);
   const [openExitModal, setOpenExitModal] = useState(false);
   const router = useRouter();
 
+  const handleLogout = async () => {
+    await signOut({ callbackUrl: "/" });
 
-  const handleLogOut = () => router.push("/");
+    localStorage.clear();
+    sessionStorage.clear();
+  };
   const handleOpenExitModal = () => setOpenExitModal(false);
 
   const handleClickProfile = () => {
@@ -79,7 +85,9 @@ const MainContentHeader = ({ children, toggleSidebar }) => {
           <NotificationsIcon />
         </IconButton>
         <IconButton onClick={handleClickProfile}>
-          <Avatar {...stringAvatar("Otavali Saksonov")} />
+          <Avatar
+            {...stringAvatar(`${session?.user?.name} ${session?.user?.name}`)}
+          />
         </IconButton>
 
         {openNotification && (
@@ -117,7 +125,7 @@ const MainContentHeader = ({ children, toggleSidebar }) => {
         {openProfile && (
           <div className="w-60 h-45 bg-white absolute border border-gray-200 overflow-hidden right-0 z-50 top-18 rounded-lg ">
             <p className="text-base font-medium p-[18px]">
-              👋 Otavali Saksonov
+              👋 {session?.user?.name}
             </p>
 
             <div className="bg-gray-200 w-full h-[1px]"></div>
@@ -133,7 +141,7 @@ const MainContentHeader = ({ children, toggleSidebar }) => {
                     bgcolor: "#ECF3FF",
                   }}
                 >
-                  <p>Profil sozlamalari</p>
+                  <p>Настройки профиля</p>
                 </Button>
               </Link>
 
@@ -156,7 +164,11 @@ const MainContentHeader = ({ children, toggleSidebar }) => {
         )}
       </div>
 
-      <ExitModal open={openExitModal} onClose={handleOpenExitModal} handleLogout={handleLogOut}/>
+      <ExitModal
+        open={openExitModal}
+        onClose={handleOpenExitModal}
+        handleLogout={handleLogout}
+      />
     </div>
   );
 };

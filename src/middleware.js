@@ -18,13 +18,13 @@ export function middleware(req) {
   }
 
   // Login bo‘lgan, lekin `/dashboard/reports`dan boshqa sahifaga kirsa → `reports`ga redirect
-  if (token && isDashboardPath && pathname !== "/dashboard/reports") {
-    return NextResponse.redirect(new URL("/dashboard/reports", req.url));
+  if (token && isDashboardPath && pathname !== "/dashboard/checkpoints") {
+    return NextResponse.redirect(new URL("/dashboard/checkpoints", req.url));
   }
 
   return NextResponse.next(); // Ruxsat
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*"], // faqat dashboard ichidagi sahifalar uchun ishlaydi
+  matcher: ["/dashboard/abs"], // faqat dashboard ichidagi sahifalar uchun ishlaydi
 };

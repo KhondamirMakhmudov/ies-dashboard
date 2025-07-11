@@ -32,7 +32,7 @@ const CustomSelect = ({
   const selectedLabel = options.find((opt) => opt.value === value)?.label;
 
   return (
-    <div className="relative w-full col-span-4 mt-[15px]" ref={selectRef}>
+    <div className="relative w-full col-span-4" ref={selectRef}>
       <button
         type="button"
         onClick={toggleDropdown}

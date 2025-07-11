@@ -23,6 +23,7 @@ import WifiIcon from "@mui/icons-material/Wifi";
 import SecurityIcon from "@mui/icons-material/Security";
 import AssessmentIcon from "@mui/icons-material/Assessment";
 import ExitModal from "../modal/exit-modal";
+import { signOut } from "next-auth/react";
 const menuItems = [
   {
     text: "Обзор",
@@ -86,8 +87,11 @@ export default function Sidebar({ isOpen = true }) {
     setOpenExitModal(false);
   };
 
-  const handleLogout = () => {
-    router.push("/");
+  const handleLogout = async () => {
+    await signOut({ callbackUrl: "/" });
+
+    localStorage.clear();
+    sessionStorage.clear();
   };
 
   return (
@@ -113,8 +117,6 @@ export default function Sidebar({ isOpen = true }) {
         </div>
 
         <div className="w-full h-[1px] bg-gray-200 my-[10px]"></div>
-
-
 
         <List sx={{ fontFamily: "DM Sans, sans-serif", color: "#A0AEC0FF" }}>
           {menuItems.map((item, index) => (

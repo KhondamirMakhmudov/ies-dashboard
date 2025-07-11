@@ -9,6 +9,7 @@ import { ThemeProvider, createTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import "@/styles/globals.css";
 import "@/styles/loader.css";
+import "@/styles/iesloader.css";
 import theme from "@/components/theme/theme";
 
 export default function App({
@@ -23,7 +24,6 @@ export default function App({
           <ThemeProvider theme={theme}>
             <CssBaseline />
             <Component {...pageProps} />
-
           </ThemeProvider>
           <ReactQueryDevtools initialIsOpen={false} />
           <ClientOnlyToaster />

@@ -4,13 +4,15 @@ import Input from "@/components/input";
 
 import { useState } from "react";
 import Image from "next/image";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import toast from "react-hot-toast";
 import { motion } from "framer-motion";
 import ContentLoader from "@/components/loader";
+import Link from "next/link";
 
 export default function Home() {
+  const { data: session } = useSession();
   const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -28,7 +30,7 @@ export default function Home() {
       });
 
       if (response?.ok && !response?.error) {
-        toast.success("Kirish muvaffaqiyatli yakunlandi!");
+        toast.success("Добро пожаловать");
         router.push("/dashboard/main");
       } else {
         toast.error(
@@ -88,39 +90,55 @@ export default function Home() {
                 <h1 className="text-[36px] mb-[12px] font-semibold">
                   Вход в систему
                 </h1>
-                <p className="text-gray-400">
-                  Для входа в систему введите ваше имя пользователя и пароль!
-                </p>
+                {session?.accessToken ? (
+                  ""
+                ) : (
+                  <p className="text-gray-400">
+                    Для входа в систему введите ваше имя пользователя и пароль!
+                  </p>
+                )}
               </div>
 
-              <motion.form
-                onSubmit={onSubmit}
-                className="py-[40px] space-y-[10px] w-full"
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.7 }}
-              >
-                <Input
-                  label="Имя пользователя"
-                  type="text"
-                  inputClass="!h-[48px] rounded-[8px] !border-gray-300 text-[15px]"
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Введите имя пользователя"
-                />
-                <Input
-                  label="Пароль"
-                  type="password"
-                  inputClass="!h-[48px] rounded-[8px] !border-gray-300 text-[15px]"
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Введите пароль"
-                />
+              {session?.accessToken ? (
                 <motion.div
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.97 }}
+                  className="w-full"
                 >
-                  <Button>Kirish</Button>
+                  <Button sx={{ width: "100%" }}>
+                    <Link href={"/dashboard/main"}>Вход</Link>
+                  </Button>
                 </motion.div>
-              </motion.form>
+              ) : (
+                <motion.form
+                  onSubmit={onSubmit}
+                  className="py-[40px] space-y-[10px] w-full"
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.7 }}
+                >
+                  <Input
+                    label="Имя пользователя"
+                    type="text"
+                    inputClass="!h-[48px] rounded-[8px] !border-gray-300 text-[15px]"
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="Введите имя пользователя"
+                  />
+                  <Input
+                    label="Пароль"
+                    type="password"
+                    inputClass="!h-[48px] rounded-[8px] !border-gray-300 text-[15px]"
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Введите пароль"
+                  />
+                  <motion.div
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                  >
+                    <Button>Вход</Button>
+                  </motion.div>
+                </motion.form>
+              )}
             </motion.div>
           </motion.div>
         </div>

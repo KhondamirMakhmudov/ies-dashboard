@@ -19,6 +19,7 @@ import MethodModal from "@/components/modal/method-modal";
 import usePostQuery from "@/hooks/java/usePostQuery";
 import { config } from "@/config";
 import { useSession } from "next-auth/react";
+import CustomSelect from "@/components/select";
 const ipRegex =
   /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
 
@@ -27,6 +28,10 @@ const Index = () => {
   const [createCameraModal, setCreateCameraModal] = useState(false);
   const [editCameraModal, setEditCameraModal] = useState(false);
   const [deleteCameraModal, setDeleteCameraModal] = useState(false);
+  const [ipAddress, setIpAddress] = useState("");
+  const [building, setBuilding] = useState("");
+  const [login, setLogin] = useState("");
+  const [password, setPassword] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("");
   const [selectedEntryPoint, setSelectedEntryPoint] = useState("");
   const [selectedCheckPoint, setSelectedCheckPoint] = useState("");
@@ -49,10 +54,10 @@ const Index = () => {
     key: KEYS.allCameras,
     url: URLS.allCameras,
     headers: {
-      Authorization: `Bearer ${session.accessToken}`,
+      Authorization: `Bearer ${session?.accessToken}`,
       Accept: "application/json",
     },
-    enabled: !!session.accessToken,
+    enabled: !!session?.accessToken,
   });
 
   // department get
@@ -60,11 +65,16 @@ const Index = () => {
     key: KEYS.departments,
     url: URLS.departments,
     headers: {
-      Authorization: `Bearer ${session.accessToken}`,
+      Authorization: `Bearer ${session?.accessToken}`,
       Accept: "application/json",
     },
-    enabled: !!session.accessToken,
+    enabled: !!session?.accessToken,
   });
+
+  const optionsDepartments = get(departments, "data", []).map((entry) => ({
+    value: entry.id,
+    label: entry.nameDep,
+  }));
 
   // entrypoint get
 
@@ -72,22 +82,33 @@ const Index = () => {
     key: KEYS.entrypoints,
     url: URLS.entrypoints,
     headers: {
-      Authorization: `Bearer ${session.accessToken}`,
+      Authorization: `Bearer ${session?.accessToken}`,
       Accept: "application/json",
     },
-    enabled: !!session.accessToken,
+    enabled: !!session?.accessToken,
   });
+
+  const options = get(entrypoints, "data", []).map((entry) => ({
+    value: entry.id,
+    label: entry.entryPointName,
+  }));
 
   // checkpoint get
   const { data: checkpoints } = useGetQuery({
     key: KEYS.checkpoints,
     url: URLS.checkpoints,
     headers: {
-      Authorization: `Bearer ${session.accessToken}`,
+      Authorization: `Bearer ${session?.accessToken}`,
       Accept: "application/json",
     },
-    enabled: !!session.accessToken,
+    enabled: !!session?.accessToken,
   });
+
+  const optionsCheckpoints = get(checkpoints, "data", []).map((entry) => ({
+    value: entry.id,
+    label: entry.checkPointName,
+  }));
+
   const { mutate: createCamera } = usePostQuery({
     listKeyId: "create-camera",
   });
@@ -96,18 +117,18 @@ const Index = () => {
     createCamera({
       url: URLS.createCamera,
       attributes: {
-        ipAddress: "198.52.2.4",
-        building: "Главный офис",
-        login: "iesqwerty",
-        password: "ies2025",
-        // departmentId: 1,
-        checkPointId: 2,
+        ipAddress: ipAddress,
+        building: building,
+        login: login,
+        password: password,
+        // departmentId: selectedDepartment,
+        checkPointId: selectedCheckPoint,
         doorTypeId: 1,
         isActive: 1,
       },
       config: {
         headers: {
-          Authorization: `Bearer ${session.accessToken}`,
+          Authorization: `Bearer ${session?.accessToken}`,
         },
       },
     });
@@ -171,7 +192,7 @@ const Index = () => {
     // You can send it to your API here
   };
 
-  if (!allCameras) {
+  if (isLoading || isFetching) {
     return (
       <DashboardLayout>
         <ContentLoader />
@@ -213,10 +234,9 @@ const Index = () => {
               <p>Создать</p>
             </Button>
           </div>
-          <CustomTable data={get(allCameras, "data")} columns={columns} />
+          <CustomTable data={get(allCameras, "data", [])} columns={columns} />
         </div>
         {/* delete modal */}
-
         <DeleteModal
           open={deleteCameraModal}
           onClose={() => setDeleteCameraModal(false)}
@@ -233,11 +253,7 @@ const Index = () => {
             Добавить камеру
           </Typography>
 
-          <div className="my-[15px] border-t border-t-[#C9C9C9] py-[10px]">
-            <Typography variant="h6" sx={{ fontSize: "15px" }}>
-              Основная информация
-            </Typography>
-
+          <div className="my-[15px]">
             <form className="grid grid-cols-4 my-[30px] gap-[15px]">
               <Input
                 label="IP адрес"
@@ -245,18 +261,39 @@ const Index = () => {
                 name="ipAddress"
                 placeholder="Введите IP адрес"
                 classNames="col-span-4"
-                inputClass={"!h-[45px] rounded-[12px] text-[15px]"}
+                inputClass={
+                  "!h-[45px] rounded-[8px] !border-gray-300 text-[15px]"
+                }
+                value={ipAddress}
                 labelClass={"text-sm"}
+                onChange={(e) => setIpAddress(e.target.value)}
                 pattern={ipRegex.source}
                 required
+              />
+
+              <Input
+                label="Здание"
+                name="building"
+                placeholder="Введите название здания"
+                classNames="col-span-4"
+                labelClass={"text-sm"}
+                inputClass={
+                  "!h-[45px] rounded-[8px] !border-gray-300 text-[15px]"
+                }
+                value={building}
+                onChange={(e) => setBuilding(e.target.value)}
               />
 
               <Input
                 label="Имя пользователя"
                 name="login"
                 placeholder="Введите имя пользователя"
+                value={login}
+                onChange={(e) => setLogin(e.target.value)}
                 classNames="col-span-2"
-                inputClass={"!h-[45px] rounded-[12px] text-[15px]"}
+                inputClass={
+                  "!h-[45px] rounded-[8px] !border-gray-300 text-[15px]"
+                }
                 labelClass={"text-sm"}
                 required
               />
@@ -266,68 +303,33 @@ const Index = () => {
                 name="password"
                 type="text"
                 placeholder="Введите пароль"
-                inputClass={"!h-[45px] rounded-[12px] text-[15px]"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                inputClass={
+                  "!h-[45px] rounded-[8px] !border-gray-300 text-[15px]"
+                }
                 labelClass={"text-sm"}
                 classNames="col-span-2"
                 required
               />
 
-              <Select
-                className="w-full text-black mt-[15px] col-span-4"
-                id="demo-simple-select"
+              {/* <CustomSelect
+                options={optionsDepartments}
                 value={selectedDepartment}
-                onChange={handleChange}
-                displayEmpty
-              >
-                <MenuItem value="" disabled>
-                  Выберите департамент
-                </MenuItem>
-                {get(departments, "data", []).map((department, index) => (
-                  <MenuItem key={index} value={get(department, "id")}>
-                    {get(department, "nameDep")}
-                  </MenuItem>
-                ))}
-              </Select>
+                onChange={(val) => setSelectedDepartment(val)}
+              /> */}
 
-              <Select
-                className="w-full text-black mt-[15px] col-span-4"
-                id="demo-simple-select"
+              <CustomSelect
+                options={options}
                 value={selectedEntryPoint}
-                onChange={(e) => {
-                  e.preventDefault();
-                  setSelectedEntryPoint(e.target.value);
-                }}
-                displayEmpty
-              >
-                <MenuItem value="" disabled>
-                  Выберите контрольную точку
-                </MenuItem>
-                {get(entrypoints, "data", []).map((entry, index) => (
-                  <MenuItem key={index} value={get(entry, "id")}>
-                    {get(entry, "entryPointName")}
-                  </MenuItem>
-                ))}
-              </Select>
+                onChange={(val) => setSelectedEntryPoint(val)}
+              />
 
-              <Select
-                className="w-full text-black mt-[15px] col-span-4"
-                id="demo-simple-select"
+              <CustomSelect
+                options={optionsCheckpoints}
                 value={selectedCheckPoint}
-                onChange={(e) => {
-                  e.preventDefault();
-                  setSelectedCheckPoint(e.target.value);
-                }}
-                displayEmpty
-              >
-                <MenuItem value="" disabled>
-                  Выберите точки доступа
-                </MenuItem>
-                {get(checkpoints, "data", []).map((entry, index) => (
-                  <MenuItem key={index} value={get(entry, "id")}>
-                    {get(entry, "checkPointName")}
-                  </MenuItem>
-                ))}
-              </Select>
+                onChange={(val) => setSelectedCheckPoint(val)}
+              />
 
               <button
                 type="submit"

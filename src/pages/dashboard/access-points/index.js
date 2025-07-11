@@ -32,10 +32,10 @@ const Index = () => {
     key: KEYS.structureOfOrganizations,
     url: URLS.structureOfOrganizations,
     headers: {
-      Authorization: `Bearer ${session.accessToken}`,
+      Authorization: `Bearer ${session?.accessToken}`,
       Accept: "application/json",
     },
-    enabled: !!session.accessToken,
+    enabled: !!session?.accessToken,
   });
 
   const options = get(structureOfOrganizations, "data", []).map((entry) => ({
@@ -52,10 +52,10 @@ const Index = () => {
     key: KEYS.entrypoints,
     url: URLS.entrypoints,
     headers: {
-      Authorization: `Bearer ${config.JAVA_TEMP_TOKEN}`,
+      Authorization: `Bearer ${session?.accessToken}`,
       Accept: "application/json",
     },
-    enabled: !!config.JAVA_TEMP_TOKEN,
+    enabled: !!session?.accessToken,
   });
   // create entrypoints
 
@@ -74,7 +74,7 @@ const Index = () => {
         },
         config: {
           headers: {
-            Authorization: `Bearer ${config.JAVA_TEMP_TOKEN}`,
+            Authorization: `Bearer ${session?.accessToken}`,
           },
         },
       },
@@ -102,7 +102,7 @@ const Index = () => {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${config.JAVA_TEMP_TOKEN}`,
+            Authorization: `Bearer ${session?.accessToken}`,
           },
           body: JSON.stringify({ id }), // agar server bodyda kutsa
         }
