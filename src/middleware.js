@@ -26,5 +26,5 @@ export function middleware(req) {
 }
 
 export const config = {
-  matcher: ["/dashboard/abs"], // faqat dashboard ichidagi sahifalar uchun ishlaydi
+  matcher: ["/main/"], // faqat dashboard ichidagi sahifalar uchun ishlaydi
 };

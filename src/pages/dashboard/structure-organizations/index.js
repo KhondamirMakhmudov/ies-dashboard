@@ -11,88 +11,7 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { useState } from "react";
 import EditIcon from "@mui/icons-material/Edit";
 import AddIcon from "@mui/icons-material/Add";
-import {motion} from "framer-motion"
-
-const departments = [
-  { id: 1, name: "Котельный цех" },
-  { id: 2, name: "Электроцех" },
-  { id: 3, name: "Цех автоматики и измерений" },
-  { id: 4, name: "Ремонтный отдел" },
-  { id: 5, name: "Отдел охраны труда" },
-];
-
-const employees = [
-  {
-    id: 1,
-    fullName: "Ибрагимов Шерзод",
-    departmentId: 1,
-    position: "Инженер-теплотехник",
-    phone: "+998 90 123 45 67",
-  },
-  {
-    id: 2,
-    fullName: "Насиров Аброр",
-    departmentId: 1,
-    position: "Оператор котла",
-    phone: "+998 90 234 56 78",
-  },
-  {
-    id: 3,
-    fullName: "Саидова Зарина",
-    departmentId: 2,
-    position: "Электроинженер",
-    phone: "+998 91 765 43 21",
-  },
-  {
-    id: 4,
-    fullName: "Ахмедов Жахонгир",
-    departmentId: 2,
-    position: "Техник-электрик",
-    phone: "+998 91 111 22 33",
-  },
-  {
-    id: 5,
-    fullName: "Абдуллаев Азиз",
-    departmentId: 3,
-    position: "Техник-измеритель",
-    phone: "+998 93 111 22 33",
-  },
-  {
-    id: 6,
-    fullName: "Юсупов Дилшод",
-    departmentId: 3,
-    position: "Системный техник",
-    phone: "+998 93 333 44 55",
-  },
-  {
-    id: 7,
-    fullName: "Нормуродов Мухаммад",
-    departmentId: 4,
-    position: "Слесарь-ремонтник",
-    phone: "+998 99 777 88 66",
-  },
-  {
-    id: 8,
-    fullName: "Мирзаев Умид",
-    departmentId: 4,
-    position: "Механик",
-    phone: "+998 99 123 45 67",
-  },
-  {
-    id: 9,
-    fullName: "Хакимова Гулноза",
-    departmentId: 5,
-    position: "Инспектор по охране труда",
-    phone: "+998 95 444 55 66",
-  },
-  {
-    id: 10,
-    fullName: "Тиллаев Илхом",
-    departmentId: 5,
-    position: "Специалист по ТБ",
-    phone: "+998 95 777 00 11",
-  },
-];
+import { motion } from "framer-motion";
 
 const Index = () => {
   const [open, setOpen] = useState(false);
@@ -149,7 +68,11 @@ const Index = () => {
   return (
     <DashboardLayout headerTitle={"Структура организации"}>
       <div className="grid grid-cols-12 gap-4 my-[50px]">
-        <motion.div initial={{opacity: 0, translateY: "-30px"}} animate={{ opacity: 1, translateY: 0}} className="col-span-3 self-start bg-white p-[24px] rounded-md ">
+        <motion.div
+          initial={{ opacity: 0, translateY: "-30px" }}
+          animate={{ opacity: 1, translateY: 0 }}
+          className="col-span-3 self-start bg-white p-[24px] rounded-md "
+        >
           <div>
             <div className="flex justify-between">
               <Typography variant="h6" className="mb-4">
@@ -194,8 +117,12 @@ const Index = () => {
               </ul>
             )}
           </div>
-        </motion.div >
-        <motion.div initial={{opacity: 0, translateY: "30px"}} animate={{ opacity: 1, translateY: 0}} className="col-span-9 bg-white p-[24px] rounded-md ">
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, translateY: "30px" }}
+          animate={{ opacity: 1, translateY: 0 }}
+          className="col-span-9 bg-white p-[24px] rounded-md "
+        >
           <Typography variant="h6" className="mb-4">
             Список сотрудников
           </Typography>

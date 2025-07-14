@@ -21,8 +21,9 @@ import usePutQuery from "@/hooks/java/usePutQuery";
 import CustomSelect from "@/components/select";
 import { set } from "react-hook-form";
 import { useSession } from "next-auth/react";
-
+import { useQueryClient } from "@tanstack/react-query";
 const Index = () => {
+  const queryClient = useQueryClient();
   const { data: session } = useSession();
   const [createCheckpoints, setCreateCheckpoints] = useState(false);
   const [editCheckpoints, setEditCheckpoints] = useState(false);
@@ -84,7 +85,10 @@ const Index = () => {
           toast.success("Checkpoint muvaffaqiyatli joylandi", {
             position: "top-center",
           });
+          setNameOfCheckpointName("");
           setCreateCheckpoints(false);
+          setSelectedEntryPoint([]);
+          queryClient.invalidateQueries(KEYS.checkpoints);
         },
         onError: (error) => {
           toast.error(`Error is ${error}`, { position: "top-right" });
@@ -100,18 +104,35 @@ const Index = () => {
   });
 
   const submitEditCheckPoint = (id) => {
-    editCheckpoint({
-      url: `${URLS.editOrDeleteCheckpoint}${id}`,
-      attributes: {
-        checkPointName: nameOfCheckpointName,
-        entryPointId: selectedEntryPoint,
-      },
-      config: {
-        headers: {
-          Authorization: `Bearer ${session?.accessToken}`,
+    editCheckpoint(
+      {
+        url: `${URLS.editOrDeleteCheckpoint}${id}`,
+        attributes: {
+          checkPointName: nameOfCheckpointName,
+          entryPointId: selectedEntryPoint,
+        },
+        config: {
+          headers: {
+            Authorization: `Bearer ${session?.accessToken}`,
+          },
         },
       },
-    });
+      {
+        onSuccess: () => {
+          toast.success("Checkpoint muvaffaqiyatli tahrirlandi", {
+            position: "top-center",
+          });
+          setEditCheckpoints(false);
+          setNameOfCheckpointName("");
+          setSelectedEntryPoint(null);
+          setCreateCheckpoints(false);
+          queryClient.invalidateQueries(KEYS.checkpoints);
+        },
+        onError: (error) => {
+          toast.error(`Error is ${error}`, { position: "top-right" });
+        },
+      }
+    );
   };
 
   // checkpoint o'chirish
@@ -125,7 +146,7 @@ const Index = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${session?.accessToken}`,
           },
-          body: JSON.stringify({ id }), // agar server bodyda kutsa
+          body: JSON.stringify({ id }), // faqat agar backend body kutsa
         }
       );
 
@@ -133,8 +154,14 @@ const Index = () => {
         throw new Error("Ошибка при удалении");
       }
 
-      const result = await response.json();
-      console.log("Deleted:", result);
+      let result = null;
+
+      // Faqat agar javob body mavjud bo‘lsa
+      if (response.status !== 204) {
+        result = await response.json();
+        console.log("Deleted:", result);
+      }
+      queryClient.invalidateQueries(KEYS.checkpoints);
       toast.success("Успешно удалено");
     } catch (error) {
       console.error(error);
@@ -153,8 +180,11 @@ const Index = () => {
   const columns = [
     { accessorKey: "id", header: "№" },
     { accessorKey: "checkPointName", header: "Тип двери" },
-    { accessorKey: "entryPoint.entryPointName", header: "Подразделение" },
-    { accessorKey: "checkPointName", header: "Контрольная точка" },
+    { accessorKey: "entryPoint.entryPointName", header: "Точки входа" },
+    {
+      accessorKey: "entryPoint.entryPointShortName",
+      header: "Краткое имя точки входа",
+    },
 
     {
       accessorKey: "actions",
@@ -163,8 +193,12 @@ const Index = () => {
         <div className="flex gap-2">
           <Button
             onClick={() => {
-              setSelectedCheckpointId(row);
+              setSelectedCheckpointId(row?.original.id);
               setEditCheckpoints(true);
+              setNameOfCheckpointName(row.original.checkPointName);
+              setSelectedEntryPoint(
+                options.find((opt) => opt.label === row.original.entryPointName)
+              );
             }}
             sx={{
               width: "32px",
@@ -177,9 +211,8 @@ const Index = () => {
             <EditIcon fontSize="small" />
           </Button>
           <Button
-            // onClick={() => handleDeleteCheckPoint(row.id)}
             onClick={() => {
-              setSelectedCheckpointId(row.original.id);
+              setSelectedCheckpointId(row?.original.id);
               setDeleteCheckpoints(true);
             }}
             sx={{
@@ -229,9 +262,8 @@ const Index = () => {
           </div>
           <CustomTable data={get(checkpoints, "data")} columns={columns} />
         </div>
-        {/* delete modal */}
       </motion.div>
-
+      {/* create checkpoint */}
       {createCheckpoints && (
         <MethodModal
           open={createCheckpoints}
@@ -241,7 +273,7 @@ const Index = () => {
             Добавить контрольно-пропускной пункт
           </Typography>
 
-          <div className="my-[30px]">
+          <div className="my-[30px] space-y-[20px]">
             <Input
               name="login"
               onChange={(e) => {
@@ -287,7 +319,7 @@ const Index = () => {
           </div>
         </MethodModal>
       )}
-
+      {/* edit checkpoint */}
       {editCheckpoints && (
         <MethodModal
           open={editCheckpoints}
@@ -297,7 +329,7 @@ const Index = () => {
             Изменить контрольно-пропускной пункт
           </Typography>
 
-          <div className="my-[30px]">
+          <div className="my-[30px] space-y-[15px]">
             <Input
               name="login"
               onChange={(e) => {
@@ -309,6 +341,7 @@ const Index = () => {
                 "!h-[45px] rounded-[8px] !border-gray-300 text-[15px]"
               }
               labelClass={"text-sm"}
+              value={nameOfCheckpointName}
               required
             />
 
@@ -335,7 +368,7 @@ const Index = () => {
                 marginTop: "15px",
               }}
               variant="contained"
-              onClick={submitEditCheckPoint}
+              onClick={() => submitEditCheckPoint(selectedCheckpointId)}
               type="submit"
             >
               Изменить
@@ -343,7 +376,7 @@ const Index = () => {
           </div>
         </MethodModal>
       )}
-
+      {/* delete checkpoint */}
       {deleteCheckpoints && (
         <DeleteModal
           open={deleteCheckpoints}

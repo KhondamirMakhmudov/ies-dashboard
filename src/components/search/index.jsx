@@ -1,43 +1,49 @@
-import { useState } from "react";
-import { InputBase, Paper, IconButton } from "@mui/material";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import SearchIcon from "@mui/icons-material/Search";
 
-function SearchInput({ onSearch }) {
-  const [searchTerm, setSearchTerm] = useState("");
+export default function CustomSearch({
+  onSearch,
+  placeholder = "Поиск...",
+  delay = 300,
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchValue, setSearchValue] = useState("");
 
-  const handleSearch = () => {
-    if (searchTerm.trim()) {
-      onSearch(searchTerm);
-    }
-  };
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      onSearch?.(searchValue);
+    }, delay);
+
+    return () => clearTimeout(timeout); // debounce effect
+  }, [searchValue]);
 
   return (
-    <Paper
-      component="form"
-      sx={{
-        boxShadow: "none",
-        marginRight: "20px",
-        borderRadius: "8px",
-        fontFamily: "DM Sans, sans-serif",
-      }}
-      onSubmit={(e) => {
-        e.preventDefault();
-        handleSearch();
-      }}
-      className="flex items-center w-full max-w-md p-1 border border-gray-300 rounded-md shadow-sm"
-    >
-      <InputBase
-        sx={{ ml: 1, flex: 1 }}
-        placeholder="Qidirish..."
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        inputProps={{ "aria-label": "qidirish" }}
-      />
-      <IconButton type="submit" sx={{ p: "10px" }} aria-label="search">
-        <SearchIcon />
-      </IconButton>
-    </Paper>
+    <div className="relative w-fit cursor-pointer">
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="text-gray-600 hover:text-black focus:outline-none cursor-pointer"
+        >
+          <SearchIcon size={22} />
+        </button>
+
+        <AnimatePresence>
+          {isOpen && (
+            <motion.input
+              type="text"
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+              initial={{ width: 0, opacity: 0 }}
+              animate={{ width: 200, opacity: 1 }}
+              exit={{ width: 0, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              placeholder={placeholder}
+              className="px-3 py-[6px] border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+            />
+          )}
+        </AnimatePresence>
+      </div>
+    </div>
   );
 }
-
-export default SearchInput;

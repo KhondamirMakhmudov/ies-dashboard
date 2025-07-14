@@ -5,9 +5,8 @@ export const URLS = {
   structureOfOrganizations: "/api/structures",
   // CheckPoints
   checkpoints: "api/checkpoints",
-  createCheckpoint: "/api/checkpoints",
-  editOrDeleteCheckpoint: "/api/checkpoints/",
-
+  createCheckpoint: "api/checkpoints",
+  editOrDeleteCheckpoint: "api/checkpoints/",
 
   // EntryPoints
   entrypoints: "api/entry-points",

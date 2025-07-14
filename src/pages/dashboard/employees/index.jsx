@@ -7,7 +7,7 @@ import { useState } from "react";
 import HalfModal from "@/components/modal/half-modal";
 import Input from "@/components/input";
 import Image from "next/image";
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import {
   Table,
   TableBody,
@@ -30,7 +30,7 @@ import {
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import { employees } from "@/dummy-data/employees";
 import EmployeeDetailsTabs from "@/components/tab";
-import {motion} from "framer-motion";
+import { motion } from "framer-motion";
 import ImageUploader from "@/components/image-uploader";
 
 const Index = () => {
@@ -244,16 +244,23 @@ const Index = () => {
           <form className="space-y-[20px] py-[30px]">
             {/* Asosiy ma'lumotlar */}
             <div className="border border-[#E9E9E9] p-3 rounded-xl">
-              <div onClick={() => setShowDropdownMain(!showDropdownMain)} className="flex justify-between items-center cursor-pointer">
+              <div
+                onClick={() => setShowDropdownMain(!showDropdownMain)}
+                className="flex justify-between items-center cursor-pointer"
+              >
                 <Typography variant="h7">Основные данные</Typography>
-                
+
                 <IconButton>
-                  <KeyboardArrowDownIcon/>
+                  <KeyboardArrowDownIcon />
                 </IconButton>
               </div>
 
-              {!showDropdownMain &&               
-                <motion.div initial={{ opacity: 0, translateY: "-30px" }} animate={{ opacity: 1, translateY: 0 }} className="cursor-pointer">
+              {!showDropdownMain && (
+                <motion.div
+                  initial={{ opacity: 0, translateY: "-30px" }}
+                  animate={{ opacity: 1, translateY: 0 }}
+                  className="cursor-pointer"
+                >
                   <Input
                     label="Имя"
                     placeholder="Имя пользователя"
@@ -306,22 +313,27 @@ const Index = () => {
                   />
 
                   <FormControl fullWidth sx={{ minWidth: 200 }}>
-                    <InputLabel                       sx={{
+                    <InputLabel
+                      sx={{
                         fontSize: "14px",
                         backgroundColor: "#fff",
                         px: "4px",
                         mx: "4px",
-                      }} id="gender-label">Jins</InputLabel>
+                      }}
+                      id="gender-label"
+                    >
+                      Jins
+                    </InputLabel>
                     <Select
-                                          sx={{
+                      sx={{
                         height: "45px",
                         borderRadius: "5px",
                         backgroundColor: "#fff",
-                       
+
                         fontSize: "14px",
                         "& fieldset": {
                           border: "1px solid #E9E9E9", // border style
-                          borderRadius: "8px",         // radius
+                          borderRadius: "8px", // radius
                         },
                       }}
                       MenuProps={{
@@ -339,24 +351,29 @@ const Index = () => {
                       <MenuItem value="male">Erkak</MenuItem>
                       <MenuItem value="female">Ayol</MenuItem>
                     </Select>
-                </FormControl>
+                  </FormControl>
                 </motion.div>
-              }
+              )}
             </div>
 
             {/* Ishlash joyi va o'qigan joyi */}
             <div className="border border-[#E9E9E9] p-3 rounded-xl">
-                <div onClick={() => setShowDropDownLabor(!showDropdownLabor)} className="flex justify-between items-center cursor-pointer">
-                  <Typography variant="h7">Место учебы и место работы</Typography>
-                  
-                  <IconButton>
-                    <KeyboardArrowDownIcon/>
-                  </IconButton>
+              <div
+                onClick={() => setShowDropDownLabor(!showDropdownLabor)}
+                className="flex justify-between items-center cursor-pointer"
+              >
+                <Typography variant="h7">Место учебы и место работы</Typography>
 
-
+                <IconButton>
+                  <KeyboardArrowDownIcon />
+                </IconButton>
               </div>
-                {showDropdownLabor && 
-                <motion.div initial={{ opacity: 0, translateY: "-30px" }} animate={{ opacity: 1, translateY: 0 }} className="mt-[15px]">
+              {showDropdownLabor && (
+                <motion.div
+                  initial={{ opacity: 0, translateY: "-30px" }}
+                  animate={{ opacity: 1, translateY: 0 }}
+                  className="mt-[15px]"
+                >
                   <FormControl fullWidth sx={{ mb: "10px" }}>
                     <InputLabel
                       id="education-label"
@@ -382,7 +399,7 @@ const Index = () => {
                         fontSize: "14px",
                         "& fieldset": {
                           border: "1px solid #E9E9E9", // border style
-                          borderRadius: "8px",         // radius
+                          borderRadius: "8px", // radius
                         },
                       }}
                       MenuProps={{
@@ -401,20 +418,19 @@ const Index = () => {
                     </Select>
                   </FormControl>
 
-
-                    {education === "Bakalavr" && (
-                      <Input
-                          type={"text"}
-                          label={"Место образование"}
-                          placeholder={"Kiriting"}
-                          classNames="w-full my-[10px]"
-                          inputClass="!h-[40px] text-sm !border-[#E9E9E9]"
-                          labelClass="text-sm"
-                      />
-                    )}
+                  {education === "Bakalavr" && (
+                    <Input
+                      type={"text"}
+                      label={"Место образование"}
+                      placeholder={"Kiriting"}
+                      classNames="w-full my-[10px]"
+                      inputClass="!h-[40px] text-sm !border-[#E9E9E9]"
+                      labelClass="text-sm"
+                    />
+                  )}
 
                   <FormControl fullWidth sx={{ my: "10px" }}>
-                    <InputLabel 
+                    <InputLabel
                       id="rank-label"
                       sx={{
                         fontSize: "14px",
@@ -422,7 +438,9 @@ const Index = () => {
                         px: "4px",
                         mx: "3px",
                       }}
-                    >Razryad</InputLabel>
+                    >
+                      Razryad
+                    </InputLabel>
                     <Select
                       labelId="rank-label"
                       value={rank}
@@ -434,7 +452,7 @@ const Index = () => {
                         fontSize: "14px",
                         "& fieldset": {
                           border: "1px solid #E9E9E9", // border style
-                          borderRadius: "8px",         // radius
+                          borderRadius: "8px", // radius
                         },
                       }}
                       onChange={(e) => setRank(e.target.value)}
@@ -447,13 +465,12 @@ const Index = () => {
                     </Select>
                   </FormControl>
                 </motion.div>
-                }
+              )}
             </div>
 
             <div>
-              <ImageUploader/>
+              <ImageUploader />
             </div>
-
 
             {/* <div>
               <p>Адресс</p>
