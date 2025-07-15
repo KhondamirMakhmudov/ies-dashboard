@@ -15,4 +15,5 @@ export const URLS = {
   allCameras: "api/cameras",
   createCamera: "api/cameras/create",
   logEntersOfEmployeeById: "api/log_enters/",
+  scheduleCameras: "api/cameras/access-schedules/",
 };

@@ -24,6 +24,9 @@ import usePutQuery from "@/hooks/java/usePutQuery";
 import { useQueryClient } from "@tanstack/react-query";
 import CustomSearch from "@/components/search";
 import ExcelButton from "@/components/button/excel-button";
+import Link from "next/link";
+import { useGlobalStore } from "@/store/globalStore";
+import { useRouter } from "next/router";
 const ipRegex =
   /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
 
@@ -237,7 +240,28 @@ const Index = () => {
 
   const columns = [
     { accessorKey: "id", header: "№" },
-    { accessorKey: "ipAddress", header: "IP-адрес" },
+    {
+      accessorKey: "ipAddress",
+      header: "IP-адрес",
+      cell: ({ row }) => {
+        const setSelectedCamera = useGlobalStore(
+          (state) => state.setSelectedCamera
+        );
+        const router = useRouter();
+
+        return (
+          <span
+            onClick={() => {
+              setSelectedCamera(row.original);
+              router.push(`/dashboard/devices/${row.original.id}`);
+            }}
+            className="text-blue-600 hover:underline cursor-pointer"
+          >
+            {row.original.ipAddress}
+          </span>
+        );
+      },
+    },
     { accessorKey: "doorType", header: "Тип двери" },
     { accessorKey: "depName", header: "Подразделение" },
     { accessorKey: "checkPointName", header: "Контрольная точка" },

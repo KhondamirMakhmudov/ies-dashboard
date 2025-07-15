@@ -6,4 +6,5 @@ export const KEYS = {
   logEntersOfEmployees: "logEntersOfEmployees",
   logEntersOfEmployeeById: "logEntersOfEmployeeById",
   structureOfOrganizations: "structureOfOrganizations",
+  scheduleCameras: "scheduleCameras",
 };

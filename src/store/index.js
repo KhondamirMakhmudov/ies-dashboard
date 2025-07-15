@@ -5,6 +5,10 @@ import { config } from "@/config";
 let store = (set) => ({
   user: null,
   serUser: (user) => set((state) => ({ ...state, user })),
+
+  selectedCamera: null,
+  setSelectedCamera: (camera) => set({ selectedCamera: camera }),
+
   currencyList: [],
   setCurrencyList: (currencyList) =>
     set((state) => ({ ...state, currencyList })),
