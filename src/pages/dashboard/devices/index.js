@@ -239,7 +239,10 @@ const Index = () => {
   };
 
   const columns = [
-    { accessorKey: "id", header: "№" },
+    {
+      header: "№",
+      cell: ({ row }) => row.index + 1,
+    },
     {
       accessorKey: "ipAddress",
       header: "IP-адрес",

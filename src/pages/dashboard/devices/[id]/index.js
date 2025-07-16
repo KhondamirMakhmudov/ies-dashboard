@@ -6,7 +6,8 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { useGlobalStore } from "@/store/globalStore";
 import { motion } from "framer-motion";
-import AccessScheduleChart from "@/components/charts/ScheduleAccessController";
+import ContentLoader from "@/components/loader";
+import AccessCustomTimeline from "@/components/charts/AccessTimeLineSchedule";
 import { get } from "lodash";
 
 const Index = () => {
@@ -83,13 +84,21 @@ const Index = () => {
         </div>
       </motion.div>
 
-      <motion.div
-        initial={{ opacity: 0, scale: 0 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className=" p-[12px] my-[50px] rounded-md"
-      >
-        {/* <AccessScheduleChart scheduleData={get(scheduleCamera, "data")} /> */}
-      </motion.div>
+      {isLoading || isFetching ? (
+        <ContentLoader />
+      ) : (
+        <motion.div
+          initial={{ opacity: 0, scale: 0 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className=" p-[12px] my-[50px] rounded-md space-y-[10px]"
+        >
+          <AccessCustomTimeline schedule={get(scheduleCamera, "data", [])[0]} />
+
+          <AccessCustomTimeline schedule={get(scheduleCamera, "data", [])[1]} />
+
+          <AccessCustomTimeline schedule={get(scheduleCamera, "data", [])[2]} />
+        </motion.div>
+      )}
     </DashboardLayout>
   );
 };

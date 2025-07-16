@@ -1,201 +1,242 @@
+import UnitTypeCard from "@/components/card/unitType";
+import CustomTable from "@/components/table";
+import { KEYS } from "@/constants/key";
+import { URLS } from "@/constants/url";
+import useGetPythonQuery from "@/hooks/python/useGetQuery";
 import DashboardLayout from "@/layouts/dashboard/DashboardLayout";
-import {
-  Button,
-  Typography,
-  Modal,
-  TextField,
-  Box,
-  IconButton,
-} from "@mui/material";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import { useState } from "react";
-import EditIcon from "@mui/icons-material/Edit";
-import AddIcon from "@mui/icons-material/Add";
 import { motion } from "framer-motion";
+import { get } from "lodash";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import { Button, Typography } from "@mui/material";
+import ContentLoader from "@/components/loader";
+import usePostPythonQuery from "@/hooks/python/usePostQuery";
+import MethodModal from "@/components/modal/method-modal";
+import { useState } from "react";
+import Input from "@/components/input";
+import { useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
+import { config } from "@/config";
+import DeleteModal from "@/components/modal/delete-modal";
 
 const Index = () => {
-  const [open, setOpen] = useState(false);
-  const [departments, setDepartments] = useState([
-    { id: 1, name: "Администрация" },
-    { id: 2, name: "Инженерный отдел" },
-    { id: 3, name: "Отдел кадров" },
-  ]);
-  const [editingDept, setEditingDept] = useState(null);
-  const [newDeptName, setNewDeptName] = useState("");
-  const [departmentsOpen, setDepartmentsOpen] = useState(false);
-  const [selectedDepartmentId, setSelectedDepartmentId] = useState(null);
-  const toggleDepartments = () => {
-    setDepartmentsOpen(!departmentsOpen);
+  const queryClient = useQueryClient();
+  const [createModal, setCreateModal] = useState(false);
+  const [editModal, setEditModal] = useState(false);
+  const [deleteModal, setDeleteModal] = useState(false);
+  const [name, setName] = useState("");
+  const [selectedUnitType, setSelectedUnitType] = useState(null);
+  const [isActive, setIsActive] = useState(true);
+  const {
+    data: unitType,
+    isLoading,
+    isFetching,
+  } = useGetPythonQuery({
+    key: KEYS.unitTypes,
+    url: URLS.unitTypes,
+  });
+
+  const { mutate: createUnitType } = usePostPythonQuery({
+    listKeyId: "create-unit-type",
+  });
+  // create unit type
+  const onSubmitCreateUnitType = () => {
+    createUnitType(
+      {
+        url: URLS.unitTypes,
+        attributes: {
+          name: name,
+          is_active: isActive,
+        },
+      },
+      {
+        onSuccess: () => {
+          setCreateModal(false);
+          toast.success("unitType muvaffaqiyatli tahrirlandi", {
+            position: "top-center",
+          });
+
+          queryClient.invalidateQueries(KEYS.unitTypes);
+        },
+        onError: (error) => {
+          toast.error(`Error is ${error}`, { position: "top-right" });
+        },
+      }
+    );
   };
 
-  const filteredEmployees = selectedDepartmentId
-    ? employees.filter((emp) => emp.departmentId === selectedDepartmentId)
-    : [];
-
-  const handleOpenModal = (dept = null) => {
-    setEditingDept(dept);
-    setNewDeptName(dept?.name || "");
-    setOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setOpen(false);
-    setEditingDept(null);
-    setNewDeptName("");
-  };
-
-  const handleSave = () => {
-    if (newDeptName.trim() === "") return;
-
-    if (editingDept) {
-      // Edit
-      setDepartments((prev) =>
-        prev.map((d) =>
-          d.id === editingDept.id ? { ...d, name: newDeptName } : d
-        )
+  // delete unit type
+  const onSubmitDeleteUnitType = async (id) => {
+    try {
+      const response = await fetch(
+        `${config.PYTHON_API_URL}${URLS.unitTypes}${id}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ unit_type_id: id }),
+        }
       );
-    } else {
-      // Add
-      const newDept = {
-        id: Date.now(),
-        name: newDeptName,
-      };
-      setDepartments((prev) => [...prev, newDept]);
-    }
 
-    handleCloseModal();
+      if (!response.ok) {
+        throw new Error("Ошибка при удалении");
+      }
+
+      toast.success("Успешно удалено");
+      queryClient.invalidateQueries(KEYS.checkpoints);
+      console.log("Deleted successfully");
+    } catch (error) {
+      console.error(error);
+      toast.error("Не удалось удалить");
+    }
   };
+
+  const columns = [
+    {
+      header: "№",
+      cell: ({ row }) => row.index + 1,
+    },
+    { accessorKey: "name", header: "Имя точки входа" },
+
+    {
+      accessorKey: "actions",
+      header: "Действия",
+      cell: ({ row }) => (
+        <div className="flex gap-2">
+          <Button
+            sx={{
+              width: "32px",
+              height: "32px",
+              minWidth: "32px",
+              background: "#F0D8C8",
+              color: "#FF6200",
+            }}
+          >
+            <EditIcon fontSize="small" />
+          </Button>
+          <Button
+            onClick={() => {
+              setDeleteModal(true);
+              setSelectedUnitType(row.original.id);
+            }}
+            sx={{
+              width: "32px",
+              height: "32px",
+              minWidth: "32px",
+              background: "#FCD8D3",
+              color: "#FF1E00",
+            }}
+          >
+            <DeleteIcon fontSize="small" />
+          </Button>
+        </div>
+      ),
+      enableSorting: false,
+    },
+  ];
+
   return (
     <DashboardLayout headerTitle={"Структура организации"}>
-      <div className="grid grid-cols-12 gap-4 my-[50px]">
-        <motion.div
-          initial={{ opacity: 0, translateY: "-30px" }}
-          animate={{ opacity: 1, translateY: 0 }}
-          className="col-span-3 self-start bg-white p-[24px] rounded-md "
-        >
-          <div>
-            <div className="flex justify-between">
-              <Typography variant="h6" className="mb-4">
-                Отделы
-              </Typography>
-
-              <Button
-                onClick={() => handleOpenModal()}
-                variant="text"
-                sx={{
-                  borderRadius: "100%",
-                  padding: 0,
-                  minWidth: 0,
-                  width: "32px",
-                  height: "32px",
-
-                  transform: departmentsOpen ? "scale(1.1)" : "scale(1)",
-                  transition: "transform 0.2s ease-in-out",
-                }}
-              >
-                <AddIcon />
-              </Button>
-            </div>
-
-            {!departmentsOpen && (
-              <ul className="space-y-2 mt-[20px]">
-                {departments.map((dept) => (
-                  <li
-                    key={dept.id}
-                    className="flex justify-between items-center bg-gray-50 p-2 rounded hover:bg-gray-100 cursor-pointer"
-                  >
-                    <span>{dept.name}</span>
-                    <IconButton
-                      onClick={() => handleOpenModal(dept)}
-                      size="small"
-                      color="primary"
-                    >
-                      <EditIcon fontSize="small" />
-                    </IconButton>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </motion.div>
-        <motion.div
-          initial={{ opacity: 0, translateY: "30px" }}
-          animate={{ opacity: 1, translateY: 0 }}
-          className="col-span-9 bg-white p-[24px] rounded-md "
-        >
-          <Typography variant="h6" className="mb-4">
-            Список сотрудников
-          </Typography>
-
-          <div className=" mt-[20px]">
-            {filteredEmployees.length > 0 ? (
-              <table className="min-w-full border border-gray-200 text-sm">
-                <thead className="bg-gray-100 text-left">
-                  <tr>
-                    <th className="p-2 border-b">№</th>
-                    <th className="p-2 border-b">ФИО</th>
-                    <th className="p-2 border-b">Должность</th>
-                    <th className="p-2 border-b">Телефон</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredEmployees.map((emp, index) => (
-                    <tr key={emp.id} className="hover:bg-gray-50">
-                      <td className="p-2 border-b">{index + 1}</td>
-                      <td className="p-2 border-b">{emp.fullName}</td>
-                      <td className="p-2 border-b">{emp.position}</td>
-                      <td className="p-2 border-b">{emp.phone}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            ) : selectedDepartmentId ? (
-              <p>Сотрудники не найдены для выбранного отдела.</p>
-            ) : (
-              <p>Пожалуйста, выберите отдел.</p>
-            )}
-          </div>
-        </motion.div>
-      </div>
-      {/* <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between"></div>
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <p className="text-gray-600">No organizations found.</p>
-        </div>
-      </div> */}
-
-      <Modal open={open} onClose={handleCloseModal}>
-        <Box
-          sx={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            width: 400,
-            bgcolor: "white",
-            boxShadow: 24,
-            p: 4,
-            borderRadius: "8px",
-          }}
-        >
-          <Typography variant="h6" gutterBottom>
-            {editingDept ? "Изменить отдел" : "Добавить отдел"}
-          </Typography>
-          <TextField
-            fullWidth
-            label="Название отдела"
-            value={newDeptName}
-            onChange={(e) => setNewDeptName(e.target.value)}
-            sx={{ mb: 2 }}
-          />
-          <div className="flex justify-end gap-2">
-            <Button onClick={handleCloseModal}>Отмена</Button>
-            <Button onClick={handleSave} variant="contained">
-              Сохранить
+      <motion.div
+        initial={{ opacity: 0, scale: 0 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="bg-white p-[12px] my-[50px] rounded-md"
+      >
+        <div className="space-y-[15px]">
+          <div className="flex justify-between items-center">
+            <Button
+              onClick={() => setCreateModal(true)}
+              sx={{
+                textTransform: "initial",
+                fontFamily: "DM Sans, sans-serif",
+                backgroundColor: "#4182F9",
+                boxShadow: "none",
+                color: "white",
+                display: "flex",
+                gap: "4px",
+                fontSize: "14px",
+                borderRadius: "8px",
+              }}
+              variant="contained"
+            >
+              <p>Создать</p>
             </Button>
           </div>
-        </Box>
-      </Modal>
+
+          {isLoading || isFetching ? (
+            <ContentLoader />
+          ) : (
+            <CustomTable columns={columns} data={get(unitType, "data")} />
+          )}
+        </div>
+
+        {/* create modal */}
+        <MethodModal open={createModal} onClose={() => setCreateModal(false)}>
+          <Typography variant="h6">Создать</Typography>
+
+          <form
+            onSubmit={onSubmitCreateUnitType}
+            className="space-y-[15px] my-[30px]"
+          >
+            <Input
+              label="Имя"
+              type="text"
+              // name="ipAddress"
+              placeholder="Введите имя"
+              classNames="col-span-4"
+              inputClass={
+                "!h-[45px] rounded-[8px] !border-gray-300 text-[15px]"
+              }
+              value={name}
+              labelClass={"text-sm"}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+
+            <div className="col-span-2 flex items-center gap-4">
+              <label className="flex items-center gap-1">
+                <input
+                  type="radio"
+                  name="isActive"
+                  value="true"
+                  checked={isActive === true}
+                  onChange={() => setIsActive(true)}
+                />
+                <span>Активный</span>
+              </label>
+              <label className="flex items-center gap-1">
+                <input
+                  type="radio"
+                  name="isActive"
+                  value="false"
+                  checked={isActive === false}
+                  onChange={() => setIsActive(false)}
+                />
+                <span>Неактивный</span>
+              </label>
+            </div>
+            <button
+              type="submit"
+              className=" bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 w-1/4 rounded-xl transition-all duration-200"
+            >
+              Создать
+            </button>
+          </form>
+        </MethodModal>
+
+        {/* Delete modal */}
+        <DeleteModal
+          open={deleteModal}
+          onClose={() => setDeleteModal(false)}
+          deleting={() => {
+            onSubmitDeleteUnitType(selectedUnitType); // 👈 DELETE so‘rov
+            setDeleteModal(false);
+            setSelectedUnitType(null);
+          }}
+          title="Вы уверены, что хотите удалить эту ...?"
+        />
+      </motion.div>
     </DashboardLayout>
   );
 };

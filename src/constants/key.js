@@ -1,4 +1,5 @@
 export const KEYS = {
+  // Java
   allCameras: "allCameras",
   departments: "departments",
   checkpoints: "checkpoints",
@@ -7,4 +8,8 @@ export const KEYS = {
   logEntersOfEmployeeById: "logEntersOfEmployeeById",
   structureOfOrganizations: "structureOfOrganizations",
   scheduleCameras: "scheduleCameras",
+
+  // Python
+
+  unitTypes: "unitTypes",
 };

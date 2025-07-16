@@ -12,7 +12,6 @@ import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import UnfoldMoreIcon from "@mui/icons-material/UnfoldMore";
 
-
 const CustomTable = ({ data, columns }) => {
   const table = useReactTable({
     data,
@@ -68,7 +67,10 @@ const CustomTable = ({ data, columns }) => {
                 className="hover:bg-gray-50"
               >
                 {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id} className="px-4 py-2 border-t border-t-[#E9E9E9]">
+                  <td
+                    key={cell.id}
+                    className="px-4 py-2 border-t border-t-[#E9E9E9]"
+                  >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </td>
                 ))}

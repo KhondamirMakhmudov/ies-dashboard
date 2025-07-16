@@ -1,4 +1,5 @@
 export const URLS = {
+  // Java
   authenticate: "authenticate",
   departments: "api/departments",
   // structure of organizations
@@ -16,4 +17,9 @@ export const URLS = {
   createCamera: "api/cameras/create",
   logEntersOfEmployeeById: "api/log_enters/",
   scheduleCameras: "api/cameras/access-schedules/",
+
+  // Python
+  // structure unit type
+
+  unitTypes: "unit-type/",
 };
