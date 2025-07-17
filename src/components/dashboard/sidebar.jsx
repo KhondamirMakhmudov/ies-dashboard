@@ -1,36 +1,32 @@
+import React, { useState } from "react";
 import Image from "next/image";
-import {
-  List,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  Typography,
-  Modal,
-  Box,
-  Button,
-} from "@mui/material";
-import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
-import DashboardIcon from "@mui/icons-material/Dashboard";
-import MediationIcon from "@mui/icons-material/Mediation";
-import ControlCameraIcon from "@mui/icons-material/ControlCamera";
-import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
-import SchoolRoundedIcon from "@mui/icons-material/SchoolRounded";
 import { useRouter } from "next/router";
+import { List, ListItemButton, ListItemIcon, Typography } from "@mui/material";
 import ExitToAppIcon from "@mui/icons-material/ExitToApp";
-import { useState } from "react";
-import CameraAltIcon from "@mui/icons-material/CameraAlt";
-import WifiIcon from "@mui/icons-material/Wifi";
-import SecurityIcon from "@mui/icons-material/Security";
-import AssessmentIcon from "@mui/icons-material/Assessment";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import {
+  PeopleAlt as PeopleAltIcon,
+  Dashboard as DashboardIcon,
+  Mediation as MediationIcon,
+  ControlCamera as ControlCameraIcon,
+  SettingsRounded as SettingsRoundedIcon,
+  SchoolRounded as SchoolRoundedIcon,
+  CameraAlt as CameraAltIcon,
+  Wifi as WifiIcon,
+  Security as SecurityIcon,
+  Assessment as AssessmentIcon,
+} from "@mui/icons-material";
+
 import ExitModal from "../modal/exit-modal";
 import { signOut } from "next-auth/react";
+
 const menuItems = [
   {
     text: "Обзор",
     icon: <DashboardIcon />,
     path: "/dashboard/main",
   },
-
   {
     text: "Сотрудники",
     icon: <PeopleAltIcon />,
@@ -39,7 +35,22 @@ const menuItems = [
   {
     text: "Структура организации",
     icon: <MediationIcon />,
-    path: "/dashboard/structure-organizations",
+    submenu: [
+      {
+        text: "Справочник",
+        icon: (
+          <div className="w-[10px] h-[10px] rounded-full bg-gray-300"></div>
+        ),
+        path: "/dashboard/structure-organizations/reference",
+      },
+      {
+        text: "Руководства управлении",
+        icon: (
+          <div className="w-[10px] h-[10px] rounded-full bg-gray-300"></div>
+        ),
+        path: "/dashboard/structure-organizations/management-organizations",
+      },
+    ],
   },
   {
     text: "Должности",
@@ -79,17 +90,19 @@ const menuItems = [
 ];
 
 export default function Sidebar({ isOpen = true }) {
-  const [openexitModal, setOpenExitModal] = useState(false);
-
+  const [openExitModal, setOpenExitModal] = useState(false);
+  const [openSubmenus, setOpenSubmenus] = useState({});
   const router = useRouter();
 
-  const handleOpenExitModal = () => {
-    setOpenExitModal(false);
+  const handleToggleSubmenu = (index) => {
+    setOpenSubmenus((prev) => ({
+      ...prev,
+      [index]: !prev[index],
+    }));
   };
 
   const handleLogout = async () => {
     await signOut({ callbackUrl: "/" });
-
     localStorage.clear();
     sessionStorage.clear();
   };
@@ -98,7 +111,7 @@ export default function Sidebar({ isOpen = true }) {
     <aside
       className={`${
         isOpen ? "w-[330px]" : "w-[80px]"
-      } h-screen bg-white px-[16px] py-[25px] transition-all duration-300 overflow-hidden flex flex-col justify-between`}
+      } h-screen bg-white px-[16px] py-[25px] transition-all duration-300 overflow-y-auto flex flex-col justify-between`}
     >
       <div>
         <div
@@ -111,63 +124,116 @@ export default function Sidebar({ isOpen = true }) {
               <p className="text-[18px] font-medium">
                 "ISSIQLIK ELЕKTR STANSIYALARI" AJ
               </p>
-              {/* <p className="text-base text-gray-400">Inventarizatsiya</p> */}
             </div>
           )}
         </div>
 
         <div className="w-full h-[1px] bg-gray-200 my-[10px]"></div>
 
-        <List sx={{ fontFamily: "DM Sans, sans-serif", color: "#A0AEC0FF" }}>
-          {menuItems.map((item, index) => (
-            <ListItemButton
-              key={index}
-              onClick={() => router.push(item.path)}
-              selected={router.pathname === item.path}
-              sx={{
-                borderRadius: "8px",
-                my: 0.5,
-                color: router.pathname === item.path ? "#2D3748" : "#718096",
-                backgroundColor:
-                  router.pathname === item.path ? "#EDF2F7" : "transparent",
-                "&:hover": {
-                  backgroundColor: "#F7FAFC",
-                },
-                justifyContent: isOpen ? "flex-start" : "center",
-                px: isOpen ? 2 : 0,
-              }}
-            >
-              <ListItemIcon
-                sx={{
-                  minWidth: "auto",
-                  color: router.pathname === item.path ? "#2D3748" : "#A0AEC0",
-                  justifyContent: "center",
-                }}
-              >
-                {item.icon}
-              </ListItemIcon>
-              {isOpen && (
-                <Typography
+        <List sx={{ fontFamily: "DM Sans, sans-serif", color: "#A0AEC0" }}>
+          {menuItems.map((item, index) => {
+            const isActive = router.pathname === item.path;
+            const isAnySubmenuActive =
+              item.submenu?.some((sub) => router.pathname === sub.path) ||
+              false;
+
+            return (
+              <div key={index}>
+                <ListItemButton
+                  onClick={() =>
+                    item.submenu
+                      ? handleToggleSubmenu(index)
+                      : router.push(item.path)
+                  }
+                  selected={isActive || isAnySubmenuActive}
                   sx={{
-                    fontFamily: "DM Sans, sans-serif",
+                    borderRadius: "8px",
+                    my: 0.5,
                     color:
-                      router.pathname === item.path ? "#2D3748" : "#A0AEC0",
-                    fontSize: "18px",
-                    marginLeft: "12px",
+                      isActive || isAnySubmenuActive ? "#2D3748" : "#718096",
+                    backgroundColor:
+                      isActive || isAnySubmenuActive
+                        ? "#EDF2F7"
+                        : "transparent",
+                    "&:hover": {
+                      backgroundColor: "#F7FAFC",
+                    },
+                    justifyContent: isOpen ? "flex-start" : "center",
+                    px: isOpen ? 2 : 0,
                   }}
                 >
-                  {item.text}
-                </Typography>
-              )}
-            </ListItemButton>
-          ))}
+                  <ListItemIcon
+                    sx={{
+                      minWidth: "auto",
+                      color:
+                        isActive || isAnySubmenuActive ? "#2D3748" : "#A0AEC0",
+                      justifyContent: "center",
+                    }}
+                  >
+                    {item.icon}
+                  </ListItemIcon>
+                  {isOpen && (
+                    <Typography
+                      sx={{
+                        fontFamily: "DM Sans, sans-serif",
+                        fontSize: "18px",
+                        marginLeft: "12px",
+                      }}
+                    >
+                      {item.text}
+                    </Typography>
+                  )}
+                  {item.submenu && isOpen && (
+                    <span className="ml-auto">
+                      {openSubmenus[index] ? (
+                        <ExpandLessIcon fontSize="small" />
+                      ) : (
+                        <ExpandMoreIcon fontSize="small" />
+                      )}
+                    </span>
+                  )}
+                </ListItemButton>
+
+                {/* Submenu render */}
+                {item.submenu && openSubmenus[index] && isOpen && (
+                  <div className="ml-10">
+                    {item.submenu.map((sub, subIndex) => {
+                      const isSubActive = router.pathname === sub.path;
+                      return (
+                        <ListItemButton
+                          key={subIndex}
+                          onClick={() => router.push(sub.path)}
+                          selected={isSubActive}
+                          sx={{
+                            borderRadius: "6px",
+                            my: 0.5,
+                            color: isSubActive ? "#2D3748" : "#A0AEC0",
+                            backgroundColor: isSubActive
+                              ? "#EDF2F7"
+                              : "transparent",
+                            "&:hover": {
+                              backgroundColor: "#F7FAFC",
+                            },
+                          }}
+                        >
+                          <Typography sx={{ fontSize: "16px", ml: 1 }}>
+                            {sub.text}
+                          </Typography>
+                        </ListItemButton>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </List>
       </div>
 
-      {/* 🚪 Logout tugmasi pastda */}
+      {/* Logout Button */}
       <div className="mb-4">
         <ListItemButton
-          onClick={() => setOpenExitModal(true)} // funksiyani yozing
+          onClick={() => setOpenExitModal(true)}
           sx={{
             borderRadius: "8px",
             backgroundColor: "#FCD8D3",
@@ -183,8 +249,7 @@ export default function Sidebar({ isOpen = true }) {
               justifyContent: "center",
             }}
           >
-            <ExitToAppIcon />{" "}
-            {/* logout icon (mui yoki sizda bor bo'lgan icon) */}
+            <ExitToAppIcon />
           </ListItemIcon>
           {isOpen && (
             <Typography
@@ -202,8 +267,8 @@ export default function Sidebar({ isOpen = true }) {
       </div>
 
       <ExitModal
-        open={openexitModal}
-        onClose={handleOpenExitModal}
+        open={openExitModal}
+        onClose={() => setOpenExitModal(false)}
         handleLogout={handleLogout}
       />
     </aside>

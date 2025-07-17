@@ -22,4 +22,5 @@ export const URLS = {
   // structure unit type
 
   unitTypes: "unit-type/",
+  organizationalUnits: "organizational-unit/",
 };

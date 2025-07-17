@@ -12,4 +12,5 @@ export const KEYS = {
   // Python
 
   unitTypes: "unitTypes",
+  organizationalUnits: "organizationalUnits",
 };
