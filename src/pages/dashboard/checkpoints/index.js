@@ -178,7 +178,10 @@ const Index = () => {
   }
 
   const columns = [
-    { accessorKey: "id", header: "№" },
+    {
+      header: "№",
+      cell: ({ row }) => row.index + 1,
+    },
     { accessorKey: "checkPointName", header: "Тип двери" },
     { accessorKey: "entryPoint.entryPointName", header: "Точки входа" },
     {

@@ -403,7 +403,13 @@ const Index = () => {
       {createCameraModal && (
         <MethodModal
           open={createCameraModal}
-          onClose={() => setCreateCameraModal(false)}
+          onClose={() => {
+            setCreateCameraModal(false);
+            setIpAddress("");
+            setBuilding("");
+            setLogin("");
+            setPassword("");
+          }}
         >
           <Typography variant="h6" className="mb-2">
             Добавить камеру
