@@ -38,6 +38,8 @@ const Index = () => {
     "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face"
   );
 
+  const [photoFile, setPhotoFile] = useState(null);
+
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -93,6 +95,7 @@ const Index = () => {
         level: get(employeePhoto, "data.level", ""),
         hire_date: get(employeePhoto, "data.hire_date", ""),
         workplace_id: get(employeePhoto, "data.workplace_id", ""),
+        photo: photoPreview,
       });
 
       if (get(employeePhoto, "data.file_url", null)) {
@@ -130,18 +133,24 @@ const Index = () => {
   });
 
   const onSubmitEditEmployee = () => {
+    const formDataToSend = new FormData();
+    Object.keys(formData).forEach((key) => {
+      formDataToSend.append(key, formData[key]);
+    });
+
+    if (photoFile) {
+      formDataToSend.append("photo", photoFile[0]); // ✅ majburiy qo‘shamiz
+    }
+
     editEmployee(
       {
         url: `${URLS.employees}${employee_id}`,
-        attributes: formData,
+        attributes: formDataToSend, // ⚡ JSON emas, FormData yuborasiz
       },
       {
         onSuccess: () => {
           setEditModal(false);
-          toast.success("Успешно редактировано", {
-            position: "top-center",
-          });
-
+          toast.success("Успешно редактировано", { position: "top-center" });
           queryClient.invalidateQueries(KEYS.positionTypes);
         },
         onError: (error) => {
@@ -193,10 +202,9 @@ const Index = () => {
   const handlePhotoChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      setPhotoFile(file); // ✅ Faylni saqlab qo'yamiz
       const reader = new FileReader();
-      reader.onload = (e) => {
-        setPhotoPreview(e.target.result);
-      };
+      reader.onload = (e) => setPhotoPreview(e.target.result);
       reader.readAsDataURL(file);
     }
   };
@@ -225,10 +233,16 @@ const Index = () => {
 
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-    const dataUrl = canvas.toDataURL("image/png");
-    setPhotoPreview(dataUrl);
+    canvas.toBlob((blob) => {
+      if (blob) {
+        const file = new File([blob], "camera-photo.png", {
+          type: "image/png",
+        });
+        setPhotoFile(file); // ✅ file saqlaymiz
+        setPhotoPreview(URL.createObjectURL(blob));
+      }
+    }, "image/png");
 
-    // Kamerani yopish
     let tracks = video.srcObject.getTracks();
     tracks.forEach((track) => track.stop());
     setIsCameraOpen(false);
@@ -1075,6 +1089,22 @@ const Index = () => {
                 />
               </div>
             </div>
+          </div>
+
+          <div className="sticky  bg-white border-t border-t-gray-200 p-4 flex justify-end gap-3">
+            <button
+              onClick={() => setEditModal(false)}
+              className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-sm font-medium"
+            >
+              Отмена
+            </button>
+            <button
+              onClick={onSubmitEditEmployee}
+              type="submit"
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium"
+            >
+              Сохранить изменения
+            </button>
           </div>
         </MethodModal>
       )}
