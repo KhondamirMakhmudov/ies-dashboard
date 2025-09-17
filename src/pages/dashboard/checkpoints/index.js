@@ -7,7 +7,7 @@ import DashboardLayout from "@/layouts/dashboard/DashboardLayout";
 import { motion } from "framer-motion";
 import CustomTable from "@/components/table";
 import { Button, Select, MenuItem, Typography } from "@mui/material";
-import { get } from "lodash";
+import { get, isEmpty } from "lodash";
 import DeleteModal from "@/components/modal/delete-modal";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -22,6 +22,7 @@ import CustomSelect from "@/components/select";
 import { set } from "react-hook-form";
 import { useSession } from "next-auth/react";
 import { useQueryClient } from "@tanstack/react-query";
+import NoData from "@/components/no-data";
 const Index = () => {
   const queryClient = useQueryClient();
   const { data: session } = useSession();
@@ -48,13 +49,13 @@ const Index = () => {
   // entrypoint get
 
   const { data: entrypoints } = useGetQuery({
-    key: KEYS.entrypoints,
+    key: [KEYS.entrypoints, createCheckpoints || editCheckpoints],
     url: URLS.entrypoints,
     headers: {
       Authorization: `Bearer ${session?.accessToken}`,
       Accept: "application/json",
     },
-    enabled: !!session?.accessToken,
+    enabled: !!session?.accessToken && (createCheckpoints || editCheckpoints),
   });
 
   const options = get(entrypoints, "data", []).map((entry) => ({
@@ -67,6 +68,10 @@ const Index = () => {
   });
   // checkpoint yaratish
   const submitCreateCheckPoint = () => {
+    if (!selectedCheckpointId || !nameOfCheckpointName) {
+      toast.error("Пожалуйста, заполните все поля", { position: "top-center" });
+      return;
+    }
     createCheckpoint(
       {
         url: URLS.createCheckpoint,
@@ -235,42 +240,50 @@ const Index = () => {
   ];
   return (
     <DashboardLayout headerTitle={"Контрольные точки"}>
-      <motion.div
-        initial={{ opacity: 0, scale: 0 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="bg-white p-[12px] my-[50px] rounded-md"
-      >
-        <div className="col-span-12 space-y-[15px]">
-          <div className="max-w-[100px]">
-            <Button
-              onClick={() => setCreateCheckpoints(true)}
-              sx={{
-                textTransform: "initial",
-                fontFamily: "DM Sans, sans-serif",
-                backgroundColor: "#4182F9",
-                boxShadow: "none",
-                color: "white",
-                display: "flex", // inline-block emas
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "4px",
-                fontSize: "14px",
-                minWidth: "100px", // yoki widthni kengroq bering
-                borderRadius: "8px",
-              }}
-              variant="contained"
-            >
-              Создать
-            </Button>
+      {isEmpty(get(checkpoints, "data", [])) ? (
+        <NoData onCreate={() => setCreateCheckpoints(true)} />
+      ) : (
+        <motion.div
+          initial={{ opacity: 0, scale: 0 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-white p-[12px] my-[50px] rounded-md border border-gray-200"
+        >
+          <div className="col-span-12 space-y-[15px]">
+            <div className="max-w-[100px]">
+              <Button
+                onClick={() => setCreateCheckpoints(true)}
+                sx={{
+                  textTransform: "initial",
+                  fontFamily: "DM Sans, sans-serif",
+                  backgroundColor: "#4182F9",
+                  boxShadow: "none",
+                  color: "white",
+                  display: "flex", // inline-block emas
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "4px",
+                  fontSize: "14px",
+                  minWidth: "100px", // yoki widthni kengroq bering
+                  borderRadius: "8px",
+                }}
+                variant="contained"
+              >
+                Создать
+              </Button>
+            </div>
+            <CustomTable data={get(checkpoints, "data")} columns={columns} />
           </div>
-          <CustomTable data={get(checkpoints, "data")} columns={columns} />
-        </div>
-      </motion.div>
+        </motion.div>
+      )}
       {/* create checkpoint */}
       {createCheckpoints && (
         <MethodModal
           open={createCheckpoints}
-          onClose={() => setCreateCheckpoints(false)}
+          onClose={() => {
+            setCreateCheckpoints(false);
+            setNameOfCheckpointName("");
+            setSelectedEntryPoint(null);
+          }}
         >
           <Typography variant="h6" className="mb-2">
             Добавить контрольно-пропускной пункт

@@ -1,15 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/router";
 import { List, ListItemButton, ListItemIcon, Typography } from "@mui/material";
 import ExitToAppIcon from "@mui/icons-material/ExitToApp";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import { motion } from "framer-motion";
 import {
   PeopleAlt as PeopleAltIcon,
-  Dashboard as DashboardIcon,
   Mediation as MediationIcon,
-  ControlCamera as ControlCameraIcon,
   SettingsRounded as SettingsRoundedIcon,
   SchoolRounded as SchoolRoundedIcon,
   CameraAlt as CameraAltIcon,
@@ -17,16 +16,11 @@ import {
   Security as SecurityIcon,
   Assessment as AssessmentIcon,
 } from "@mui/icons-material";
-
+import EventNoteIcon from "@mui/icons-material/EventNote";
 import ExitModal from "../modal/exit-modal";
 import { signOut } from "next-auth/react";
 
 const menuItems = [
-  {
-    text: "Обзор",
-    icon: <DashboardIcon />,
-    path: "/dashboard/main",
-  },
   {
     text: "Сотрудники",
     icon: <PeopleAltIcon />,
@@ -38,49 +32,66 @@ const menuItems = [
     submenu: [
       {
         text: "Справочник",
-        icon: (
-          <div className="w-[10px] h-[10px] rounded-full bg-gray-300"></div>
-        ),
         path: "/dashboard/structure-organizations/reference",
       },
       {
         text: "Руководства управлении",
-        icon: (
-          <div className="w-[10px] h-[10px] rounded-full bg-gray-300"></div>
-        ),
         path: "/dashboard/structure-organizations/management-organizations",
+      },
+      {
+        text: "Место работы",
+        path: "/dashboard/structure-organizations/workplace",
       },
     ],
   },
   {
-    text: "Должности",
-    icon: <ControlCameraIcon />,
-    path: "/dashboard/positions",
-  },
-  {
-    text: "Устройства (камеры)",
-    icon: <CameraAltIcon />,
-    path: "/dashboard/devices",
-  },
-  {
-    text: "Точки доступа",
-    icon: <WifiIcon />,
-    path: "/dashboard/access-points",
-  },
-  {
-    text: "Контрольные точки",
+    text: "Точки контроля",
     icon: <SecurityIcon />,
-    path: "/dashboard/checkpoints",
+    submenu: [
+      {
+        text: "Устройства (камеры)",
+        icon: <CameraAltIcon />,
+        path: "/dashboard/devices",
+      },
+      {
+        text: "Точки доступа",
+        icon: <WifiIcon />,
+        path: "/dashboard/access-points",
+      },
+      {
+        text: "Контрольные точки",
+        icon: <SecurityIcon />,
+        path: "/dashboard/checkpoints",
+      },
+    ],
   },
   {
     text: "Отчёты",
     icon: <AssessmentIcon />,
-    path: "/dashboard/reports",
+    submenu: [
+      {
+        text: "по сотрудникам",
+        path: "/dashboard/reports/employee-id",
+      },
+      {
+        text: "по структура организации",
+        path: "/dashboard/reports",
+      },
+      {
+        text: "всех сотрудников",
+        path: "/dashboard/reports/all-employees",
+      },
+    ],
   },
   {
     text: "Обучение и квалификация",
     icon: <SchoolRoundedIcon />,
     path: "/dashboard/user-profile",
+  },
+  {
+    text: "Расписание",
+    icon: <EventNoteIcon />,
+    path: "/dashboard/schedule",
   },
   {
     text: "Настройки",
@@ -93,6 +104,18 @@ export default function Sidebar({ isOpen = true }) {
   const [openExitModal, setOpenExitModal] = useState(false);
   const [openSubmenus, setOpenSubmenus] = useState({});
   const router = useRouter();
+
+  // 🔑 active submenu bo‘lsa parentni ochiq qilib qo‘yish
+  useEffect(() => {
+    menuItems.forEach((item, index) => {
+      if (item.submenu?.some((sub) => router.pathname === sub.path)) {
+        setOpenSubmenus((prev) => ({
+          ...prev,
+          [index]: true,
+        }));
+      }
+    });
+  }, [router.pathname]);
 
   const handleToggleSubmenu = (index) => {
     setOpenSubmenus((prev) => ({
@@ -114,6 +137,7 @@ export default function Sidebar({ isOpen = true }) {
       } h-screen bg-white px-[16px] py-[25px] transition-all duration-300 overflow-y-auto flex flex-col justify-between`}
     >
       <div>
+        {/* LOGO */}
         <div
           onClick={() => router.push("/")}
           className="my-[32px] flex justify-center items-start gap-4 cursor-pointer"
@@ -124,21 +148,25 @@ export default function Sidebar({ isOpen = true }) {
               <p className="text-[18px] font-medium">
                 "ISSIQLIK ELЕKTR STANSIYALARI" AJ
               </p>
+              {/* <p className="text-sm text-gray-600">СКУД</p> */}
             </div>
           )}
         </div>
 
         <div className="w-full h-[1px] bg-gray-200 my-[10px]"></div>
 
+        {/* MENU */}
         <List sx={{ fontFamily: "DM Sans, sans-serif", color: "#A0AEC0" }}>
           {menuItems.map((item, index) => {
             const isActive = router.pathname === item.path;
             const isAnySubmenuActive =
               item.submenu?.some((sub) => router.pathname === sub.path) ||
               false;
+            const isOpenSubmenu = openSubmenus[index] || false;
 
             return (
               <div key={index}>
+                {/* Parent item */}
                 <ListItemButton
                   onClick={() =>
                     item.submenu
@@ -166,7 +194,7 @@ export default function Sidebar({ isOpen = true }) {
                     sx={{
                       minWidth: "auto",
                       color:
-                        isActive || isAnySubmenuActive ? "#2D3748" : "#A0AEC0",
+                        isActive || isAnySubmenuActive ? "#0247b5" : "#A0AEC0",
                       justifyContent: "center",
                     }}
                   >
@@ -185,7 +213,7 @@ export default function Sidebar({ isOpen = true }) {
                   )}
                   {item.submenu && isOpen && (
                     <span className="ml-auto">
-                      {openSubmenus[index] ? (
+                      {isOpenSubmenu ? (
                         <ExpandLessIcon fontSize="small" />
                       ) : (
                         <ExpandMoreIcon fontSize="small" />
@@ -194,9 +222,15 @@ export default function Sidebar({ isOpen = true }) {
                   )}
                 </ListItemButton>
 
-                {/* Submenu render */}
-                {item.submenu && openSubmenus[index] && isOpen && (
-                  <div className="ml-10">
+                {/* Submenu */}
+                {item.submenu && isOpenSubmenu && isOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 50 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 50 }}
+                    transition={{ duration: 0.2 }}
+                    className="ml-10"
+                  >
                     {item.submenu.map((sub, subIndex) => {
                       const isSubActive = router.pathname === sub.path;
                       return (
@@ -216,13 +250,18 @@ export default function Sidebar({ isOpen = true }) {
                             },
                           }}
                         >
+                          <div
+                            className={`w-[7px] h-[7px] rounded-full ${
+                              isSubActive ? "bg-[#2D3748]" : "bg-[#A0AEC0]"
+                            }`}
+                          ></div>
                           <Typography sx={{ fontSize: "16px", ml: 1 }}>
                             {sub.text}
                           </Typography>
                         </ListItemButton>
                       );
                     })}
-                  </div>
+                  </motion.div>
                 )}
               </div>
             );
@@ -230,7 +269,7 @@ export default function Sidebar({ isOpen = true }) {
         </List>
       </div>
 
-      {/* Logout Button */}
+      {/* LOGOUT */}
       <div className="mb-4">
         <ListItemButton
           onClick={() => setOpenExitModal(true)}

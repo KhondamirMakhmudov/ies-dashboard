@@ -3,22 +3,26 @@ import { KeyboardArrowDown } from "@mui/icons-material";
 import clsx from "clsx";
 
 const CustomSelect = ({
+  label,
+  required = false,
+  error,
   options = [],
   value,
   onChange,
   placeholder = "Выберите контрольную точку",
+  className = "",
+  returnObject = false, // ✅ yangi prop: true => object qaytaradi, false => faqat value
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const selectRef = useRef(null);
 
   const toggleDropdown = () => setIsOpen(!isOpen);
 
-  const handleSelect = (val) => {
-    onChange(val);
+  const handleSelect = (opt) => {
+    onChange(returnObject ? opt : opt.value); // ✅ object yoki value
     setIsOpen(false);
   };
 
-  // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (selectRef.current && !selectRef.current.contains(event.target)) {
@@ -29,14 +33,28 @@ const CustomSelect = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const selectedLabel = options.find((opt) => opt.value === value)?.label;
+  const selectedLabel = returnObject
+    ? value?.label
+    : options.find((opt) => opt.value === value)?.label;
 
   return (
-    <div className="relative w-full col-span-4" ref={selectRef}>
+    <div className={`relative w-full ${className}`} ref={selectRef}>
+      {label && (
+        <label className="block mb-1 text-sm text-gray-700">
+          {label}
+          {required && <span className="text-red-500"> *</span>}
+        </label>
+      )}
+
       <button
         type="button"
         onClick={toggleDropdown}
-        className="w-full border border-gray-300 rounded-md p-2 text-[15px] text-left text-black flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className={clsx(
+          "w-full h-[45px] border rounded-md p-2 text-[15px] text-left text-black flex items-center justify-between focus:outline-none focus:ring-2",
+          error
+            ? "border-red-500 focus:ring-red-500"
+            : "border-gray-300 focus:ring-blue-500"
+        )}
       >
         <span className={clsx("truncate", !value && "text-gray-400")}>
           {selectedLabel || placeholder}
@@ -55,15 +73,18 @@ const CustomSelect = ({
               key={idx}
               className={clsx(
                 "px-4 py-2 hover:bg-blue-100 cursor-pointer",
-                opt.value === value && "bg-blue-50 font-medium"
+                (returnObject ? value?.value : value) === opt.value &&
+                  "bg-blue-50 font-medium"
               )}
-              onClick={() => handleSelect(opt.value)}
+              onClick={() => handleSelect(opt)}
             >
               {opt.label}
             </li>
           ))}
         </ul>
       )}
+
+      {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
     </div>
   );
 };

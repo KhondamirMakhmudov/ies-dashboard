@@ -2,7 +2,7 @@ import Brand from "@/components/brand";
 import Button from "@/components/button";
 import Input from "@/components/input";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/router";
@@ -14,9 +14,41 @@ import Link from "next/link";
 export default function Home() {
   const { data: session } = useSession();
   const router = useRouter();
+
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  // saved logins
+  const [savedLogins, setSavedLogins] = useState([]);
+
+  useEffect(() => {
+    const stored = JSON.parse(localStorage.getItem("logins") || "[]");
+    setSavedLogins(stored);
+  }, []);
+
+  const saveLogin = (username, password) => {
+    let updated = [...savedLogins];
+    const existingIndex = updated.findIndex((u) => u.username === username);
+    if (existingIndex > -1) {
+      updated[existingIndex].password = password;
+    } else {
+      updated.push({ username, password });
+    }
+    setSavedLogins(updated);
+    localStorage.setItem("logins", JSON.stringify(updated));
+  };
+
+  const removeLogin = (username) => {
+    const updated = savedLogins.filter((u) => u.username !== username);
+    setSavedLogins(updated);
+    localStorage.setItem("logins", JSON.stringify(updated));
+  };
+
+  const handleSelectLogin = (login) => {
+    setUsername(login.username);
+    setPassword(login.password);
+  };
 
   const onSubmit = async (e) => {
     e.preventDefault();
@@ -31,7 +63,8 @@ export default function Home() {
 
       if (response?.ok && !response?.error) {
         toast.success("Добро пожаловать");
-        router.push("/dashboard/main");
+        saveLogin(username, password); // saqlash
+        router.push("/dashboard/employees");
       } else {
         toast.error(
           "Login xato! " + (response?.error || "Ma'lumotlar noto‘g‘ri.")
@@ -40,7 +73,7 @@ export default function Home() {
     } catch (error) {
       toast.error("Tizimga kirishda xatolik yuz berdi.");
     } finally {
-      setIsLoading(false); // agar xohlasangiz, router.push'dan keyin olib tashlasa ham bo'ladi
+      setIsLoading(false);
     }
   };
 
@@ -56,92 +89,123 @@ export default function Home() {
           <ContentLoader />
         </div>
       )}
-      <div className="">
-        <div className="grid grid-cols-12 w-full gap-[30px] place-items-center">
-          <motion.div
-            className="col-span-6"
-            initial={{ x: -100, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-          >
-            <Image
-              src="/icons/login.svg"
-              alt="login"
-              width={600}
-              height={300}
-            />
-          </motion.div>
 
+      <div className="grid grid-cols-12 w-full gap-[30px] place-items-center h-full overflow-hidden">
+        {/* Left side image */}
+        <motion.div
+          className="col-span-6 flex justify-center h-full"
+          initial={{ x: -80, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+        >
+          <Image src="/icons/login.svg" alt="login" width={600} height={300} />
+        </motion.div>
+
+        {/* Right side form */}
+        <motion.div
+          className="col-span-6 w-full flex flex-col items-center justify-center h-full bg-white rounded-md p-[24px]"
+          initial={{ x: 80, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+        >
           <motion.div
-            className="col-span-6 w-full flex flex-col items-center justify-center h-screen bg-white rounded-md p-[24px]"
-            initial={{ x: 100, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
+            className="max-w-[600px] flex flex-col items-start justify-center"
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.5 }}
           >
-            <motion.div
-              className="max-w-[600px] flex flex-col items-start justify-center"
-              initial={{ opacity: 0, y: 40 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.5 }}
-            >
-              <Brand />
-              <div className="w-full h-[1px] bg-gray-200 my-[10px]" />
-              <div className="mb-[20px]">
-                <h1 className="text-[36px] mb-[12px] font-semibold">
-                  Вход в систему
-                </h1>
-                {session?.accessToken ? (
-                  ""
-                ) : (
-                  <p className="text-gray-400">
-                    Для входа в систему введите ваше имя пользователя и пароль!
-                  </p>
+            <Brand />
+            <div className="w-full h-[1px] bg-gray-200 my-[10px]" />
+
+            <div className="mb-[20px]">
+              <h1 className="text-[36px] mb-[12px] font-semibold">
+                Вход в систему
+              </h1>
+              {!session?.accessToken && (
+                <p className="text-gray-400">
+                  Для входа в систему введите ваше имя пользователя и пароль!
+                </p>
+              )}
+            </div>
+
+            {session?.accessToken ? (
+              <motion.div
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                className="w-full"
+              >
+                <Button sx={{ width: "100%" }}>
+                  <Link href={"/dashboard/employees"}>Вход</Link>
+                </Button>
+              </motion.div>
+            ) : (
+              <motion.form
+                onSubmit={onSubmit}
+                className="py-[40px] space-y-[10px] w-full"
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.7 }}
+              >
+                {/* Saved logins */}
+                {savedLogins.length > 0 && (
+                  <div className="mb-4">
+                    <p className="text-sm text-gray-600 mb-2">
+                      Сохраненные логины:
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {savedLogins.map((login, i) => (
+                        <div
+                          key={i}
+                          onClick={() => handleSelectLogin(login)}
+                          className="flex items-center gap-2 px-3 py-2 rounded-full bg-blue-50 text-blue-600 cursor-pointer hover:bg-blue-100 transition-all"
+                        >
+                          <span className="w-6 h-6 flex items-center justify-center rounded-full bg-blue-500 text-white text-xs">
+                            {login.username.charAt(0).toUpperCase()}
+                          </span>
+                          <span>{login.username}</span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeLogin(login.username);
+                            }}
+                            className="ml-1 text-red-400 hover:text-red-600"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 )}
-              </div>
 
-              {session?.accessToken ? (
+                <Input
+                  label="Имя пользователя"
+                  type="text"
+                  value={username}
+                  inputClass="!h-[48px] rounded-[8px] !border-gray-300 text-[15px]"
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="Введите имя пользователя"
+                />
+                <Input
+                  label="Пароль"
+                  type="password"
+                  value={password}
+                  inputClass="!h-[48px] rounded-[8px] !border-gray-300 text-[15px]"
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Введите пароль"
+                />
+
                 <motion.div
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.97 }}
-                  className="w-full"
                 >
-                  <Button sx={{ width: "100%" }}>
-                    <Link href={"/dashboard/main"}>Вход</Link>
-                  </Button>
+                  <Button>Вход</Button>
                 </motion.div>
-              ) : (
-                <motion.form
-                  onSubmit={onSubmit}
-                  className="py-[40px] space-y-[10px] w-full"
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.7 }}
-                >
-                  <Input
-                    label="Имя пользователя"
-                    type="text"
-                    inputClass="!h-[48px] rounded-[8px] !border-gray-300 text-[15px]"
-                    onChange={(e) => setUsername(e.target.value)}
-                    placeholder="Введите имя пользователя"
-                  />
-                  <Input
-                    label="Пароль"
-                    type="password"
-                    inputClass="!h-[48px] rounded-[8px] !border-gray-300 text-[15px]"
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Введите пароль"
-                  />
-                  <motion.div
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.97 }}
-                  >
-                    <Button>Вход</Button>
-                  </motion.div>
-                </motion.form>
-              )}
-            </motion.div>
+              </motion.form>
+            )}
           </motion.div>
-        </div>
+        </motion.div>
       </div>
     </motion.div>
   );

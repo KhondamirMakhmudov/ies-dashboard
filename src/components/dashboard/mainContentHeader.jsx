@@ -17,12 +17,10 @@ const MainContentHeader = ({ children, toggleSidebar }) => {
   const [openExitModal, setOpenExitModal] = useState(false);
   const router = useRouter();
 
-  const handleLogout = async () => {
-    await signOut({ callbackUrl: "/" });
-
-    localStorage.clear();
-    sessionStorage.clear();
+  const handleLogout = () => {
+    signOut({ redirect: true, callbackUrl: "http://10.20.6.30:3000" });
   };
+
   const handleOpenExitModal = () => setOpenExitModal(false);
 
   const handleClickProfile = () => {
@@ -64,7 +62,7 @@ const MainContentHeader = ({ children, toggleSidebar }) => {
     setOpenProfile(false);
   };
   return (
-    <div className="bg-white p-[12px] rounded-md flex justify-between items-center gap-4">
+    <div className="bg-white p-[12px] h-[72px] sticky top-0 z-30 rounded-md flex justify-between items-center gap-4 border border-[#E9E9E9]">
       <div className="flex items-center gap-4">
         <IconButton aria-label="menu" onClick={toggleSidebar}>
           <MenuIcon />

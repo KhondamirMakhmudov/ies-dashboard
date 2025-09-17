@@ -1,6 +1,6 @@
 import { Modal, Box, Button, Typography } from "@mui/material";
 
-const DeleteModal = ({ open, onClose, deleting, title }) => {
+const DeleteModal = ({ open, onClose, deleting, title, children }) => {
   return (
     <Modal open={open} onClose={onClose}>
       <Box
@@ -17,6 +17,8 @@ const DeleteModal = ({ open, onClose, deleting, title }) => {
         }}
       >
         <Typography>{title}</Typography>
+
+        {children}
 
         <div className="flex justify-end gap-1 mt-4">
           <Button

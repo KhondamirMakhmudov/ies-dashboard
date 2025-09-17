@@ -2,7 +2,6 @@ import { useQuery } from "@tanstack/react-query";
 import { request } from "@/services/api";
 import { toast } from "react-hot-toast";
 
-
 const useGetQuery = ({
   key = "get-all",
   url = "/",
@@ -12,8 +11,6 @@ const useGetQuery = ({
   showErrorMsg = false,
   enabled = true,
 }) => {
-
-
   const { isLoading, isError, data, error, isFetching } = useQuery(
     [key, params],
     () =>

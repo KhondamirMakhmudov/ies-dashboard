@@ -1,57 +1,62 @@
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useRef } from "react";
+import AvatarEditor from "react-avatar-editor";
+import toast from "react-hot-toast";
 
-export default function ImageUploader() {
+export default function ImageUploader({ onFileChange }) {
   const [image, setImage] = useState(null);
+  const [scale, setScale] = useState(1.0);
+  const editorRef = useRef(null);
 
+  // Fayl yuklash
   const handleImageUpload = (event) => {
     const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        setImage(reader.result);
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    // ✅ 2MB dan oshmasin
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Файл 2MB dan kichik bo‘lishi kerak!");
+      return;
     }
+
+    setImage(file);
   };
 
-  const handleDragOver = (event) => {
-    event.preventDefault();
-  };
-
+  // Drag & drop
   const handleDrop = (event) => {
     event.preventDefault();
     const file = event.dataTransfer.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        setImage(reader.result);
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Файл 2MB dan kichik bo‘lishi kerak!");
+      return;
+    }
+
+    setImage(file);
+  };
+
+  // Crop tugmasi
+  const handleSave = () => {
+    if (editorRef.current) {
+      editorRef.current.getImageScaledToCanvas().toBlob((blob) => {
+        if (blob) {
+          const croppedFile = new File([blob], image.name, {
+            type: image.type,
+          });
+          onFileChange(croppedFile); // ✅ parentga File object uzatamiz
+        }
+      }, image.type);
     }
   };
 
   return (
     <div
-      className="relative w-full h-[250px] border border-[#C9C9C9] rounded-xl flex flex-col items-center justify-center text-center p-4 cursor-pointer bg-white overflow-hidden"
-      onDragOver={handleDragOver}
+      className="relative w-full h-[350px] border border-[#C9C9C9] rounded-xl flex flex-col items-center justify-center text-center p-4 bg-white overflow-hidden"
+      onDragOver={(e) => e.preventDefault()}
       onDrop={handleDrop}
     >
-      {image ? (
-        <>
-          <img
-            src={image}
-            alt="Uploaded"
-            className="w-full h-full object-contain rounded-lg"
-          />
-          <label
-            htmlFor="fileInput"
-            className="absolute bottom-4 right-4 py-1.5 px-4  text-sm border border-[#C9c9c9] rounded-lg  cursor-pointer hover:bg-gray-100 active:scale-90 transition-all duration-200"
-          >
-            Изменить фото
-          </label>
-        </>
-      ) : (
+      {!image ? (
         <>
           <Image
             src={"/icons/plus-circle.svg"}
@@ -75,8 +80,50 @@ export default function ImageUploader() {
             <p>Загрузить</p>
           </label>
         </>
+      ) : (
+        <div className="flex flex-col items-center gap-4 w-full">
+          {/* Crop editor */}
+          <AvatarEditor
+            ref={editorRef}
+            image={image}
+            width={150}
+            height={150}
+            border={10}
+            borderRadius={110}
+            scale={scale}
+            className="rounded-lg shadow-md"
+          />
+
+          {/* Zoom slider */}
+          <input
+            type="range"
+            min="1"
+            max="3"
+            step="0.1"
+            value={scale}
+            onChange={(e) => setScale(parseFloat(e.target.value))}
+            className="w-full accent-blue-500"
+          />
+
+          {/* Actions */}
+          <div className="flex gap-3">
+            <label
+              htmlFor="fileInput"
+              className="py-2 px-4 border border-[#C9c9c9] rounded-lg cursor-pointer hover:bg-gray-100 active:scale-90 transition-all duration-200"
+            >
+              Изменить фото
+            </label>
+            <button
+              onClick={handleSave}
+              className="py-2 px-4 bg-blue-500 text-white rounded-lg hover:bg-blue-600 active:scale-95 transition-all"
+            >
+              Сохранить
+            </button>
+          </div>
+        </div>
       )}
 
+      {/* Fayl inputi */}
       <input
         id="fileInput"
         type="file"

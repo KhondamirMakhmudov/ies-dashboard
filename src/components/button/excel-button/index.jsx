@@ -12,7 +12,7 @@ export default function ExcelButton({ onClick }) {
       onMouseLeave={() => setIsHovering(false)}
       onClick={onClick}
       initial={{ width: 44 }}
-      animate={{ width: isHovering ? 100 : 38 }}
+      animate={{ width: isHovering ? 180 : 38 }}
       transition={{ duration: 0.3 }}
       className="flex items-center bg-[#00733B] hover:bg-[#00733bf1] py-[10px] px-[8px] rounded-[8px] overflow-hidden text-white gap-2 cursor-pointer"
     >
@@ -29,7 +29,7 @@ export default function ExcelButton({ onClick }) {
         transition={{ duration: 0.2 }}
         className="text-xs lg:text-sm font-gilroy whitespace-nowrap"
       >
-        Скачать
+        Скачать Excel файл
       </motion.span>
     </motion.button>
   );

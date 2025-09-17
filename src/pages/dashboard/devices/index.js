@@ -9,7 +9,7 @@ import useGetQuery from "@/hooks/java/useGetQuery";
 import { KEYS } from "@/constants/key";
 import { URLS } from "@/constants/url";
 import { motion } from "framer-motion";
-import { get } from "lodash";
+import { get, isEmpty } from "lodash";
 import ContentLoader from "@/components/loader";
 import { Typography, Select, MenuItem } from "@mui/material";
 import Input from "@/components/input";
@@ -23,10 +23,10 @@ import CustomSelect from "@/components/select";
 import usePutQuery from "@/hooks/java/usePutQuery";
 import { useQueryClient } from "@tanstack/react-query";
 import CustomSearch from "@/components/search";
-import ExcelButton from "@/components/button/excel-button";
-import Link from "next/link";
+
 import { useGlobalStore } from "@/store/globalStore";
 import { useRouter } from "next/router";
+import NoData from "@/components/no-data";
 const ipRegex =
   /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
 
@@ -64,13 +64,13 @@ const Index = () => {
 
   // department get
   const { data: departments } = useGetQuery({
-    key: KEYS.departments,
+    key: [KEYS.departments, createCameraModal || editCameraModal],
     url: URLS.departments,
     headers: {
       Authorization: `Bearer ${session?.accessToken}`,
       Accept: "application/json",
     },
-    enabled: !!session?.accessToken,
+    enabled: !!session?.accessToken && (createCameraModal || editCameraModal),
   });
 
   const optionsDepartments = get(departments, "data", []).map((entry) => ({
@@ -81,13 +81,13 @@ const Index = () => {
   // entrypoint get
 
   const { data: entrypoints } = useGetQuery({
-    key: KEYS.entrypoints,
+    key: [KEYS.entrypoints, createCameraModal || editCameraModal],
     url: URLS.entrypoints,
     headers: {
       Authorization: `Bearer ${session?.accessToken}`,
       Accept: "application/json",
     },
-    enabled: !!session?.accessToken,
+    enabled: !!session?.accessToken && (createCameraModal || editCameraModal),
   });
 
   const options = get(entrypoints, "data", []).map((entry) => ({
@@ -97,13 +97,13 @@ const Index = () => {
 
   // checkpoint get
   const { data: checkpoints } = useGetQuery({
-    key: KEYS.checkpoints,
+    key: [KEYS.checkpoints, createCameraModal || editCameraModal],
     url: URLS.checkpoints,
     headers: {
       Authorization: `Bearer ${session?.accessToken}`,
       Accept: "application/json",
     },
-    enabled: !!session?.accessToken,
+    enabled: !!session?.accessToken && (createCameraModal || editCameraModal),
   });
 
   const optionsCheckpoints = get(checkpoints, "data", []).map((entry) => ({
@@ -117,15 +117,33 @@ const Index = () => {
 
   const onSubmitCreateCamera = (e) => {
     e.preventDefault();
+
+    // Client-side validatsiya
+    if (
+      !ipAddress?.trim() ||
+      !building?.trim() ||
+      !login?.trim() ||
+      !password?.trim() ||
+      !selectedDepartment ||
+      !selectedCheckPoint ||
+      !doorType
+    ) {
+      toast.error("Пожалуйста, заполните все поля", {
+        position: "top-center",
+      });
+      return;
+    }
+
+    // Ma'lumotlar to‘g‘ri bo‘lsa, serverga yuboriladi
     createCamera(
       {
         url: URLS.createCamera,
         attributes: {
-          ipAddress: ipAddress,
-          building: building,
-          login: login,
+          ipAddress,
+          building,
+          login,
           departmentId: selectedDepartment,
-          password: password,
+          password,
           checkPointId: selectedCheckPoint,
           doorTypeId: doorType === "in" ? 1 : 2,
           isActive: isActive === true ? 1 : 0,
@@ -153,7 +171,13 @@ const Index = () => {
           queryClient.invalidateQueries(KEYS.checkpoints);
         },
         onError: (error) => {
-          toast.error(`Error is ${error}`, { position: "top-right" });
+          const resData = error?.response?.data;
+          const message =
+            resData?.message && resData?.details
+              ? `${resData.message}: ${resData.details}`
+              : resData?.message || resData?.details || "Непредвиденная ошибка";
+
+          toast.error(message, { position: "top-right" });
         },
       }
     );
@@ -266,7 +290,7 @@ const Index = () => {
       },
     },
     { accessorKey: "doorType", header: "Тип двери" },
-    { accessorKey: "depName", header: "Подразделение" },
+    // { accessorKey: "depName", header: "Подразделение" },
     { accessorKey: "checkPointName", header: "Контрольная точка" },
     { accessorKey: "entryPointName", header: "Входная точка" },
     {
@@ -361,50 +385,57 @@ const Index = () => {
   // }
   return (
     <DashboardLayout headerTitle={"Устройства"}>
-      <motion.div
-        initial={{ opacity: 0, scale: 0 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="bg-white p-[12px] my-[50px] rounded-md"
-      >
-        <div className="col-span-12 space-y-[15px]">
-          <div className="flex justify-between items-center">
-            <Button
-              onClick={() => setCreateCameraModal(true)}
-              sx={{
-                textTransform: "initial",
-                fontFamily: "DM Sans, sans-serif",
-                backgroundColor: "#4182F9",
-                boxShadow: "none",
-                color: "white",
-                display: "flex",
-                gap: "4px",
-                fontSize: "14px",
-                borderRadius: "8px",
-              }}
-              variant="contained"
-            >
-              <p>Создать</p>
-            </Button>
-            {/* search camera data */}
-            <div className="flex gap-2 items-center">
-              <CustomSearch onSearch={setSearchTerm} />
+      {isEmpty(get(allCameras, "data", [])) ? (
+        <NoData onCreate={() => setCreateCameraModal(true)} />
+      ) : (
+        <motion.div
+          initial={{ opacity: 0, scale: 0 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-white p-[12px] my-[50px] rounded-md border border-gray-200"
+        >
+          <div className="col-span-12 space-y-[15px]">
+            <div className="flex justify-between items-center">
+              <Button
+                onClick={() => setCreateCameraModal(true)}
+                sx={{
+                  textTransform: "initial",
+                  fontFamily: "DM Sans, sans-serif",
+                  backgroundColor: "#4182F9",
+                  boxShadow: "none",
+                  color: "white",
+                  display: "flex",
+                  gap: "4px",
+                  fontSize: "14px",
+                  borderRadius: "8px",
+                }}
+                variant="contained"
+              >
+                <p>Создать</p>
+              </Button>
+              {/* search camera data */}
+              <div className="flex gap-2 items-center">
+                <CustomSearch onSearch={setSearchTerm} />
+              </div>
             </div>
+            <CustomTable data={filteredCameras} columns={columns} />
           </div>
-          <CustomTable data={filteredCameras} columns={columns} />
-        </div>
-        {/* delete camera */}
-        <DeleteModal
-          open={deleteCameraModal}
-          onClose={() => setDeleteCameraModal(false)}
-          title="Вы уверены, что хотите удалить эту камеру?"
-        />
-      </motion.div>
+          {/* delete camera */}
+          <DeleteModal
+            open={deleteCameraModal}
+            onClose={() => setDeleteCameraModal(false)}
+            title="Вы уверены, что хотите удалить эту камеру?"
+          />
+        </motion.div>
+      )}
       {/* create camera */}
       {createCameraModal && (
         <MethodModal
           open={createCameraModal}
           onClose={() => {
             setCreateCameraModal(false);
+            setSelectedDepartment("");
+            setSelectedEntryPoint("");
+            setSelectedCheckPoint("");
             setIpAddress("");
             setBuilding("");
             setLogin("");
@@ -483,6 +514,7 @@ const Index = () => {
                 value={selectedDepartment}
                 onChange={(val) => setSelectedDepartment(val)}
                 placeholder="Выберите департамент"
+                className="col-span-4"
               />
 
               <CustomSelect
@@ -490,12 +522,14 @@ const Index = () => {
                 value={selectedEntryPoint}
                 onChange={(val) => setSelectedEntryPoint(val)}
                 placeholder="Выберите точки входа"
+                className="col-span-4"
               />
 
               <CustomSelect
                 options={optionsCheckpoints}
                 value={selectedCheckPoint}
                 onChange={(val) => setSelectedCheckPoint(val)}
+                className="col-span-4"
               />
 
               <CustomSelect
@@ -638,6 +672,7 @@ const Index = () => {
                 value={selectedDepartment}
                 onChange={(val) => setSelectedDepartment(val)}
                 placeholder="Выберите департамент"
+                className="col-span-4"
               />
 
               <CustomSelect
@@ -645,12 +680,14 @@ const Index = () => {
                 value={selectedEntryPoint}
                 onChange={(val) => setSelectedEntryPoint(val)}
                 placeholder="Выберите точки входа"
+                className="col-span-4"
               />
 
               <CustomSelect
                 options={optionsCheckpoints}
                 value={selectedCheckPoint}
                 onChange={(val) => setSelectedCheckPoint(val)}
+                className="col-span-4"
               />
 
               <CustomSelect
@@ -739,7 +776,7 @@ const Index = () => {
             setDeleteCameraModal(false);
             setSelectedCamera(null);
           }}
-          title="Вы уверены, что хотите удалить эту чекпоинт?"
+          title="Вы уверены, что хотите удалить эту камеру?"
         />
       )}
     </DashboardLayout>

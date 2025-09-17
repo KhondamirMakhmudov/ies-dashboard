@@ -4,34 +4,49 @@ import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 
 const Input = ({
   label,
-  type,
+  required = false,
+  type = "text",
+  name,
   placeholder,
   value,
   onChange,
+  error,
   classNames = "",
   inputClass = "",
   labelClass = "",
   ...props
 }) => {
   const [showPassword, setShowPassword] = useState(false);
-
   const isPassword = type === "password";
   const inputType = isPassword ? (showPassword ? "text" : "password") : type;
 
   return (
     <div className={`relative ${classNames}`}>
-      {label && <label className={`${labelClass}`}>{label}</label>}
+      {label && (
+        <label
+          htmlFor={name}
+          className={`block mb-1 text-sm text-gray-700 ${labelClass}`}
+        >
+          {label}
+          {required && <span className="text-red-500"> *</span>}
+        </label>
+      )}
 
       <input
         {...props}
+        id={name}
+        name={name}
         type={inputType}
         placeholder={placeholder}
         value={value}
         onChange={onChange}
-        className={`w-full h-[55px] border border-gray-400 rounded-[5px] p-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 ${inputClass}`}
+        className={`w-full h-[55px] border ${
+          error ? "border-red-500" : "border-gray-400"
+        } rounded-[5px] p-2 pr-10 focus:outline-none focus:ring-2 ${
+          error ? "focus:ring-red-500" : "focus:ring-blue-500"
+        } ${inputClass}`}
       />
 
-      {/* Show/hide toggle */}
       {isPassword && (
         <button
           type="button"
@@ -41,6 +56,8 @@ const Input = ({
           {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
         </button>
       )}
+
+      {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
     </div>
   );
 };

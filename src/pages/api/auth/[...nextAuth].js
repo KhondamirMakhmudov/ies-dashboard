@@ -67,6 +67,16 @@ export const authOptions = {
 
   session: {
     strategy: "jwt",
+    maxAge: 24 * 60 * 60, // 1 kun = 86400 soniya
+  },
+
+  jwt: {
+    maxAge: 24 * 60 * 60, // 1 kun
+  },
+
+  pages: {
+    signIn: "/", // login sahifangiz
+    signOut: "http://10.20.6.60:3000/",
   },
 
   secret: process.env.NEXTAUTH_SECRET || "some-hardcoded-secret",

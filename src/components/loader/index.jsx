@@ -8,7 +8,7 @@ const ContentLoader = ({ classNames }) => {
         classNames
       )}
     >
-      <svg class="pl" width="240" height="240" viewBox="0 0 240 240">
+      <svg className="pl" width="240" height="240" viewBox="0 0 240 240">
         <circle
           className="pl__ring pl__ring--a"
           cx="120"

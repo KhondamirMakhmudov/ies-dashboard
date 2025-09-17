@@ -10,22 +10,29 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import DetailsIcon from "@mui/icons-material/Details";
 import HexagonIcon from "@mui/icons-material/Hexagon";
+import StarIcon from "@mui/icons-material/Star";
 import { Button, IconButton, Typography } from "@mui/material";
 import { useState } from "react";
 import MethodModal from "@/components/modal/method-modal";
 import Input from "@/components/input";
 import usePostPythonQuery from "@/hooks/python/usePostQuery";
-import CustomTable from "@/components/table";
 import CustomSelect from "@/components/select";
 import { useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
+import usePatchPythonQuery from "@/hooks/python/usePatchQuery";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import DeleteModal from "@/components/modal/delete-modal";
+import { config } from "@/config";
 
 const Index = () => {
   const queryClient = useQueryClient();
   const [createModal, setCreateModal] = useState(false);
   const [createModalParentId, setCreateModalParentId] = useState(null);
+  const [selectEditId, setSelectEditId] = useState(null);
   const [editModal, setEditModal] = useState(false);
+  const [deleteModal, setDeleteModal] = useState(false);
   const [editModalOrgid, setEditOrgId] = useState(null);
   const [name, setName] = useState("");
   const [unitCode, setUnitCode] = useState("");
@@ -34,6 +41,7 @@ const Index = () => {
   const [openLevel1Id, setOpenLevel1Id] = useState(null);
   const [openLevel2Id, setOpenLevel2Id] = useState(null);
   const [openLevel3Id, setOpenLevel3Id] = useState(null);
+  const [openLevel4Id, setOpenLevel4Id] = useState(null);
 
   // LEVEL 1 - Asosiy bo'limlar
   const { data: level1List } = useGetPythonQuery({
@@ -64,6 +72,13 @@ const Index = () => {
     url: URLS.organizationalUnits,
     enabled: !!openLevel3Id,
     params: { parent_id: openLevel3Id },
+  });
+
+  const { data: level5List } = useGetPythonQuery({
+    key: [KEYS.organizationalUnits, openLevel4Id],
+    url: URLS.organizationalUnits,
+    enabled: !!openLevel4Id,
+    params: { parent_id: openLevel4Id },
   });
 
   const {
@@ -103,7 +118,7 @@ const Index = () => {
       },
       {
         onSuccess: () => {
-          toast.success("Bo‘lim muvaffaqiyatli yaratildi", {
+          toast.success("Раздел успешно создан.", {
             position: "top-center",
           });
           setCreateModal(false);
@@ -118,6 +133,72 @@ const Index = () => {
         },
       }
     );
+  };
+
+  // edit organization
+  const { mutate: editOrg } = usePatchPythonQuery({
+    listKeyId: "edit-org",
+    hideSuccessToast: true,
+  });
+
+  const onSubmitEditOrg = (id) => {
+    editOrg(
+      {
+        url: `${URLS.organizationalUnits}${id}`,
+        attributes: {
+          name: name,
+          // unit_code: unitCode,
+          // is_active: isActive,
+          // unit_type_id: unitTypeId,
+          // parent_id: createModalParentId,
+        },
+      },
+      {
+        onSuccess: () => {
+          toast.success("Раздел успешно отредактирован.", {
+            position: "top-center",
+          });
+          setEditModal(false);
+          setUnitTypeId(null);
+          setUnitCode("");
+          setName("");
+          setCreateModalParentId(null);
+          queryClient.invalidateQueries(KEYS.organizationalUnits);
+        },
+        onError: (error) => {
+          toast.error(`Xatolik: ${error}`, { position: "top-right" });
+        },
+      }
+    );
+  };
+
+  // delete organization
+
+  const onSubmitDeleteOrg = async (id) => {
+    try {
+      const response = await fetch(
+        `${config.PYTHON_API_URL}${URLS.organizationalUnits}${id}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ organizational_unit_id: id }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Ошибка при удалении");
+      }
+
+      toast.success("Успешно удалено");
+      queryClient.invalidateQueries(KEYS.organizationalUnits);
+      setDeleteModal(false);
+      console.log("Deleted successfully");
+    } catch (error) {
+      console.error(error);
+      toast.error("Не удалось удалить");
+    }
   };
 
   return (
@@ -190,9 +271,49 @@ const Index = () => {
                       sx={{
                         background: "#ECF2FF",
                         color: "#1E5EFF",
-                        padding: "8px",
-                        width: "35px",
-                        height: "35px",
+                        padding: "4px",
+                        width: "30px",
+                        height: "30px",
+                        borderRadius: "100%",
+                      }}
+                    />
+                  </IconButton>
+
+                  <IconButton
+                    onClick={() => {
+                      setEditModal(true);
+                      setSelectEditId(level1.id);
+                      setName(level1.name);
+                      setUnitCode(level1.unit_code);
+                    }}
+                    className="text-blue-600 text-sm hover:underline normal-case"
+                  >
+                    <EditIcon
+                      sx={{
+                        background: "#ECF2FF",
+                        color: "#1E5EFF",
+                        padding: "4px",
+                        width: "30px",
+                        height: "30px",
+                        borderRadius: "100%",
+                      }}
+                    />
+                  </IconButton>
+
+                  <IconButton
+                    onClick={() => {
+                      setDeleteModal(true);
+                      setSelectEditId(level1.id);
+                    }}
+                    className="text-blue-600 text-sm hover:underline normal-case"
+                  >
+                    <DeleteIcon
+                      sx={{
+                        background: "#ECF2FF",
+                        color: "#1E5EFF",
+                        padding: "4px",
+                        width: "30px",
+                        height: "30px",
                         borderRadius: "100%",
                       }}
                     />
@@ -212,7 +333,7 @@ const Index = () => {
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
                     exit={{ opacity: 0, height: 0 }}
-                    className="ml-6 mt-2 space-y-2 border border-gray-200 rounded"
+                    className="ml-6 mt-2 space-y-2  rounded"
                   >
                     {get(level2List, "data", []).length > 0 ? (
                       get(level2List, "data", []).map((level2) => {
@@ -227,7 +348,7 @@ const Index = () => {
                                 );
                                 setOpenLevel3Id(null);
                               }}
-                              className="p-3 bg-white rounded hover:bg-gray-50 flex justify-between items-center cursor-pointer"
+                              className="p-3 bg-white rounded hover:bg-gray-50 flex border border-gray-200 justify-between items-center cursor-pointer"
                             >
                               <div className="flex items-center gap-3">
                                 <HiveIcon
@@ -251,6 +372,44 @@ const Index = () => {
                                   className="text-blue-600 text-sm hover:underline normal-case"
                                 >
                                   <AddCircleIcon
+                                    sx={{
+                                      background: "#FFF4C9",
+                                      color: "#FFC700",
+                                      padding: "4px",
+                                      width: "30px",
+                                      height: "30px",
+                                      borderRadius: "100%",
+                                    }}
+                                  />
+                                </IconButton>
+                                <IconButton
+                                  onClick={() => {
+                                    setEditModal(true);
+                                    setSelectEditId(level2.id);
+                                    setName(level2.name);
+                                    setUnitCode(level2.unit_code);
+                                  }}
+                                  className="text-blue-600 text-sm hover:underline normal-case"
+                                >
+                                  <EditIcon
+                                    sx={{
+                                      background: "#FFF4C9",
+                                      color: "#FFC700",
+                                      padding: "4px",
+                                      width: "30px",
+                                      height: "30px",
+                                      borderRadius: "100%",
+                                    }}
+                                  />
+                                </IconButton>
+                                <IconButton
+                                  onClick={() => {
+                                    setDeleteModal(true);
+                                    setSelectEditId(level2.id);
+                                  }}
+                                  className="text-blue-600 text-sm hover:underline normal-case"
+                                >
+                                  <DeleteIcon
                                     sx={{
                                       background: "#FFF4C9",
                                       color: "#FFC700",
@@ -330,6 +489,47 @@ const Index = () => {
                                                     }}
                                                   />
                                                 </IconButton>
+                                                <IconButton
+                                                  onClick={() => {
+                                                    setEditModal(true);
+                                                    setSelectEditId(level3.id);
+                                                    setName(level3.name);
+                                                    setUnitCode(
+                                                      level3.unit_code
+                                                    );
+                                                  }}
+                                                  className="text-blue-600 text-sm hover:underline normal-case"
+                                                >
+                                                  <EditIcon
+                                                    sx={{
+                                                      background: "#C4F8E2",
+                                                      color: "#1FD286",
+                                                      padding: "4px",
+                                                      width: "30px",
+                                                      height: "30px",
+                                                      borderRadius: "100%",
+                                                    }}
+                                                  />
+                                                </IconButton>
+
+                                                <IconButton
+                                                  onClick={() => {
+                                                    setDeleteModal(true);
+                                                    setSelectEditId(level3.id);
+                                                  }}
+                                                  className="text-blue-600 text-sm hover:underline normal-case"
+                                                >
+                                                  <DeleteIcon
+                                                    sx={{
+                                                      background: "#C4F8E2",
+                                                      color: "#1FD286",
+                                                      padding: "4px",
+                                                      width: "30px",
+                                                      height: "30px",
+                                                      borderRadius: "100%",
+                                                    }}
+                                                  />
+                                                </IconButton>
                                                 {isLevel3Open ? (
                                                   <KeyboardArrowUpIcon />
                                                 ) : (
@@ -362,33 +562,289 @@ const Index = () => {
                                                       level4List,
                                                       "data",
                                                       []
-                                                    ).map((level4) => (
-                                                      <div
-                                                        key={level4.id}
-                                                        className="p-2 bg-white hover:bg-gray-50 border border-gray-200  rounded text-sm"
-                                                      >
-                                                        <div className="flex items-center gap-3">
-                                                          <HexagonIcon
-                                                            sx={{
-                                                              background:
-                                                                "#E9D3FF",
-                                                              color: "#6E0BD4",
-                                                              padding: "4px",
-                                                              width: "30px",
-                                                              height: "30px",
-                                                              borderRadius:
-                                                                "100%",
-                                                            }}
-                                                          />
-                                                          <span>
-                                                            {level4.name}
-                                                          </span>
+                                                    ).map((level4) => {
+                                                      const isLevel4Open =
+                                                        openLevel4Id ===
+                                                        level4.id;
+
+                                                      return (
+                                                        <div key={level4.id}>
+                                                          {/* LEVEL 4 */}
+                                                          <div
+                                                            onClick={() =>
+                                                              setOpenLevel4Id(
+                                                                isLevel4Open
+                                                                  ? null
+                                                                  : level4.id
+                                                              )
+                                                            }
+                                                            className="p-2 bg-white hover:bg-gray-50 border border-gray-200 rounded text-sm flex justify-between items-center cursor-pointer"
+                                                          >
+                                                            <div className="flex items-center gap-3">
+                                                              <HexagonIcon
+                                                                sx={{
+                                                                  background:
+                                                                    "#E9D3FF",
+                                                                  color:
+                                                                    "#6E0BD4",
+                                                                  padding:
+                                                                    "4px",
+                                                                  width: "30px",
+                                                                  height:
+                                                                    "30px",
+                                                                  borderRadius:
+                                                                    "100%",
+                                                                }}
+                                                              />
+                                                              <span>
+                                                                {level4.name}
+                                                              </span>
+                                                            </div>
+                                                            <div className="flex items-center gap-1">
+                                                              <IconButton
+                                                                onClick={() => {
+                                                                  setCreateModal(
+                                                                    true
+                                                                  );
+                                                                  setCreateModalParentId(
+                                                                    level4.id
+                                                                  );
+                                                                }}
+                                                                className="text-blue-600 text-sm hover:underline normal-case"
+                                                              >
+                                                                <AddCircleIcon
+                                                                  sx={{
+                                                                    background:
+                                                                      "#E9D3FF",
+                                                                    color:
+                                                                      "#6E0BD4",
+                                                                    padding:
+                                                                      "4px",
+                                                                    width:
+                                                                      "30px",
+                                                                    height:
+                                                                      "30px",
+                                                                    borderRadius:
+                                                                      "100%",
+                                                                  }}
+                                                                />
+                                                              </IconButton>
+                                                              <IconButton
+                                                                onClick={() => {
+                                                                  setEditModal(
+                                                                    true
+                                                                  );
+                                                                  setSelectEditId(
+                                                                    level4.id
+                                                                  );
+                                                                  setName(
+                                                                    level4.name
+                                                                  );
+                                                                  setUnitCode(
+                                                                    level4.unit_code
+                                                                  );
+                                                                }}
+                                                                className="text-blue-600 text-sm hover:underline normal-case"
+                                                              >
+                                                                <EditIcon
+                                                                  sx={{
+                                                                    background:
+                                                                      "#E9D3FF",
+                                                                    color:
+                                                                      "#6E0BD4",
+                                                                    padding:
+                                                                      "4px",
+                                                                    width:
+                                                                      "30px",
+                                                                    height:
+                                                                      "30px",
+                                                                    borderRadius:
+                                                                      "100%",
+                                                                  }}
+                                                                />
+                                                              </IconButton>
+
+                                                              <IconButton
+                                                                onClick={() => {
+                                                                  setDeleteModal(
+                                                                    true
+                                                                  );
+                                                                  setSelectEditId(
+                                                                    level4.id
+                                                                  );
+                                                                }}
+                                                                className="text-blue-600 text-sm hover:underline normal-case"
+                                                              >
+                                                                <DeleteIcon
+                                                                  sx={{
+                                                                    background:
+                                                                      "#E9D3FF",
+                                                                    color:
+                                                                      "#6E0BD4",
+                                                                    padding:
+                                                                      "4px",
+                                                                    width:
+                                                                      "30px",
+                                                                    height:
+                                                                      "30px",
+                                                                    borderRadius:
+                                                                      "100%",
+                                                                  }}
+                                                                />
+                                                              </IconButton>
+                                                              {isLevel4Open ? (
+                                                                <KeyboardArrowUpIcon />
+                                                              ) : (
+                                                                <KeyboardArrowDownIcon />
+                                                              )}
+                                                            </div>
+                                                          </div>
+
+                                                          {/* LEVEL 5 */}
+                                                          <AnimatePresence>
+                                                            {isLevel4Open && (
+                                                              <motion.div
+                                                                initial={{
+                                                                  opacity: 0,
+                                                                  height: 0,
+                                                                }}
+                                                                animate={{
+                                                                  opacity: 1,
+                                                                  height:
+                                                                    "auto",
+                                                                }}
+                                                                exit={{
+                                                                  opacity: 0,
+                                                                  height: 0,
+                                                                }}
+                                                                className="ml-6 mt-1 space-y-1 flex flex-col justify-between"
+                                                              >
+                                                                {get(
+                                                                  level5List,
+                                                                  "data",
+                                                                  []
+                                                                ).length > 0 ? (
+                                                                  get(
+                                                                    level5List,
+                                                                    "data",
+                                                                    []
+                                                                  ).map(
+                                                                    (
+                                                                      level5
+                                                                    ) => (
+                                                                      <div
+                                                                        key={
+                                                                          level5.id
+                                                                        }
+                                                                        className="p-2 bg-white hover:bg-gray-50 border border-gray-200 rounded text-xs flex justify-between"
+                                                                      >
+                                                                        <div className="flex items-center gap-3">
+                                                                          <StarIcon
+                                                                            sx={{
+                                                                              background:
+                                                                                "#FFD6D6",
+                                                                              color:
+                                                                                "#FF4D4D",
+                                                                              padding:
+                                                                                "4px",
+                                                                              width:
+                                                                                "25px",
+                                                                              height:
+                                                                                "25px",
+                                                                              borderRadius:
+                                                                                "100%",
+                                                                            }}
+                                                                          />
+                                                                          <span>
+                                                                            {
+                                                                              level5.name
+                                                                            }
+                                                                          </span>
+                                                                        </div>
+
+                                                                        <div className="flex items-center gap-1">
+                                                                          <IconButton
+                                                                            onClick={() => {
+                                                                              setEditModal(
+                                                                                true
+                                                                              );
+                                                                              setSelectEditId(
+                                                                                level5.id
+                                                                              );
+                                                                              setName(
+                                                                                level5.name
+                                                                              );
+                                                                              setUnitCode(
+                                                                                level5.unit_code
+                                                                              );
+                                                                            }}
+                                                                            className="text-blue-600 text-sm hover:underline normal-case"
+                                                                          >
+                                                                            <EditIcon
+                                                                              sx={{
+                                                                                background:
+                                                                                  "#FFD6D6",
+                                                                                color:
+                                                                                  "#FF4D4D",
+                                                                                padding:
+                                                                                  "4px",
+                                                                                width:
+                                                                                  "30px",
+                                                                                height:
+                                                                                  "30px",
+                                                                                borderRadius:
+                                                                                  "100%",
+                                                                              }}
+                                                                            />
+                                                                          </IconButton>
+
+                                                                          <IconButton
+                                                                            onClick={() => {
+                                                                              setDeleteModal(
+                                                                                true
+                                                                              );
+                                                                              setSelectEditId(
+                                                                                level5.id
+                                                                              );
+                                                                            }}
+                                                                            className="text-blue-600 text-sm hover:underline normal-case"
+                                                                          >
+                                                                            <DeleteIcon
+                                                                              sx={{
+                                                                                background:
+                                                                                  "#FFD6D6",
+                                                                                color:
+                                                                                  "#FF4D4D",
+                                                                                padding:
+                                                                                  "4px",
+                                                                                width:
+                                                                                  "30px",
+                                                                                height:
+                                                                                  "30px",
+                                                                                borderRadius:
+                                                                                  "100%",
+                                                                              }}
+                                                                            />
+                                                                          </IconButton>
+                                                                        </div>
+                                                                      </div>
+                                                                    )
+                                                                  )
+                                                                ) : (
+                                                                  <div className="text-gray-400 text-xs italic">
+                                                                    Bo‘limlar
+                                                                    mavjud emas
+                                                                  </div>
+                                                                )}
+                                                              </motion.div>
+                                                            )}
+                                                          </AnimatePresence>
                                                         </div>
-                                                      </div>
-                                                    ))
+                                                      );
+                                                    })
                                                   ) : (
                                                     <div className="text-gray-400 text-xs italic">
-                                                      Bo‘limlar mavjud emas
+                                                      Разделы отсутствуют
                                                     </div>
                                                   )}
                                                 </motion.div>
@@ -400,7 +856,7 @@ const Index = () => {
                                     )
                                   ) : (
                                     <div className="text-gray-400 text-sm italic">
-                                      Bo‘limlar mavjud emas
+                                      Разделы отсутствуют
                                     </div>
                                   )}
                                 </motion.div>
@@ -435,7 +891,7 @@ const Index = () => {
             }}
           >
             <Typography variant="h6" className="mb-2">
-              Создать
+              Создать структурное дерево управления
             </Typography>
 
             <div className="space-y-[15px] my-[30px]">
@@ -444,8 +900,8 @@ const Index = () => {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder={"Имя"}
-                required
                 inputClass="!h-[45px] border !border-[#C9C9C9]"
+                required
               />
 
               <Input
@@ -454,14 +910,16 @@ const Index = () => {
                 onChange={(e) => setUnitCode(e.target.value)}
                 required
                 inputClass="!h-[43px] border !border-[#C9C9C9]"
-                placeholder={"Enter the unit code"}
+                placeholder={"Введите код единицы"}
               />
 
               <CustomSelect
                 options={optionsUnitType}
-                value={unitTypeId}
-                onChange={(val) => setUnitTypeId(val)}
-                placeholder="Выберите"
+                value={unitTypeId} // faqat id (number/string)
+                onChange={(val) => setUnitTypeId(val)} // object emas
+                placeholder={"Выберите тип единицы"}
+                returnObject={false}
+                required // ixtiyoriy, default ham false
               />
 
               <div className="col-span-2 flex items-center gap-4">
@@ -511,6 +969,105 @@ const Index = () => {
               </Button>
             </div>
           </MethodModal>
+        )}
+        {/* edit modal */}
+        {editModal && (
+          <MethodModal
+            open={editModal}
+            onClose={() => {
+              setName("");
+              setEditModal(false);
+              setUnitCode("");
+              setUnitTypeId(null);
+              setIsActive();
+            }}
+          >
+            <Typography variant="h6" className="mb-2">
+              Изменить
+            </Typography>
+
+            <div className="space-y-[15px] my-[30px]">
+              <Input
+                type={"text"}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder={"Имя"}
+                inputClass="!h-[45px] border !border-[#C9C9C9]"
+                required
+              />
+
+              {/* <Input
+                type={"text"}
+                value={unitCode}
+                onChange={(e) => setUnitCode(e.target.value)}
+                required
+                inputClass="!h-[43px] border !border-[#C9C9C9]"
+                placeholder={"Enter the unit code"}
+              /> */}
+
+              {/* <CustomSelect
+                options={optionsUnitType}
+                value={unitTypeId}
+                onChange={(val) => setUnitTypeId(val)}
+                placeholder="Выберите"
+              />
+
+              <div className="col-span-2 flex items-center gap-4">
+                <label className="flex items-center gap-1">
+                  <input
+                    type="radio"
+                    name="isActive"
+                    value="true"
+                    checked={isActive === true}
+                    onChange={() => setIsActive(true)}
+                  />
+                  <span>Активный</span>
+                </label>
+                <label className="flex items-center gap-1">
+                  <input
+                    type="radio"
+                    name="isActive"
+                    value="false"
+                    checked={isActive === false}
+                    onChange={() => setIsActive(false)}
+                  />
+                  <span>Неактивный</span>
+                </label>
+              </div> */}
+
+              <Button
+                sx={{
+                  textTransform: "initial",
+                  fontFamily: "DM Sans, sans-serif",
+                  backgroundColor: "#F07427",
+                  boxShadow: "none",
+                  color: "white",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "4px",
+                  fontSize: "14px",
+                  minWidth: "100px",
+                  borderRadius: "8px",
+                  marginTop: "15px",
+                }}
+                variant="contained"
+                onClick={() => onSubmitEditOrg(selectEditId)}
+                type="submit"
+              >
+                Изменить
+              </Button>
+            </div>
+          </MethodModal>
+        )}
+        {/* delete modal */}
+        {deleteModal && (
+          <DeleteModal
+            open={deleteModal}
+            onClose={() => setDeleteModal(false)}
+            title={"Вы точно хотите удалить эту"}
+            deleting={() => onSubmitDeleteOrg(selectEditId)}
+          />
         )}
       </motion.div>
     </DashboardLayout>

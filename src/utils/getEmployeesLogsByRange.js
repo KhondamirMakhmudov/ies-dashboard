@@ -34,11 +34,25 @@ export const getEmployeesLogsByRange = async ({
 };
 
 function parseEmployeeIdRange(input) {
-  if (input.includes("-")) {
-    const [start, end] = input.split("-").map(Number);
-    if (isNaN(start) || isNaN(end) || start > end) return [];
-    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
-  }
-  const id = Number(input);
-  return isNaN(id) ? [] : [id];
+  const result = new Set();
+
+  input.split(",").forEach((part) => {
+    const trimmed = part.trim();
+
+    if (trimmed.includes("-")) {
+      const [start, end] = trimmed.split("-").map(Number);
+      if (!isNaN(start) && !isNaN(end) && start <= end) {
+        for (let i = start; i <= end; i++) {
+          result.add(i);
+        }
+      }
+    } else {
+      const id = Number(trimmed);
+      if (!isNaN(id)) {
+        result.add(id);
+      }
+    }
+  });
+
+  return Array.from(result);
 }

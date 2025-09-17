@@ -3,7 +3,15 @@ import dayjs from "dayjs";
 import { toast } from "react-hot-toast";
 
 export const exportToExcelStyled = (data) => {
-  if (!data || data.length === 0) {
+  // 1. Tekislash (flatten)
+  const flatData = Array.isArray(data)
+    ? data.flat()
+    : Array.isArray(data?.data)
+    ? data.data.flat()
+    : [];
+
+  // 2. Bo'sh yoki noto'g'ri bo'lsa
+  if (!Array.isArray(flatData) || flatData.length === 0) {
     toast.error("Информация для скачивания отсутствует.");
     return;
   }
@@ -11,7 +19,8 @@ export const exportToExcelStyled = (data) => {
   const rows = [];
   const merges = [];
 
-  const groupedData = data.reduce((acc, item) => {
+  // 3. Xodim bo‘yicha guruhlash
+  const groupedData = flatData.reduce((acc, item) => {
     const key = `${item.empName} (таб.№${item.empId})`;
     if (!acc[key]) acc[key] = [];
     acc[key].push(item);
@@ -20,6 +29,7 @@ export const exportToExcelStyled = (data) => {
 
   let rowIndex = 0;
 
+  // 4. Header
   const headerRow = [
     {
       v: "Дата и время",
@@ -63,8 +73,14 @@ export const exportToExcelStyled = (data) => {
     },
   ];
 
+  console.log("DATA =>", data);
+  console.log("FLATTED =>", flatData);
+  console.log("FLATTED IS ARRAY:", Array.isArray(flatData));
+  console.log("FLATTED LENGTH:", flatData.length);
+
+  // 5. Har bir xodim uchun ma'lumot
   Object.entries(groupedData).forEach(([employee, logs]) => {
-    // Xodim ismi
+    // Xodim sarlavhasi
     rows.push([
       {
         v: employee,
@@ -77,7 +93,7 @@ export const exportToExcelStyled = (data) => {
       {},
       {},
       {},
-      {}, // 5 ta ustun
+      {},
     ]);
 
     merges.push({
@@ -87,11 +103,11 @@ export const exportToExcelStyled = (data) => {
 
     rowIndex++;
 
-    // Header row for log data
+    // Header row
     rows.push(headerRow);
     rowIndex++;
 
-    // Log rows
+    // Loglar
     logs.forEach((item) => {
       rows.push([
         {
@@ -123,14 +139,15 @@ export const exportToExcelStyled = (data) => {
       rowIndex++;
     });
 
-    rows.push([]); // Bo'sh qator ajratish uchun
+    // Bo'sh qator
+    rows.push([]);
     rowIndex++;
   });
 
+  // 6. Export qilish
   try {
     const worksheet = XLSX.utils.aoa_to_sheet(rows);
     worksheet["!merges"] = merges;
-
     worksheet["!cols"] = [
       { wch: 22 },
       { wch: 25 },
@@ -142,9 +159,7 @@ export const exportToExcelStyled = (data) => {
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "LogEntries");
 
-    XLSX.writeFile(workbook, `employees.xlsx`);
-
-    // 🔔 Muvaffaqiyatli yuklandi
+    XLSX.writeFile(workbook, `сотрудники.xlsx`);
     toast.success("Excel файл успешно загружен.");
   } catch (error) {
     console.error("Excel export error", error);

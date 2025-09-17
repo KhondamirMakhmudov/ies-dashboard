@@ -1,409 +1,105 @@
-import UnitTypeCard from "@/components/card/unitType";
-import CustomTable from "@/components/table";
-import { KEYS } from "@/constants/key";
-import { URLS } from "@/constants/url";
-import useGetPythonQuery from "@/hooks/python/useGetQuery";
 import DashboardLayout from "@/layouts/dashboard/DashboardLayout";
-import { motion } from "framer-motion";
-import { get } from "lodash";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
-import { Button, Typography } from "@mui/material";
-import ContentLoader from "@/components/loader";
-import usePostPythonQuery from "@/hooks/python/usePostQuery";
-import MethodModal from "@/components/modal/method-modal";
-import { useState } from "react";
-import Input from "@/components/input";
-import { useQueryClient } from "@tanstack/react-query";
-import toast from "react-hot-toast";
-import { config } from "@/config";
-import DeleteModal from "@/components/modal/delete-modal";
-import usePatchPythonQuery from "@/hooks/python/usePatchQuery";
+import { useRouter } from "next/router";
+import { motion, AnimatePresence } from "framer-motion";
+import UnitType from "@/components/reference/unit-type";
+import PositionType from "@/components/reference/position-type";
+import Position from "@/components/reference/position";
 
 const Index = () => {
-  const queryClient = useQueryClient();
-  const [currentPage, setCurrentPage] = useState(1);
-  const limit = 10;
-  const offset = (currentPage - 1) * limit;
-  const [createModal, setCreateModal] = useState(false);
-  const [editModal, setEditModal] = useState(false);
-  const [deleteModal, setDeleteModal] = useState(false);
-  const [name, setName] = useState("");
-  const [selectedUnitType, setSelectedUnitType] = useState(null);
-  const [isActive, setIsActive] = useState(true);
-  const [selectStatus, setSelectStatus] = useState(true);
-  const {
-    data: unitType,
-    isLoading,
-    isFetching,
-  } = useGetPythonQuery({
-    key: KEYS.unitTypes,
-    url: URLS.unitTypes,
-    params: {
-      is_active: selectStatus,
-      limit: limit,
-      offset: offset,
-    },
-  });
+  const router = useRouter();
+  const { query } = router;
+  const tab = query.tab || "unit-type";
 
-  const handlePaginationChange = ({ page, offset, limit }) => {
-    setCurrentPage(page);
+  const handleTab = (tabValue) => {
+    router.push({
+      pathname: router.pathname,
+      query: { tab: tabValue },
+    });
   };
 
-  // create unit type
-  const { mutate: createUnitType } = usePostPythonQuery({
-    listKeyId: "create-unit-type",
-  });
-
-  const onSubmitCreateUnitType = () => {
-    createUnitType(
-      {
-        url: URLS.unitTypes,
-        attributes: {
-          name: name,
-          is_active: isActive,
-        },
-      },
-      {
-        onSuccess: () => {
-          setCreateModal(false);
-          toast.success("unitType muvaffaqiyatli yaratildi", {
-            position: "top-center",
-          });
-
-          queryClient.invalidateQueries(KEYS.unitTypes);
-        },
-        onError: (error) => {
-          toast.error(`Error is ${error}`, { position: "top-right" });
-        },
-      }
-    );
-  };
-
-  // edit unit type
-  const { mutate: editUnitType } = usePatchPythonQuery({
-    listKeyId: "edit-unit-type",
-  });
-
-  const onSubmitEditUnitType = (id) => {
-    editUnitType(
-      {
-        url: `${URLS.unitTypes}${id}`,
-        attributes: {
-          name: name,
-          is_active: isActive,
-        },
-      },
-
-      {
-        onSuccess: () => {
-          setEditModal(false);
-          toast.success("unitType muvaffaqiyatli tahrirlandi", {
-            position: "top-center",
-          });
-
-          queryClient.invalidateQueries(KEYS.unitTypes);
-        },
-        onError: (error) => {
-          toast.error(`Error is ${error}`, { position: "top-right" });
-        },
-      }
-    );
-  };
-
-  // delete unit type
-  const onSubmitDeleteUnitType = async (id) => {
-    try {
-      const response = await fetch(
-        `${config.PYTHON_API_URL}${URLS.unitTypes}${id}`,
-        {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ unit_type_id: id }),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Ошибка при удалении");
-      }
-
-      toast.success("Успешно удалено");
-      queryClient.invalidateQueries(KEYS.checkpoints);
-      console.log("Deleted successfully");
-    } catch (error) {
-      console.error(error);
-      toast.error("Не удалось удалить");
-    }
-  };
-
-  const columns = [
-    {
-      header: "№",
-      cell: ({ row }) => row.index + 1,
-    },
-    { accessorKey: "name", header: "Имя точки входа" },
-    {
-      accessorKey: "is_active",
-      header: "Статус",
-      cell: ({ getValue }) => {
-        const isActive = getValue();
-        return (
-          <span
-            className={
-              isActive
-                ? "text-green-600 font-medium bg-[#E8F6F0] p-1 rounded-md border border-green-600"
-                : "text-red-600 font-medium bg-[#FAE7E7] p-1 rounded-md border border-red-600"
-            }
-          >
-            {isActive ? "Активный" : "Неактивный"}
-          </span>
-        );
-      },
-    },
-
-    {
-      accessorKey: "actions",
-      header: "Действия",
-      cell: ({ row }) => (
-        <div className="flex gap-2">
-          <Button
-            onClick={() => {
-              setEditModal(true);
-              setSelectedUnitType(row.original.id);
-              setName(row.original.name);
-              setIsActive(row.original.is_active);
-            }}
-            sx={{
-              width: "32px",
-              height: "32px",
-              minWidth: "32px",
-              background: "#F0D8C8",
-              color: "#FF6200",
-            }}
-          >
-            <EditIcon fontSize="small" />
-          </Button>
-          <Button
-            onClick={() => {
-              setDeleteModal(true);
-              setSelectedUnitType(row.original.id);
-            }}
-            sx={{
-              width: "32px",
-              height: "32px",
-              minWidth: "32px",
-              background: "#FCD8D3",
-              color: "#FF1E00",
-            }}
-          >
-            <DeleteIcon fontSize="small" />
-          </Button>
-        </div>
-      ),
-      enableSorting: false,
-    },
-  ];
-
-  const totalCount =
-    get(unitType, "data")?.length < limit
-      ? offset + unitType.length
-      : offset + limit + 1;
   return (
     <DashboardLayout headerTitle={"Справочник"}>
-      <motion.div
-        initial={{ opacity: 0, scale: 0 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="bg-white p-[12px] my-[50px] rounded-md"
-      >
-        <div className="space-y-[15px]">
-          <div className="flex justify-between items-center">
-            <Button
-              onClick={() => setCreateModal(true)}
-              sx={{
-                textTransform: "initial",
-                fontFamily: "DM Sans, sans-serif",
-                backgroundColor: "#4182F9",
-                boxShadow: "none",
-                color: "white",
-                display: "flex",
-                gap: "4px",
-                fontSize: "14px",
-                borderRadius: "8px",
-              }}
-              variant="contained"
-            >
-              <p>Создать</p>
-            </Button>
-
-            <div className="flex justify-between items-center gap-2">
-              <button
-                className={` font-medium cursor-pointer p-1 text-sm rounded-md border  ${
-                  selectStatus === true
-                    ? "text-green-600 border-green-600 bg-[#E8F6F0]"
-                    : "text-gray-400 border-gray-400 bg-white"
-                } scale-100 active:scale-95 transition-all duration-200`}
-                onClick={() => setSelectStatus(true)}
-              >
-                Активные
-              </button>
-              <div className="w-[1px] h-[20px] bg-gray-200"></div>
-              <button
-                className={` font-medium cursor-pointer p-1 text-sm rounded-md border ${
-                  selectStatus === false
-                    ? "text-red-600 border-red-600  bg-[#FAE7E7]"
-                    : "text-gray-400 border-gray-400 bg-white"
-                } scale-100 active:scale-95 transition-all duration-200`}
-                onClick={() => setSelectStatus(false)}
-              >
-                Неактивные
-              </button>
-            </div>
-          </div>
-
-          {isLoading || isFetching ? (
-            <ContentLoader />
-          ) : (
-            <CustomTable
-              columns={columns}
-              data={get(unitType, "data")}
-              pagination={{
-                currentPage,
-                totalCount,
-                pageSize: limit,
-                onPaginationChange: handlePaginationChange,
-              }}
-            />
-          )}
-        </div>
-
-        {/* create modal */}
-        <MethodModal open={createModal} onClose={() => setCreateModal(false)}>
-          <Typography variant="h6">Создать</Typography>
-
-          <form
-            onSubmit={onSubmitCreateUnitType}
-            className="space-y-[15px] my-[30px]"
+      <div className="p-2 bg-white mt-[30px]">
+        <div className="flex text-base items-center gap-[20px]">
+          {/* First Tab */}
+          <button
+            onClick={() => handleTab("unit-type")}
+            className={`py-[11px] px-[15px] rounded-md flex flex-col items-center ${
+              tab === "unit-type"
+                ? "bg-[#F5F5F5] text-black"
+                : "bg-white text-[#828282]"
+            }`}
           >
-            <Input
-              label="Имя"
-              type="text"
-              // name="ipAddress"
-              placeholder="Введите имя"
-              classNames="col-span-4"
-              inputClass={
-                "!h-[45px] rounded-[8px] !border-gray-300 text-[15px]"
-              }
-              value={name}
-              labelClass={"text-sm"}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
-
-            <div className="col-span-2 flex items-center gap-4">
-              <label className="flex items-center gap-1">
-                <input
-                  type="radio"
-                  name="isActive"
-                  value="true"
-                  checked={isActive === true}
-                  onChange={() => setIsActive(true)}
+            <p>Тип организационные единицы</p>
+            <AnimatePresence>
+              {tab === "unit-type" && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.5 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.5 }}
+                  transition={{ duration: 0.2 }}
+                  className="w-[8px] h-[8px] rounded-full bg-black mt-[2px]"
                 />
-                <span>Активный</span>
-              </label>
-              <label className="flex items-center gap-1">
-                <input
-                  type="radio"
-                  name="isActive"
-                  value="false"
-                  checked={isActive === false}
-                  onChange={() => setIsActive(false)}
+              )}
+            </AnimatePresence>
+          </button>
+
+          <div className="w-[1px] h-[15px] bg-[#E9E9E9]"></div>
+
+          {/* Second Tab */}
+          <button
+            onClick={() => handleTab("position-type")}
+            className={`py-[11px] px-[15px] rounded-md flex flex-col items-center ${
+              tab === "position-type"
+                ? "bg-[#F5F5F5] text-black"
+                : "bg-white text-[#828282]"
+            }`}
+          >
+            <p>Тип позиции</p>
+            <AnimatePresence>
+              {tab === "position-type" && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.5 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.5 }}
+                  transition={{ duration: 0.2 }}
+                  className="w-[8px] h-[8px] rounded-full bg-black mt-[2px]"
                 />
-                <span>Неактивный</span>
-              </label>
-            </div>
-            <button
-              type="submit"
-              className=" bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 w-1/4 rounded-xl transition-all duration-200"
-            >
-              Создать
-            </button>
-          </form>
-        </MethodModal>
+              )}
+            </AnimatePresence>
+          </button>
 
-        {/* edit modal */}
+          <div className="w-[1px] h-[15px] bg-[#E9E9E9]"></div>
 
-        <MethodModal
-          open={editModal}
-          onClose={() => {
-            setEditModal(false);
-            setName("");
-            setIsActive();
-          }}
-        >
-          <Typography variant="h6">Изменить</Typography>
-
-          <form className="space-y-[15px] my-[30px]">
-            <Input
-              label="Имя"
-              type="text"
-              // name="ipAddress"
-              placeholder="Введите имя"
-              classNames="col-span-4"
-              inputClass={
-                "!h-[45px] rounded-[8px] !border-gray-300 text-[15px]"
-              }
-              value={name}
-              labelClass={"text-sm"}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
-
-            <div className="col-span-2 flex items-center gap-4">
-              <label className="flex items-center gap-1">
-                <input
-                  type="radio"
-                  name="isActive"
-                  value="true"
-                  checked={isActive === true}
-                  onChange={() => setIsActive(true)}
+          {/* Third Tab */}
+          <button
+            onClick={() => handleTab("position")}
+            className={`py-[11px] px-[15px] rounded-md flex flex-col items-center ${
+              tab === "position"
+                ? "bg-[#F5F5F5] text-black"
+                : "bg-white text-[#828282]"
+            }`}
+          >
+            <p>Позиция</p>
+            <AnimatePresence>
+              {tab === "position" && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.5 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.5 }}
+                  transition={{ duration: 0.2 }}
+                  className="w-[8px] h-[8px] rounded-full bg-black mt-[2px]"
                 />
-                <span>Активный</span>
-              </label>
-              <label className="flex items-center gap-1">
-                <input
-                  type="radio"
-                  name="isActive"
-                  value="false"
-                  checked={isActive === false}
-                  onChange={() => setIsActive(false)}
-                />
-                <span>Неактивный</span>
-              </label>
-            </div>
-            <button
-              onClick={() => onSubmitEditUnitType(selectedUnitType)}
-              type="submit"
-              className=" bg-orange-400 hover:bg-orange-500 text-white font-semibold py-2 w-1/4 rounded-xl transition-all duration-200"
-            >
-              Изменить
-            </button>
-          </form>
-        </MethodModal>
+              )}
+            </AnimatePresence>
+          </button>
+        </div>
+      </div>
 
-        {/* Delete modal */}
-        <DeleteModal
-          open={deleteModal}
-          onClose={() => setDeleteModal(false)}
-          deleting={() => {
-            onSubmitDeleteUnitType(selectedUnitType); // 👈 DELETE so‘rov
-            setDeleteModal(false);
-            setSelectedUnitType(null);
-          }}
-          title="Вы уверены, что хотите удалить эту ...?"
-        />
-      </motion.div>
+      {/* Content rendering */}
+      {tab === "unit-type" && <UnitType />}
+      {tab === "position-type" && <PositionType />}
+      {tab === "position" && <Position />}
     </DashboardLayout>
   );
 };

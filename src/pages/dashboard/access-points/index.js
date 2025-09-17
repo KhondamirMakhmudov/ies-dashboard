@@ -6,7 +6,7 @@ import { config } from "@/config";
 import { motion } from "framer-motion";
 import { Button, Typography } from "@mui/material";
 import CustomTable from "@/components/table";
-import { get } from "lodash";
+import { get, isEmpty } from "lodash";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useState } from "react";
@@ -20,6 +20,8 @@ import DeleteModal from "@/components/modal/delete-modal";
 import { useSession } from "next-auth/react";
 import { useQueryClient } from "@tanstack/react-query";
 import usePutQuery from "@/hooks/java/usePutQuery";
+import NoData from "@/components/no-data";
+import Link from "next/link";
 const Index = () => {
   const { data: session } = useSession();
   const [createAccessPoint, setCreateAccessPoint] = useState(false);
@@ -33,13 +35,13 @@ const Index = () => {
   const queryClient = useQueryClient();
   // get structure of organization
   const { data: structureOfOrganizations } = useGetQuery({
-    key: KEYS.structureOfOrganizations,
+    key: [KEYS.structureOfOrganizations, createAccessPoint || editEntryPoint],
     url: URLS.structureOfOrganizations,
     headers: {
       Authorization: `Bearer ${session?.accessToken}`,
       Accept: "application/json",
     },
-    enabled: !!session?.accessToken,
+    enabled: !!session?.accessToken && (createAccessPoint || editEntryPoint),
   });
 
   const options = get(structureOfOrganizations, "data", []).map((entry) => ({
@@ -68,12 +70,17 @@ const Index = () => {
   });
 
   const submitCreateEntryPoint = () => {
+    if (!entryPointName || !entryPointShortName || !selectedStructureOfOrg) {
+      toast.error("Пожалуйста, заполните все поля", { position: "top-center" });
+      return;
+    }
+
     createEntryPoint(
       {
         url: URLS.entrypoints,
         attributes: {
-          entryPointName: entryPointName,
-          entryPointShortName: entryPointShortName,
+          entryPointName,
+          entryPointShortName,
           structureId: selectedStructureOfOrg,
         },
         config: {
@@ -92,7 +99,9 @@ const Index = () => {
           queryClient.invalidateQueries(KEYS.entrypoints);
         },
         onError: (error) => {
-          toast.error(`Error is ${error}`, { position: "top-right" });
+          const message =
+            error?.response?.data?.message || "Непредвиденная ошибка";
+          toast.error(message, { position: "top-right" });
         },
       }
     );
@@ -145,7 +154,7 @@ const Index = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${session?.accessToken}`,
           },
-          body: JSON.stringify({ id }), // agar kerak bo‘lsa
+          body: JSON.stringify({ id }),
         }
       );
       console.log(response);
@@ -154,14 +163,11 @@ const Index = () => {
         throw new Error("Ошибка при удалении");
       }
 
-      // JSON kutmaslik: 204 holati
       if (response.status !== 204) {
         await response.json();
       }
 
       toast.success("Успешно удалено");
-
-      // 🔁 Query-ni yangilash
       queryClient.invalidateQueries(KEYS.entrypoints);
     } catch (error) {
       console.error(error);
@@ -174,7 +180,17 @@ const Index = () => {
       header: "№",
       cell: ({ row }) => row.index + 1,
     },
-    { accessorKey: "entryPointName", header: "Имя точки входа" },
+    {
+      accessorKey: "entryPointName",
+      header: "Имя точки входа",
+      cell: ({ row }) => (
+        <Link href={`/dashboard/access-points/${row.original.id}`}>
+          <p className="text-blue-500 hover:underline underline-0">
+            {row.original.entryPointName}
+          </p>
+        </Link>
+      ),
+    },
     {
       accessorKey: "entryPointShortName",
       header: "Краткое название точки входа.",
@@ -233,201 +249,210 @@ const Index = () => {
   }
   return (
     <DashboardLayout headerTitle={"Точки доступа"}>
-      <motion.div
-        initial={{ opacity: 0, scale: 0 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="bg-white p-[12px] my-[50px] rounded-md"
-      >
-        <div className="col-span-12 space-y-[15px]">
-          <div className="max-w-[100px]">
-            <Button
-              onClick={() => setCreateAccessPoint(true)}
-              sx={{
-                textTransform: "initial",
-                fontFamily: "DM Sans, sans-serif",
-                backgroundColor: "#4182F9",
-                boxShadow: "none",
-                color: "white",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "4px",
-                fontSize: "14px",
-                minWidth: "100px",
-                borderRadius: "8px",
-              }}
-              variant="contained"
-            >
-              Создать
-            </Button>
-          </div>
-          <CustomTable data={get(entrypoints, "data")} columns={columns} />
-        </div>
-        {/* create modal */}
-
-        {createAccessPoint && (
-          <MethodModal
-            open={createAccessPoint}
-            onClose={() => setCreateAccessPoint(false)}
-          >
-            <Typography variant="h6" className="mb-2">
-              Добавить точку доступа
-            </Typography>
-
-            <div className="my-[30px] space-y-[15px]">
-              <Input
-                name="login"
-                onChange={(e) => {
-                  setEntryPointName(e.target.value);
-                }}
-                label={"Имя точки входа"}
-                placeholder="введите имя точки входа"
-                classNames="col-span-2"
-                inputClass={
-                  "!h-[45px] rounded-[8px] !border-gray-300 text-[15px]"
-                }
-                labelClass={"text-sm"}
-                required
-              />
-              <Input
-                name="login"
-                onChange={(e) => {
-                  setEntryPointShortName(e.target.value);
-                }}
-                label={"Краткое название точки входа."}
-                placeholder="Введите краткое название точки входа."
-                classNames="col-span-2"
-                inputClass={
-                  "!h-[45px] rounded-[8px] !border-gray-300 text-[15px]"
-                }
-                labelClass={"text-sm"}
-                required
-              />
-              <CustomSelect
-                options={options}
-                value={selectedStructureOfOrg}
-                placeholder="Выберите структурное подразделение"
-                onChange={(val) => setSelectedStructureOfOrg(val)}
-              />
-
+      {isEmpty(entrypoints, "data", []) ? (
+        <NoData onCreate={() => setCreateAccessPoint(true)} />
+      ) : (
+        <motion.div
+          initial={{ opacity: 0, scale: 0 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-white p-[12px] my-[50px] rounded-md border border-gray-200"
+        >
+          <div className="col-span-12 space-y-[15px]">
+            <div className="max-w-[100px]">
               <Button
+                onClick={() => setCreateAccessPoint(true)}
                 sx={{
                   textTransform: "initial",
                   fontFamily: "DM Sans, sans-serif",
                   backgroundColor: "#4182F9",
                   boxShadow: "none",
                   color: "white",
-                  display: "flex", // inline-block emas
+                  display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   gap: "4px",
                   fontSize: "14px",
-                  minWidth: "100px", // yoki widthni kengroq bering
+                  minWidth: "100px",
                   borderRadius: "8px",
-                  marginTop: "15px",
                 }}
                 variant="contained"
-                onClick={submitCreateEntryPoint}
-                type="submit"
               >
                 Создать
               </Button>
             </div>
-          </MethodModal>
-        )}
+            <CustomTable data={get(entrypoints, "data")} columns={columns} />
+          </div>
+          {/* create modal */}
+        </motion.div>
+      )}
 
-        {/* edit modal */}
-        {editEntryPoint && (
-          <MethodModal
-            open={editEntryPoint}
-            onClose={() => setEditEntryPoint(false)}
-          >
-            <Typography variant="h6" className="mb-2">
-              Добавить точку доступа
-            </Typography>
+      {createAccessPoint && (
+        <MethodModal
+          open={createAccessPoint}
+          onClose={() => {
+            setCreateAccessPoint(false);
+            setEntryPointName("");
+            setEntryPointShortName("");
+            setSelectedStructureOfOrg(null);
+          }}
+        >
+          <Typography variant="h6" className="mb-2">
+            Добавить точку доступа
+          </Typography>
 
-            <div className="my-[30px] space-y-[15px]">
-              <Input
-                name="login"
-                value={entryPointName}
-                onChange={(e) => {
-                  setEntryPointName(e.target.value);
-                }}
-                label={"Имя точки входа"}
-                placeholder="введите имя точки входа"
-                classNames="col-span-2"
-                inputClass={
-                  "!h-[45px] rounded-[8px] !border-gray-300 text-[15px]"
-                }
-                labelClass={"text-sm"}
-                required
-              />
-              <Input
-                name="login"
-                value={entryPointShortName}
-                onChange={(e) => {
-                  setEntryPointShortName(e.target.value);
-                }}
-                label={"Краткое название точки входа."}
-                placeholder="Введите краткое название точки входа."
-                classNames="col-span-2"
-                inputClass={
-                  "!h-[45px] rounded-[8px] !border-gray-300 text-[15px]"
-                }
-                labelClass={"text-sm"}
-                required
-              />
-              <CustomSelect
-                options={options}
-                value={selectedStructureOfOrg}
-                placeholder="Выберите структурное подразделение"
-                onChange={(val) => setSelectedStructureOfOrg(val)}
-              />
+          <div className="my-[30px] space-y-[15px]">
+            <Input
+              name="login"
+              onChange={(e) => {
+                setEntryPointName(e.target.value);
+              }}
+              label={"Имя точки входа"}
+              placeholder="введите имя точки входа"
+              classNames="col-span-2"
+              inputClass={
+                "!h-[45px] rounded-[8px] !border-gray-300 text-[15px]"
+              }
+              labelClass={"text-sm"}
+              required
+            />
+            <Input
+              name="login"
+              onChange={(e) => {
+                setEntryPointShortName(e.target.value);
+              }}
+              label={"Краткое название точки входа."}
+              placeholder="Введите краткое название точки входа."
+              classNames="col-span-2"
+              inputClass={
+                "!h-[45px] rounded-[8px] !border-gray-300 text-[15px]"
+              }
+              labelClass={"text-sm"}
+              required
+            />
+            <CustomSelect
+              options={options}
+              value={selectedStructureOfOrg}
+              placeholder="Выберите структурное подразделение"
+              onChange={(val) => setSelectedStructureOfOrg(val)}
+            />
 
-              <Button
-                sx={{
-                  textTransform: "initial",
-                  fontFamily: "DM Sans, sans-serif",
-                  backgroundColor: "#F07427",
-                  boxShadow: "none",
-                  color: "white",
-                  display: "flex", // inline-block emas
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "4px",
-                  fontSize: "14px",
-                  minWidth: "100px", // yoki widthni kengroq bering
-                  borderRadius: "8px",
-                  marginTop: "15px",
-                }}
-                variant="contained"
-                onClick={() => submitEditEntrypoint(selectedEntryPointId)}
-                type="submit"
-              >
-                Изменить
-              </Button>
-            </div>
-          </MethodModal>
-        )}
+            <Button
+              sx={{
+                textTransform: "initial",
+                fontFamily: "DM Sans, sans-serif",
+                backgroundColor: "#4182F9",
+                boxShadow: "none",
+                color: "white",
+                display: "flex", // inline-block emas
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "4px",
+                fontSize: "14px",
+                minWidth: "100px", // yoki widthni kengroq bering
+                borderRadius: "8px",
+                marginTop: "15px",
+              }}
+              variant="contained"
+              onClick={submitCreateEntryPoint}
+              type="submit"
+            >
+              Создать
+            </Button>
+          </div>
+        </MethodModal>
+      )}
 
-        {/* delete modal */}
+      {/* edit modal */}
+      {editEntryPoint && (
+        <MethodModal
+          open={editEntryPoint}
+          onClose={() => setEditEntryPoint(false)}
+        >
+          <Typography variant="h6" className="mb-2">
+            Добавить точку доступа
+          </Typography>
 
-        {deleteAccessPoint && (
-          <DeleteModal
-            open={deleteAccessPoint}
-            onClose={() => {
-              setDeleteAccessPoint(false);
-              setSelectedEntryPointId(null);
-            }}
-            deleting={() => {
-              handleDeleteCheckPoint(selectedEntryPointId); // 👈 DELETE so‘rov
-              setDeleteAccessPoint(false);
-              setSelectedEntryPointId(null);
-            }}
-            title="Вы уверены, что хотите удалить эту чекпоинт?"
-          />
-        )}
-      </motion.div>
+          <div className="my-[30px] space-y-[15px]">
+            <Input
+              name="login"
+              value={entryPointName}
+              onChange={(e) => {
+                setEntryPointName(e.target.value);
+              }}
+              label={"Имя точки входа"}
+              placeholder="введите имя точки входа"
+              classNames="col-span-2"
+              inputClass={
+                "!h-[45px] rounded-[8px] !border-gray-300 text-[15px]"
+              }
+              labelClass={"text-sm"}
+              required
+            />
+            <Input
+              name="login"
+              value={entryPointShortName}
+              onChange={(e) => {
+                setEntryPointShortName(e.target.value);
+              }}
+              label={"Краткое название точки входа."}
+              placeholder="Введите краткое название точки входа."
+              classNames="col-span-2"
+              inputClass={
+                "!h-[45px] rounded-[8px] !border-gray-300 text-[15px]"
+              }
+              labelClass={"text-sm"}
+              required
+            />
+            <CustomSelect
+              options={options}
+              value={selectedStructureOfOrg}
+              placeholder="Выберите структурное подразделение"
+              onChange={(val) => setSelectedStructureOfOrg(val)}
+            />
+
+            <Button
+              sx={{
+                textTransform: "initial",
+                fontFamily: "DM Sans, sans-serif",
+                backgroundColor: "#F07427",
+                boxShadow: "none",
+                color: "white",
+                display: "flex", // inline-block emas
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "4px",
+                fontSize: "14px",
+                minWidth: "100px", // yoki widthni kengroq bering
+                borderRadius: "8px",
+                marginTop: "15px",
+              }}
+              variant="contained"
+              onClick={() => submitEditEntrypoint(selectedEntryPointId)}
+              type="submit"
+            >
+              Изменить
+            </Button>
+          </div>
+        </MethodModal>
+      )}
+
+      {/* delete modal */}
+
+      {deleteAccessPoint && (
+        <DeleteModal
+          open={deleteAccessPoint}
+          onClose={() => {
+            setDeleteAccessPoint(false);
+            setSelectedEntryPointId(null);
+          }}
+          deleting={() => {
+            handleDeleteCheckPoint(selectedEntryPointId); // 👈 DELETE so‘rov
+            setDeleteAccessPoint(false);
+            setSelectedEntryPointId(null);
+          }}
+          title="Вы уверены, что хотите удалить эту чекпоинт?"
+        />
+      )}
     </DashboardLayout>
   );
 };
