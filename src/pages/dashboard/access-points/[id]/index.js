@@ -16,7 +16,7 @@ import NoData from "@/components/no-data";
 import usePostQuery from "@/hooks/java/usePostQuery";
 import { useState } from "react";
 import MethodModal from "@/components/modal/method-modal";
-import { Typography, Button, Modal, Switch } from "@mui/material";
+import { Typography, Button, Modal, Switch, Tab, Tabs } from "@mui/material";
 import CustomSelect from "@/components/select";
 import toast from "react-hot-toast";
 import { useQueryClient } from "@tanstack/react-query";
@@ -37,6 +37,7 @@ const Index = () => {
   const [editModal, setEditModal] = useState(false);
   const [deleteModal, setDeleteModal] = useState(null);
   const [isPriority, setIsPriority] = useState(false);
+  const [tab, setTab] = useState("org-units");
   const router = useRouter();
   const { id } = router.query;
 
@@ -46,7 +47,7 @@ const Index = () => {
     isFetching,
   } = useGetQuery({
     key: KEYS.entrypoint,
-    url: `${URLS.entrypoints}/${id}`,
+    url: `${URLS.newEntryPoints}/${id}`,
     headers: {
       Authorization: `Bearer ${session?.accessToken}`,
       Accept: "application/json",
@@ -195,6 +196,10 @@ const Index = () => {
     }
   };
 
+  const handleChange = (event, newValue) => {
+    setTab(newValue);
+  };
+
   if (isLoading || isFetching) {
     return (
       <DashboardLayout>
@@ -272,7 +277,7 @@ const Index = () => {
       cell: ({ row }) => (
         <div className="flex gap-2">
           <Link href={`/dashboard/schedule/${row.original.scheduleId}`}>
-            <button className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm py-1 px-2 rounded-lg shadow-sm cursor-pointer">
+            <button className="flex items-center gap-1 bg-[#4182F9] hover:bg-blue-700 text-white text-xs sm:text-sm py-2 px-2 rounded-lg shadow-sm cursor-pointer">
               {/* <ArrowForwardIcon fontSize="14px" /> */}
               Перейти
             </button>
@@ -318,13 +323,6 @@ const Index = () => {
                 {get(entrypoint, "data.entryPointShortName", [])}
               </p>
             </div>
-
-            <div>
-              <p className="text-sm text-gray-500">Структура</p>
-              <p className="text-lg font-medium text-gray-900">
-                {get(entrypoint, "data.structure.structureName", [])}
-              </p>
-            </div>
           </div>
         </div>
       </motion.div>
@@ -342,37 +340,126 @@ const Index = () => {
           className="bg-white p-6 my-[50px] rounded-md border border-gray-200"
         >
           <div className=" border border-gray-200 rounded-md mt-[20px]">
-            <div className="flex border-b border-b-gray-200 p-3 justify-between items-center mb-6">
-              <h2 className="text-xl font-semibold  text-gray-800 ">
-                Расписания точки доступа
-              </h2>
+            <Tabs
+              value={["schedule", "org-units"].includes(tab) ? tab : "personal"}
+              onChange={handleChange}
+              textColor="primary"
+              indicatorColor="primary"
+              sx={{ paddingTop: "1px" }}
+            >
+              <Tab
+                value="org-units"
+                label="Подразделения, привязанные к точке доступа"
+                sx={{ px: 1, py: 0.5, textTransform: "none" }}
+              />
+              <Tab
+                value="schedule"
+                label="Расписания, привязанные к точке доступа"
+                sx={{ px: 1, py: 0.5, textTransform: "none" }}
+              />
+            </Tabs>
+            {tab === "org-units" && (
+              <div className=" p-[20px]">
+                <div className="flex justify-between mb-[20px] items-center">
+                  <h2 className="text-xl font-semibold  text-gray-800 ">
+                    Подразделения точки доступа
+                  </h2>
 
-              <div className="flex items-center gap-2">
-                <Button
-                  onClick={() => setCreateModal(true)}
-                  sx={{
-                    textTransform: "initial",
-                    fontFamily: "DM Sans, sans-serif",
-                    backgroundColor: "#4182F9",
-                    boxShadow: "none",
-                    color: "white",
-                    display: "flex",
-                    gap: "4px",
-                    fontSize: "14px",
-                    borderRadius: "8px",
-                  }}
-                  variant="contained"
-                >
-                  <ShareIcon sx={{ width: "20px", height: "20px" }} />
-                  <p>Привязать</p>
-                </Button>
+                  <Button
+                    onClick={() =>
+                      router.push(
+                        "/dashboard/structure-organizations/management-organizations"
+                      )
+                    }
+                    sx={{
+                      textTransform: "initial",
+                      fontFamily: "DM Sans, sans-serif",
+                      backgroundColor: "#4182F9",
+                      boxShadow: "none",
+                      color: "white",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "4px",
+                      fontSize: "14px",
+                      minWidth: "100px",
+                      borderRadius: "8px",
+                    }}
+                    variant="contained"
+                  >
+                    Все подразделения
+                  </Button>
+                </div>
+                {isEmpty(get(entrypoint, "data.unitCodes", [])) ? (
+                  <p className="text-gray-400 italic text-sm">
+                    Подразделения не привязаны
+                  </p>
+                ) : (
+                  <ul className="space-y-[10px]">
+                    {get(entrypoint, "data.unitCodes", []).map(
+                      (unitCode, index) => (
+                        <li
+                          key={index}
+                          className="border border-gray-200 flex justify-between px-4 py-2 rounded-md"
+                        >
+                          <div>
+                            <Typography variant="h6">
+                              {get(unitCode, "name")}
+                            </Typography>
+                            <p className="text-gray-300 text-sm">
+                              Код подразделение: {get(unitCode, "code")}
+                            </p>
+                          </div>
+
+                          <div className="flex justify-center items-center">
+                            {get(unitCode, "main") === true && (
+                              <p className="gap-1 px-2 py-1 text-xs font-medium bg-green-100 text-green-500 rounded-full">
+                                Основная точка доступа
+                              </p>
+                            )}
+                          </div>
+                        </li>
+                      )
+                    )}
+                  </ul>
+                )}
               </div>
-            </div>
+            )}
+            {tab === "schedule" && (
+              <div>
+                <div className="flex border-b border-b-gray-200 p-3 justify-between items-center mb-6">
+                  <h2 className="text-xl font-semibold  text-gray-800 ">
+                    Расписания точки доступа
+                  </h2>
 
-            <CustomTable
-              data={get(schedulesOfEntrypoints, "data.schedules", [])}
-              columns={columns}
-            />
+                  <div className="flex items-center gap-2">
+                    <Button
+                      onClick={() => setCreateModal(true)}
+                      sx={{
+                        textTransform: "initial",
+                        fontFamily: "DM Sans, sans-serif",
+                        backgroundColor: "#4182F9",
+                        boxShadow: "none",
+                        color: "white",
+                        display: "flex",
+                        gap: "4px",
+                        fontSize: "14px",
+                        borderRadius: "8px",
+                      }}
+                      variant="contained"
+                    >
+                      <ShareIcon sx={{ width: "20px", height: "20px" }} />
+                      <p>Привязать</p>
+                    </Button>
+                  </div>
+                </div>
+
+                <CustomTable
+                  data={get(schedulesOfEntrypoints, "data.schedules", [])}
+                  columns={columns}
+                />
+              </div>
+            )}
           </div>
         </motion.div>
       )}

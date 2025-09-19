@@ -11,7 +11,8 @@ const CustomSelect = ({
   onChange,
   placeholder = "Выберите контрольную точку",
   className = "",
-  returnObject = false, // ✅ yangi prop: true => object qaytaradi, false => faqat value
+  returnObject = false, // ✅ true => object qaytaradi, false => faqat value
+  sortOptions = true, // ✅ yangi prop: true => alfavit bo‘yicha sort
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const selectRef = useRef(null);
@@ -19,7 +20,7 @@ const CustomSelect = ({
   const toggleDropdown = () => setIsOpen(!isOpen);
 
   const handleSelect = (opt) => {
-    onChange(returnObject ? opt : opt.value); // ✅ object yoki value
+    onChange(returnObject ? opt : opt.value);
     setIsOpen(false);
   };
 
@@ -36,6 +37,13 @@ const CustomSelect = ({
   const selectedLabel = returnObject
     ? value?.label
     : options.find((opt) => opt.value === value)?.label;
+
+  // ✅ optionsni shartli tartiblash
+  const finalOptions = sortOptions
+    ? [...options].sort((a, b) =>
+        a.label.localeCompare(b.label, "ru", { sensitivity: "base" })
+      )
+    : options;
 
   return (
     <div className={`relative w-full ${className}`} ref={selectRef}>
@@ -67,8 +75,8 @@ const CustomSelect = ({
       </button>
 
       {isOpen && (
-        <ul className="absolute z-10 mt-2 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
-          {options.map((opt, idx) => (
+        <ul className="absolute z-9999 mt-2 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+          {finalOptions.map((opt, idx) => (
             <li
               key={idx}
               className={clsx(

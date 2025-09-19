@@ -118,21 +118,21 @@ const Index = () => {
   const onSubmitCreateCamera = (e) => {
     e.preventDefault();
 
-    // Client-side validatsiya
-    if (
-      !ipAddress?.trim() ||
-      !building?.trim() ||
-      !login?.trim() ||
-      !password?.trim() ||
-      !selectedDepartment ||
-      !selectedCheckPoint ||
-      !doorType
-    ) {
-      toast.error("Пожалуйста, заполните все поля", {
-        position: "top-center",
-      });
-      return;
-    }
+    // // Client-side validatsiya
+    // if (
+    //   !ipAddress?.trim() ||
+    //   !building?.trim() ||
+    //   !login?.trim() ||
+    //   !password?.trim() ||
+    //   !selectedDepartment ||
+    //   !selectedCheckPoint ||
+    //   !doorType
+    // ) {
+    //   toast.error("Пожалуйста, заполните все поля", {
+    //     position: "top-center",
+    //   });
+    //   return;
+    // }
 
     // Ma'lumotlar to‘g‘ri bo‘lsa, serverga yuboriladi
     createCamera(
@@ -142,7 +142,7 @@ const Index = () => {
           ipAddress,
           building,
           login,
-          departmentId: selectedDepartment,
+          // departmentId: selectedDepartment,
           password,
           checkPointId: selectedCheckPoint,
           doorTypeId: doorType === "in" ? 1 : 2,
@@ -164,7 +164,7 @@ const Index = () => {
           setBuilding("");
           setLogin("");
           setPassword("");
-          setSelectedDepartment(null);
+          // setSelectedDepartment(null);
           setSelectedEntryPoint(null);
           setSelectedCheckPoint(null);
           setDoorType("");
@@ -509,13 +509,13 @@ const Index = () => {
                 required
               />
 
-              <CustomSelect
+              {/* <CustomSelect
                 options={optionsDepartments}
                 value={selectedDepartment}
                 onChange={(val) => setSelectedDepartment(val)}
                 placeholder="Выберите департамент"
                 className="col-span-4"
-              />
+              /> */}
 
               <CustomSelect
                 options={options}

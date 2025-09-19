@@ -1,4 +1,4 @@
-import { Modal, Box, Button, Typography } from "@mui/material";
+import { Modal, Box, Typography, IconButton } from "@mui/material";
 
 const MethodModal = ({
   open,
@@ -8,6 +8,8 @@ const MethodModal = ({
   width = 600,
   padding = 4,
   height,
+  showCloseIcon = false,
+  closeClick, // ✅ yangi prop
 }) => {
   return (
     <Modal open={open} onClose={onClose}>
@@ -25,7 +27,38 @@ const MethodModal = ({
           borderRadius: "8px",
         }}
       >
-        <Typography>{title}</Typography>
+        {/* Title va X icon joylashuvi */}
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mb: showCloseIcon ? 2 : 0,
+          }}
+        >
+          <Typography variant="h6">{title}</Typography>
+
+          {showCloseIcon && (
+            <IconButton onClick={closeClick} size="small">
+              {/* SVG X icon */}
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={2}
+                stroke="currentColor"
+                className="w-5 h-5"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </IconButton>
+          )}
+        </Box>
+
         {children}
       </Box>
     </Modal>

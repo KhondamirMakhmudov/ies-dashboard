@@ -68,10 +68,6 @@ const Index = () => {
   });
   // checkpoint yaratish
   const submitCreateCheckPoint = () => {
-    if (!selectedCheckpointId || !nameOfCheckpointName) {
-      toast.error("Пожалуйста, заполните все поля", { position: "top-center" });
-      return;
-    }
     createCheckpoint(
       {
         url: URLS.createCheckpoint,

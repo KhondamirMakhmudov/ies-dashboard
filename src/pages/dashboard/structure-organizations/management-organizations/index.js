@@ -63,7 +63,7 @@ const Index = () => {
     key: [KEYS.organizationalUnits, openLevel2Id],
     url: URLS.organizationalUnits,
     enabled: !!openLevel2Id,
-    params: { parent_id: openLevel2Id },
+    params: { parent_id: openLevel2Id, limit: 150 },
   });
 
   // LEVEL 4 - Level 3 child
@@ -71,14 +71,14 @@ const Index = () => {
     key: [KEYS.organizationalUnits, openLevel3Id],
     url: URLS.organizationalUnits,
     enabled: !!openLevel3Id,
-    params: { parent_id: openLevel3Id },
+    params: { parent_id: openLevel3Id, limit: 150 },
   });
 
   const { data: level5List } = useGetPythonQuery({
     key: [KEYS.organizationalUnits, openLevel4Id],
     url: URLS.organizationalUnits,
     enabled: !!openLevel4Id,
-    params: { parent_id: openLevel4Id },
+    params: { parent_id: openLevel4Id, limit: 150 },
   });
 
   const {

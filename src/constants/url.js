@@ -11,6 +11,7 @@ export const URLS = {
 
   // EntryPoints
   entrypoints: "api/entry-points",
+  newEntryPoints: "api/ep",
 
   // Cameras
   allCameras: "api/cameras",

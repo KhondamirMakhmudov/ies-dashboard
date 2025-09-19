@@ -267,7 +267,7 @@ const Index = () => {
             setSelect(null);
           }}
         >
-          <Typography variant="h6">Создать рабочий место</Typography>
+          <Typography variant="h6">Создать рабочие место</Typography>
 
           <div className="my-[30px] space-y-[15px]">
             <CustomSelect

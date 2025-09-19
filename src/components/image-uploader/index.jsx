@@ -3,8 +3,7 @@ import { useState, useRef } from "react";
 import AvatarEditor from "react-avatar-editor";
 import toast from "react-hot-toast";
 
-export default function ImageUploader({ onFileChange }) {
-  const [image, setImage] = useState(null);
+export default function ImageUploader({ image, onFileChange }) {
   const [scale, setScale] = useState(1.0);
   const editorRef = useRef(null);
 
@@ -13,16 +12,14 @@ export default function ImageUploader({ onFileChange }) {
     const file = event.target.files[0];
     if (!file) return;
 
-    // ✅ 2MB dan oshmasin
     if (file.size > 2 * 1024 * 1024) {
       toast.error("Файл 2MB dan kichik bo‘lishi kerak!");
       return;
     }
 
-    setImage(file);
+    onFileChange(file); // ✅ parentga yuboramiz
   };
 
-  // Drag & drop
   const handleDrop = (event) => {
     event.preventDefault();
     const file = event.dataTransfer.files[0];
@@ -33,10 +30,9 @@ export default function ImageUploader({ onFileChange }) {
       return;
     }
 
-    setImage(file);
+    onFileChange(file); // ✅ parentga yuboramiz
   };
 
-  // Crop tugmasi
   const handleSave = () => {
     if (editorRef.current) {
       editorRef.current.getImageScaledToCanvas().toBlob((blob) => {
@@ -44,7 +40,7 @@ export default function ImageUploader({ onFileChange }) {
           const croppedFile = new File([blob], image.name, {
             type: image.type,
           });
-          onFileChange(croppedFile); // ✅ parentga File object uzatamiz
+          onFileChange(croppedFile); // ✅ parent state update
         }
       }, image.type);
     }
@@ -82,7 +78,6 @@ export default function ImageUploader({ onFileChange }) {
         </>
       ) : (
         <div className="flex flex-col items-center gap-4 w-full">
-          {/* Crop editor */}
           <AvatarEditor
             ref={editorRef}
             image={image}
@@ -94,7 +89,6 @@ export default function ImageUploader({ onFileChange }) {
             className="rounded-lg shadow-md"
           />
 
-          {/* Zoom slider */}
           <input
             type="range"
             min="1"
@@ -105,7 +99,6 @@ export default function ImageUploader({ onFileChange }) {
             className="w-full accent-blue-500"
           />
 
-          {/* Actions */}
           <div className="flex gap-3">
             <label
               htmlFor="fileInput"
@@ -123,7 +116,6 @@ export default function ImageUploader({ onFileChange }) {
         </div>
       )}
 
-      {/* Fayl inputi */}
       <input
         id="fileInput"
         type="file"

@@ -313,10 +313,12 @@ const Index = () => {
 
       <MethodModal
         open={open}
-        onClose={() => {
+        closeClick={() => {
           setOpen(false);
+          setStep(1);
           setFormData({});
         }}
+        showCloseIcon={true}
       >
         <Typography variant="h6" className="text-xl font-bold">
           Добавить нового сотрудника
@@ -328,17 +330,21 @@ const Index = () => {
             const isCompleted = step > current;
 
             return (
-              <div key={index} className="flex items-center w-full">
+              <div
+                key={index}
+                className="flex items-center w-full cursor-pointer"
+                onClick={() => setStep(current)} // ✅ stepni update qilish
+              >
                 {/* Step circle */}
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold 
-              ${
-                isActive
-                  ? "bg-blue-600"
-                  : isCompleted
-                  ? "bg-green-500"
-                  : "bg-gray-300"
-              }`}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold transition-colors
+          ${
+            isActive
+              ? "bg-blue-600"
+              : isCompleted
+              ? "bg-green-500 hover:bg-green-600"
+              : "bg-gray-300 hover:bg-gray-400"
+          }`}
                 >
                   {current}
                 </div>
@@ -495,6 +501,7 @@ const Index = () => {
                     level: val,
                   }))
                 }
+                sortOptions={false}
                 returnObject={false} // ✅ faqat value qaytaradi
               />
             </div>
@@ -528,7 +535,7 @@ const Index = () => {
             <CustomSelect
               options={get(workplaceData, "data", []).map((w) => ({
                 value: w.id,
-                label: w.organizational_unit.name,
+                label: `${w.organizational_unit.name} - ${w.position.name}`,
               }))}
               value={formData.workplace_id}
               placeholder="Выберите рабочее место"
@@ -672,7 +679,10 @@ const Index = () => {
               </div>
             </div> */}
             <div>
-              <ImageUploader onFileChange={handlePhotoChange} />
+              <ImageUploader
+                image={formData.photo}
+                onFileChange={handlePhotoChange}
+              />
             </div>
           </div>
         )}
