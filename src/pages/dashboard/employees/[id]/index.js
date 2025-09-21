@@ -7,7 +7,7 @@ import { useRouter } from "next/router";
 import { motion } from "framer-motion";
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import { get } from "lodash";
+import { get, set } from "lodash";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import dayjs from "dayjs";
@@ -59,7 +59,6 @@ const Index = () => {
     education_degree: "школа",
     education_place: "",
     workplace_id: "",
-    photo: null,
   });
   // Format function: converts to 'YYYY-MM-DDTHH:mm'
   const formatDateTime = (date) => {
@@ -95,7 +94,6 @@ const Index = () => {
         level: get(employeePhoto, "data.level", ""),
         hire_date: get(employeePhoto, "data.hire_date", ""),
         workplace_id: get(employeePhoto, "data.workplace_id", ""),
-        photo: photoPreview,
       });
 
       if (get(employeePhoto, "data.file_url", null)) {
@@ -134,24 +132,29 @@ const Index = () => {
 
   const onSubmitEditEmployee = () => {
     const formDataToSend = new FormData();
+
+    // Faqat o‘zgargan fieldlarni solamiz
     Object.keys(formData).forEach((key) => {
-      formDataToSend.append(key, formData[key]);
+      const newValue = formData[key];
+      const oldValue = get(employeePhoto, `data.${key}`, "");
+
+      if (newValue !== oldValue) {
+        formDataToSend.append(key, newValue);
+      }
     });
 
-    if (photoFile) {
-      formDataToSend.append("photo", photoFile[0]); // ✅ majburiy qo‘shamiz
-    }
+    // Agar yangi rasm tanlangan bo‘lsa, faqat shunda yuboramiz
 
     editEmployee(
       {
         url: `${URLS.employees}${employee_id}`,
-        attributes: formDataToSend, // ⚡ JSON emas, FormData yuborasiz
+        attributes: formDataToSend, // faqat keraklilar yuborilyapti
       },
       {
         onSuccess: () => {
           setEditModal(false);
           toast.success("Успешно редактировано", { position: "top-center" });
-          queryClient.invalidateQueries(KEYS.positionTypes);
+          queryClient.invalidateQueries(KEYS.employeePhoto);
         },
         onError: (error) => {
           toast.error(`Error is ${error}`, { position: "top-right" });
@@ -188,7 +191,15 @@ const Index = () => {
     }
   };
 
-  const handleChange = (event, newValue) => {
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleChangeTab = (event, newValue) => {
     setTab(newValue);
   };
 
@@ -228,23 +239,22 @@ const Index = () => {
     const canvas = canvasRef.current;
     const context = canvas.getContext("2d");
 
+    // Canvas o‘lchamini video bilan teng qilamiz
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
 
+    // Videodan rasmni canvasga chizamiz
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
+    // Blob (file) obyektini olamiz
     canvas.toBlob((blob) => {
       if (blob) {
-        const file = new File([blob], "camera-photo.png", {
-          type: "image/png",
-        });
-        setPhotoFile(file); // ✅ file saqlaymiz
-        setPhotoPreview(URL.createObjectURL(blob));
+        const file = new File([blob], "photo.jpg", { type: "image/jpeg" });
+        setPhotoPreview(URL.createObjectURL(file));
+        setPhotoFile(file); // 🚀 bu yerda file real "File" obyekt bo‘ladi
       }
-    }, "image/png");
+    }, "image/jpeg");
 
-    let tracks = video.srcObject.getTracks();
-    tracks.forEach((track) => track.stop());
     setIsCameraOpen(false);
   };
 
@@ -365,6 +375,7 @@ const Index = () => {
       label: `${lvl}-разряд`,
     };
   });
+
   return (
     <DashboardLayout headerTitle={`Полная информация о сотруднике`}>
       <div>
@@ -417,7 +428,7 @@ const Index = () => {
                   value={
                     ["personal", "employee"].includes(tab) ? tab : "personal"
                   }
-                  onChange={handleChange}
+                  onChange={handleChangeTab}
                   textColor="primary"
                   indicatorColor="primary"
                   sx={{ paddingTop: "1px" }}
@@ -818,6 +829,7 @@ const Index = () => {
                       const file = e.target.files[0];
                       if (file) {
                         setPhotoPreview(URL.createObjectURL(file));
+                        setPhotoFile(e.target.files[0]);
                       }
                     }}
                   />

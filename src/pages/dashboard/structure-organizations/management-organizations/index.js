@@ -211,7 +211,10 @@ const Index = () => {
       >
         <div className="mb-[20px]">
           <Button
-            onClick={() => setCreateModal(true)}
+            onClick={() => {
+              setCreateModal(true);
+              setCreateModalParentId(null);
+            }}
             sx={{
               textTransform: "initial",
               fontFamily: "DM Sans, sans-serif",
@@ -904,14 +907,16 @@ const Index = () => {
                 required
               />
 
-              <Input
-                type={"text"}
-                value={unitCode}
-                onChange={(e) => setUnitCode(e.target.value)}
-                required
-                inputClass="!h-[43px] border !border-[#C9C9C9]"
-                placeholder={"Введите код единицы"}
-              />
+              {createModalParentId === null && (
+                <Input
+                  type={"text"}
+                  value={unitCode}
+                  onChange={(e) => setUnitCode(e.target.value)}
+                  required
+                  inputClass="!h-[43px] border !border-[#C9C9C9]"
+                  placeholder={"Введите код единицы"}
+                />
+              )}
 
               <CustomSelect
                 options={optionsUnitType}
