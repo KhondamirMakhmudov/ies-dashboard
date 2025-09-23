@@ -10,11 +10,54 @@ import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import UnfoldMoreIcon from "@mui/icons-material/UnfoldMore";
 
+// ✅ Helper: sahifalarni hisoblab beradi (ellipsis bilan)
+const getPaginationRange = (currentPage, totalPages, siblingCount = 1) => {
+  const totalPageNumbers = siblingCount * 2 + 5;
+
+  if (totalPages <= totalPageNumbers) {
+    return [...Array(totalPages).keys()].map((n) => n + 1);
+  }
+
+  const leftSibling = Math.max(currentPage - siblingCount, 1);
+  const rightSibling = Math.min(currentPage + siblingCount, totalPages);
+
+  const showLeftDots = leftSibling > 2;
+  const showRightDots = rightSibling < totalPages - 1;
+
+  const range = [];
+
+  if (!showLeftDots && showRightDots) {
+    const leftRange = [...Array(3 + 2 * siblingCount).keys()].map((n) => n + 1);
+    return [...leftRange, "...", totalPages];
+  }
+
+  if (showLeftDots && !showRightDots) {
+    const rightRange = [...Array(3 + 2 * siblingCount).keys()].map(
+      (n) => totalPages - (3 + 2 * siblingCount) + n + 1
+    );
+    return [1, "...", ...rightRange];
+  }
+
+  if (showLeftDots && showRightDots) {
+    return [
+      1,
+      "...",
+      ...Array(rightSibling - leftSibling + 1)
+        .fill(0)
+        .map((_, i) => leftSibling + i),
+      "...",
+      totalPages,
+    ];
+  }
+
+  return [];
+};
+
 const CustomTable = ({ data, columns, pagination }) => {
-  const hasPagination = !!pagination;
   const {
     currentPage = 1,
     pageSize = 10,
+    total = 0, // umumiy yozuvlar soni backenddan kelsa
     onPaginationChange = () => {},
   } = pagination || {};
 
@@ -25,23 +68,16 @@ const CustomTable = ({ data, columns, pagination }) => {
     getSortedRowModel: getSortedRowModel(),
   });
 
-  const handlePrevious = () => {
-    if (currentPage > 1) {
+  const totalPages = Math.ceil(total / pageSize);
+
+  const handlePageClick = (page) => {
+    if (page !== "..." && page !== currentPage) {
       onPaginationChange({
-        page: currentPage - 1,
-        offset: (currentPage - 2) * pageSize,
+        page,
+        offset: (page - 1) * pageSize,
         limit: pageSize,
       });
     }
-  };
-
-  const handleNext = () => {
-    // Ma’lumot kelmay qolgan holatda tugmani yashirishingiz mumkin
-    onPaginationChange({
-      page: currentPage + 1,
-      offset: currentPage * pageSize,
-      limit: pageSize,
-    });
   };
 
   return (
@@ -103,29 +139,40 @@ const CustomTable = ({ data, columns, pagination }) => {
         </motion.tbody>
       </table>
 
-      {/* Pagination tugmalari */}
-      {hasPagination && (
-        <div className="mt-4 flex justify-center gap-4">
+      {/* ✅ Pagination */}
+      {totalPages > 1 && (
+        <div className="flex justify-center items-center gap-2 mt-4">
           <button
-            onClick={handlePrevious}
+            onClick={() => currentPage > 1 && handlePageClick(currentPage - 1)}
             disabled={currentPage === 1}
-            className={`px-4 py-1 rounded border text-sm ${
-              currentPage === 1
-                ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                : "bg-white border-gray-300 hover:bg-gray-100"
-            }`}
+            className="px-3 py-1 border border-gray-200 cursor-pointer rounded disabled:opacity-50"
           >
             ←
           </button>
-          <span className="text-sm pt-1">{currentPage}</span>
+
+          {getPaginationRange(currentPage, totalPages).map((p, i) => (
+            <button
+              key={i}
+              onClick={() => handlePageClick(p)}
+              disabled={p === "..."}
+              className={`px-3 py-1 border border-gray-200 cursor-pointer rounded ${
+                p === currentPage
+                  ? "bg-blue-500 text-white"
+                  : p === "..."
+                  ? "cursor-default text-gray-500"
+                  : "hover:bg-gray-100"
+              }`}
+            >
+              {p}
+            </button>
+          ))}
+
           <button
-            onClick={handleNext}
-            disabled={data.length < pageSize}
-            className={`px-4 py-1 rounded border text-sm ${
-              data.length < pageSize
-                ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                : "bg-white border-gray-300 hover:bg-gray-100"
-            }`}
+            onClick={() =>
+              currentPage < totalPages && handlePageClick(currentPage + 1)
+            }
+            disabled={currentPage === totalPages}
+            className="px-3 py-1 border border-gray-200 cursor-pointer rounded disabled:opacity-50"
           >
             →
           </button>

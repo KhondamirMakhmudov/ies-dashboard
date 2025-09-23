@@ -1,15 +1,10 @@
 import DashboardLayout from "@/layouts/dashboard/DashboardLayout";
-import PersonAddAlt1Icon from "@mui/icons-material/PersonAddAlt1";
-import PictureAsPdfRoundedIcon from "@mui/icons-material/PictureAsPdfRounded";
 import { useState } from "react";
 import Input from "@/components/input";
-import Image from "next/image";
 import { Typography, Button } from "@mui/material";
-import { motion } from "framer-motion";
 import ImageUploader from "@/components/image-uploader";
 import CustomSelect from "@/components/select";
 import MethodModal from "@/components/modal/method-modal";
-import usePostPythonQuery from "@/hooks/python/usePostQuery";
 import useGetPythonQuery from "@/hooks/python/useGetQuery";
 import { URLS } from "@/constants/url";
 import { KEYS } from "@/constants/key";
@@ -27,8 +22,11 @@ import NoData from "@/components/no-data";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import ExcelButton from "@/components/button/excel-button";
+import CustomSearch from "@/components/search";
 
 const Index = () => {
+  const [currentPage, setCurrentPage] = useState(0);
+  const pageSize = 20;
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const router = useRouter();
@@ -64,7 +62,10 @@ const Index = () => {
   } = useGetPythonQuery({
     key: KEYS.employees,
     url: URLS.employees,
-    params: { limit: 150, offset: 0 },
+    params: {
+      limit: pageSize,
+      offset: pageSize * currentPage,
+    },
   });
 
   // organization units
@@ -85,8 +86,6 @@ const Index = () => {
       },
       enabled: !!selectUnitCode, // faqat selectUnitCode tanlanganda chaqilsin
     });
-
-  console.log(selectUnitCode, "selectUnitCode");
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
@@ -183,6 +182,7 @@ const Index = () => {
       cell: ({ row }) => row.index + 1,
     },
     {
+      accessorKey: "last_name",
       header: "Имя сотрудника",
       cell: ({ row }) => {
         const { first_name, last_name } = row.original;
@@ -269,43 +269,55 @@ const Index = () => {
 
   return (
     <DashboardLayout headerTitle={"Сотрудники"}>
+      <div className="bg-white p-[15px] mt-[50px] rounded-md border border-[#E9E9E9]">
+        <div className="col-span-12 flex justify-between items-center ">
+          <Typography variant="h6">
+            Просмотр и управление сотрудниками
+          </Typography>
+
+          <div className="flex gap-2 items-center">
+            <ExcelButton
+              onClick={() => exportToExcel(get(employee, "data", []))}
+            />
+
+            <Button
+              onClick={() => setOpen(true)}
+              sx={{
+                textTransform: "initial",
+                fontFamily: "DM Sans, sans-serif",
+                backgroundColor: "#4182F9",
+                boxShadow: "none",
+                color: "white",
+                display: "flex",
+                gap: "4px",
+                fontSize: "14px",
+                borderRadius: "8px",
+                paddingY: "8px",
+                paddingX: "20px",
+              }}
+              variant="contained"
+            >
+              <p>Добавить сотрудника</p>
+            </Button>
+          </div>
+        </div>
+      </div>
       {isEmpty(get(employee, "data", [])) ? (
         <NoData onCreate={() => setOpen(true)} />
       ) : (
-        <div className="bg-white p-[12px] my-[50px] rounded-md border border-[#E9E9E9]">
+        <div className="bg-white p-[12px] mt-[5px] mb-[50px] rounded-md border border-[#E9E9E9]">
           <div className="grid grid-cols-12 gap-[12px] p-2">
-            <div className="col-span-12 flex justify-between ">
-              <Typography variant="h6">
-                Просмотр и управление сотрудниками
-              </Typography>
-
-              <div className="flex gap-2">
-                <ExcelButton
-                  onClick={() => exportToExcel(get(employee, "data", []))}
-                />
-
-                <Button
-                  onClick={() => setOpen(true)}
-                  sx={{
-                    textTransform: "initial",
-                    fontFamily: "DM Sans, sans-serif",
-                    backgroundColor: "#4182F9",
-                    boxShadow: "none",
-                    color: "white",
-                    display: "flex",
-                    gap: "4px",
-                    fontSize: "14px",
-                    borderRadius: "8px",
-                  }}
-                  variant="contained"
-                >
-                  <p>Добавить сотрудника</p>
-                </Button>
-              </div>
-            </div>
-
-            <div className="col-span-12 mt-6">
-              <CustomTable data={get(employee, "data", [])} columns={columns} />
+            <div className="col-span-12 ">
+              <CustomTable
+                data={get(employee, "data", [])}
+                columns={columns}
+                pagination={{
+                  currentPage,
+                  pageSize: pageSize,
+                  total: 500, // 👈 bu umumiy son (backenddan kelmasa qo‘lda berish kerak)
+                  onPaginationChange: ({ page }) => setCurrentPage(page),
+                }}
+              />
             </div>
           </div>
         </div>
@@ -691,7 +703,19 @@ const Index = () => {
         <div className="flex justify-between pt-4">
           {step > 1 ? (
             <Button
-              sx={{ textTransform: "initial" }}
+              sx={{
+                textTransform: "initial",
+                fontFamily: "DM Sans, sans-serif",
+                backgroundColor: "#EDEDF2",
+                boxShadow: "none",
+                color: "black",
+                display: "flex",
+                gap: "4px",
+                fontSize: "14px",
+                borderRadius: "8px",
+                paddingY: "8px",
+                paddingX: "20px",
+              }}
               onClick={handlePrev}
               variant="secondary"
             >
@@ -701,7 +725,22 @@ const Index = () => {
             <div />
           )}
           {step < 3 ? (
-            <Button sx={{ textTransform: "initial" }} onClick={handleNext}>
+            <Button
+              sx={{
+                textTransform: "initial",
+                fontFamily: "DM Sans, sans-serif",
+                backgroundColor: "#4182F9",
+                boxShadow: "none",
+                color: "white",
+                display: "flex",
+                gap: "4px",
+                fontSize: "14px",
+                borderRadius: "8px",
+                paddingY: "8px",
+                paddingX: "20px",
+              }}
+              onClick={handleNext}
+            >
               Вперёд
             </Button>
           ) : (

@@ -110,7 +110,7 @@ const Index = () => {
         url: URLS.organizationalUnits,
         attributes: {
           name: name,
-          unit_code: unitCode,
+          unit_code: createModalParentId === null ? unitCode : null,
           is_active: isActive,
           unit_type_id: unitTypeId,
           parent_id: createModalParentId,

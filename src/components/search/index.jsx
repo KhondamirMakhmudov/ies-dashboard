@@ -1,22 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import SearchIcon from "@mui/icons-material/Search";
 
-export default function CustomSearch({
-  onSearch,
-  placeholder = "Поиск...",
-  delay = 300,
-}) {
+export default function CustomSearch({ onChange, placeholder = "Поиск..." }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [searchValue, setSearchValue] = useState("");
-
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      onSearch?.(searchValue);
-    }, delay);
-
-    return () => clearTimeout(timeout); // debounce effect
-  }, [searchValue]);
 
   return (
     <div className="relative w-fit cursor-pointer">
@@ -32,8 +19,7 @@ export default function CustomSearch({
           {isOpen && (
             <motion.input
               type="text"
-              value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
+              onChange={(e) => onChange?.(e.target.value)}
               initial={{ width: 0, opacity: 0 }}
               animate={{ width: 200, opacity: 1 }}
               exit={{ width: 0, opacity: 0 }}

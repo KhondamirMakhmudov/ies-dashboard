@@ -3,16 +3,18 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { useState } from "react";
 
-export default function ExcelButton({ onClick }) {
+export default function ExcelButton({ onClick, enableHover = true }) {
   const [isHovering, setIsHovering] = useState(false);
+
+  const hovering = enableHover ? isHovering : true; // agar hover o‘chirilsa doimiy ravishda ko‘rsatadi
 
   return (
     <motion.button
-      onMouseEnter={() => setIsHovering(true)}
-      onMouseLeave={() => setIsHovering(false)}
+      onMouseEnter={() => enableHover && setIsHovering(true)}
+      onMouseLeave={() => enableHover && setIsHovering(false)}
       onClick={onClick}
       initial={{ width: 44 }}
-      animate={{ width: isHovering ? 180 : 38 }}
+      animate={{ width: hovering ? 180 : 38 }}
       transition={{ duration: 0.3 }}
       className="flex items-center bg-[#00733B] hover:bg-[#00733bf1] py-[10px] px-[8px] rounded-[8px] overflow-hidden text-white gap-2 cursor-pointer"
     >
@@ -25,7 +27,7 @@ export default function ExcelButton({ onClick }) {
       />
       <motion.span
         initial={{ opacity: 0 }}
-        animate={{ opacity: isHovering ? 1 : 0 }}
+        animate={{ opacity: hovering ? 1 : 0 }}
         transition={{ duration: 0.2 }}
         className="text-xs lg:text-sm font-gilroy whitespace-nowrap"
       >
