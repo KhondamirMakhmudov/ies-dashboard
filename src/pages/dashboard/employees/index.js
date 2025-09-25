@@ -266,6 +266,7 @@ const Index = () => {
       </DashboardLayout>
     );
   }
+  console.log(get(employee, "data", []).length);
 
   return (
     <DashboardLayout headerTitle={"Сотрудники"}>
@@ -302,19 +303,19 @@ const Index = () => {
           </div>
         </div>
       </div>
-      {isEmpty(get(employee, "data", [])) ? (
+      {isEmpty(get(employee, "data.data", [])) ? (
         <NoData onCreate={() => setOpen(true)} />
       ) : (
         <div className="bg-white p-[12px] mt-[5px] mb-[50px] rounded-md border border-[#E9E9E9]">
           <div className="grid grid-cols-12 gap-[12px] p-2">
             <div className="col-span-12 ">
               <CustomTable
-                data={get(employee, "data", [])}
+                data={get(employee, "data.data", [])}
                 columns={columns}
                 pagination={{
                   currentPage,
                   pageSize: pageSize,
-                  total: 500, // 👈 bu umumiy son (backenddan kelmasa qo‘lda berish kerak)
+                  total: get(employee, "data.count", 0), // 👈 bu umumiy son (backenddan kelmasa qo‘lda berish kerak)
                   onPaginationChange: ({ page }) => setCurrentPage(page),
                 }}
               />
