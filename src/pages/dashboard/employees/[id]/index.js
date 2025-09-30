@@ -23,6 +23,7 @@ import Input from "@/components/input";
 import BirthDateInput from "@/components/input/birthdate-input";
 import PhoneInputUz from "@/components/input/phone-input";
 import CustomSelect from "@/components/select";
+import Breadcrumb from "@/components/breadcrumb";
 
 import ReportComponent from "@/components/report";
 
@@ -99,6 +100,19 @@ const Index = () => {
       }
     }
   }, [employeePhoto]);
+
+  // Masalan, backenddan kelgan qiymat: "1010-02"
+  const oldTable = get(employeePhoto, "data.tabel_number", "");
+  const prefix = oldTable?.split("-")[0] || ""; // "1010"
+  const oldSuffix = oldTable?.split("-")[1] || ""; // "02"
+
+  // Boshlang‘ich qiymat sifatida suffixni yozamiz
+  useEffect(() => {
+    setFormData((prev) => ({
+      ...prev,
+      tabel_number: oldSuffix, // faqat suffix saqlanadi
+    }));
+  }, [oldSuffix]);
 
   // GET schedule and entrypoint which are connected to employee
 
@@ -292,12 +306,32 @@ const Index = () => {
 
   return (
     <DashboardLayout headerTitle={`Полная информация о сотруднике`}>
+      <div className="bg-white p-[15px] mt-[10px] rounded-md border border-[#E9E9E9]">
+        <Breadcrumb
+          paths={[
+            {
+              label: "Сотрудники",
+              href: "/dashboard/employees",
+              isCurrent: false,
+            },
+
+            {
+              label: `${get(employeePhoto, "data.first_name")} ${get(
+                employeePhoto,
+                "data.last_name"
+              )}`,
+              href: "/dashboard/employees",
+              isCurrent: true,
+            },
+          ]}
+        />
+      </div>
       <div>
         {/* employee details */}
         <motion.div
           initial={{ opacity: 0, scale: 0 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-white mb-5 border border-[#E9E9E9] w-full grid grid-cols-1 md:grid-cols-12 mt-8 rounded-md"
+          className="bg-white mb-5 border border-[#E9E9E9] w-full grid grid-cols-1 md:grid-cols-12 mt-[10px] rounded-md"
         >
           {/* Chap tomonda profil */}
           <div className="md:col-span-3 flex flex-col gap-2 items-center text-center border-b md:border-b-0 md:border-r border-[#E9E9E9] py-5 px-4">

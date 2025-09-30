@@ -38,8 +38,10 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DeleteModal from "@/components/modal/delete-modal";
 import { config } from "@/config";
+import { useRouter } from "next/router";
 
 const WorkplaceEmployeeSection = ({ workplace = [], levelColor }) => {
+  const router = useRouter();
   const [showEmployees, setShowEmployees] = useState(false);
 
   if (!workplace || workplace.length === 0) {
@@ -118,44 +120,44 @@ const WorkplaceEmployeeSection = ({ workplace = [], levelColor }) => {
                           fontSize: 16,
                         }}
                       >
-                        {wp.employee.first_name?.[0]}
                         {wp.employee.last_name?.[0]}
+                        {wp.employee.first_name?.[0]}
                       </Avatar>
 
                       <div className="flex-1 space-y-1">
                         <div className="flex items-center gap-2">
-                          <PersonIcon sx={{ fontSize: 14, color: "gray" }} />
+                          <PersonIcon sx={{ fontSize: 16, color: "gray" }} />
                           <span className="text-sm font-medium">
                             {wp.employee.last_name} {wp.employee.first_name}{" "}
                             {wp.employee.middle_name}
                           </span>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-1 text-xs text-gray-600">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-1 text-sm text-gray-600">
                           {wp.employee.phone_number && (
                             <div className="flex items-center gap-1">
-                              <PhoneIcon sx={{ fontSize: 12 }} />
-                              <span>{wp.employee.phone_number}</span>
+                              <PhoneIcon sx={{ fontSize: 14 }} />
+                              <span>+998 {wp.employee.phone_number}</span>
                             </div>
                           )}
 
                           {wp.employee.email && (
                             <div className="flex items-center gap-1">
-                              <EmailIcon sx={{ fontSize: 12 }} />
+                              <EmailIcon sx={{ fontSize: 14 }} />
                               <span>{wp.employee.email}</span>
                             </div>
                           )}
 
                           {wp.employee.tabel_number && (
                             <div className="flex items-center gap-1">
-                              <BadgeIcon sx={{ fontSize: 12 }} />
+                              <BadgeIcon sx={{ fontSize: 14 }} />
                               <span>Таб. №: {wp.employee.tabel_number}</span>
                             </div>
                           )}
 
                           {wp.start_date && (
                             <div className="flex items-center gap-1">
-                              <CalendarTodayIcon sx={{ fontSize: 12 }} />
+                              <CalendarTodayIcon sx={{ fontSize: 14 }} />
                               <span>
                                 С:{" "}
                                 {new Date(wp.start_date).toLocaleDateString()}
@@ -165,11 +167,22 @@ const WorkplaceEmployeeSection = ({ workplace = [], levelColor }) => {
                         </div>
 
                         {wp.employee.education_degree && (
-                          <div className="text-xs text-gray-500">
+                          <div className="text-sm text-gray-500">
                             Образование: {wp.employee.education_degree}
                           </div>
                         )}
                       </div>
+                    </div>
+
+                    <div className="flex justify-end">
+                      <a
+                        href={`/dashboard/employees/${wp.employee.id}`}
+                        target="_blank"
+                        className="text-sm bg-[#979797] hover:bg-[#b8b8b8] text-white py-2 px-5 rounded-md transition-all duration-200"
+                        variant="contained"
+                      >
+                        <p>Подробнее</p>
+                      </a>
                     </div>
                   </div>
                 )}

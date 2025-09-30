@@ -23,7 +23,7 @@ import NoData from "@/components/no-data";
 const UnitType = () => {
   const queryClient = useQueryClient();
   const [currentPage, setCurrentPage] = useState(1);
-  const limit = 10;
+  const limit = 150;
   const offset = (currentPage - 1) * limit;
   const [createModal, setCreateModal] = useState(false);
   const [editModal, setEditModal] = useState(false);

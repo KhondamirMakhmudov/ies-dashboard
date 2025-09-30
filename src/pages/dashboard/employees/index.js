@@ -23,9 +23,10 @@ import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import ExcelButton from "@/components/button/excel-button";
 import CustomSearch from "@/components/search";
+import Breadcrumb from "@/components/breadcrumb";
 
 const Index = () => {
-  const [currentPage, setCurrentPage] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 20;
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -64,7 +65,7 @@ const Index = () => {
     url: URLS.employees,
     params: {
       limit: pageSize,
-      offset: pageSize * currentPage,
+      offset: (currentPage - 1) * pageSize,
     },
   });
 
@@ -179,7 +180,9 @@ const Index = () => {
   const columns = [
     {
       header: "№",
-      cell: ({ row }) => row.index + 1,
+      cell: ({ row }) => {
+        return (currentPage - 1) * pageSize + (row.index + 1);
+      },
     },
     {
       accessorKey: "last_name",
@@ -270,7 +273,18 @@ const Index = () => {
 
   return (
     <DashboardLayout headerTitle={"Сотрудники"}>
-      <div className="bg-white p-[15px] mt-[50px] rounded-md border border-[#E9E9E9]">
+      <div className="bg-white p-[15px] mt-[10px] rounded-md border border-[#E9E9E9]">
+        <Breadcrumb
+          paths={[
+            {
+              label: "Сотрудники",
+              href: "/dashboard/employees",
+              isCurrent: true,
+            },
+          ]}
+        />
+      </div>
+      <div className="bg-white p-[15px] mt-[10px] rounded-md border border-[#E9E9E9]">
         <div className="col-span-12 flex justify-between items-center ">
           <Typography variant="h6">
             Просмотр и управление сотрудниками
