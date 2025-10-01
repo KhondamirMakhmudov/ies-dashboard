@@ -6,7 +6,7 @@ import useGetQuery from "@/hooks/java/useGetQuery";
 import DashboardLayout from "@/layouts/dashboard/DashboardLayout";
 import { motion } from "framer-motion";
 import CustomTable from "@/components/table";
-import { Button, Select, MenuItem, Typography } from "@mui/material";
+import { Button, Typography } from "@mui/material";
 import { get, isEmpty } from "lodash";
 import DeleteModal from "@/components/modal/delete-modal";
 import EditIcon from "@mui/icons-material/Edit";
@@ -14,12 +14,10 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import MethodModal from "@/components/modal/method-modal";
 import usePostQuery from "@/hooks/java/usePostQuery";
 import Input from "@/components/input";
-import useDeleteQuery from "@/hooks/java/useDeleteQuery";
 import { config } from "@/config";
 import toast from "react-hot-toast";
 import usePutQuery from "@/hooks/java/usePutQuery";
 import CustomSelect from "@/components/select";
-import { set } from "react-hook-form";
 import { useSession } from "next-auth/react";
 import { useQueryClient } from "@tanstack/react-query";
 import NoData from "@/components/no-data";
@@ -200,9 +198,9 @@ const Index = () => {
               setSelectedCheckpointId(row?.original.id);
               setEditCheckpoints(true);
               setNameOfCheckpointName(row.original.checkPointName);
-              setSelectedEntryPoint(
-                options.find((opt) => opt.label === row.original.entryPointName)
-              );
+
+              // faqat id yuboramiz
+              setSelectedEntryPoint(row.original.entryPoint?.id || null);
             }}
             sx={{
               width: "32px",
@@ -275,6 +273,12 @@ const Index = () => {
       {createCheckpoints && (
         <MethodModal
           open={createCheckpoints}
+          showCloseIcon={true}
+          closeClick={() => {
+            setCreateCheckpoints(false);
+            setNameOfCheckpointName("");
+            setSelectedEntryPoint(null);
+          }}
           onClose={() => {
             setCreateCheckpoints(false);
             setNameOfCheckpointName("");
@@ -287,7 +291,7 @@ const Index = () => {
 
           <div className="my-[30px] space-y-[20px]">
             <Input
-              name="login"
+              label="Имя чекпоинта"
               onChange={(e) => {
                 setNameOfCheckpointName(e.target.value);
               }}
@@ -304,21 +308,25 @@ const Index = () => {
               options={options}
               value={selectedEntryPoint}
               onChange={(val) => setSelectedEntryPoint(val)}
+              label={"Точка входа"}
+              required
+              placeholder="Выберите точку входа"
             />
 
             <Button
+              disabled={nameOfCheckpointName === "" || !selectedEntryPoint}
               sx={{
                 textTransform: "initial",
                 fontFamily: "DM Sans, sans-serif",
                 backgroundColor: "#4182F9",
                 boxShadow: "none",
                 color: "white",
-                display: "flex", // inline-block emas
+                display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 gap: "4px",
                 fontSize: "14px",
-                minWidth: "100px", // yoki widthni kengroq bering
+                minWidth: "100px",
                 borderRadius: "8px",
                 marginTop: "15px",
               }}
@@ -335,7 +343,16 @@ const Index = () => {
       {editCheckpoints && (
         <MethodModal
           open={editCheckpoints}
-          onClose={() => setEditCheckpoints(false)}
+          showCloseIcon={true}
+          closeClick={() => {
+            setEditCheckpoints(false);
+            setNameOfCheckpointName("");
+            setSelectedEntryPoint(null);
+          }}
+          onClose={() => {
+            setEditCheckpoints(false);
+            setSelectedEntryPoint(null);
+          }}
         >
           <Typography variant="h6" className="mb-2">
             Изменить контрольно-пропускной пункт

@@ -22,9 +22,16 @@ const DeleteModal = ({ open, onClose, deleting, title, children }) => {
 
         <div className="flex justify-end gap-1 mt-4">
           <Button
-            sx={{ boxShadow: "none", backgroundColor: "#4182F9" }}
+            sx={{
+              boxShadow: "none",
+              backgroundColor: "#C9C9C9",
+              color: "black",
+              fontSize: "17px",
+              width: "50%",
+              paddingY: "8px",
+              textTransform: "initial",
+            }}
             onClick={onClose}
-            variant="contained"
           >
             Нет
           </Button>
@@ -32,6 +39,10 @@ const DeleteModal = ({ open, onClose, deleting, title, children }) => {
             sx={{
               fontFamily: "DM Sans, sans-serif",
               color: "#991300",
+              textTransform: "initial",
+              fontSize: "17px",
+              width: "50%",
+              paddingY: "8px",
               backgroundColor: "#FCD8D3",
               boxShadow: "none",
               "&hover": {

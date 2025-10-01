@@ -591,18 +591,6 @@ const Index = () => {
             <Button
               sx={{
                 textTransform: "initial",
-                backgroundColor: "#e5e7eb", // gray
-                color: "black",
-                borderRadius: "8px",
-              }}
-              variant="contained"
-              onClick={() => setCreateAccessPoint(false)}
-            >
-              Отмена
-            </Button>
-            <Button
-              sx={{
-                textTransform: "initial",
                 backgroundColor: "#4182F9",
                 color: "white",
                 borderRadius: "8px",
@@ -846,7 +834,7 @@ const Index = () => {
             setDeleteAccessPoint(false);
             setSelectedEntryPointId(null);
           }}
-          title="Вы уверены, что хотите удалить эту чекпоинт?"
+          title="  Вы уверены, что хотите удалить эту точку доступа?  Это действие необратимо и приведет к удалению всех связанных данных.  Пожалуйста, подтвердите своё решение."
         />
       )}
     </DashboardLayout>
