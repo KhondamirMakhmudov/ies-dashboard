@@ -17,14 +17,7 @@ import EmailIcon from "@mui/icons-material/Email";
 import PhoneIcon from "@mui/icons-material/Phone";
 import BadgeIcon from "@mui/icons-material/Badge";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
-import {
-  Button,
-  IconButton,
-  Typography,
-  Chip,
-  Avatar,
-  Tooltip,
-} from "@mui/material";
+import { Button, IconButton, Typography, Chip, Avatar } from "@mui/material";
 import { useState } from "react";
 import MethodModal from "@/components/modal/method-modal";
 import Input from "@/components/input";
@@ -178,7 +171,7 @@ const WorkplaceEmployeeSection = ({ workplace = [], levelColor }) => {
                       <a
                         href={`/dashboard/employees/${wp.employee.id}`}
                         target="_blank"
-                        className="text-sm bg-[#979797] hover:bg-[#b8b8b8] text-white py-2 px-5 rounded-md transition-all duration-200"
+                        className="text-sm bg-blue-400 hover:bg-blue-500 text-white py-2 px-5 rounded-md transition-all duration-200"
                         variant="contained"
                       >
                         <p>Подробнее</p>

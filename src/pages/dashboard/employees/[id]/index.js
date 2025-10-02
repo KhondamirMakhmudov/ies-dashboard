@@ -2,12 +2,12 @@ import { KEYS } from "@/constants/key";
 import { URLS } from "@/constants/url";
 import useGetPythonQuery from "@/hooks/python/useGetQuery";
 import DashboardLayout from "@/layouts/dashboard/DashboardLayout";
-import { Tabs, Tab, Typography, Button } from "@mui/material";
+import { Typography, Button } from "@mui/material";
 import { useRouter } from "next/router";
 import { motion } from "framer-motion";
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import { get, set } from "lodash";
+import { get, isEmpty, set } from "lodash";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import dayjs from "dayjs";
@@ -35,9 +35,7 @@ const Index = () => {
   const { data: session } = useSession();
   const [editModal, setEditModal] = useState(false);
   const [deleteModal, setDeleteModal] = useState(false);
-  const [photoPreview, setPhotoPreview] = useState(
-    "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face"
-  );
+  const [photoPreview, setPhotoPreview] = useState("");
 
   const [photoFile, setPhotoFile] = useState(null);
 
@@ -45,6 +43,11 @@ const Index = () => {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const [tab, setTab] = useState("personal");
+  const tabs = [
+    { key: "personal", label: "Основная информация" },
+    { key: "employee", label: "Данные о сотрудниках" },
+    { key: "schedule", label: "Доступ и расписание" },
+  ];
   const [formData, setFormData] = useState({
     first_name: "",
     last_name: "",
@@ -62,9 +65,9 @@ const Index = () => {
     workplace_id: "",
     photo: null,
   });
-  // Format function: converts to 'YYYY-MM-DDTHH:mm'
 
   const { id: employee_id } = router.query;
+
   // GET employee all informations
   const {
     data: employeePhoto,
@@ -77,7 +80,7 @@ const Index = () => {
   });
 
   useEffect(() => {
-    if (get(employeePhoto, "data", [])) {
+    if (employeePhoto?.data) {
       setFormData({
         first_name: get(employeePhoto, "data.first_name", ""),
         last_name: get(employeePhoto, "data.last_name", ""),
@@ -95,24 +98,10 @@ const Index = () => {
         workplace_id: get(employeePhoto, "data.workplace_id", ""),
       });
 
-      if (get(employeePhoto, "data.file_url", null)) {
-        setPhotoPreview(get(employeePhoto, "data.file_url"));
-      }
+      const fileUrl = get(employeePhoto, "data.file_url", null);
+      setPhotoPreview(fileUrl || null);
     }
-  }, [employeePhoto]);
-
-  // Masalan, backenddan kelgan qiymat: "1010-02"
-  const oldTable = get(employeePhoto, "data.tabel_number", "");
-  const prefix = oldTable?.split("-")[0] || ""; // "1010"
-  const oldSuffix = oldTable?.split("-")[1] || ""; // "02"
-
-  // Boshlang‘ich qiymat sifatida suffixni yozamiz
-  useEffect(() => {
-    setFormData((prev) => ({
-      ...prev,
-      tabel_number: oldSuffix, // faqat suffix saqlanadi
-    }));
-  }, [oldSuffix]);
+  }, [employeePhoto?.data]);
 
   // GET schedule and entrypoint which are connected to employee
 
@@ -127,7 +116,7 @@ const Index = () => {
       Authorization: `Bearer ${session?.accessToken}`,
       Accept: "application/json",
     },
-    enabled: !!employee_id,
+    enabled: !!employee_id && !!session?.accessToken,
   });
 
   // GET report of the employee by employee_id (right now used table_number instead of id)
@@ -147,7 +136,8 @@ const Index = () => {
       ...(startDate && { startDate }),
       ...(endDate && { endDate }),
     },
-    enabled: !!employee_id,
+    enabled:
+      !!employee_id && !!session?.accessToken && !!startDate && !!endDate, // ✅ faqat sanalar bo‘lsa fetch qiladi
   });
 
   // edit(patch) Employee
@@ -168,9 +158,6 @@ const Index = () => {
     }
 
     // Debug uchun
-    for (let [key, value] of formDataToSend.entries()) {
-      console.log("FormData:", key, value);
-    }
 
     try {
       const res = await fetch(
@@ -227,10 +214,6 @@ const Index = () => {
       ...prev,
       [name]: value,
     }));
-  };
-
-  const handleChangeTab = (event, newValue) => {
-    setTab(newValue);
   };
 
   if (isLoadingPhoto || isFetchingPhoto) {
@@ -337,11 +320,25 @@ const Index = () => {
           <div className="md:col-span-3 flex flex-col gap-2 items-center text-center border-b md:border-b-0 md:border-r border-[#E9E9E9] py-5 px-4">
             <div className="w-[150px] h-[150px] sm:w-[180px] sm:h-[180px] rounded-full overflow-hidden border border-[#C9C9C9]">
               <Image
-                src={get(employeePhoto, "data.file_url", "")}
-                loader={() => get(employeePhoto, "data.file_url", "")}
+                src={
+                  isEmpty(
+                    get(
+                      employeePhoto,
+                      "data.file_url",
+                      "/images/profile-default.jpg"
+                    )
+                  )
+                    ? "/images/profile-default.jpg"
+                    : get(
+                        employeePhoto,
+                        "data.file_url",
+                        "/images/profile-default.jpg"
+                      )
+                }
                 alt="user photo"
                 width={180}
                 height={180}
+                unoptimized
                 className="object-cover w-full h-full"
               />
             </div>
@@ -380,34 +377,33 @@ const Index = () => {
               className="bg-white p-0 border-b border-b-[#E9E9E9]"
             >
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                <Tabs
-                  value={
-                    ["personal", "employee", "schedule"].includes(tab)
-                      ? tab
-                      : "personal"
-                  }
-                  onChange={handleChangeTab}
-                  textColor="primary"
-                  indicatorColor="primary"
-                  sx={{ paddingTop: "1px" }}
-                >
-                  <Tab
-                    value="personal"
-                    label="Основная информация"
-                    sx={{ px: 1, py: 0.5, textTransform: "none" }}
-                  />
-                  <Tab
-                    value="employee"
-                    label="Данные о сотрудниках"
-                    sx={{ px: 1, py: 0.5, textTransform: "none" }}
-                  />
+                <div className="flex gap-3 px-3">
+                  {tabs.map((t) => (
+                    <button
+                      key={t.key}
+                      onClick={() => setTab(t.key)}
+                      className={`relative px-3 py-2 text-sm font-medium transition-colors ${
+                        tab === t.key
+                          ? "text-blue-600"
+                          : "text-gray-500 hover:text-gray-700"
+                      }`}
+                    >
+                      {t.label}
 
-                  <Tab
-                    value="schedule"
-                    label="Доступ и расписание"
-                    sx={{ px: 1, py: 0.5, textTransform: "none" }}
-                  />
-                </Tabs>
+                      {tab === t.key && (
+                        <motion.span
+                          layoutId="underline"
+                          className="absolute left-0 bottom-0 h-[2px] w-full bg-blue-600 rounded-full"
+                          transition={{
+                            type: "spring",
+                            stiffness: 500,
+                            damping: 30,
+                          }}
+                        />
+                      )}
+                    </button>
+                  ))}
+                </div>
 
                 <div className="flex gap-2 pr-4">
                   <Button
@@ -454,25 +450,28 @@ const Index = () => {
                     <li className="min-w-[120px] sm:min-w-[150px]">
                       <h4 className="text-sm text-gray-500 mb-1">Имя</h4>
                       <p className="text-base font-medium">
-                        {get(employeePhoto, "data.first_name")}
+                        {get(employeePhoto, "data.first_name") ||
+                          "Имя не указано"}
                       </p>
                     </li>
                     <li className="min-w-[120px] sm:min-w-[150px]">
                       <h4 className="text-sm text-gray-500 mb-1">Фамилия</h4>
                       <p className="text-base font-medium">
-                        {get(employeePhoto, "data.last_name")}
+                        {get(employeePhoto, "data.last_name") ||
+                          "Фамилия не указана"}
                       </p>
                     </li>
                     <li className="min-w-[120px] sm:min-w-[150px]">
                       <h4 className="text-sm text-gray-500 mb-1">Отчество</h4>
                       <p className="text-base font-medium">
-                        {get(employeePhoto, "data.middle_name")}
+                        {get(employeePhoto, "data.middle_name") ||
+                          "Отчество не указано"}
                       </p>
                     </li>
                     <li className="min-w-[120px] sm:min-w-[150px]">
                       <h4 className="text-sm text-gray-500 mb-1">Пол</h4>
                       <p className="text-base font-medium capitalize">
-                        {get(employeePhoto, "data.gender")}
+                        {get(employeePhoto, "data.gender") || "Пол не указан"}
                       </p>
                     </li>
                     <li className="min-w-[120px] sm:min-w-[150px]">
@@ -480,9 +479,11 @@ const Index = () => {
                         Дата рождения
                       </h4>
                       <p className="text-base font-medium">
-                        {dayjs(
-                          get(employeePhoto, "data.date_of_birth", "")
-                        ).format("DD.MM.YYYY")}
+                        {get(employeePhoto, "data.date_of_birth")
+                          ? dayjs(
+                              get(employeePhoto, "data.date_of_birth")
+                            ).format("DD.MM.YYYY")
+                          : "Дата рождения не указана"}
                       </p>
                     </li>
                   </ul>
@@ -503,7 +504,9 @@ const Index = () => {
                         Номер телефона
                       </h4>
                       <p className="text-base font-medium">
-                        +998 {get(employeePhoto, "data.phone_number")}
+                        {get(employeePhoto, "data.phone_number")
+                          ? `+998 ${get(employeePhoto, "data.phone_number")}`
+                          : "Номер телефона не указан"}
                       </p>
                     </li>
                     <li className="min-w-[120px] sm:min-w-[150px]">
@@ -511,7 +514,8 @@ const Index = () => {
                         Электронная почта
                       </h4>
                       <p className="text-base font-medium">
-                        {get(employeePhoto, "data.email", "-")}
+                        {get(employeePhoto, "data.email") ||
+                          "Электронная почта не указана"}
                       </p>
                     </li>
                     <li className="min-w-[120px] sm:min-w-[150px]">
@@ -519,7 +523,8 @@ const Index = () => {
                         Адрес проживания
                       </h4>
                       <p className="text-base font-medium">
-                        {get(employeePhoto, "data.address")}
+                        {get(employeePhoto, "data.address") ||
+                          "Адрес не указан"}
                       </p>
                     </li>
                   </ul>
@@ -540,7 +545,8 @@ const Index = () => {
                         Степень образования
                       </h4>
                       <p className="text-base font-medium capitalize">
-                        {get(employeePhoto, "data.education_degree")}
+                        {get(employeePhoto, "data.education_degree") ||
+                          "Не указано"}
                       </p>
                     </li>
                     <li className="min-w-[120px] sm:min-w-[150px]">
@@ -548,7 +554,8 @@ const Index = () => {
                         Место образование
                       </h4>
                       <p className="text-base font-medium">
-                        {get(employeePhoto, "data.education_place", "-")}
+                        {get(employeePhoto, "data.education_place") ||
+                          "Не указано"}
                       </p>
                     </li>
                   </ul>
@@ -573,7 +580,8 @@ const Index = () => {
                         Должность сотрудника
                       </h4>
                       <p className="text-base font-medium">
-                        {get(employeePhoto, "data.workplace.position.name")}
+                        {get(employeePhoto, "data.workplace.position.name") ||
+                          "Должность не указана"}
                       </p>
                     </li>
                     <li className="min-w-[120px] sm:min-w-[150px]">
@@ -582,7 +590,7 @@ const Index = () => {
                         {get(
                           employeePhoto,
                           "data.workplace.organizational_unit.name"
-                        )}
+                        ) || "Отдел не указан"}
                       </p>
                     </li>
                     <li className="min-w-[120px] sm:min-w-[150px]">
@@ -590,7 +598,7 @@ const Index = () => {
                         Разряд сотрудника
                       </h4>
                       <p className="text-base font-medium">
-                        {get(employeePhoto, "data.level", "")}
+                        {get(employeePhoto, "data.level") || "Не указан"}
                       </p>
                     </li>
                     <li className="min-w-[120px] sm:min-w-[150px]">
@@ -598,9 +606,11 @@ const Index = () => {
                         Дата приема на работу
                       </h4>
                       <p className="text-base font-medium">
-                        {dayjs(get(employeePhoto, "data.hire_date")).format(
-                          "DD.MM.YYYY"
-                        )}
+                        {get(employeePhoto, "data.hire_date")
+                          ? dayjs(get(employeePhoto, "data.hire_date")).format(
+                              "DD.MM.YYYY"
+                            )
+                          : "Дата приема не указана"}
                       </p>
                     </li>
                     <li className="min-w-[120px] sm:min-w-[150px]">
@@ -608,7 +618,9 @@ const Index = () => {
                         Табельный номер
                       </h4>
                       <p className="text-base font-medium">
-                        №{get(employeePhoto, "data.tabel_number", "")}
+                        {get(employeePhoto, "data.tabel_number")
+                          ? `№${get(employeePhoto, "data.tabel_number")}`
+                          : "Табельный номер не указан"}
                       </p>
                     </li>
                     <li className="min-w-[120px] sm:min-w-[150px]">
@@ -617,12 +629,12 @@ const Index = () => {
                       </h4>
                       <span
                         className={`px-3 py-1 text-xs font-medium rounded-full ${
-                          get(employeePhoto, "data.is_active", "")
-                            ? "bg-green-100 text-green-800 "
+                          get(employeePhoto, "data.is_active")
+                            ? "bg-green-100 text-green-800"
                             : "bg-red-100 text-red-800"
                         }`}
                       >
-                        {get(employeePhoto, "data.is_active", "")
+                        {get(employeePhoto, "data.is_active")
                           ? "Активный"
                           : "Неактивный"}
                       </span>
@@ -633,11 +645,9 @@ const Index = () => {
             )}
 
             {/* Connected schedule and entrypoint to employee */}
-
             {tab === "schedule" && (
               <div className="space-y-[10px] p-2 sm:p-4">
                 <Typography variant="h6">Точки доступа и расписания</Typography>
-
                 <p className="text-gray-500">
                   Точки входа, к которым у сотрудника есть доступ, и связанные с
                   ними расписания.
@@ -648,64 +658,77 @@ const Index = () => {
                     ScheduleAndEntrypointOfEmployee,
                     "data.entryPointSchedules",
                     []
-                  ).map((item, index) => (
-                    <div
-                      key={index}
-                      className="border border-gray-200 p-3 rounded-md"
-                    >
-                      <div className="flex justify-between">
-                        <Typography variant="h6">
-                          {get(item, "entryPointName")}
-                        </Typography>
+                  ).length > 0 ? (
+                    get(
+                      ScheduleAndEntrypointOfEmployee,
+                      "data.entryPointSchedules",
+                      []
+                    ).map((item, index) => (
+                      <div
+                        key={index}
+                        className="border border-gray-200 p-3 rounded-md"
+                      >
+                        <div className="flex justify-between">
+                          <Typography variant="h6">
+                            {get(item, "entryPointName") ||
+                              "Название точки не указано"}
+                          </Typography>
 
-                        <Button
-                          onClick={() =>
-                            router.push(
-                              `/dashboard/access-points/${get(
-                                item,
-                                "entryPointId"
-                              )}`
-                            )
-                          }
-                          sx={{
-                            textTransform: "initial",
-                            fontFamily: "DM Sans, sans-serif",
-                            backgroundColor: "#4182F9",
-                            boxShadow: "none",
-                            color: "white",
-                            display: "flex",
-                            gap: "4px",
-                            fontSize: "14px",
-                            borderRadius: "8px",
-                          }}
-                          variant="contained"
-                        >
-                          <p>Перейти к точки доступу</p>
-                        </Button>
-                      </div>
-
-                      <div className="mt-[10px] bg-gray-100 p-3 rounded-md">
-                        <p className="text-[17px] font-semibold">Расписание:</p>
-
-                        <div className="flex justify-between ">
-                          <p className="text-[17px] font-medium">
-                            {get(item, "scheduleName")}
-                          </p>
-
-                          <button
+                          <Button
                             onClick={() =>
                               router.push(
-                                `/dashboard/schedule/${get(item, "scheduleId")}`
+                                `/dashboard/access-points/${
+                                  get(item, "entryPointId") || ""
+                                }`
                               )
                             }
-                            class="text-blue-600 hover:text-blue-800 text-sm font-medium cursor-pointer"
+                            sx={{
+                              textTransform: "initial",
+                              fontFamily: "DM Sans, sans-serif",
+                              backgroundColor: "#4182F9",
+                              boxShadow: "none",
+                              color: "white",
+                              display: "flex",
+                              gap: "4px",
+                              fontSize: "14px",
+                              borderRadius: "8px",
+                            }}
+                            variant="contained"
                           >
-                            Подробнее →
-                          </button>
+                            <p>Перейти к точке доступа</p>
+                          </Button>
+                        </div>
+
+                        <div className="mt-[10px] bg-gray-100 p-3 rounded-md">
+                          <p className="text-[17px] font-semibold">
+                            Расписание:
+                          </p>
+                          <div className="flex justify-between">
+                            <p className="text-[17px] font-medium">
+                              {get(item, "scheduleName") ||
+                                "Расписание не указано"}
+                            </p>
+                            <button
+                              onClick={() =>
+                                router.push(
+                                  `/dashboard/schedule/${
+                                    get(item, "scheduleId") || ""
+                                  }`
+                                )
+                              }
+                              className="text-blue-600 hover:text-blue-800 text-sm font-medium cursor-pointer"
+                            >
+                              Подробнее →
+                            </button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))
+                  ) : (
+                    <p className="text-gray-500">
+                      Нет данных по точкам доступа и расписаниям
+                    </p>
+                  )}
                 </div>
               </div>
             )}
@@ -857,7 +880,7 @@ const Index = () => {
                 <Input
                   label={"Имя сотрудника"}
                   name="first_name"
-                  value={formData.first_name}
+                  value={formData.first_name || ""}
                   onChange={handleChange}
                   placeholder="Имя"
                   inputClass="!h-[45px] border !border-gray-200"
@@ -867,7 +890,7 @@ const Index = () => {
                 <Input
                   label={"Фамилия сотрудника"}
                   name="last_name"
-                  value={formData.last_name}
+                  value={formData.last_name || ""}
                   onChange={handleChange}
                   placeholder="Фамилия"
                   inputClass="!h-[45px] border !border-gray-200"
@@ -876,14 +899,14 @@ const Index = () => {
                 <Input
                   label={"Отчество сотрудника"}
                   name="middle_name"
-                  value={formData.middle_name}
+                  value={formData.middle_name || ""}
                   onChange={handleChange}
                   placeholder="Отчество"
                   inputClass="!h-[45px] border !border-gray-200"
                 />
 
                 <BirthDateInput
-                  value={formData.date_of_birth}
+                  value={formData.date_of_birth || ""}
                   onChange={handleChange}
                   inputClass="!h-[45px] border !border-gray-200"
                   required
@@ -892,7 +915,7 @@ const Index = () => {
                 <CustomSelect
                   label={"Пол"}
                   options={genderOptions}
-                  value={formData.gender}
+                  value={formData.gender || ""}
                   placeholder="Выберите пол"
                   className="!h-[55px]"
                   onChange={(val) =>
@@ -907,7 +930,7 @@ const Index = () => {
 
                 <Input
                   name="tabel_number"
-                  label={"Табельный номер"}
+                  label={"Табельный номер" || ""}
                   value={formData.tabel_number}
                   onChange={handleChange}
                   placeholder="Введите"
@@ -919,7 +942,7 @@ const Index = () => {
               <div className="mt-6">
                 <Input
                   name="address"
-                  value={formData.address}
+                  value={formData.address || ""}
                   label={"Адрес проживания"}
                   onChange={handleChange}
                   placeholder="Введите"
@@ -952,7 +975,7 @@ const Index = () => {
                 <Input
                   label={"Электронная почта"}
                   name="email"
-                  value={formData.email}
+                  value={formData.email || ""}
                   onChange={handleChange}
                   placeholder="Электронная почта"
                   inputClass="!h-[45px] border !border-gray-200"
@@ -962,7 +985,7 @@ const Index = () => {
                 <PhoneInputUz
                   label={"Телефон номер сотрудника"}
                   name="phone_number"
-                  value={formData.phone_number}
+                  value={formData.phone_number || ""}
                   onChange={handleChange}
                   placeholder="Телефонный номер"
                   inputClass="!h-[45px] border !border-gray-200"
@@ -993,7 +1016,7 @@ const Index = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <CustomSelect
                   options={educationLevelOptions}
-                  value={formData.education_degree} // ✅ faqat value (string/number)
+                  value={formData.education_degree || ""} // ✅ faqat value (string/number)
                   label="Степень образования"
                   placeholder="Выберите уровень образования"
                   onChange={(val) =>
@@ -1008,7 +1031,7 @@ const Index = () => {
 
                 <Input
                   name="education_place"
-                  value={formData.education_place}
+                  value={formData.education_place || ""}
                   onChange={handleChange}
                   placeholder={"Введите"}
                   label="Место получения образования"
@@ -1041,7 +1064,7 @@ const Index = () => {
                 <CustomSelect
                   label={"Выберите разряд"}
                   options={razryadOptions}
-                  value={formData.level}
+                  value={formData.level || ""}
                   placeholder="Выберите разряд"
                   onChange={(val) =>
                     setFormData((prev) => ({
@@ -1049,13 +1072,14 @@ const Index = () => {
                       level: val,
                     }))
                   }
+                  sortOptions={false}
                   returnObject={false} // ✅ faqat value qaytaradi
                 />
                 <Input
                   name="hire_date"
                   type="date"
                   label={"Дата приема на работу"}
-                  value={formData.hire_date}
+                  value={formData.hire_date || ""}
                   onChange={handleChange}
                   inputClass="!h-[45px] border !border-gray-200"
                   required

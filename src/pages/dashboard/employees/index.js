@@ -215,7 +215,9 @@ const Index = () => {
       cell: ({ row }) => {
         return (
           <span className="font-medium">
-            {dayjs(row?.original?.hire_date).format("DD.MM.YYYY")}
+            {row?.original?.hire_date
+              ? dayjs(row.original.hire_date).format("DD.MM.YYYY")
+              : "Дата приема не указана"}
           </span>
         );
       },
@@ -269,7 +271,6 @@ const Index = () => {
       </DashboardLayout>
     );
   }
-  console.log(get(employee, "data", []).length);
 
   return (
     <DashboardLayout headerTitle={"Сотрудники"}>
@@ -292,7 +293,7 @@ const Index = () => {
 
           <div className="flex gap-2 items-center">
             <ExcelButton
-              onClick={() => exportToExcel(get(employee, "data", []))}
+              onClick={() => exportToExcel(get(employee, "data.data", []))}
             />
 
             <Button

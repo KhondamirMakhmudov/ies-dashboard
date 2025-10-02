@@ -1,4 +1,5 @@
 import CustomTable from "../table";
+import { useEffect } from "react";
 import { Typography } from "@mui/material";
 import { motion } from "framer-motion";
 import ContentLoader from "../loader";
@@ -32,6 +33,18 @@ const ReportComponent = ({
   const formatDateTime = (date) => {
     return date.toISOString().slice(0, 16);
   };
+
+  useEffect(() => {
+    if (!startDate && !endDate) {
+      const start = new Date();
+      start.setHours(0, 0, 0, 0); // 00:00
+      const end = new Date();
+      end.setHours(23, 59, 59, 999); // 23:59
+
+      setStartDate(formatDateTime(start));
+      setEndDate(formatDateTime(end));
+    }
+  }, [startDate, endDate, setStartDate, setEndDate]);
 
   const exportToExcel = (data, filename = "employees.xlsx") => {
     if (!data || data.length === 0) {

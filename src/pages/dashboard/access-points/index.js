@@ -143,7 +143,19 @@ const Index = () => {
 
     const original = selectedEntryPoint.original;
 
-    // Build updated data object - only include changed fields
+    // Helper functions: normalize formats for backend
+    const normalizeUnitCodes = (arr = []) =>
+      arr.map((u) => ({
+        code: String(u.code),
+        isMain: u.isMain !== undefined ? u.isMain : u.isMain ? 1 : 0, // agar boolean bo'lsa 1/0 ga aylantiramiz
+      }));
+
+    const normalizeSchedules = (arr = []) =>
+      arr.map((s) => ({
+        scheduleId: Number(s.scheduleId),
+        isMain: s.isMain !== undefined ? s.isMain : s.main ? 1 : 0,
+      }));
+
     const updatedData = {};
 
     if (entryPointName !== original.entryPointName) {
@@ -156,12 +168,19 @@ const Index = () => {
       updatedData.buildingDescription = buildingDescription;
     }
 
-    // Use lodash isEqual for deep comparison
-    if (!isEqual(unitCodes, original.unitCodes || [])) {
-      updatedData.unitCodes = unitCodes;
+    // Normalize both current and original before comparison
+    const normUnitCodes = normalizeUnitCodes(unitCodes);
+    const origUnitCodes = normalizeUnitCodes(original.unitCodes || []);
+
+    if (!isEqual(normUnitCodes, origUnitCodes)) {
+      updatedData.unitCodes = normUnitCodes;
     }
-    if (!isEqual(schedules, original.schedules || [])) {
-      updatedData.schedules = schedules;
+
+    const normSchedules = normalizeSchedules(schedules);
+    const origSchedules = normalizeSchedules(original.schedules || []);
+
+    if (!isEqual(normSchedules, origSchedules)) {
+      updatedData.schedules = normSchedules;
     }
 
     if (Object.keys(updatedData).length === 0) {
@@ -187,10 +206,11 @@ const Index = () => {
         throw new Error(errorData?.message || "Ошибка при обновлении");
       }
 
-      toast.success("Checkpoint muvaffaqiyatno обновлен", {
+      toast.success("Checkpoint muvaffaqиятно обновлен", {
         position: "top-center",
       });
 
+      // Reset states
       setEditEntryPoint(false);
       setEntryPointName("");
       setEntryPointShortName("");
@@ -263,7 +283,7 @@ const Index = () => {
             {units.map((unit, idx) => (
               <div key={idx} className="text-sm">
                 {getUnitNameByCode(unit.code)}
-                {unit.main === true && (
+                {unit.isMain === 1 && (
                   <span className="ml-2 px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded">
                     Основной
                   </span>
@@ -685,12 +705,12 @@ const Index = () => {
                     <label className="flex items-center gap-2 text-sm text-gray-600">
                       <input
                         type="checkbox"
-                        checked={unit.main === true}
+                        checked={unit.isMain === 1}
                         onChange={(e) =>
                           handleUnitCodeChange(
                             index,
-                            "main",
-                            e.target.checked ? true : false
+                            "isMain",
+                            e.target.checked ? 1 : 0
                           )
                         }
                         className="w-4 h-4 accent-blue-500"
