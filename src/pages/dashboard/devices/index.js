@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from "react";
 import CustomTable from "@/components/table";
 import DashboardLayout from "@/layouts/dashboard/DashboardLayout";
-import Button from "@mui/material/Button";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DeleteModal from "@/components/modal/delete-modal";
@@ -11,10 +10,9 @@ import { URLS } from "@/constants/url";
 import { motion } from "framer-motion";
 import { get, isEmpty } from "lodash";
 import ContentLoader from "@/components/loader";
-import { Typography, Select, MenuItem } from "@mui/material";
+import { Typography, Button } from "@mui/material";
 import Input from "@/components/input";
 import toast from "react-hot-toast";
-import Image from "next/image";
 import MethodModal from "@/components/modal/method-modal";
 import usePostQuery from "@/hooks/java/usePostQuery";
 import { config } from "@/config";
@@ -43,9 +41,9 @@ const Index = () => {
   const [password, setPassword] = useState("");
   const [doorType, setDoorType] = useState("");
   const [isActive, setIsActive] = useState(true);
-  const [selectedDepartment, setSelectedDepartment] = useState("");
+
   const [selectedEntryPoint, setSelectedEntryPoint] = useState("");
-  const [selectedCheckPoint, setSelectedCheckPoint] = useState("");
+  const [selectedCheckPoint, setSelectedCheckPoint] = useState(null);
   const [selectedCamera, setSelectedCamera] = useState(null);
 
   const {
@@ -61,22 +59,6 @@ const Index = () => {
     },
     enabled: !!session?.accessToken,
   });
-
-  // department get
-  const { data: departments } = useGetQuery({
-    key: [KEYS.departments, createCameraModal || editCameraModal],
-    url: URLS.departments,
-    headers: {
-      Authorization: `Bearer ${session?.accessToken}`,
-      Accept: "application/json",
-    },
-    enabled: !!session?.accessToken && (createCameraModal || editCameraModal),
-  });
-
-  const optionsDepartments = get(departments, "data", []).map((entry) => ({
-    value: entry.id,
-    label: entry.nameDep,
-  }));
 
   // entrypoint get
 
@@ -118,22 +100,6 @@ const Index = () => {
   const onSubmitCreateCamera = (e) => {
     e.preventDefault();
 
-    // // Client-side validatsiya
-    // if (
-    //   !ipAddress?.trim() ||
-    //   !building?.trim() ||
-    //   !login?.trim() ||
-    //   !password?.trim() ||
-    //   !selectedDepartment ||
-    //   !selectedCheckPoint ||
-    //   !doorType
-    // ) {
-    //   toast.error("Пожалуйста, заполните все поля", {
-    //     position: "top-center",
-    //   });
-    //   return;
-    // }
-
     // Ma'lumotlar to‘g‘ri bo‘lsa, serverga yuboriladi
     createCamera(
       {
@@ -156,7 +122,7 @@ const Index = () => {
       },
       {
         onSuccess: () => {
-          toast.success("Kamera muvaffaqiyatli joylandi", {
+          toast.success("Камера успешно установлена", {
             position: "top-center",
           });
           setCreateCameraModal(false);
@@ -164,7 +130,6 @@ const Index = () => {
           setBuilding("");
           setLogin("");
           setPassword("");
-          // setSelectedDepartment(null);
           setSelectedEntryPoint(null);
           setSelectedCheckPoint(null);
           setDoorType("");
@@ -197,7 +162,6 @@ const Index = () => {
           ipAddress: ipAddress,
           building: building,
           login: login,
-          departmentId: selectedDepartment,
           password: password,
           checkPointId: selectedCheckPoint,
           doorTypeId: doorType === "in" ? 1 : 2,
@@ -219,7 +183,6 @@ const Index = () => {
           setBuilding("");
           setLogin("");
           setPassword("");
-          setSelectedDepartment("");
           setSelectedEntryPoint("");
           setSelectedCheckPoint("");
           setDoorType("");
@@ -325,6 +288,12 @@ const Index = () => {
               setBuilding(row.original.building);
               setPassword(row.original.password);
               setIpAddress(row.original.ipAddress);
+
+              // ✅ CheckPoint obyektini set qilamiz
+              setSelectedCheckPoint(row.original.checkPointId);
+              setSelectedEntryPoint(row.original.entryPointId);
+
+              setDoorType(row.original.doorType === "Выход" ? "out" : "in");
             }}
             sx={{
               width: "32px",
@@ -357,17 +326,6 @@ const Index = () => {
     },
   ];
 
-  const filteredCameras = useMemo(() => {
-    if (!searchTerm) return get(allCameras, "data");
-
-    return get(allCameras, "data").filter(
-      (cam) =>
-        cam.ipAddress?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        cam.building?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        cam.login?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [searchTerm, allCameras]);
-
   if (isLoading || isFetching) {
     return (
       <DashboardLayout>
@@ -376,13 +334,6 @@ const Index = () => {
     );
   }
 
-  // if (!departments) {
-  //   return (
-  //     <DashboardLayout>
-  //       <ContentLoader />
-  //     </DashboardLayout>
-  //   );
-  // }
   return (
     <DashboardLayout headerTitle={"Устройства"}>
       {isEmpty(get(allCameras, "data", [])) ? (
@@ -412,12 +363,8 @@ const Index = () => {
               >
                 <p>Создать</p>
               </Button>
-              {/* search camera data */}
-              <div className="flex gap-2 items-center">
-                <CustomSearch onSearch={setSearchTerm} />
-              </div>
             </div>
-            <CustomTable data={filteredCameras} columns={columns} />
+            <CustomTable data={get(allCameras, "data", [])} columns={columns} />
           </div>
           {/* delete camera */}
           <DeleteModal
@@ -431,9 +378,20 @@ const Index = () => {
       {createCameraModal && (
         <MethodModal
           open={createCameraModal}
+          showCloseIcon={true}
+          closeClick={() => {
+            setCreateCameraModal(false);
+
+            setSelectedEntryPoint("");
+            setSelectedCheckPoint("");
+            setIpAddress("");
+            setBuilding("");
+            setLogin("");
+            setPassword("");
+          }}
           onClose={() => {
             setCreateCameraModal(false);
-            setSelectedDepartment("");
+
             setSelectedEntryPoint("");
             setSelectedCheckPoint("");
             setIpAddress("");
@@ -509,14 +467,6 @@ const Index = () => {
                 required
               />
 
-              {/* <CustomSelect
-                options={optionsDepartments}
-                value={selectedDepartment}
-                onChange={(val) => setSelectedDepartment(val)}
-                placeholder="Выберите департамент"
-                className="col-span-4"
-              /> */}
-
               <CustomSelect
                 options={options}
                 value={selectedEntryPoint}
@@ -566,22 +516,53 @@ const Index = () => {
                 </label>
               </div>
 
-              <button
+              <Button
+                disabled={
+                  !ipAddress?.trim() ||
+                  !building?.trim() ||
+                  !login?.trim() ||
+                  !password?.trim() ||
+                  !selectedCheckPoint ||
+                  !doorType
+                }
+                sx={{
+                  textTransform: "initial",
+                  fontFamily: "DM Sans, sans-serif",
+                  backgroundColor: "#4182F9",
+                  boxShadow: "none",
+                  color: "white",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "4px",
+                  fontSize: "14px",
+                  minWidth: "100px",
+                  borderRadius: "8px",
+                  marginTop: "15px",
+                  opacity:
+                    !ipAddress?.trim() ||
+                    !building?.trim() ||
+                    !login?.trim() ||
+                    !password?.trim() ||
+                    !selectedCheckPoint ||
+                    !doorType
+                      ? 0.6
+                      : 1, // disabled bo‘lsa biroz xiralashadi
+                  cursor:
+                    !ipAddress?.trim() ||
+                    !building?.trim() ||
+                    !login?.trim() ||
+                    !password?.trim() ||
+                    !selectedCheckPoint ||
+                    !doorType
+                      ? "not-allowed"
+                      : "pointer",
+                }}
+                variant="contained"
                 type="submit"
-                className="col-span-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-xl transition-all duration-200"
               >
                 Создать
-              </button>
-
-              {/* <div className="col-span-4 flex justify-center mt-4">
-                <Image
-                  src="/images/secure-img.png"
-                  alt="secure"
-                  width={400}
-                  height={300}
-                  className="w-full max-w-[350px] h-auto object-cover"
-                />
-              </div> */}
+              </Button>
             </form>
           </div>
         </MethodModal>
@@ -590,13 +571,24 @@ const Index = () => {
       {editCameraModal && (
         <MethodModal
           open={editCameraModal}
+          showCloseIcon={true}
+          closeClick={() => {
+            setCreateCameraModal(false);
+            setIpAddress("");
+            setBuilding("");
+            setLogin("");
+            setPassword("");
+            setSelectedEntryPoint(null);
+            setSelectedCheckPoint(null);
+            setDoorType("");
+            setEditCameraModal(false);
+          }}
           onClose={() => {
             setCreateCameraModal(false);
             setIpAddress("");
             setBuilding("");
             setLogin("");
             setPassword("");
-            setSelectedDepartment(null);
             setSelectedEntryPoint(null);
             setSelectedCheckPoint(null);
             setDoorType("");
@@ -668,14 +660,6 @@ const Index = () => {
               />
 
               <CustomSelect
-                options={optionsDepartments}
-                value={selectedDepartment}
-                onChange={(val) => setSelectedDepartment(val)}
-                placeholder="Выберите департамент"
-                className="col-span-4"
-              />
-
-              <CustomSelect
                 options={options}
                 value={selectedEntryPoint}
                 onChange={(val) => setSelectedEntryPoint(val)}
@@ -738,7 +722,7 @@ const Index = () => {
                     gap: "4px",
                     fontSize: "14px",
                     minWidth: "100px",
-                    width: "100%", // yoki widthni kengroq bering
+                    width: "20%", // yoki widthni kengroq bering
                     borderRadius: "8px",
                     marginTop: "15px",
                   }}

@@ -142,7 +142,14 @@ export default function Sidebar({ isOpen = true }) {
           onClick={() => router.push("/")}
           className="my-[32px] flex justify-center items-start gap-4 cursor-pointer"
         >
-          <Image src="/icons/ies_brand.svg" alt="logo" width={53} height={76} />
+          <Image
+            src="/icons/ies_brand.svg"
+            alt="logo"
+            width={53}
+            height={76}
+            priority
+            className="w-[53px] h-auto"
+          />
           {isOpen && (
             <div className="flex flex-col">
               <p className="text-[18px] font-medium">

@@ -1,15 +1,10 @@
 import DashboardLayout from "@/layouts/dashboard/DashboardLayout";
-import PersonAddAlt1Icon from "@mui/icons-material/PersonAddAlt1";
-import PictureAsPdfRoundedIcon from "@mui/icons-material/PictureAsPdfRounded";
 import { useState } from "react";
 import Input from "@/components/input";
-import Image from "next/image";
 import { Typography, Button } from "@mui/material";
-import { motion } from "framer-motion";
 import ImageUploader from "@/components/image-uploader";
 import CustomSelect from "@/components/select";
 import MethodModal from "@/components/modal/method-modal";
-import usePostPythonQuery from "@/hooks/python/usePostQuery";
 import useGetPythonQuery from "@/hooks/python/useGetQuery";
 import { URLS } from "@/constants/url";
 import { KEYS } from "@/constants/key";
@@ -27,8 +22,12 @@ import NoData from "@/components/no-data";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import ExcelButton from "@/components/button/excel-button";
+import CustomSearch from "@/components/search";
+import Breadcrumb from "@/components/breadcrumb";
 
 const Index = () => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 20;
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const router = useRouter();
@@ -64,7 +63,10 @@ const Index = () => {
   } = useGetPythonQuery({
     key: KEYS.employees,
     url: URLS.employees,
-    params: { limit: 150, offset: 0 },
+    params: {
+      limit: pageSize,
+      offset: (currentPage - 1) * pageSize,
+    },
   });
 
   // organization units
@@ -85,8 +87,6 @@ const Index = () => {
       },
       enabled: !!selectUnitCode, // faqat selectUnitCode tanlanganda chaqilsin
     });
-
-  console.log(selectUnitCode, "selectUnitCode");
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
@@ -180,9 +180,12 @@ const Index = () => {
   const columns = [
     {
       header: "№",
-      cell: ({ row }) => row.index + 1,
+      cell: ({ row }) => {
+        return (currentPage - 1) * pageSize + (row.index + 1);
+      },
     },
     {
+      accessorKey: "last_name",
       header: "Имя сотрудника",
       cell: ({ row }) => {
         const { first_name, last_name } = row.original;
@@ -212,7 +215,9 @@ const Index = () => {
       cell: ({ row }) => {
         return (
           <span className="font-medium">
-            {dayjs(row?.original?.hire_date).format("DD.MM.YYYY")}
+            {row?.original?.hire_date
+              ? dayjs(row.original.hire_date).format("DD.MM.YYYY")
+              : "Дата приема не указана"}
           </span>
         );
       },
@@ -269,43 +274,66 @@ const Index = () => {
 
   return (
     <DashboardLayout headerTitle={"Сотрудники"}>
-      {isEmpty(get(employee, "data", [])) ? (
+      <div className="bg-white p-[15px] mt-[10px] rounded-md border border-[#E9E9E9]">
+        <Breadcrumb
+          paths={[
+            {
+              label: "Сотрудники",
+              href: "/dashboard/employees",
+              isCurrent: true,
+            },
+          ]}
+        />
+      </div>
+      <div className="bg-white p-[15px] mt-[10px] rounded-md border border-[#E9E9E9]">
+        <div className="col-span-12 flex justify-between items-center ">
+          <Typography variant="h6">
+            Просмотр и управление сотрудниками
+          </Typography>
+
+          <div className="flex gap-2 items-center">
+            <ExcelButton
+              onClick={() => exportToExcel(get(employee, "data.data", []))}
+            />
+
+            <Button
+              onClick={() => setOpen(true)}
+              sx={{
+                textTransform: "initial",
+                fontFamily: "DM Sans, sans-serif",
+                backgroundColor: "#4182F9",
+                boxShadow: "none",
+                color: "white",
+                display: "flex",
+                gap: "4px",
+                fontSize: "14px",
+                borderRadius: "8px",
+                paddingY: "8px",
+                paddingX: "20px",
+              }}
+              variant="contained"
+            >
+              <p>Добавить сотрудника</p>
+            </Button>
+          </div>
+        </div>
+      </div>
+      {isEmpty(get(employee, "data.data", [])) ? (
         <NoData onCreate={() => setOpen(true)} />
       ) : (
-        <div className="bg-white p-[12px] my-[50px] rounded-md border border-[#E9E9E9]">
+        <div className="bg-white p-[12px] mt-[5px] mb-[50px] rounded-md border border-[#E9E9E9]">
           <div className="grid grid-cols-12 gap-[12px] p-2">
-            <div className="col-span-12 flex justify-between ">
-              <Typography variant="h6">
-                Просмотр и управление сотрудниками
-              </Typography>
-
-              <div className="flex gap-2">
-                <ExcelButton
-                  onClick={() => exportToExcel(get(employee, "data", []))}
-                />
-
-                <Button
-                  onClick={() => setOpen(true)}
-                  sx={{
-                    textTransform: "initial",
-                    fontFamily: "DM Sans, sans-serif",
-                    backgroundColor: "#4182F9",
-                    boxShadow: "none",
-                    color: "white",
-                    display: "flex",
-                    gap: "4px",
-                    fontSize: "14px",
-                    borderRadius: "8px",
-                  }}
-                  variant="contained"
-                >
-                  <p>Добавить сотрудника</p>
-                </Button>
-              </div>
-            </div>
-
-            <div className="col-span-12 mt-6">
-              <CustomTable data={get(employee, "data", [])} columns={columns} />
+            <div className="col-span-12 ">
+              <CustomTable
+                data={get(employee, "data.data", [])}
+                columns={columns}
+                pagination={{
+                  currentPage,
+                  pageSize: pageSize,
+                  total: get(employee, "data.count", 0), // 👈 bu umumiy son (backenddan kelmasa qo‘lda berish kerak)
+                  onPaginationChange: ({ page }) => setCurrentPage(page),
+                }}
+              />
             </div>
           </div>
         </div>
@@ -691,7 +719,19 @@ const Index = () => {
         <div className="flex justify-between pt-4">
           {step > 1 ? (
             <Button
-              sx={{ textTransform: "initial" }}
+              sx={{
+                textTransform: "initial",
+                fontFamily: "DM Sans, sans-serif",
+                backgroundColor: "#EDEDF2",
+                boxShadow: "none",
+                color: "black",
+                display: "flex",
+                gap: "4px",
+                fontSize: "14px",
+                borderRadius: "8px",
+                paddingY: "8px",
+                paddingX: "20px",
+              }}
               onClick={handlePrev}
               variant="secondary"
             >
@@ -701,7 +741,22 @@ const Index = () => {
             <div />
           )}
           {step < 3 ? (
-            <Button sx={{ textTransform: "initial" }} onClick={handleNext}>
+            <Button
+              sx={{
+                textTransform: "initial",
+                fontFamily: "DM Sans, sans-serif",
+                backgroundColor: "#4182F9",
+                boxShadow: "none",
+                color: "white",
+                display: "flex",
+                gap: "4px",
+                fontSize: "14px",
+                borderRadius: "8px",
+                paddingY: "8px",
+                paddingX: "20px",
+              }}
+              onClick={handleNext}
+            >
               Вперёд
             </Button>
           ) : (

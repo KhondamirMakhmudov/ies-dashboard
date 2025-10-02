@@ -28,36 +28,31 @@ const MethodModal = ({
         }}
       >
         {/* Title va X icon joylashuvi */}
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            mb: showCloseIcon ? 2 : 0,
-          }}
-        >
+        <div className="flex items-center justify-between">
           <Typography variant="h6">{title}</Typography>
 
-          {showCloseIcon && (
-            <IconButton onClick={closeClick} size="small">
-              {/* SVG X icon */}
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={2}
-                stroke="currentColor"
-                className="w-5 h-5"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </IconButton>
-          )}
-        </Box>
+          <div>
+            {showCloseIcon && (
+              <IconButton onClick={closeClick} size="medium">
+                {/* SVG X icon */}
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={2}
+                  stroke="currentColor"
+                  className="w-5 h-5"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </IconButton>
+            )}
+          </div>
+        </div>
 
         {children}
       </Box>

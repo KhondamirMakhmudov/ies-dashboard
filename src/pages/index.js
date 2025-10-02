@@ -134,9 +134,9 @@ export default function Home() {
                 whileTap={{ scale: 0.97 }}
                 className="w-full"
               >
-                <Button sx={{ width: "100%" }}>
-                  <Link href={"/dashboard/employees"}>Вход</Link>
-                </Button>
+                <Link href={"/dashboard/employees"}>
+                  <Button sx={{ width: "100%" }}>Вход</Button>
+                </Link>
               </motion.div>
             ) : (
               <motion.form

@@ -2,20 +2,18 @@ import { KEYS } from "@/constants/key";
 import { URLS } from "@/constants/url";
 import useGetPythonQuery from "@/hooks/python/useGetQuery";
 import DashboardLayout from "@/layouts/dashboard/DashboardLayout";
-import { Tabs, Tab, Typography, Button } from "@mui/material";
+import { Typography, Button } from "@mui/material";
 import { useRouter } from "next/router";
 import { motion } from "framer-motion";
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import { get, set } from "lodash";
+import { get, isEmpty, set } from "lodash";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import dayjs from "dayjs";
 import ContentLoader from "@/components/loader";
 import useGetQuery from "@/hooks/java/useGetQuery";
 import { useSession } from "next-auth/react";
-import EmojiEmotionsIcon from "@mui/icons-material/EmojiEmotions";
-import CustomTable from "@/components/table";
 import DeleteModal from "@/components/modal/delete-modal";
 import toast from "react-hot-toast";
 import { config } from "@/config";
@@ -25,18 +23,19 @@ import Input from "@/components/input";
 import BirthDateInput from "@/components/input/birthdate-input";
 import PhoneInputUz from "@/components/input/phone-input";
 import CustomSelect from "@/components/select";
-import usePatchPythonQuery from "@/hooks/python/usePatchQuery";
+import Breadcrumb from "@/components/breadcrumb";
+
+import ReportComponent from "@/components/report";
+
 const Index = () => {
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const queryClient = useQueryClient();
   const router = useRouter();
   const { data: session } = useSession();
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
   const [editModal, setEditModal] = useState(false);
   const [deleteModal, setDeleteModal] = useState(false);
-  const [photoPreview, setPhotoPreview] = useState(
-    "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face"
-  );
+  const [photoPreview, setPhotoPreview] = useState("");
 
   const [photoFile, setPhotoFile] = useState(null);
 
@@ -44,6 +43,11 @@ const Index = () => {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const [tab, setTab] = useState("personal");
+  const tabs = [
+    { key: "personal", label: "Основная информация" },
+    { key: "employee", label: "Данные о сотрудниках" },
+    { key: "schedule", label: "Доступ и расписание" },
+  ];
   const [formData, setFormData] = useState({
     first_name: "",
     last_name: "",
@@ -59,13 +63,11 @@ const Index = () => {
     education_degree: "школа",
     education_place: "",
     workplace_id: "",
+    photo: null,
   });
-  // Format function: converts to 'YYYY-MM-DDTHH:mm'
-  const formatDateTime = (date) => {
-    return date.toISOString().slice(0, 16);
-  };
 
   const { id: employee_id } = router.query;
+
   // GET employee all informations
   const {
     data: employeePhoto,
@@ -78,7 +80,7 @@ const Index = () => {
   });
 
   useEffect(() => {
-    if (get(employeePhoto, "data", [])) {
+    if (employeePhoto?.data) {
       setFormData({
         first_name: get(employeePhoto, "data.first_name", ""),
         last_name: get(employeePhoto, "data.last_name", ""),
@@ -96,24 +98,36 @@ const Index = () => {
         workplace_id: get(employeePhoto, "data.workplace_id", ""),
       });
 
-      if (get(employeePhoto, "data.file_url", null)) {
-        setPhotoPreview(get(employeePhoto, "data.file_url"));
-      }
+      const fileUrl = get(employeePhoto, "data.file_url", null);
+      setPhotoPreview(fileUrl || null);
     }
-  }, [employeePhoto]);
+  }, [employeePhoto?.data]);
+
+  // GET schedule and entrypoint which are connected to employee
+
+  const {
+    data: ScheduleAndEntrypointOfEmployee,
+    isLoading: isLoadingScheduleAndEntrypointOfEmployee,
+    isFetching: isFetchingScheduleAndEntrypointOfEmployee,
+  } = useGetQuery({
+    key: KEYS.ScheduleAndEntrypointOfEmployee,
+    url: `${URLS.ScheduleAndEntrypointOfEmployee}${employee_id}`,
+    headers: {
+      Authorization: `Bearer ${session?.accessToken}`,
+      Accept: "application/json",
+    },
+    enabled: !!employee_id && !!session?.accessToken,
+  });
 
   // GET report of the employee by employee_id (right now used table_number instead of id)
+
   const {
     data: employeeReport,
     isLoading: isLoadingReport,
     isFetching: isFetchingReport,
   } = useGetQuery({
     key: KEYS.employeeReport,
-    url: `${URLS.logEntersOfEmployeeById}${get(
-      employeePhoto,
-      "data.tabel_number",
-      ""
-    )}/dates/new-output`,
+    url: `${URLS.logEntersOfEmployeeById}uuid/${employee_id}/dates/new-output`,
     headers: {
       Authorization: `Bearer ${session?.accessToken}`,
       Accept: "application/json",
@@ -122,45 +136,48 @@ const Index = () => {
       ...(startDate && { startDate }),
       ...(endDate && { endDate }),
     },
+    enabled:
+      !!employee_id && !!session?.accessToken && !!startDate && !!endDate, // ✅ faqat sanalar bo‘lsa fetch qiladi
   });
 
-  // edit Employee
-
-  const { mutate: editEmployee } = usePatchPythonQuery({
-    listKeyId: "edit-employee",
-  });
-
-  const onSubmitEditEmployee = () => {
+  // edit(patch) Employee
+  const onSubmitEditEmployee = async () => {
     const formDataToSend = new FormData();
 
-    // Faqat o‘zgargan fieldlarni solamiz
     Object.keys(formData).forEach((key) => {
       const newValue = formData[key];
       const oldValue = get(employeePhoto, `data.${key}`, "");
 
-      if (newValue !== oldValue) {
+      if (String(newValue) !== String(oldValue)) {
         formDataToSend.append(key, newValue);
       }
     });
 
-    // Agar yangi rasm tanlangan bo‘lsa, faqat shunda yuboramiz
+    if (photoFile) {
+      formDataToSend.append("photo", photoFile);
+    }
 
-    editEmployee(
-      {
-        url: `${URLS.employees}${employee_id}`,
-        attributes: formDataToSend, // faqat keraklilar yuborilyapti
-      },
-      {
-        onSuccess: () => {
-          setEditModal(false);
-          toast.success("Успешно редактировано", { position: "top-center" });
-          queryClient.invalidateQueries(KEYS.employeePhoto);
-        },
-        onError: (error) => {
-          toast.error(`Error is ${error}`, { position: "top-right" });
-        },
+    // Debug uchun
+
+    try {
+      const res = await fetch(
+        `${config.PYTHON_API_URL}${URLS.employees}${employee_id}`,
+        {
+          method: "PATCH",
+          body: formDataToSend,
+        }
+      );
+
+      if (!res.ok) {
+        throw new Error(`Ошибка ${res.status}`);
       }
-    );
+
+      toast.success("Успешно редактировано", { position: "top-center" });
+      setEditModal(false);
+      queryClient.invalidateQueries(KEYS.employeePhoto);
+    } catch (error) {
+      toast.error(`Error is ${error}`, { position: "top-right" });
+    }
   };
 
   // delete Employee
@@ -199,10 +216,6 @@ const Index = () => {
     }));
   };
 
-  const handleChangeTab = (event, newValue) => {
-    setTab(newValue);
-  };
-
   if (isLoadingPhoto || isFetchingPhoto) {
     return (
       <DashboardLayout>
@@ -210,15 +223,6 @@ const Index = () => {
       </DashboardLayout>
     );
   }
-  const handlePhotoChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setPhotoFile(file); // ✅ Faylni saqlab qo'yamiz
-      const reader = new FileReader();
-      reader.onload = (e) => setPhotoPreview(e.target.result);
-      reader.readAsDataURL(file);
-    }
-  };
 
   // Kamera ochish
   const openCamera = async () => {
@@ -258,99 +262,6 @@ const Index = () => {
     setIsCameraOpen(false);
   };
 
-  const columns = [
-    {
-      header: "№",
-      cell: ({ row }) => row.index + 1,
-    },
-
-    {
-      accessorKey: "time",
-      header: "Время действие",
-      cell: ({ getValue }) => {
-        const datetime = getValue(); // masalan: "2025-07-22T11:14:56"
-        const date = dayjs(datetime).format("DD.MM.YYYY");
-        const time = dayjs(datetime).format("HH:mm:ss");
-
-        return (
-          <div className="flex flex-col">
-            <span className="font-medium">{date}</span>
-            <span className="text-gray-400 text-xs">{time}</span>
-          </div>
-        );
-      },
-    },
-    {
-      accessorKey: "errorCode",
-      header: "Статус",
-      cell: ({ getValue }) => {
-        const errorCode = getValue();
-
-        return (
-          <span
-            className={
-              errorCode === 0
-                ? "text-green-600 font-medium bg-[#E8F6F0] p-1 rounded-md border border-green-600"
-                : "text-red-600 font-medium bg-[#FAE7E7] p-1 rounded-md border border-red-600"
-            }
-          >
-            {errorCode === 0
-              ? "доступ разрешен"
-              : "отказ в доступе (режим графика)"}
-          </span>
-        );
-      },
-    },
-    {
-      accessorKey: "event",
-      header: "Событие",
-      cell: ({ getValue }) => {
-        const event = getValue();
-        return (
-          <span
-            className={
-              event
-                ? "text-green-600 font-medium bg-[#E8F6F0] p-1 px-3 rounded-md border border-green-600"
-                : "text-red-600 font-medium bg-[#FAE7E7] p-1 rounded-md border border-red-600"
-            }
-          >
-            {event === "enter" ? "Вход" : "Выход"}
-          </span>
-        );
-      },
-    },
-    {
-      accessorKey: "eventType",
-      header: "Тип доступа",
-      cell: ({ getValue }) => {
-        const eventType = getValue();
-        return (
-          <div
-            className={
-              "text-[#1E5EFF] font-medium bg-[#ECF2FF] p-1 px-3 rounded-md border border-[#1E5EFF]  items-center gap-1 inline-flex"
-            }
-          >
-            <EmojiEmotionsIcon
-              sx={{ width: "15px", height: "15px", color: "#1E5EFF" }}
-            />
-            <span>{eventType === 15 ? "FACE ID" : "Другое"}</span>
-          </div>
-        );
-      },
-    },
-
-    { accessorKey: "entryPointName", header: "Точка входа" },
-    { accessorKey: "structureName", header: "Отдел" },
-  ];
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
   const genderOptions = [
     { value: "мужской", label: "Мужской" },
     { value: "женский", label: "Женский" },
@@ -378,34 +289,76 @@ const Index = () => {
 
   return (
     <DashboardLayout headerTitle={`Полная информация о сотруднике`}>
+      <div className="bg-white p-[15px] mt-[10px] rounded-md border border-[#E9E9E9]">
+        <Breadcrumb
+          paths={[
+            {
+              label: "Сотрудники",
+              href: "/dashboard/employees",
+              isCurrent: false,
+            },
+
+            {
+              label: `${get(employeePhoto, "data.first_name")} ${get(
+                employeePhoto,
+                "data.last_name"
+              )}`,
+              href: "/dashboard/employees",
+              isCurrent: true,
+            },
+          ]}
+        />
+      </div>
       <div>
         {/* employee details */}
         <motion.div
           initial={{ opacity: 0, scale: 0 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-white mb-5 border border-[#E9E9E9] w-full grid grid-cols-1 md:grid-cols-12 mt-8 rounded-md"
+          className="bg-white mb-5 border border-[#E9E9E9] w-full grid grid-cols-1 md:grid-cols-12 mt-[10px] rounded-md"
         >
           {/* Chap tomonda profil */}
           <div className="md:col-span-3 flex flex-col gap-2 items-center text-center border-b md:border-b-0 md:border-r border-[#E9E9E9] py-5 px-4">
             <div className="w-[150px] h-[150px] sm:w-[180px] sm:h-[180px] rounded-full overflow-hidden border border-[#C9C9C9]">
               <Image
-                src={get(employeePhoto, "data.file_url", "")}
-                loader={() => get(employeePhoto, "data.file_url", "")}
+                src={
+                  isEmpty(
+                    get(
+                      employeePhoto,
+                      "data.file_url",
+                      "/images/profile-default.jpg"
+                    )
+                  )
+                    ? "/images/profile-default.jpg"
+                    : get(
+                        employeePhoto,
+                        "data.file_url",
+                        "/images/profile-default.jpg"
+                      )
+                }
                 alt="user photo"
                 width={180}
                 height={180}
+                unoptimized
                 className="object-cover w-full h-full"
               />
             </div>
 
             <div>
-              <Typography
-                variant="h7"
-                sx={{ fontSize: "20px", fontWeight: "600" }}
-              >
-                {get(employeePhoto, "data.first_name")}{" "}
-                {get(employeePhoto, "data.last_name")}
-              </Typography>
+              <div className="space-[10px] gap-x-2 flex flex-wrap justify-center items-center">
+                <Typography
+                  variant="h7"
+                  sx={{ fontSize: "20px", fontWeight: "600" }}
+                >
+                  {get(employeePhoto, "data.first_name")}
+                </Typography>
+
+                <Typography
+                  variant="h7"
+                  sx={{ fontSize: "20px", fontWeight: "600" }}
+                >
+                  {get(employeePhoto, "data.last_name")}
+                </Typography>
+              </div>
               <p className="text-gray-400 text-sm">
                 {get(employeePhoto, "data.email")}
               </p>
@@ -424,26 +377,33 @@ const Index = () => {
               className="bg-white p-0 border-b border-b-[#E9E9E9]"
             >
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                <Tabs
-                  value={
-                    ["personal", "employee"].includes(tab) ? tab : "personal"
-                  }
-                  onChange={handleChangeTab}
-                  textColor="primary"
-                  indicatorColor="primary"
-                  sx={{ paddingTop: "1px" }}
-                >
-                  <Tab
-                    value="personal"
-                    label="Основная информация"
-                    sx={{ px: 1, py: 0.5, textTransform: "none" }}
-                  />
-                  <Tab
-                    value="employee"
-                    label="Данные о сотрудниках"
-                    sx={{ px: 1, py: 0.5, textTransform: "none" }}
-                  />
-                </Tabs>
+                <div className="flex gap-3 px-3">
+                  {tabs.map((t) => (
+                    <button
+                      key={t.key}
+                      onClick={() => setTab(t.key)}
+                      className={`relative px-3 py-2 text-sm font-medium transition-colors ${
+                        tab === t.key
+                          ? "text-blue-600"
+                          : "text-gray-500 hover:text-gray-700"
+                      }`}
+                    >
+                      {t.label}
+
+                      {tab === t.key && (
+                        <motion.span
+                          layoutId="underline"
+                          className="absolute left-0 bottom-0 h-[2px] w-full bg-blue-600 rounded-full"
+                          transition={{
+                            type: "spring",
+                            stiffness: 500,
+                            damping: 30,
+                          }}
+                        />
+                      )}
+                    </button>
+                  ))}
+                </div>
 
                 <div className="flex gap-2 pr-4">
                   <Button
@@ -490,25 +450,28 @@ const Index = () => {
                     <li className="min-w-[120px] sm:min-w-[150px]">
                       <h4 className="text-sm text-gray-500 mb-1">Имя</h4>
                       <p className="text-base font-medium">
-                        {get(employeePhoto, "data.first_name")}
+                        {get(employeePhoto, "data.first_name") ||
+                          "Имя не указано"}
                       </p>
                     </li>
                     <li className="min-w-[120px] sm:min-w-[150px]">
                       <h4 className="text-sm text-gray-500 mb-1">Фамилия</h4>
                       <p className="text-base font-medium">
-                        {get(employeePhoto, "data.last_name")}
+                        {get(employeePhoto, "data.last_name") ||
+                          "Фамилия не указана"}
                       </p>
                     </li>
                     <li className="min-w-[120px] sm:min-w-[150px]">
                       <h4 className="text-sm text-gray-500 mb-1">Отчество</h4>
                       <p className="text-base font-medium">
-                        {get(employeePhoto, "data.middle_name")}
+                        {get(employeePhoto, "data.middle_name") ||
+                          "Отчество не указано"}
                       </p>
                     </li>
                     <li className="min-w-[120px] sm:min-w-[150px]">
                       <h4 className="text-sm text-gray-500 mb-1">Пол</h4>
                       <p className="text-base font-medium capitalize">
-                        {get(employeePhoto, "data.gender")}
+                        {get(employeePhoto, "data.gender") || "Пол не указан"}
                       </p>
                     </li>
                     <li className="min-w-[120px] sm:min-w-[150px]">
@@ -516,9 +479,11 @@ const Index = () => {
                         Дата рождения
                       </h4>
                       <p className="text-base font-medium">
-                        {dayjs(
-                          get(employeePhoto, "data.date_of_birth", "")
-                        ).format("DD.MM.YYYY")}
+                        {get(employeePhoto, "data.date_of_birth")
+                          ? dayjs(
+                              get(employeePhoto, "data.date_of_birth")
+                            ).format("DD.MM.YYYY")
+                          : "Дата рождения не указана"}
                       </p>
                     </li>
                   </ul>
@@ -539,7 +504,9 @@ const Index = () => {
                         Номер телефона
                       </h4>
                       <p className="text-base font-medium">
-                        +998 {get(employeePhoto, "data.phone_number")}
+                        {get(employeePhoto, "data.phone_number")
+                          ? `+998 ${get(employeePhoto, "data.phone_number")}`
+                          : "Номер телефона не указан"}
                       </p>
                     </li>
                     <li className="min-w-[120px] sm:min-w-[150px]">
@@ -547,7 +514,8 @@ const Index = () => {
                         Электронная почта
                       </h4>
                       <p className="text-base font-medium">
-                        {get(employeePhoto, "data.email", "-")}
+                        {get(employeePhoto, "data.email") ||
+                          "Электронная почта не указана"}
                       </p>
                     </li>
                     <li className="min-w-[120px] sm:min-w-[150px]">
@@ -555,7 +523,8 @@ const Index = () => {
                         Адрес проживания
                       </h4>
                       <p className="text-base font-medium">
-                        {get(employeePhoto, "data.address")}
+                        {get(employeePhoto, "data.address") ||
+                          "Адрес не указан"}
                       </p>
                     </li>
                   </ul>
@@ -576,7 +545,8 @@ const Index = () => {
                         Степень образования
                       </h4>
                       <p className="text-base font-medium capitalize">
-                        {get(employeePhoto, "data.education_degree")}
+                        {get(employeePhoto, "data.education_degree") ||
+                          "Не указано"}
                       </p>
                     </li>
                     <li className="min-w-[120px] sm:min-w-[150px]">
@@ -584,7 +554,8 @@ const Index = () => {
                         Место образование
                       </h4>
                       <p className="text-base font-medium">
-                        {get(employeePhoto, "data.education_place", "-")}
+                        {get(employeePhoto, "data.education_place") ||
+                          "Не указано"}
                       </p>
                     </li>
                   </ul>
@@ -609,7 +580,8 @@ const Index = () => {
                         Должность сотрудника
                       </h4>
                       <p className="text-base font-medium">
-                        {get(employeePhoto, "data.workplace.position.name")}
+                        {get(employeePhoto, "data.workplace.position.name") ||
+                          "Должность не указана"}
                       </p>
                     </li>
                     <li className="min-w-[120px] sm:min-w-[150px]">
@@ -618,7 +590,7 @@ const Index = () => {
                         {get(
                           employeePhoto,
                           "data.workplace.organizational_unit.name"
-                        )}
+                        ) || "Отдел не указан"}
                       </p>
                     </li>
                     <li className="min-w-[120px] sm:min-w-[150px]">
@@ -626,7 +598,7 @@ const Index = () => {
                         Разряд сотрудника
                       </h4>
                       <p className="text-base font-medium">
-                        {get(employeePhoto, "data.level", "")}
+                        {get(employeePhoto, "data.level") || "Не указан"}
                       </p>
                     </li>
                     <li className="min-w-[120px] sm:min-w-[150px]">
@@ -634,9 +606,11 @@ const Index = () => {
                         Дата приема на работу
                       </h4>
                       <p className="text-base font-medium">
-                        {dayjs(get(employeePhoto, "data.hire_date")).format(
-                          "DD.MM.YYYY"
-                        )}
+                        {get(employeePhoto, "data.hire_date")
+                          ? dayjs(get(employeePhoto, "data.hire_date")).format(
+                              "DD.MM.YYYY"
+                            )
+                          : "Дата приема не указана"}
                       </p>
                     </li>
                     <li className="min-w-[120px] sm:min-w-[150px]">
@@ -644,7 +618,9 @@ const Index = () => {
                         Табельный номер
                       </h4>
                       <p className="text-base font-medium">
-                        №{get(employeePhoto, "data.tabel_number", "")}
+                        {get(employeePhoto, "data.tabel_number")
+                          ? `№${get(employeePhoto, "data.tabel_number")}`
+                          : "Табельный номер не указан"}
                       </p>
                     </li>
                     <li className="min-w-[120px] sm:min-w-[150px]">
@@ -653,12 +629,12 @@ const Index = () => {
                       </h4>
                       <span
                         className={`px-3 py-1 text-xs font-medium rounded-full ${
-                          get(employeePhoto, "data.is_active", "")
-                            ? "bg-green-100 text-green-800 "
+                          get(employeePhoto, "data.is_active")
+                            ? "bg-green-100 text-green-800"
                             : "bg-red-100 text-red-800"
                         }`}
                       >
-                        {get(employeePhoto, "data.is_active", "")
+                        {get(employeePhoto, "data.is_active")
                           ? "Активный"
                           : "Неактивный"}
                       </span>
@@ -667,102 +643,110 @@ const Index = () => {
                 </div>
               </div>
             )}
+
+            {/* Connected schedule and entrypoint to employee */}
+            {tab === "schedule" && (
+              <div className="space-y-[10px] p-2 sm:p-4">
+                <Typography variant="h6">Точки доступа и расписания</Typography>
+                <p className="text-gray-500">
+                  Точки входа, к которым у сотрудника есть доступ, и связанные с
+                  ними расписания.
+                </p>
+
+                <div>
+                  {get(
+                    ScheduleAndEntrypointOfEmployee,
+                    "data.entryPointSchedules",
+                    []
+                  ).length > 0 ? (
+                    get(
+                      ScheduleAndEntrypointOfEmployee,
+                      "data.entryPointSchedules",
+                      []
+                    ).map((item, index) => (
+                      <div
+                        key={index}
+                        className="border border-gray-200 p-3 rounded-md"
+                      >
+                        <div className="flex justify-between">
+                          <Typography variant="h6">
+                            {get(item, "entryPointName") ||
+                              "Название точки не указано"}
+                          </Typography>
+
+                          <Button
+                            onClick={() =>
+                              router.push(
+                                `/dashboard/access-points/${
+                                  get(item, "entryPointId") || ""
+                                }`
+                              )
+                            }
+                            sx={{
+                              textTransform: "initial",
+                              fontFamily: "DM Sans, sans-serif",
+                              backgroundColor: "#4182F9",
+                              boxShadow: "none",
+                              color: "white",
+                              display: "flex",
+                              gap: "4px",
+                              fontSize: "14px",
+                              borderRadius: "8px",
+                            }}
+                            variant="contained"
+                          >
+                            <p>Перейти к точке доступа</p>
+                          </Button>
+                        </div>
+
+                        <div className="mt-[10px] bg-gray-100 p-3 rounded-md">
+                          <p className="text-[17px] font-semibold">
+                            Расписание:
+                          </p>
+                          <div className="flex justify-between">
+                            <p className="text-[17px] font-medium">
+                              {get(item, "scheduleName") ||
+                                "Расписание не указано"}
+                            </p>
+                            <button
+                              onClick={() =>
+                                router.push(
+                                  `/dashboard/schedule/${
+                                    get(item, "scheduleId") || ""
+                                  }`
+                                )
+                              }
+                              className="text-blue-600 hover:text-blue-800 text-sm font-medium cursor-pointer"
+                            >
+                              Подробнее →
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-gray-500">
+                      Нет данных по точкам доступа и расписаниям
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </motion.div>
 
         {/* report of the employee */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.3 }}
-          className="bg-white col-span-12 p-6 my-[50px] rounded-md border border-[#E9E9E9] w-full"
-        >
-          <div className="border-b border-b-gray-200 pb-[10px]">
-            <Typography
-              variant="h6"
-              sx={{ fontSize: "20px", fontWeight: "600" }}
-            >
-              Отчёты о сотруднике
-            </Typography>
-          </div>
-          <div className="flex gap-6 items-end flex-wrap mt-[15px]">
-            {/* Start date */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-1">
-                Дата начала
-              </label>
-              <input
-                type="datetime-local"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="!h-[44px] border !border-[#C9C9C9] px-2 rounded-md"
-              />
-            </div>
-
-            {/* End date */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-1">
-                Дата окончания
-              </label>
-              <input
-                type="datetime-local"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="!h-[44px] border !border-[#C9C9C9] px-2 rounded-md"
-              />
-            </div>
-
-            <div className="flex gap-3 mb-4">
-              <button
-                onClick={() => {
-                  const now = new Date();
-                  const start = new Date();
-                  start.setHours(0, 0, 0, 0); // bugun 00:00
-
-                  setStartDate(formatDateTime(start));
-                  setEndDate(formatDateTime(now));
-                }}
-                className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition"
-              >
-                Сегодня
-              </button>
-
-              <button
-                onClick={() => {
-                  const start = new Date();
-                  start.setDate(start.getDate() - 1);
-                  start.setHours(0, 0, 0, 0); // kecha 00:00
-
-                  const end = new Date();
-                  end.setDate(end.getDate() - 1);
-                  end.setHours(23, 59, 59, 999); // kecha 23:59
-
-                  setStartDate(formatDateTime(start));
-                  setEndDate(formatDateTime(end));
-                }}
-                className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition"
-              >
-                Вчера
-              </button>
-            </div>
-          </div>
-
-          {isLoadingReport || isFetchingReport ? (
-            <ContentLoader />
-          ) : (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.3 }}
-              className="bg-white my-[20px]   w-full"
-            >
-              <CustomTable
-                data={get(employeeReport, "data", []).flat()}
-                columns={columns}
-              />
-            </motion.div>
-          )}
-        </motion.div>
+        <ReportComponent
+          employee_id={employee_id}
+          session={session}
+          data={get(employeeReport, "data", [])}
+          startDate={startDate}
+          setStartDate={setStartDate}
+          setEndDate={setEndDate}
+          endDate={endDate}
+          isLoadingReport={isLoadingReport}
+          isFetchingReport={isFetchingReport}
+        />
       </div>
       {/* edit modal */}
 
@@ -829,7 +813,7 @@ const Index = () => {
                       const file = e.target.files[0];
                       if (file) {
                         setPhotoPreview(URL.createObjectURL(file));
-                        setPhotoFile(e.target.files[0]);
+                        setPhotoFile(file);
                       }
                     }}
                   />
@@ -896,7 +880,7 @@ const Index = () => {
                 <Input
                   label={"Имя сотрудника"}
                   name="first_name"
-                  value={formData.first_name}
+                  value={formData.first_name || ""}
                   onChange={handleChange}
                   placeholder="Имя"
                   inputClass="!h-[45px] border !border-gray-200"
@@ -906,7 +890,7 @@ const Index = () => {
                 <Input
                   label={"Фамилия сотрудника"}
                   name="last_name"
-                  value={formData.last_name}
+                  value={formData.last_name || ""}
                   onChange={handleChange}
                   placeholder="Фамилия"
                   inputClass="!h-[45px] border !border-gray-200"
@@ -915,14 +899,14 @@ const Index = () => {
                 <Input
                   label={"Отчество сотрудника"}
                   name="middle_name"
-                  value={formData.middle_name}
+                  value={formData.middle_name || ""}
                   onChange={handleChange}
                   placeholder="Отчество"
                   inputClass="!h-[45px] border !border-gray-200"
                 />
 
                 <BirthDateInput
-                  value={formData.date_of_birth}
+                  value={formData.date_of_birth || ""}
                   onChange={handleChange}
                   inputClass="!h-[45px] border !border-gray-200"
                   required
@@ -931,7 +915,7 @@ const Index = () => {
                 <CustomSelect
                   label={"Пол"}
                   options={genderOptions}
-                  value={formData.gender}
+                  value={formData.gender || ""}
                   placeholder="Выберите пол"
                   className="!h-[55px]"
                   onChange={(val) =>
@@ -946,7 +930,7 @@ const Index = () => {
 
                 <Input
                   name="tabel_number"
-                  label={"Табельный номер"}
+                  label={"Табельный номер" || ""}
                   value={formData.tabel_number}
                   onChange={handleChange}
                   placeholder="Введите"
@@ -958,7 +942,7 @@ const Index = () => {
               <div className="mt-6">
                 <Input
                   name="address"
-                  value={formData.address}
+                  value={formData.address || ""}
                   label={"Адрес проживания"}
                   onChange={handleChange}
                   placeholder="Введите"
@@ -991,7 +975,7 @@ const Index = () => {
                 <Input
                   label={"Электронная почта"}
                   name="email"
-                  value={formData.email}
+                  value={formData.email || ""}
                   onChange={handleChange}
                   placeholder="Электронная почта"
                   inputClass="!h-[45px] border !border-gray-200"
@@ -1001,7 +985,7 @@ const Index = () => {
                 <PhoneInputUz
                   label={"Телефон номер сотрудника"}
                   name="phone_number"
-                  value={formData.phone_number}
+                  value={formData.phone_number || ""}
                   onChange={handleChange}
                   placeholder="Телефонный номер"
                   inputClass="!h-[45px] border !border-gray-200"
@@ -1032,7 +1016,7 @@ const Index = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <CustomSelect
                   options={educationLevelOptions}
-                  value={formData.education_degree} // ✅ faqat value (string/number)
+                  value={formData.education_degree || ""} // ✅ faqat value (string/number)
                   label="Степень образования"
                   placeholder="Выберите уровень образования"
                   onChange={(val) =>
@@ -1047,7 +1031,7 @@ const Index = () => {
 
                 <Input
                   name="education_place"
-                  value={formData.education_place}
+                  value={formData.education_place || ""}
                   onChange={handleChange}
                   placeholder={"Введите"}
                   label="Место получения образования"
@@ -1080,7 +1064,7 @@ const Index = () => {
                 <CustomSelect
                   label={"Выберите разряд"}
                   options={razryadOptions}
-                  value={formData.level}
+                  value={formData.level || ""}
                   placeholder="Выберите разряд"
                   onChange={(val) =>
                     setFormData((prev) => ({
@@ -1088,13 +1072,14 @@ const Index = () => {
                       level: val,
                     }))
                   }
+                  sortOptions={false}
                   returnObject={false} // ✅ faqat value qaytaradi
                 />
                 <Input
                   name="hire_date"
                   type="date"
                   label={"Дата приема на работу"}
-                  value={formData.hire_date}
+                  value={formData.hire_date || ""}
                   onChange={handleChange}
                   inputClass="!h-[45px] border !border-gray-200"
                   required

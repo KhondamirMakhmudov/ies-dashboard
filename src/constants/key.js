@@ -15,6 +15,7 @@ export const KEYS = {
   allSchedules: "allSchedules",
   scheduleOfEntrypoints: "scheduleOfEntrypoints",
   schedulesOfEntrypoints: "schedulesOfEntrypoints",
+  ScheduleAndEntrypointOfEmployee: "ScheduleAndEntrypointOfEmployee",
 
   // Python
 

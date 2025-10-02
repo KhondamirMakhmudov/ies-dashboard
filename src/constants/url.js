@@ -28,6 +28,8 @@ export const URLS = {
   createConnection: "api/schedules",
   deleteConnection: "api/schedules/entry-point-schedule/",
   schedulesOfEntrypoints: "api/schedules/entry-point/",
+  ScheduleAndEntrypointOfEmployee:
+    "api/employees/assign-schedules-info/by-uuid/",
 
   // Python
   // structure unit type

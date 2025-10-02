@@ -23,7 +23,7 @@ import NoData from "@/components/no-data";
 const UnitType = () => {
   const queryClient = useQueryClient();
   const [currentPage, setCurrentPage] = useState(1);
-  const limit = 10;
+  const limit = 150;
   const offset = (currentPage - 1) * limit;
   const [createModal, setCreateModal] = useState(false);
   const [editModal, setEditModal] = useState(false);
@@ -333,12 +333,28 @@ const UnitType = () => {
               <span>Неактивный</span>
             </label>
           </div>
-          <button
+          <Button
+            sx={{
+              textTransform: "initial",
+              fontFamily: "DM Sans, sans-serif",
+              backgroundColor: "#4182F9",
+              boxShadow: "none",
+              color: "white",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "4px",
+              fontSize: "14px",
+              minWidth: "100px",
+              borderRadius: "8px",
+              marginTop: "15px",
+            }}
+            variant="contained"
             type="submit"
-            className=" bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 w-1/4 rounded-xl transition-all duration-200"
           >
-            Создать
-          </button>
+            {" "}
+            Создать{" "}
+          </Button>
         </form>
       </MethodModal>
 
