@@ -19,6 +19,7 @@ import ScheduleDayCard from "@/components/schedule-format/schedule-card";
 import ScheduleInterval from "@/components/schedule-format/schedule-interval";
 import HalfModal from "@/components/modal/half-modal";
 import ContentLoader from "@/components/loader";
+import ScheduleModal from "@/components/modal/schedule-modal";
 
 const Index = () => {
   const queryClient = useQueryClient();
@@ -269,65 +270,35 @@ const Index = () => {
       {/* create schedule */}
 
       {createModal && (
-        <HalfModal
-          width="w-1/2"
+        <ScheduleModal
           isOpen={createModal}
           onClose={() => setCreateModal(false)}
-        >
-          <h2 className="text-2xl font-bold mb-6 text-gray-800">
-            Добавить новое расписание
-          </h2>
-
-          <Input
-            inputClass="border !border-gray-300 p-3 rounded-lg w-full mb-4 focus:ring-2 focus:ring-blue-400 outline-none"
-            label="Название расписание"
-            placeholder="Название"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-          />
-
-          <Input
-            inputClass="border !border-gray-300 p-3 rounded-lg w-full mb-6 focus:ring-2 focus:ring-blue-400 outline-none"
-            placeholder="Краткое название"
-            label="Краткое название расписание"
-            value={shortName}
-            onChange={(e) => setShortName(e.target.value)}
-            required
-          />
-
-          <div className="space-y-6 max-h-[600px] overflow-y-auto pr-2">
-            {times.map((day, dayIdx) => (
-              <ScheduleDayCard
-                key={day.weekDay}
-                day={day}
-                dayIdx={dayIdx}
-                weekDaysRu={weekDaysRu}
-                onChange={handleChangeTime}
-              />
-            ))}
-          </div>
-
-          <div className="flex justify-end gap-3 mt-6">
-            <button
-              onClick={() => setCreateModal(false)}
-              className="px-5 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition"
-            >
-              Отмена
-            </button>
-            <button
-              onClick={onSubmitCreateSchedule}
-              disabled={!name.trim() || !shortName.trim()}
-              className={`px-5 py-2 rounded-lg shadow transition ${
-                !name.trim() || !shortName.trim()
-                  ? "bg-gray-400 cursor-not-allowed text-white"
-                  : "bg-gradient-to-r from-blue-500 to-blue-700 text-white hover:from-blue-600 hover:to-blue-800"
-              }`}
-            >
-              Сохранить
-            </button>
-          </div>
-        </HalfModal>
+          onSave={(data) => {
+            createSchedule(
+              {
+                url: URLS.allSchedules,
+                attributes: data, // bunda allaqachon formatlangan (jsonDailySchedule bilan)
+                config: {
+                  headers: {
+                    Authorization: `Bearer ${session?.accessToken}`,
+                    Accept: "application/json",
+                  },
+                },
+              },
+              {
+                onSuccess: () => {
+                  toast.success("Расписание успешно создано", {
+                    position: "top-center",
+                  });
+                  setCreateModal(false);
+                },
+                onError: (error) => {
+                  toast.error(`Ошибка: ${error}`, { position: "top-right" });
+                },
+              }
+            );
+          }}
+        />
       )}
     </DashboardLayout>
   );
