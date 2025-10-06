@@ -1,13 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-const ScheduleModal = ({ isOpen, onClose, onSave }) => {
-  // Состояния компонента
+const ScheduleModal = ({
+  isOpen,
+  onClose,
+  onSave,
+  mode = "create",
+  defaultValues,
+}) => {
   const [scheduleName, setScheduleName] = useState("");
   const [shortName, setShortName] = useState("");
 
-  // Дни недели
   const days = [
     "Понедельник",
     "Вторник",
@@ -18,7 +22,6 @@ const ScheduleModal = ({ isOpen, onClose, onSave }) => {
     "Воскресенье",
   ];
 
-  // Данные расписания для каждого дня
   const [scheduleData, setScheduleData] = useState({
     Понедельник: [],
     Вторник: [],
@@ -29,7 +32,47 @@ const ScheduleModal = ({ isOpen, onClose, onSave }) => {
     Воскресенье: [],
   });
 
-  // Функция добавления временного интервала
+  // 🆕 Edit rejimida ma'lumotlarni to‘ldirish
+  useEffect(() => {
+    if (mode === "edit" && defaultValues) {
+      setScheduleName(defaultValues.name || "");
+      setShortName(defaultValues.shortName || "");
+
+      const mapRu = {
+        1: "Понедельник",
+        2: "Вторник",
+        3: "Среда",
+        4: "Четверг",
+        5: "Пятница",
+        6: "Суббота",
+        7: "Воскресенье",
+      };
+
+      const parsed =
+        typeof defaultValues.jsonDailySchedule === "string"
+          ? JSON.parse(defaultValues.jsonDailySchedule)
+          : defaultValues.jsonDailySchedule;
+
+      const filledSchedule = {};
+      days.forEach((d) => (filledSchedule[d] = []));
+
+      parsed?.days?.forEach((dayObj) => {
+        const ruDay = mapRu[dayObj.weekDay];
+        if (ruDay) {
+          filledSchedule[ruDay] = (dayObj.timeList || [])
+            .filter((t) => t.enabled === 1)
+            .map((t) => ({
+              start: t.startTime?.slice(0, 5) || "00:00",
+              end: t.endTime?.slice(0, 5) || "00:00",
+            }));
+        }
+      });
+
+      setScheduleData(filledSchedule);
+    }
+  }, [mode, defaultValues]);
+
+  // --- Quyidagi kodlar o‘zgarmasdan qoldi ---
   const addTimeSlot = (day) => {
     setScheduleData((prev) => ({
       ...prev,
@@ -37,7 +80,6 @@ const ScheduleModal = ({ isOpen, onClose, onSave }) => {
     }));
   };
 
-  // Функция удаления временного интервала
   const removeTimeSlot = (day, index) => {
     setScheduleData((prev) => ({
       ...prev,
@@ -45,7 +87,6 @@ const ScheduleModal = ({ isOpen, onClose, onSave }) => {
     }));
   };
 
-  // Функция обновления времени в интервале
   const updateTimeSlot = (day, index, field, value) => {
     setScheduleData((prev) => ({
       ...prev,
@@ -55,7 +96,6 @@ const ScheduleModal = ({ isOpen, onClose, onSave }) => {
     }));
   };
 
-  // Применить расписание понедельника ко всем дням
   const applyToAllDays = () => {
     const mondaySchedule = scheduleData["Понедельник"];
     if (mondaySchedule.length === 0) {
@@ -70,7 +110,6 @@ const ScheduleModal = ({ isOpen, onClose, onSave }) => {
     setScheduleData(newSchedule);
   };
 
-  // Очистить все расписания
   const clearAllSchedules = () => {
     const clearedSchedule = {};
     days.forEach((day) => {
@@ -79,7 +118,6 @@ const ScheduleModal = ({ isOpen, onClose, onSave }) => {
     setScheduleData(clearedSchedule);
   };
 
-  // Установить стандартные часы (9-18)
   const setStandardHours = () => {
     const standardSchedule = {};
     days.forEach((day) => {
@@ -96,8 +134,6 @@ const ScheduleModal = ({ isOpen, onClose, onSave }) => {
     setScheduleData(standardSchedule);
   };
 
-  // Сохранение расписания
-
   const handleSave = () => {
     if (!scheduleName.trim()) {
       alert("Пожалуйста, введите название расписания");
@@ -109,7 +145,6 @@ const ScheduleModal = ({ isOpen, onClose, onSave }) => {
       return;
     }
 
-    // scheduleData ({"Понедельник": [...]}) → times formatiga o‘tkazamiz
     const weekDaysMap = {
       Понедельник: 1,
       Вторник: 2,
@@ -123,10 +158,10 @@ const ScheduleModal = ({ isOpen, onClose, onSave }) => {
     const times = Object.entries(scheduleData).map(([dayName, slots]) => {
       return {
         weekDay: weekDaysMap[dayName],
-        timeList: Array(4) // har kuni 4 ta bo‘lishi kerak
+        timeList: Array(4)
           .fill(null)
           .map((_, i) => {
-            const slot = slots[i]; // agar modalda kamroq qo‘shilgan bo‘lsa
+            const slot = slots[i];
             return {
               index: i,
               startTime: slot ? slot.start + ":00" : "00:00:00",
@@ -146,7 +181,6 @@ const ScheduleModal = ({ isOpen, onClose, onSave }) => {
     });
   };
 
-  // Если модальное окно закрыто, не рендерим ничего
   if (!isOpen) return null;
 
   return (
@@ -156,7 +190,9 @@ const ScheduleModal = ({ isOpen, onClose, onSave }) => {
         <div className=" px-6 py-4 border-b border-b-gray-300">
           <div className="flex items-center justify-between">
             <h2 className="text-[22px] font-semibold">
-              Создание расписания сотрудника
+              {mode === "edit"
+                ? "Редактировать расписание"
+                : "Создание расписания сотрудника"}
             </h2>
             <button
               onClick={onClose}
@@ -178,6 +214,8 @@ const ScheduleModal = ({ isOpen, onClose, onSave }) => {
             </button>
           </div>
         </div>
+
+        {/* --- Pastdagi barcha dizayn bir xil qoldi --- */}
 
         {/* Содержимое */}
         <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
@@ -264,7 +302,6 @@ const ScheduleModal = ({ isOpen, onClose, onSave }) => {
                     </label>
                   </div>
 
-                  {/* Временные интервалы для дня */}
                   <div className="space-y-2 mb-3">
                     {scheduleData[day].map((slot, index) => (
                       <div
@@ -317,7 +354,6 @@ const ScheduleModal = ({ isOpen, onClose, onSave }) => {
                     ))}
                   </div>
 
-                  {/* Кнопка добавления интервала */}
                   <button
                     onClick={() => addTimeSlot(day)}
                     className="w-full py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg text-sm font-medium hover:from-green-600 hover:to-emerald-600 transition-all"
@@ -342,7 +378,7 @@ const ScheduleModal = ({ isOpen, onClose, onSave }) => {
             onClick={handleSave}
             className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all font-medium shadow-lg"
           >
-            Сохранить расписание
+            {mode === "edit" ? "Сохранить изменения" : "Сохранить расписание"}
           </button>
         </div>
       </div>

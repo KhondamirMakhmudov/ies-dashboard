@@ -83,11 +83,11 @@ const menuItems = [
       },
     ],
   },
-  {
-    text: "Обучение и квалификация",
-    icon: <SchoolRoundedIcon />,
-    path: "/dashboard/user-profile",
-  },
+  // {
+  //   text: "Обучение и квалификация",
+  //   icon: <SchoolRoundedIcon />,
+  //   path: "/dashboard/user-profile",
+  // },
   {
     text: "Расписание",
     icon: <EventNoteIcon />,

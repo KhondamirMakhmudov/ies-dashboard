@@ -37,6 +37,7 @@ const Index = () => {
   const [editModal, setEditModal] = useState(false);
   const [deleteModal, setDeleteModal] = useState(null);
   const [isPriority, setIsPriority] = useState(false);
+  const [createConnectModal, setCreateConnectModal] = useState(false);
   const [tab, setTab] = useState("org-units");
   const router = useRouter();
   const { id } = router.query;
@@ -127,6 +128,32 @@ const Index = () => {
     );
   };
 
+  const { mutate: connectEmployeesToSchedule } = usePostQuery({
+    listKeyId: "connect-employee-to-schedule",
+  });
+
+  const SubmitConnectionOfEmployeeToSchedule = () => {
+    connectEmployeesToSchedule(
+      {
+        url: URLS.connectScheduleAndEmployee,
+        attributes: [],
+      },
+      {
+        onSuccess: () => {
+          setCreateModal(false);
+          toast.success("Успешно привязан", {
+            position: "top-center",
+          });
+
+          queryClient.invalidateQueries(KEYS.positionTypes);
+        },
+        onError: (error) => {
+          toast.error(`Error is ${error}`, { position: "top-right" });
+        },
+      }
+    );
+  };
+
   // edit priority of schedule for entrypoint
 
   const { mutate: editPriorityOfConnection } = usePutQuery({
@@ -196,10 +223,6 @@ const Index = () => {
     }
   };
 
-  const handleChange = (event, newValue) => {
-    setTab(newValue);
-  };
-
   if (isLoading || isFetching) {
     return (
       <DashboardLayout>
@@ -207,6 +230,11 @@ const Index = () => {
       </DashboardLayout>
     );
   }
+  const tabs = [
+    { key: "org-units", label: "Подразделения, привязанные к точке доступу" },
+    { key: "schedule", label: "Расписания, привязанные к точке доступу" },
+    { key: "employees", label: "Сотрудники, привязанные к точке доступу" },
+  ];
 
   const columns = [
     {
@@ -302,7 +330,7 @@ const Index = () => {
       <motion.div
         initial={{ opacity: 0, scale: 0 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-white p-6 my-[50px] rounded-md border border-gray-200"
+        className="bg-white p-6 my-[20px] rounded-md border border-gray-200"
       >
         <div className="bg-white rounded-xl   mx-auto ">
           <h1 className="text-2xl font-bold text-gray-800 mb-6 border-b border-b-gray-200 pb-3">
@@ -337,27 +365,36 @@ const Index = () => {
         <motion.div
           initial={{ opacity: 0, scale: 0 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-white p-6 my-[50px] rounded-md border border-gray-200"
+          className="bg-white p-6 my-[20px] rounded-md border border-gray-200"
         >
           <div className=" border border-gray-200 rounded-md mt-[20px]">
-            <Tabs
-              value={["schedule", "org-units"].includes(tab) ? tab : "personal"}
-              onChange={handleChange}
-              textColor="primary"
-              indicatorColor="primary"
-              sx={{ paddingTop: "1px" }}
-            >
-              <Tab
-                value="org-units"
-                label="Подразделения, привязанные к точке доступа"
-                sx={{ px: 1, py: 0.5, textTransform: "none" }}
-              />
-              <Tab
-                value="schedule"
-                label="Расписания, привязанные к точке доступа"
-                sx={{ px: 1, py: 0.5, textTransform: "none" }}
-              />
-            </Tabs>
+            <div className="flex gap-3 px-3">
+              {tabs.map((t) => (
+                <button
+                  key={t.key}
+                  onClick={() => setTab(t.key)}
+                  className={`relative px-3 py-2 text-sm font-medium transition-colors ${
+                    tab === t.key
+                      ? "text-blue-600"
+                      : "text-gray-500 hover:text-gray-700"
+                  }`}
+                >
+                  {t.label}
+
+                  {tab === t.key && (
+                    <motion.span
+                      layoutId="underline"
+                      className="absolute left-0 bottom-0 h-[2px] w-full bg-blue-600 rounded-full"
+                      transition={{
+                        type: "spring",
+                        stiffness: 500,
+                        damping: 30,
+                      }}
+                    />
+                  )}
+                </button>
+              ))}
+            </div>
             {tab === "org-units" && (
               <div className=" p-[20px]">
                 <div className="flex justify-between mb-[20px] items-center">
@@ -460,8 +497,52 @@ const Index = () => {
                 />
               </div>
             )}
+
+            {tab === "employees" && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-white p-[12px] my-[10px] rounded-md"
+              >
+                <div className="flex justify-between items-center">
+                  <Typography variant="h6">
+                    Сотрудники которые привязаны к этому точке доступу
+                  </Typography>
+
+                  <Button
+                    onClick={() => setCreateConnectModal(true)}
+                    sx={{
+                      textTransform: "initial",
+                      fontFamily: "DM Sans, sans-serif",
+                      backgroundColor: "#4182F9",
+                      boxShadow: "none",
+                      color: "white",
+                      display: "flex",
+                      gap: "4px",
+                      fontSize: "14px",
+                      borderRadius: "8px",
+                    }}
+                    variant="contained"
+                  >
+                    <ShareIcon sx={{ width: "20px", height: "20px" }} />
+                    <p>Привязать</p>
+                  </Button>
+                </div>
+              </motion.div>
+            )}
           </div>
         </motion.div>
+      )}
+      {/*  */}
+      {createConnectModal && (
+        <MethodModal
+          onClose={() => setCreateConnectModal(false)}
+          open={createConnectModal}
+        >
+          <Typography variant="h6">
+            Подключить сотрудников к расписанию
+          </Typography>
+        </MethodModal>
       )}
       {/* Attach an existing schedule to an entry point */}
       {createModal && (

@@ -9,104 +9,16 @@ import { KEYS } from "@/constants/key";
 import { useSession } from "next-auth/react";
 import { Button } from "@mui/material";
 import usePostQuery from "@/hooks/java/usePostQuery";
-import MethodModal from "@/components/modal/method-modal";
-import Input from "@/components/input";
 import toast from "react-hot-toast";
-import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/router";
 import CustomTable from "@/components/table";
-import ScheduleDayCard from "@/components/schedule-format/schedule-card";
-import ScheduleInterval from "@/components/schedule-format/schedule-interval";
-import HalfModal from "@/components/modal/half-modal";
 import ContentLoader from "@/components/loader";
 import ScheduleModal from "@/components/modal/schedule-modal";
 
 const Index = () => {
-  const queryClient = useQueryClient();
   const router = useRouter();
   const { data: session } = useSession();
   const [createModal, setCreateModal] = useState(false);
-  const [name, setName] = useState("");
-  const [shortName, setShortName] = useState("");
-  const [times, setTimes] = useState([
-    {
-      weekDay: 1,
-      timeList: Array(4)
-        .fill(null)
-        .map((_, i) => ({
-          index: i,
-          startTime: "00:00:00",
-          endTime: "00:00:00",
-          enabled: 0,
-        })),
-    },
-    {
-      weekDay: 2,
-      timeList: Array(4)
-        .fill(null)
-        .map((_, i) => ({
-          index: i,
-          startTime: "00:00:00",
-          endTime: "00:00:00",
-          enabled: 0,
-        })),
-    },
-    {
-      weekDay: 3,
-      timeList: Array(4)
-        .fill(null)
-        .map((_, i) => ({
-          index: i,
-          startTime: "00:00:00",
-          endTime: "00:00:00",
-          enabled: 0,
-        })),
-    },
-    {
-      weekDay: 4,
-      timeList: Array(4)
-        .fill(null)
-        .map((_, i) => ({
-          index: i,
-          startTime: "00:00:00",
-          endTime: "00:00:00",
-          enabled: 0,
-        })),
-    },
-    {
-      weekDay: 5,
-      timeList: Array(4)
-        .fill(null)
-        .map((_, i) => ({
-          index: i,
-          startTime: "00:00:00",
-          endTime: "00:00:00",
-          enabled: 0,
-        })),
-    },
-    {
-      weekDay: 6,
-      timeList: Array(4)
-        .fill(null)
-        .map((_, i) => ({
-          index: i,
-          startTime: "00:00:00",
-          endTime: "00:00:00",
-          enabled: 0,
-        })),
-    },
-    {
-      weekDay: 7,
-      timeList: Array(4)
-        .fill(null)
-        .map((_, i) => ({
-          index: i,
-          startTime: "00:00:00",
-          endTime: "00:00:00",
-          enabled: 0,
-        })),
-    },
-  ]);
 
   const {
     data: allSchedules,
@@ -125,51 +37,6 @@ const Index = () => {
   const { mutate: createSchedule } = usePostQuery({
     listKeyId: "create-schedule",
   });
-
-  const handleChangeTime = (dayIdx, intervalIdx, field, value) => {
-    const updated = [...times];
-    updated[dayIdx].timeList[intervalIdx][field] = value;
-    setTimes(updated);
-  };
-  // create schedule
-  const onSubmitCreateSchedule = () => {
-    const jsonDailySchedule = {
-      days: times.map((t) => ({
-        weekDay: t.weekDay,
-        timeList: t.timeList, // bu yerda har doim 4 ta bo'ladi
-      })),
-    };
-
-    createSchedule(
-      {
-        url: URLS.allSchedules,
-        attributes: {
-          name,
-          shortName,
-          jsonDailySchedule: JSON.stringify(jsonDailySchedule),
-        },
-        config: {
-          headers: {
-            Authorization: `Bearer ${session?.accessToken}`,
-            Accept: "application/json",
-          },
-        },
-      },
-      {
-        onSuccess: () => {
-          toast.success("Расписание успешно создано", {
-            position: "top-center",
-          });
-          setCreateModal(false);
-          setName("");
-          setShortName("");
-        },
-        onError: (error) => {
-          toast.error(`Ошибка: ${error}`, { position: "top-right" });
-        },
-      }
-    );
-  };
 
   const columns = [
     {
@@ -207,16 +74,6 @@ const Index = () => {
       ),
       enableSorting: false,
     },
-  ];
-
-  const weekDaysRu = [
-    "Понедельник",
-    "Вторник",
-    "Среда",
-    "Четверг",
-    "Пятница",
-    "Суббота",
-    "Воскресенье",
   ];
 
   if (isLoading || isFetching) {
