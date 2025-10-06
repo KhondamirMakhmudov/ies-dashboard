@@ -118,7 +118,7 @@ const ExportEmployeesPage = () => {
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.3 }}
-        className="bg-white col-span-12 p-6 my-[50px] rounded-md border border-gray-200 w-full"
+        className="bg-white col-span-12 p-6 my-[20px] rounded-md border border-gray-200 w-full"
       >
         <div className="flex w-full">
           <div className="flex-1">
@@ -161,7 +161,7 @@ const ExportEmployeesPage = () => {
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.3 }}
-        className="bg-white col-span-12 p-6 my-[50px] rounded-md border border-gray-200 w-full "
+        className="bg-white col-span-12 p-6 my-[20px] rounded-md border border-gray-200 w-full "
       >
         <div className="flex gap-6 items-end justify-between flex-wrap">
           {/* Start date */}
@@ -213,15 +213,6 @@ const ExportEmployeesPage = () => {
               </button>
             </div>
           </div>
-
-          <div className="mb-4">
-            <Link href="/dashboard/reports/all-employees">
-              <div className="bg-blue-500 text-white px-7 py-[10px] cursor-pointer rounded-md hover:bg-blue-600 flex gap-2 items-center">
-                <p>Отчёты всех сотрудников</p>
-                <EastIcon sx={{ width: "20px", height: "20px" }} />
-              </div>
-            </Link>
-          </div>
         </div>
       </motion.div>
 
@@ -229,7 +220,7 @@ const ExportEmployeesPage = () => {
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.3 }}
-        className="bg-white col-span-12 p-6 my-[50px] rounded-md border border-gray-200 w-full"
+        className="bg-white col-span-12 p-6 my-[20px] rounded-md border border-gray-200 w-full"
       >
         {/* Select structure */}
         <div className="mb-4">

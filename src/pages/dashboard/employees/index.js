@@ -19,11 +19,10 @@ import { useQueryClient } from "@tanstack/react-query";
 import ContentLoader from "@/components/loader";
 import BirthDateInput from "@/components/input/birthdate-input";
 import NoData from "@/components/no-data";
-import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import ExcelButton from "@/components/button/excel-button";
-import CustomSearch from "@/components/search";
 import Breadcrumb from "@/components/breadcrumb";
+import * as XLSX from "xlsx-js-style";
 
 const Index = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -238,25 +237,95 @@ const Index = () => {
     },
   ];
 
-  const exportToExcel = (data, filename = "employees.xlsx") => {
+  const exportToExcel = (data, filename = "Сотрудники.xlsx") => {
     if (!data || data.length === 0) {
-      alert("Ma'lumot topilmadi");
+      alert("Нет данных для экспорта");
       return;
     }
 
-    // 1. API dan kelgan obyektlarni oddiy array-of-objects ko‘rinishga o‘tkazamiz
-    const worksheet = XLSX.utils.json_to_sheet(data);
+    // 1️⃣ — Faqat kerakli maydonlar va ularning nomlari (rus tilida)
+    const columns = [
+      { key: "full_name", label: "Ф.И.О" },
+      { key: "position", label: "Должность" },
+      { key: "organizational_unit", label: "Подразделение" },
+      { key: "phone_number", label: "Телефон" },
+      { key: "email", label: "Электронная почта" },
+      { key: "hire_date", label: "Дата приема на работу" },
+      { key: "date_of_birth", label: "Дата рождения" },
+      { key: "address", label: "Адрес" },
+      { key: "education_degree", label: "Образование" },
+      { key: "education_place", label: "Место обучения" },
+    ];
 
-    // 2. Workbook yaratamiz
+    // 2️⃣ — Ma'lumotni qayta formatlash
+    const formattedData = data.map((item) => ({
+      full_name: `${item.last_name || ""} ${item.first_name || ""} ${
+        item.middle_name || ""
+      }`.trim(),
+      position: item?.workplace?.position?.name || "",
+      organizational_unit: item?.workplace?.organizational_unit?.name || "",
+      phone_number: item.phone_number ? `+998${item.phone_number}` : "",
+      email: item.email || "",
+      hire_date: item.hire_date ? item.hire_date.slice(0, 10) : "",
+      date_of_birth: item.date_of_birth ? item.date_of_birth.slice(0, 10) : "",
+      address: item.address || "",
+      education_degree: item.education_degree || "",
+      education_place: item.education_place || "",
+    }));
+
+    // 3️⃣ — Jadval uchun ma’lumot tayyorlash
+    const headers = columns.map((c) => c.label);
+    const sheetData = [
+      headers,
+      ...formattedData.map((obj) => columns.map((c) => obj[c.key])),
+    ];
+
+    const worksheet = XLSX.utils.aoa_to_sheet(sheetData);
+
+    // 4️⃣ — Stil sozlash
+    const headerStyle = {
+      font: { bold: true, color: { rgb: "FFFFFF" }, sz: 13 },
+      alignment: { horizontal: "center", vertical: "center" },
+      fill: { fgColor: { rgb: "4472C4" } }, // Moviy fon
+      border: {
+        top: { style: "thin", color: { rgb: "CCCCCC" } },
+        bottom: { style: "thin", color: { rgb: "CCCCCC" } },
+        left: { style: "thin", color: { rgb: "CCCCCC" } },
+        right: { style: "thin", color: { rgb: "CCCCCC" } },
+      },
+    };
+
+    const bodyStyle = {
+      alignment: { horizontal: "center", vertical: "center", wrapText: true },
+      border: {
+        top: { style: "thin", color: { rgb: "DDDDDD" } },
+        bottom: { style: "thin", color: { rgb: "DDDDDD" } },
+        left: { style: "thin", color: { rgb: "DDDDDD" } },
+        right: { style: "thin", color: { rgb: "DDDDDD" } },
+      },
+    };
+
+    // 5️⃣ — Har bir hujayraga stil berish
+    const range = XLSX.utils.decode_range(worksheet["!ref"]);
+    for (let R = range.s.r; R <= range.e.r; ++R) {
+      for (let C = range.s.c; C <= range.e.c; ++C) {
+        const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+        if (!worksheet[cellAddress]) continue;
+        worksheet[cellAddress].s = R === 0 ? headerStyle : bodyStyle;
+      }
+    }
+
+    // 6️⃣ — Ustun kengliklarini sozlash
+    worksheet["!cols"] = columns.map((col) => ({ wch: col.label.length + 15 }));
+
+    // 7️⃣ — Workbook yaratish va yuklab berish
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Employees");
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Сотрудники");
 
-    // 3. Blob qilib olish va yuklab berish
     const excelBuffer = XLSX.write(workbook, {
       bookType: "xlsx",
       type: "array",
     });
-
     const blob = new Blob([excelBuffer], {
       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     });
