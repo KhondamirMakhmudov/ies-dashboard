@@ -26,7 +26,7 @@ const Index = () => {
   const { data: session } = useSession();
   const router = useRouter();
   const { id } = router.query;
-  const [createConnectModal, setCreateConnectModal] = useState(false);
+
   const [editModal, setEditModal] = useState(false);
   const [deleteModal, setDeleteModal] = useState(false);
 
