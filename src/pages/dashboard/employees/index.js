@@ -604,7 +604,7 @@ const Index = () => {
                     <span className="font-medium text-blue-800">
                       Размер файла:
                     </span>
-                    <span className="text-blue-700"> Максимум 2МБ</span>
+                    <span className="text-blue-700"> Максимум 10МБ</span>
                   </div>
                 </div>
                 <div className="flex items-start">

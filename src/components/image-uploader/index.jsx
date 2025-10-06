@@ -12,8 +12,8 @@ export default function ImageUploader({ image, onFileChange }) {
     const file = event.target.files[0];
     if (!file) return;
 
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error("Файл 2MB dan kichik bo‘lishi kerak!");
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Файл 10MB dan kichik bo‘lishi kerak!");
       return;
     }
 

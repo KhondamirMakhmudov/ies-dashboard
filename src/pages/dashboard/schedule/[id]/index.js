@@ -5,111 +5,30 @@ import DashboardLayout from "@/layouts/dashboard/DashboardLayout";
 import { useRouter } from "next/router";
 import { motion } from "framer-motion";
 import { useSession } from "next-auth/react";
-import { Typography, Button, Switch } from "@mui/material";
+import { Typography, Button } from "@mui/material";
 import ScheduleFormat from "@/components/schedule-format";
-import { get, isEmpty } from "lodash";
-
-import { useState, useEffect } from "react";
-
+import { get } from "lodash";
+import { useState } from "react";
 import toast from "react-hot-toast";
 import ContentLoader from "@/components/loader";
 import { config } from "@/config";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import Input from "@/components/input";
 import DeleteModal from "@/components/modal/delete-modal";
-import ScheduleDayCard from "@/components/schedule-format/schedule-card";
-import HalfModal from "@/components/modal/half-modal";
+import ScheduleModal from "@/components/modal/schedule-modal";
 import { useQueryClient } from "@tanstack/react-query";
+import ShareIcon from "@mui/icons-material/Share";
+import usePostQuery from "@/hooks/java/usePostQuery";
+import MethodModal from "@/components/modal/method-modal";
 
 const Index = () => {
   const queryClient = useQueryClient();
   const { data: session } = useSession();
   const router = useRouter();
   const { id } = router.query;
+
   const [editModal, setEditModal] = useState(false);
   const [deleteModal, setDeleteModal] = useState(false);
-  const [name, setName] = useState("");
-  const [shortName, setShortName] = useState("");
-  const [times, setTimes] = useState([
-    {
-      weekDay: 1,
-      timeList: Array(4)
-        .fill(null)
-        .map((_, i) => ({
-          index: i,
-          startTime: "00:00:00",
-          endTime: "00:00:00",
-          enabled: 0,
-        })),
-    },
-    {
-      weekDay: 2,
-      timeList: Array(4)
-        .fill(null)
-        .map((_, i) => ({
-          index: i,
-          startTime: "00:00:00",
-          endTime: "00:00:00",
-          enabled: 0,
-        })),
-    },
-    {
-      weekDay: 3,
-      timeList: Array(4)
-        .fill(null)
-        .map((_, i) => ({
-          index: i,
-          startTime: "00:00:00",
-          endTime: "00:00:00",
-          enabled: 0,
-        })),
-    },
-    {
-      weekDay: 4,
-      timeList: Array(4)
-        .fill(null)
-        .map((_, i) => ({
-          index: i,
-          startTime: "00:00:00",
-          endTime: "00:00:00",
-          enabled: 0,
-        })),
-    },
-    {
-      weekDay: 5,
-      timeList: Array(4)
-        .fill(null)
-        .map((_, i) => ({
-          index: i,
-          startTime: "00:00:00",
-          endTime: "00:00:00",
-          enabled: 0,
-        })),
-    },
-    {
-      weekDay: 6,
-      timeList: Array(4)
-        .fill(null)
-        .map((_, i) => ({
-          index: i,
-          startTime: "00:00:00",
-          endTime: "00:00:00",
-          enabled: 0,
-        })),
-    },
-    {
-      weekDay: 7,
-      timeList: Array(4)
-        .fill(null)
-        .map((_, i) => ({
-          index: i,
-          startTime: "00:00:00",
-          endTime: "00:00:00",
-          enabled: 0,
-        })),
-    },
-  ]);
 
   const {
     data: schedule,
@@ -125,65 +44,8 @@ const Index = () => {
     enabled: !!id && !!session?.accessToken,
   });
 
-  useEffect(() => {
-    if (get(schedule, "data")) {
-      setName(get(schedule, "data.name", ""));
-      setShortName(get(schedule, "data.shortName", ""));
+  // connect employees to schedule by uuid
 
-      try {
-        const parsed = JSON.parse(
-          get(schedule, "data.jsonDailySchedule", "{}")
-        );
-        if (parsed?.days) {
-          setTimes(parsed.days);
-        }
-      } catch (e) {
-        console.error("Ошибка парсинга jsonDailySchedule:", e);
-      }
-    }
-  }, [get(schedule, "data")]);
-
-  // edit schedule
-  const onSubmitEditSchedule = async () => {
-    const jsonDailySchedule = {
-      days: times.map((t) => ({
-        weekDay: t.weekDay,
-        timeList: t.timeList, // bu yerda har doim 4 ta bo'ladi
-      })),
-    };
-    try {
-      const response = await fetch(
-        `${config.JAVA_API_URL}${URLS.allSchedules}/${id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session?.accessToken}`,
-          },
-          body: JSON.stringify({
-            name,
-            shortName,
-            jsonDailySchedule: JSON.stringify(jsonDailySchedule),
-          }),
-        }
-      );
-
-      if (!response.ok) throw new Error("Ошибка при редактировании");
-
-      toast.success("Изменения сохранены");
-      queryClient.invalidateQueries(KEYS.schedule);
-      setEditModal(false);
-    } catch (err) {
-      toast.error("Не удалось сохранить");
-      console.error(err);
-    }
-  };
-
-  const handleChangeTime = (dayIdx, intervalIdx, field, value) => {
-    const updated = [...times];
-    updated[dayIdx].timeList[intervalIdx][field] = value;
-    setTimes(updated);
-  };
   // delete schedule
   const onSubmitDeleteSchedule = async () => {
     try {
@@ -217,16 +79,6 @@ const Index = () => {
     }
   };
 
-  const weekDaysRu = [
-    "Понедельник",
-    "Вторник",
-    "Среда",
-    "Четверг",
-    "Пятница",
-    "Суббота",
-    "Воскресенье",
-  ];
-
   if (isLoading || isFetching) {
     return (
       <DashboardLayout>
@@ -239,7 +91,7 @@ const Index = () => {
       <motion.div
         initial={{ opacity: 0, scale: 0 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-white p-[12px] my-[50px] rounded-md border border-gray-200"
+        className="bg-white py-[12px] px-[24px] my-[30px] rounded-md border border-gray-200"
       >
         <div className="flex justify-between">
           <Typography variant="h6">
@@ -274,7 +126,7 @@ const Index = () => {
           </div>
         </div>
 
-        <div className="my-8">
+        <div className="my-2">
           {/* Folder shaklidagi title */}
           <div className="flex items-end">
             {/* Chap baland qismi */}
@@ -295,66 +147,36 @@ const Index = () => {
 
       {/* edit schedule */}
       {editModal && (
-        <HalfModal
-          width="w-1/2"
+        <ScheduleModal
           isOpen={editModal}
+          mode="edit"
           onClose={() => setEditModal(false)}
-        >
-          <h2 className="text-2xl font-bold mb-6 text-gray-800">
-            Редактировать расписание
-          </h2>
+          defaultValues={get(schedule, "data", [])}
+          onSave={async (data) => {
+            try {
+              const response = await fetch(
+                `${config.JAVA_API_URL}${URLS.allSchedules}/${id}`,
+                {
+                  method: "PUT",
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${session?.accessToken}`,
+                  },
+                  body: JSON.stringify(data),
+                }
+              );
 
-          <Input
-            inputClass="border !border-gray-300 p-3 rounded-lg w-full mb-4 focus:ring-2 focus:ring-blue-400 outline-none"
-            label={"Название расписание"}
-            placeholder="Название"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-          />
+              if (!response.ok) throw new Error("Ошибка при обновлении");
 
-          <Input
-            inputClass="border !border-gray-300 p-3 rounded-lg w-full mb-6 focus:ring-2 focus:ring-blue-400 outline-none"
-            placeholder="Краткое название"
-            label={"Краткое название расписание"}
-            value={shortName}
-            onChange={(e) => setShortName(e.target.value)}
-            required
-          />
-
-          <div className="space-y-6 max-h-[600px] overflow-y-auto pr-2">
-            {times.map((day, dayIdx) => (
-              <ScheduleDayCard
-                key={day.weekDay}
-                day={day}
-                dayIdx={dayIdx}
-                weekDaysRu={weekDaysRu}
-                onChange={handleChangeTime}
-              />
-            ))}
-          </div>
-
-          <div className="flex justify-end gap-3 mt-6">
-            <button
-              onClick={() => setEditModal(false)}
-              className="px-5 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition"
-            >
-              Отмена
-            </button>
-            <button
-              onClick={onSubmitEditSchedule}
-              disabled={!name.trim() || !shortName.trim()}
-              className={`px-5 py-2 rounded-lg shadow transition 
-                ${
-                  !name.trim() || !shortName.trim()
-                    ? "bg-gray-400 cursor-not-allowed text-white"
-                    : "bg-gradient-to-r from-green-500 to-green-700 text-white hover:from-green-600 hover:to-green-800"
-                }`}
-            >
-              Сохранить изменения
-            </button>
-          </div>
-        </HalfModal>
+              toast.success("Расписание успешно обновлено");
+              queryClient.invalidateQueries(KEYS.schedule); // agar React Query ishlatyapsan
+              setEditModal(false);
+            } catch (err) {
+              console.error("Ошибка:", err);
+              toast.error("Не удалось сохранить изменения");
+            }
+          }}
+        />
       )}
 
       {/* delete schedule */}

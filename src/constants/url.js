@@ -13,6 +13,10 @@ export const URLS = {
   entrypoints: "api/entry-points",
   newEntryPoints: "api/ep",
 
+  // Employee connection to Schedule
+
+  connectScheduleAndEmployee: "api/employees/assign-schedule-by-uuid",
+
   // Cameras
   allCameras: "api/cameras",
   createCamera: "api/cameras/create",
