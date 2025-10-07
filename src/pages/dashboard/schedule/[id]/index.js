@@ -44,8 +44,6 @@ const Index = () => {
     enabled: !!id && !!session?.accessToken,
   });
 
-  // connect employees to schedule by uuid
-
   // delete schedule
   const onSubmitDeleteSchedule = async () => {
     try {

@@ -21,9 +21,8 @@ import CustomSelect from "@/components/select";
 import toast from "react-hot-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import ShareIcon from "@mui/icons-material/Share";
-
 import DeleteModal from "@/components/modal/delete-modal";
-
+import useGetPythonQuery from "@/hooks/python/useGetQuery";
 import { config } from "@/config";
 import CustomTable from "@/components/table";
 import usePutQuery from "@/hooks/java/usePutQuery";
@@ -38,10 +37,15 @@ const Index = () => {
   const [deleteModal, setDeleteModal] = useState(null);
   const [isPriority, setIsPriority] = useState(false);
   const [createConnectModal, setCreateConnectModal] = useState(false);
+  const [selectedEmployees, setSelectedEmployees] = useState(new Set());
   const [tab, setTab] = useState("org-units");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedPosition, setSelectedPosition] = useState("");
+  const [selectedSchedule, setSelectedSchedule] = useState(null);
   const router = useRouter();
   const { id } = router.query;
 
+  // entrypoint/{id}
   const {
     data: entrypoint,
     isLoading,
@@ -56,6 +60,7 @@ const Index = () => {
     enabled: !!id && !!session?.accessToken,
   });
 
+  // schedules connected to entrypoint/{id}
   const {
     data: schedulesOfEntrypoints,
     isLoading: isLoadingSchedules,
@@ -70,9 +75,57 @@ const Index = () => {
     enabled: !!id && !!session?.accessToken,
   });
 
+  const scheduleOptions = get(schedulesOfEntrypoints, "data.schedules", []).map(
+    (item) => ({
+      label: item.scheduleName,
+      value: item.entryPointScheduleId, // shu yerda ID yuborayapmiz
+    })
+  );
+
   const { data: allSchedules } = useGetQuery({
     key: KEYS.allSchedules,
     url: URLS.allSchedules,
+    headers: {
+      Authorization: `Bearer ${session?.accessToken}`,
+      Accept: "application/json",
+    },
+    enabled: !!session?.accessToken,
+  });
+
+  const {
+    data: employee,
+    isLoading: isLoadingEmployee,
+    isFetching: isFetchingEmployee,
+  } = useGetPythonQuery({
+    key: KEYS.employees,
+    url: URLS.employees,
+    params: {
+      limit: 1000,
+      offset: 0,
+    },
+  });
+
+  const filteredEmployees = get(employee, "data.data", []).filter((emp) => {
+    const fio = `${emp.first_name || ""} ${emp.last_name || ""}`.toLowerCase();
+    const position = emp.workplace?.position?.name?.toLowerCase() || "";
+    const term = searchTerm.toLowerCase();
+
+    const matchesSearch = fio.includes(term) || position.includes(term);
+    const matchesPosition = selectedPosition
+      ? emp.workplace?.position?.name === selectedPosition
+      : true;
+
+    return matchesSearch && matchesPosition;
+  });
+
+  const positions = Array.from(
+    new Set(
+      filteredEmployees.map((e) => e.workplace?.position?.name).filter(Boolean)
+    )
+  );
+  const { data: connectedEmployeesToSchedule } = useGetQuery({
+    key: KEYS.connectedEmployeesToSchedule,
+    url: `${URLS.newEntryPoints}/${id}/employees`,
     headers: {
       Authorization: `Bearer ${session?.accessToken}`,
       Accept: "application/json",
@@ -133,25 +186,46 @@ const Index = () => {
   });
 
   const SubmitConnectionOfEmployeeToSchedule = () => {
+    if (selectedEmployees.size === 0) {
+      toast.warning("Пожалуйста, выберите хотя бы одного сотрудника!");
+    }
+    const selectedEmployeeList = Array.from(selectedEmployees);
     connectEmployeesToSchedule(
       {
-        url: URLS.connectScheduleAndEmployee,
-        attributes: [],
+        url: `${URLS.connectScheduleAndEmployee}?entryPointScheduleId=${selectedSchedule}`,
+        attributes: selectedEmployeeList,
+        config: {
+          headers: {
+            Authorization: `Bearer ${session?.accessToken}`,
+          },
+        },
       },
       {
         onSuccess: () => {
-          setCreateModal(false);
+          setCreateConnectModal(false);
+          setSelectScheduleId(null);
+          setSelectedEmployees(new Set());
           toast.success("Успешно привязан", {
             position: "top-center",
           });
 
-          queryClient.invalidateQueries(KEYS.positionTypes);
+          queryClient.invalidateQueries(KEYS.connectScheduleAndEmployee);
         },
         onError: (error) => {
           toast.error(`Error is ${error}`, { position: "top-right" });
         },
       }
     );
+  };
+
+  const handleToggleEmployee = (id) => {
+    const updated = new Set(selectedEmployees);
+    if (updated.has(id)) {
+      updated.delete(id);
+    } else {
+      updated.add(id);
+    }
+    setSelectedEmployees(updated);
   };
 
   // edit priority of schedule for entrypoint
@@ -231,9 +305,9 @@ const Index = () => {
     );
   }
   const tabs = [
-    { key: "org-units", label: "Подразделения, привязанные к точке доступу" },
-    { key: "schedule", label: "Расписания, привязанные к точке доступу" },
-    { key: "employees", label: "Сотрудники, привязанные к точке доступу" },
+    { key: "org-units", label: "Подразделения, связанные с точкой доступа" },
+    { key: "schedule", label: "Расписания, установленные для точки доступа" },
+    { key: "employees", label: "Сотрудники, назначенные к точке доступа" },
   ];
 
   const columns = [
@@ -365,18 +439,19 @@ const Index = () => {
         <motion.div
           initial={{ opacity: 0, scale: 0 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-white p-6 my-[20px] rounded-md border border-gray-200"
+          className="bg-white my-[20px] rounded-md border border-gray-200"
         >
-          <div className=" border border-gray-200 rounded-md mt-[20px]">
-            <div className="flex gap-3 px-3">
+          <div className=" rounded-md  grid grid-cols-12">
+            {/* Sidebar (vertical tabs) */}
+            <div className="col-span-3 self-start flex flex-col border-r border-gray-200 bg-gray-50">
               {tabs.map((t) => (
                 <button
                   key={t.key}
                   onClick={() => setTab(t.key)}
-                  className={`relative px-3 py-2 text-sm font-medium transition-colors ${
+                  className={`relative text-left px-4 py-3 text-[15px] font-medium transition-colors ${
                     tab === t.key
-                      ? "text-blue-600"
-                      : "text-gray-500 hover:text-gray-700"
+                      ? "text-blue-600 bg-blue-50 border-r-4 border-blue-600"
+                      : "text-gray-600 hover:bg-gray-100"
                   }`}
                 >
                   {t.label}
@@ -384,7 +459,7 @@ const Index = () => {
                   {tab === t.key && (
                     <motion.span
                       layoutId="underline"
-                      className="absolute left-0 bottom-0 h-[2px] w-full bg-blue-600 rounded-full"
+                      className="absolute right-0 top-0 h-full w-[4px] bg-blue-600 rounded-l-full"
                       transition={{
                         type: "spring",
                         stiffness: 500,
@@ -395,83 +470,127 @@ const Index = () => {
                 </button>
               ))}
             </div>
-            {tab === "org-units" && (
-              <div className=" p-[20px]">
-                <div className="flex justify-between mb-[20px] items-center">
-                  <h2 className="text-xl font-semibold  text-gray-800 ">
-                    Подразделения точки доступа
-                  </h2>
 
-                  <Button
-                    onClick={() =>
-                      router.push(
-                        "/dashboard/structure-organizations/management-organizations"
-                      )
-                    }
-                    sx={{
-                      textTransform: "initial",
-                      fontFamily: "DM Sans, sans-serif",
-                      backgroundColor: "#4182F9",
-                      boxShadow: "none",
-                      color: "white",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: "4px",
-                      fontSize: "14px",
-                      minWidth: "100px",
-                      borderRadius: "8px",
-                    }}
-                    variant="contained"
-                  >
-                    Все подразделения
-                  </Button>
-                </div>
-                {isEmpty(get(entrypoint, "data.unitCodes", [])) ? (
-                  <p className="text-gray-400 italic text-sm">
-                    Подразделения не привязаны
-                  </p>
-                ) : (
-                  <ul className="space-y-[10px]">
-                    {get(entrypoint, "data.unitCodes", []).map(
-                      (unitCode, index) => (
-                        <li
-                          key={index}
-                          className="border border-gray-200 flex justify-between px-4 py-2 rounded-md"
-                        >
-                          <div>
-                            <Typography variant="h6">
-                              {get(unitCode, "name")}
-                            </Typography>
-                            <p className="text-gray-300 text-sm">
-                              Код подразделение: {get(unitCode, "code")}
-                            </p>
-                          </div>
+            {/* Content section */}
+            <div className="col-span-9 p-[15px]">
+              {tab === "org-units" && (
+                <div>
+                  <div className="flex justify-between mb-[20px] items-center">
+                    <h2 className="text-xl font-semibold text-gray-800">
+                      Подразделения точки доступа
+                    </h2>
 
-                          <div className="flex justify-center items-center">
-                            {get(unitCode, "main") === true && (
-                              <p className="gap-1 px-2 py-1 text-xs font-medium bg-green-100 text-green-500 rounded-full">
-                                Основная точка доступа
-                              </p>
-                            )}
-                          </div>
-                        </li>
-                      )
-                    )}
-                  </ul>
-                )}
-              </div>
-            )}
-            {tab === "schedule" && (
-              <div>
-                <div className="flex border-b border-b-gray-200 p-3 justify-between items-center mb-6">
-                  <h2 className="text-xl font-semibold  text-gray-800 ">
-                    Расписания точки доступа
-                  </h2>
-
-                  <div className="flex items-center gap-2">
                     <Button
-                      onClick={() => setCreateModal(true)}
+                      onClick={() =>
+                        router.push(
+                          "/dashboard/structure-organizations/management-organizations"
+                        )
+                      }
+                      sx={{
+                        textTransform: "initial",
+                        fontFamily: "DM Sans, sans-serif",
+                        backgroundColor: "#4182F9",
+                        boxShadow: "none",
+                        color: "white",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: "4px",
+                        fontSize: "14px",
+                        minWidth: "100px",
+                        borderRadius: "8px",
+                      }}
+                      variant="contained"
+                    >
+                      Все подразделения
+                    </Button>
+                  </div>
+
+                  {isEmpty(get(entrypoint, "data.unitCodes", [])) ? (
+                    <p className="text-gray-400 italic text-sm">
+                      Подразделения не привязаны
+                    </p>
+                  ) : (
+                    <ul className="space-y-[10px]">
+                      {get(entrypoint, "data.unitCodes", []).map(
+                        (unitCode, index) => (
+                          <li
+                            key={index}
+                            className="border border-gray-200 flex justify-between px-4 py-2 rounded-md"
+                          >
+                            <div>
+                              <Typography variant="h6">
+                                {get(unitCode, "name")}
+                              </Typography>
+                              <p className="text-gray-300 text-sm">
+                                Код подразделение: {get(unitCode, "code")}
+                              </p>
+                            </div>
+
+                            <div className="flex justify-center items-center">
+                              {get(unitCode, "main") === true && (
+                                <p className="gap-1 px-2 py-1 text-xs font-medium bg-green-100 text-green-500 rounded-full">
+                                  Основная точка доступа
+                                </p>
+                              )}
+                            </div>
+                          </li>
+                        )
+                      )}
+                    </ul>
+                  )}
+                </div>
+              )}
+
+              {tab === "schedule" && (
+                <div>
+                  <div className="flex border-b border-b-gray-200 p-3 justify-between items-center">
+                    <h2 className="text-xl font-semibold text-gray-800">
+                      Расписания точки доступа
+                    </h2>
+
+                    <div className="flex items-center gap-2">
+                      <Button
+                        onClick={() => setCreateModal(true)}
+                        sx={{
+                          textTransform: "initial",
+                          fontFamily: "DM Sans, sans-serif",
+                          backgroundColor: "#4182F9",
+                          boxShadow: "none",
+                          color: "white",
+                          display: "flex",
+                          gap: "4px",
+                          fontSize: "14px",
+                          borderRadius: "8px",
+                        }}
+                        variant="contained"
+                      >
+                        <ShareIcon sx={{ width: "20px", height: "20px" }} />
+                        <p>Привязать</p>
+                      </Button>
+                    </div>
+                  </div>
+
+                  <CustomTable
+                    data={get(schedulesOfEntrypoints, "data.schedules", [])}
+                    columns={columns}
+                  />
+                </div>
+              )}
+
+              {tab === "employees" && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="bg-white p-[10px]  rounded-md"
+                >
+                  <div className="flex justify-between items-center">
+                    <Typography variant="h6">
+                      Сотрудники которые привязаны к этому точке доступу
+                    </Typography>
+
+                    <Button
+                      onClick={() => setCreateConnectModal(true)}
                       sx={{
                         textTransform: "initial",
                         fontFamily: "DM Sans, sans-serif",
@@ -489,61 +608,268 @@ const Index = () => {
                       <p>Привязать</p>
                     </Button>
                   </div>
-                </div>
 
-                <CustomTable
-                  data={get(schedulesOfEntrypoints, "data.schedules", [])}
-                  columns={columns}
-                />
-              </div>
-            )}
+                  <div className="space-y-[10px] my-[10px]">
+                    {get(
+                      connectedEmployeesToSchedule,
+                      "data.employees",
+                      []
+                    ).map((employee, index) => (
+                      <div
+                        key={index}
+                        className="flex justify-between text-sm items-center"
+                      >
+                        <div className="flex items-start gap-2">
+                          <div
+                            className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg shadow-inner bg-blue-600 border-blue-600 text-white`}
+                          >
+                            {employee.firstName?.[0] || "?"}
+                            {employee.lastName?.[0] || "?"}
+                          </div>
+                          <div>
+                            <p>
+                              {get(employee, "firstName", "")}{" "}
+                              {get(employee, "lastName", "")}
+                            </p>
+                            <p className="text-sm text-gray-400">
+                              привязан к расписанию:{" "}
+                              <span className="text-blue-600 border border-blue-600 bg-blue-100 px-2 py-1 rounded-md text-xs">
+                                {get(employee, "scheduleName", "")}
+                              </span>
+                            </p>
+                          </div>
+                        </div>
 
-            {tab === "employees" && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="bg-white p-[12px] my-[10px] rounded-md"
-              >
-                <div className="flex justify-between items-center">
-                  <Typography variant="h6">
-                    Сотрудники которые привязаны к этому точке доступу
-                  </Typography>
-
-                  <Button
-                    onClick={() => setCreateConnectModal(true)}
-                    sx={{
-                      textTransform: "initial",
-                      fontFamily: "DM Sans, sans-serif",
-                      backgroundColor: "#4182F9",
-                      boxShadow: "none",
-                      color: "white",
-                      display: "flex",
-                      gap: "4px",
-                      fontSize: "14px",
-                      borderRadius: "8px",
-                    }}
-                    variant="contained"
-                  >
-                    <ShareIcon sx={{ width: "20px", height: "20px" }} />
-                    <p>Привязать</p>
-                  </Button>
-                </div>
-              </motion.div>
-            )}
+                        <a
+                          href={`/dashboard/employees/${get(
+                            employee,
+                            "employeeUuid"
+                          )}`}
+                          target="_blank"
+                          className="bg-gray-300 px-4 py-2 rounded-md"
+                        >
+                          Страница сотрудника
+                        </a>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </div>
           </div>
         </motion.div>
       )}
-      {/*  */}
+      {/* create connection between employee and schedule */}
       {createConnectModal && (
         <MethodModal
-          onClose={() => setCreateConnectModal(false)}
+          showCloseIcon={true}
           open={createConnectModal}
+          closeClick={() => {
+            setCreateConnectModal(false);
+            setSelectedEmployees(new Set());
+            setSearchTerm(""); // yopilganda qidiruvni tozalaymiz
+          }}
         >
-          <Typography variant="h6">
+          <Typography variant="h6" className="mb-4">
             Подключить сотрудников к расписанию
           </Typography>
+
+          <div>
+            <CustomSelect
+              options={scheduleOptions}
+              value={selectedSchedule}
+              onChange={(val) => setSelectedSchedule(val)} // bu yerda val = entryPointScheduleId
+              label="Контрольная точка"
+              required
+              placeholder="Выберите контрольную точку"
+            />
+          </div>
+
+          {/* 🔍 Qidiruv input */}
+          <div className="relative my-4">
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Поиск сотрудника"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 pl-10 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            />
+            <svg
+              className="w-5 h-5 text-gray-400 absolute left-3 top-2.5"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M21 21l-4.35-4.35M11 18a7 7 0 100-14 7 7 0 000 14z"
+              />
+            </svg>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3 mb-4">
+            <button
+              onClick={() => {
+                const all = new Set(filteredEmployees.map((e) => e.id));
+                setSelectedEmployees(all);
+              }}
+              className="px-4 py-2 bg-blue-100 text-blue-700 font-medium rounded-lg hover:bg-blue-200 transition"
+            >
+              Выбрать всех сотрудников
+            </button>
+
+            <button
+              onClick={() => setSelectedEmployees(new Set())}
+              className="px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition"
+            >
+              Очистить
+            </button>
+            <select
+              value={selectedPosition}
+              onChange={(e) => setSelectedPosition(e.target.value)}
+              className="
+    w-full
+    h-[46px]
+    rounded-xl
+    border
+    border-gray-300
+    bg-white
+    px-3.5
+    text-[15px]
+    text-gray-800
+    shadow-sm
+    transition-all
+    duration-200
+    focus:outline-none
+    focus:ring-2
+    focus:ring-blue-200
+    focus:border-blue-400
+    hover:border-blue-400
+    appearance-none
+    cursor-pointer
+  "
+              style={{
+                backgroundImage:
+                  'url(\'data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="%23666" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="feather feather-chevron-down"><path d="M6 9l6 6 6-6"/></svg>\')',
+                backgroundRepeat: "no-repeat",
+                backgroundPosition: "right 0.9rem center",
+                backgroundSize: "1rem",
+              }}
+            >
+              <option value="">Все позиции</option>
+              {positions.map((pos, i) => (
+                <option key={i} value={pos}>
+                  {pos}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* 👇 Filtrlangan xodimlar ro‘yxati */}
+          <div className="space-y-[10px] gap-3 max-h-[400px] overflow-y-auto pr-1 my-[10px]">
+            {filteredEmployees.length === 0 ? (
+              <div className="text-center text-gray-500 py-8">
+                Xodimlar topilmadi
+              </div>
+            ) : (
+              filteredEmployees.map((emp, index) => (
+                <div
+                  key={index}
+                  onClick={() => handleToggleEmployee(emp?.id)}
+                  className={`group transition-all duration-200 border-2 rounded-xl p-4 cursor-pointer shadow-sm hover:shadow-md
+              ${
+                selectedEmployees?.has(emp?.id)
+                  ? "bg-blue-600 border-blue-600 text-white"
+                  : "bg-white border-gray-200 hover:border-blue-300"
+              }`}
+                >
+                  <div className="flex items-center space-x-3">
+                    <div
+                      className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg shadow-inner 
+                  ${
+                    selectedEmployees.has(emp.id)
+                      ? "bg-white bg-opacity-20"
+                      : "bg-blue-100 text-blue-700"
+                  }`}
+                    >
+                      {emp.first_name?.[0] || emp.name?.[0] || "?"}
+                    </div>
+
+                    <div className="flex-1">
+                      <p
+                        className={`font-medium truncate ${
+                          selectedEmployees.has(emp.id)
+                            ? "text-white"
+                            : "text-gray-900"
+                        }`}
+                      >
+                        {emp.first_name} {emp.last_name}
+                      </p>
+                      <p
+                        className={`text-sm ${
+                          selectedEmployees.has(emp.id)
+                            ? "text-blue-100"
+                            : "text-gray-500"
+                        }`}
+                      >
+                        {emp.workplace?.position?.name ||
+                          "Bo‘lim ko‘rsatilmagan"}
+                      </p>
+                    </div>
+
+                    <div
+                      className={`w-5 h-5 rounded-full flex items-center justify-center border-2
+                  ${
+                    selectedEmployees.has(emp.id)
+                      ? "bg-white border-white"
+                      : "border-gray-300"
+                  }`}
+                    >
+                      {selectedEmployees.has(emp.id) && (
+                        <svg
+                          className="w-3 h-3 text-blue-600"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 
+                        0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 
+                        12.586l7.293-7.293a1 1 0 011.414 0z"
+                            clipRule="evenodd"
+                          ></path>
+                        </svg>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+          <div className="flex items-end justify-end">
+            <Button
+              onClick={SubmitConnectionOfEmployeeToSchedule}
+              sx={{
+                textTransform: "initial",
+                fontFamily: "DM Sans, sans-serif",
+                backgroundColor: "#4182F9",
+                boxShadow: "none",
+                color: "white",
+                display: "flex",
+                gap: "4px",
+                fontSize: "14px",
+                borderRadius: "8px",
+              }}
+              variant="contained"
+            >
+              <p>Привязать</p>
+            </Button>
+          </div>
         </MethodModal>
       )}
+
       {/* Attach an existing schedule to an entry point */}
       {createModal && (
         <MethodModal
