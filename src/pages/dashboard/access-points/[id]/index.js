@@ -305,9 +305,9 @@ const Index = () => {
     );
   }
   const tabs = [
-    { key: "org-units", label: "Подразделения, связанные с точкой доступа" },
-    { key: "schedule", label: "Расписания, установленные для точки доступа" },
-    { key: "employees", label: "Сотрудники, назначенные к точке доступа" },
+    { key: "org-units", label: "Подразделения" },
+    { key: "schedule", label: "Расписания" },
+    { key: "employees", label: "Сотрудники" },
   ];
 
   const columns = [
@@ -322,8 +322,8 @@ const Index = () => {
         <div className="flex items-center gap-2">
           {row.original.scheduleName}
           {row.original.isMain === 1 && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium bg-yellow-100 text-yellow-700 rounded-full">
-              <StarIcon fontSize="small" /> Основное
+            <span className="inline-flex items-center gap-1 px-2 py-2 text-xs font-medium bg-yellow-100 text-yellow-700 rounded-full">
+              <StarIcon fontSize="small" />
             </span>
           )}
         </div>
@@ -345,13 +345,11 @@ const Index = () => {
       header: "Синхронизация",
       cell: ({ row }) =>
         row.original.syncStatus === "OK" ? (
-          <div className="flex items-center gap-1 text-green-600 font-medium">
-            <CheckCircleIcon fontSize="small" className="text-green-500" />
+          <div className="inline-flex items-center justify-center gap-1 text-green-600 font-medium border border-green-600 bg-green-100  px-2 py-1 rounded-md ">
             Синхронизировано
           </div>
         ) : (
-          <div className="flex items-center gap-1 text-red-600 font-medium">
-            <CancelIcon fontSize="small" className="text-red-500" />
+          <div className="inline-flex items-center justify-center gap-1 text-red-600 font-medium border border-red-600 bg-red-100  px-2 py-1 rounded-md ">
             Не синхронизировано
           </div>
         ),
@@ -586,7 +584,7 @@ const Index = () => {
                 >
                   <div className="flex justify-between items-center">
                     <Typography variant="h6">
-                      Сотрудники которые привязаны к этому точке доступу
+                      Сотрудники в точке доступа
                     </Typography>
 
                     <Button
@@ -674,14 +672,14 @@ const Index = () => {
             Подключить сотрудников к расписанию
           </Typography>
 
-          <div>
+          <div className="mt-[10px]">
             <CustomSelect
               options={scheduleOptions}
               value={selectedSchedule}
               onChange={(val) => setSelectedSchedule(val)} // bu yerda val = entryPointScheduleId
-              label="Контрольная точка"
+              label="Расписание"
               required
-              placeholder="Выберите контрольную точку"
+              placeholder="Выберите расписание"
             />
           </div>
 

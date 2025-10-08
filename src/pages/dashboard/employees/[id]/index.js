@@ -653,7 +653,7 @@ const Index = () => {
                   ними расписания.
                 </p>
 
-                <div>
+                <div className="space-y-[10px]">
                   {get(
                     ScheduleAndEntrypointOfEmployee,
                     "data.entryPointSchedules",
@@ -666,7 +666,7 @@ const Index = () => {
                     ).map((item, index) => (
                       <div
                         key={index}
-                        className="border border-gray-200 p-3 rounded-md"
+                        className="border border-gray-200 p-3 rounded-md hover:shadow-md transition-all duration-200"
                       >
                         <div className="flex justify-between">
                           <Typography variant="h6">
@@ -722,6 +722,8 @@ const Index = () => {
                             </button>
                           </div>
                         </div>
+                        {/* change the schedule of the employee  */}
+                        <div></div>
                       </div>
                     ))
                   ) : (

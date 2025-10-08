@@ -83,11 +83,6 @@ const menuItems = [
       },
     ],
   },
-  // {
-  //   text: "Обучение и квалификация",
-  //   icon: <SchoolRoundedIcon />,
-  //   path: "/dashboard/user-profile",
-  // },
   {
     text: "Расписание",
     icon: <EventNoteIcon />,
@@ -105,10 +100,16 @@ export default function Sidebar({ isOpen = true }) {
   const [openSubmenus, setOpenSubmenus] = useState({});
   const router = useRouter();
 
-  // 🔑 active submenu bo‘lsa parentni ochiq qilib qo‘yish
+  // 🔑 Avtomatik submenu ochilishi agar ichki path bo'lsa
   useEffect(() => {
     menuItems.forEach((item, index) => {
-      if (item.submenu?.some((sub) => router.pathname === sub.path)) {
+      if (
+        item.submenu?.some(
+          (sub) =>
+            router.pathname === sub.path ||
+            router.pathname.startsWith(sub.path + "/")
+        )
+      ) {
         setOpenSubmenus((prev) => ({
           ...prev,
           [index]: true,
@@ -155,7 +156,6 @@ export default function Sidebar({ isOpen = true }) {
               <p className="text-[18px] font-medium">
                 "ISSIQLIK ELЕKTR STANSIYALARI" AJ
               </p>
-              {/* <p className="text-sm text-gray-600">СКУД</p> */}
             </div>
           )}
         </div>
@@ -165,10 +165,17 @@ export default function Sidebar({ isOpen = true }) {
         {/* MENU */}
         <List sx={{ fontFamily: "DM Sans, sans-serif", color: "#A0AEC0" }}>
           {menuItems.map((item, index) => {
-            const isActive = router.pathname === item.path;
+            const isActive =
+              router.pathname === item.path ||
+              router.pathname.startsWith(item.path + "/");
+
             const isAnySubmenuActive =
-              item.submenu?.some((sub) => router.pathname === sub.path) ||
-              false;
+              item.submenu?.some(
+                (sub) =>
+                  router.pathname === sub.path ||
+                  router.pathname.startsWith(sub.path + "/")
+              ) || false;
+
             const isOpenSubmenu = openSubmenus[index] || false;
 
             return (
@@ -239,7 +246,10 @@ export default function Sidebar({ isOpen = true }) {
                     className="ml-10"
                   >
                     {item.submenu.map((sub, subIndex) => {
-                      const isSubActive = router.pathname === sub.path;
+                      const isSubActive =
+                        router.pathname === sub.path ||
+                        router.pathname.startsWith(sub.path + "/");
+
                       return (
                         <ListItemButton
                           key={subIndex}
