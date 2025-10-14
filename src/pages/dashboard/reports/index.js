@@ -114,7 +114,7 @@ const ExportEmployeesPage = () => {
 
   return (
     <DashboardLayout headerTitle={"Отчёты"}>
-      <motion.div
+      {/* <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.3 }}
@@ -155,7 +155,7 @@ const ExportEmployeesPage = () => {
             <StatisticCard title="Количество сотрудников" quantity={20} />
           </div>
         </div>
-      </motion.div>
+      </motion.div> */}
 
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}

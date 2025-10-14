@@ -16,6 +16,7 @@ import {
   Security as SecurityIcon,
   Assessment as AssessmentIcon,
 } from "@mui/icons-material";
+import AirlineStopsIcon from "@mui/icons-material/AirlineStops";
 import EventNoteIcon from "@mui/icons-material/EventNote";
 import ExitModal from "../modal/exit-modal";
 import { signOut } from "next-auth/react";
@@ -74,11 +75,11 @@ const menuItems = [
         path: "/dashboard/reports/employee-id",
       },
       {
-        text: "по структура организации",
-        path: "/dashboard/reports",
+        text: "по структуре организации",
+        path: "/dashboard/reports/",
       },
       {
-        text: "всех сотрудников",
+        text: "отчёты всех сотрудников",
         path: "/dashboard/reports/all-employees",
       },
     ],
@@ -86,6 +87,11 @@ const menuItems = [
   {
     text: "Расписание",
     icon: <EventNoteIcon />,
+    path: "/dashboard/schedule",
+  },
+  {
+    text: "Командировки",
+    icon: <AirlineStopsIcon />,
     path: "/dashboard/schedule",
   },
   {

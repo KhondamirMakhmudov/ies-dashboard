@@ -42,6 +42,7 @@ const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedPosition, setSelectedPosition] = useState("");
   const [selectedSchedule, setSelectedSchedule] = useState(null);
+  const [newMainScheduleId, setNewMainScheduleId] = useState(null);
   const router = useRouter();
   const { id } = router.query;
 
@@ -234,41 +235,127 @@ const Index = () => {
     listKeyId: "edit-priority",
   });
 
-  const onSubmitEditPriorityOfConnection = () => {
-    editPriorityOfConnection(
-      {
-        url: `${
-          URLS.scheduleOfEntrypoints
-        }/${selectScheduleId}/entry-point/${id}/priority?priority=${
-          isPriority ? 1 : 0
-        }`,
-        attributes: {
-          scheduleId: +selectScheduleId,
-          entryPointId: +id,
-          priority: isPriority ? 1 : 0,
-        },
+  const onSubmitEditPriorityOfConnection = async () => {
+    // When making a schedule main (isPriority = true)
+    if (isPriority) {
+      // First, get the current main schedule
+      const currentMainSchedule = get(
+        schedulesOfEntrypoints,
+        "data.schedules",
+        []
+      ).find((s) => s.isMain === 1);
 
-        config: {
-          headers: {
-            Authorization: `Bearer ${session?.accessToken}`,
+      // If there's already a main schedule, set it to non-main first
+      if (
+        currentMainSchedule &&
+        currentMainSchedule.scheduleId !== selectScheduleId
+      ) {
+        try {
+          await editPriorityOfConnection({
+            url: `${URLS.scheduleOfEntrypoints}/${currentMainSchedule.scheduleId}/entry-point/${id}/priority?priority=0`,
+            attributes: {
+              scheduleId: +currentMainSchedule.scheduleId,
+              entryPointId: +id,
+              priority: 0,
+            },
+            config: {
+              headers: {
+                Authorization: `Bearer ${session?.accessToken}`,
+              },
+            },
+          });
+        } catch (error) {
+          toast.error(`Ошибка при снятии приоритета: ${error}`, {
+            position: "top-right",
+          });
+          return;
+        }
+      }
+
+      // Now set the new schedule as main
+      editPriorityOfConnection(
+        {
+          url: `${URLS.scheduleOfEntrypoints}/${selectScheduleId}/entry-point/${id}/priority?priority=1`,
+          attributes: {
+            scheduleId: +selectScheduleId,
+            entryPointId: +id,
+            priority: 1,
+          },
+          config: {
+            headers: {
+              Authorization: `Bearer ${session?.accessToken}`,
+            },
           },
         },
-      },
-      {
-        onSuccess: () => {
-          toast.success("Приоритет успешно изменен", {
-            position: "top-center",
-          });
-          setEditModal(false);
-          queryClient.invalidateQueries(KEYS.entrypoint);
-        },
-        onError: (error) => {
-          toast.error(`Error is ${error}`, { position: "top-right" });
-        },
+        {
+          onSuccess: () => {
+            toast.success("Приоритет успешно изменен", {
+              position: "top-center",
+            });
+            setEditModal(false);
+            queryClient.invalidateQueries(KEYS.entrypoint);
+          },
+          onError: (error) => {
+            toast.error(`Ошибка: ${error}`, { position: "top-right" });
+          },
+        }
+      );
+    }
+    // When removing main status and setting a new main schedule
+    else if (newMainScheduleId) {
+      // First set the old main to non-main
+      try {
+        await editPriorityOfConnection({
+          url: `${URLS.scheduleOfEntrypoints}/${selectScheduleId}/entry-point/${id}/priority?priority=0`,
+          attributes: {
+            scheduleId: +selectScheduleId,
+            entryPointId: +id,
+            priority: 0,
+          },
+          config: {
+            headers: {
+              Authorization: `Bearer ${session?.accessToken}`,
+            },
+          },
+        });
+      } catch (error) {
+        toast.error(`Ошибка при снятии приоритета: ${error}`, {
+          position: "top-right",
+        });
+        return;
       }
-    );
-  };
 
+      // Then set the new schedule as main
+      editPriorityOfConnection(
+        {
+          url: `${config.JAVA_API_URL}${URLS.scheduleOfEntrypoints}/${newMainScheduleId}/entry-point/${id}/priority?priority=1`,
+          attributes: {
+            scheduleId: +newMainScheduleId,
+            entryPointId: +id,
+            priority: 1,
+          },
+          config: {
+            headers: {
+              Authorization: `Bearer ${session?.accessToken}`,
+            },
+          },
+        },
+        {
+          onSuccess: () => {
+            toast.success("Основное расписание успешно изменено", {
+              position: "top-center",
+            });
+            setEditModal(false);
+            setNewMainScheduleId(null);
+            queryClient.invalidateQueries(KEYS.entrypoint);
+          },
+          onError: (error) => {
+            toast.error(`Ошибка: ${error}`, { position: "top-right" });
+          },
+        }
+      );
+    }
+  };
   // remove connection
   const onSubmitDisconnectSchedule = async () => {
     try {
@@ -357,18 +444,32 @@ const Index = () => {
     {
       accessorKey: "priority",
       header: "Приоритет",
-      cell: ({ row }) => (
-        <Switch
-          checked={row.original.isMain === 1}
-          color="warning"
-          onChange={() => {
-            setSelectScheduleId(row.original.scheduleId);
+      cell: ({ row }) => {
+        const schedules = get(schedulesOfEntrypoints, "data.schedules", []);
+        const isCurrentMain = row.original.isMain === 1;
+        const hasMultipleSchedules = schedules.length > 1;
 
-            setIsPriority(row.original.isMain === 1 ? false : true);
-            setEditModal(true); // modal ochiladi
-          }}
-        />
-      ),
+        return (
+          <Switch
+            checked={isCurrentMain}
+            color="warning"
+            onChange={() => {
+              setSelectScheduleId(row.original.scheduleId);
+
+              // If trying to turn OFF the current main schedule
+              if (isCurrentMain && hasMultipleSchedules) {
+                setIsPriority(false);
+                setNewMainScheduleId(null); // Reset selection
+              } else {
+                // Making this schedule the main one
+                setIsPriority(true);
+              }
+
+              setEditModal(true);
+            }}
+          />
+        );
+      },
     },
     {
       accessorKey: "actions",
@@ -935,28 +1036,87 @@ const Index = () => {
       )}
 
       {editModal && (
-        <MethodModal open={editModal} onClose={() => setEditModal(false)}>
+        <MethodModal
+          open={editModal}
+          onClose={() => {
+            setEditModal(false);
+            setNewMainScheduleId(null);
+          }}
+        >
           <div className="space-y-4">
             <h2 className="text-lg font-semibold">
               {isPriority ? "Сделать основным?" : "Убрать из основных?"}
             </h2>
-            <p className="text-gray-600">
-              Вы уверены, что хотите{" "}
-              {isPriority
-                ? "сделать это расписание основным"
-                : "убрать из основных"}
-              ?
-            </p>
+
+            {isPriority ? (
+              // Simple confirmation when making a schedule main
+              <p className="text-gray-600">
+                Вы уверены, что хотите сделать это расписание основным?
+              </p>
+            ) : (
+              // Selection interface when removing main status
+              <div className="space-y-3">
+                <p className="text-gray-600">
+                  Нельзя отключить основное расписание без выбора нового.
+                  Выберите, какое расписание станет основным:
+                </p>
+
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {get(schedulesOfEntrypoints, "data.schedules", [])
+                    .filter(
+                      (schedule) => schedule.scheduleId !== selectScheduleId
+                    )
+                    .map((schedule) => (
+                      <div
+                        key={schedule.scheduleId}
+                        onClick={() =>
+                          setNewMainScheduleId(schedule.scheduleId)
+                        }
+                        className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+                          newMainScheduleId === schedule.scheduleId
+                            ? "border-orange-500 bg-orange-50"
+                            : "border-gray-300 hover:border-orange-300 hover:bg-gray-50"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">
+                              {schedule.scheduleName}
+                            </span>
+                            <span className="text-sm text-gray-500">
+                              ({schedule.camerasCount} камер)
+                            </span>
+                          </div>
+                          {newMainScheduleId === schedule.scheduleId && (
+                            <div className="w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center">
+                              <span className="text-white text-xs">✓</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            )}
+
             <div className="flex justify-end gap-2">
               <button
-                onClick={() => setEditModal(false)}
-                className="px-4 py-2 bg-gray-200 rounded"
+                onClick={() => {
+                  setEditModal(false);
+                  setNewMainScheduleId(null);
+                }}
+                className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded"
               >
                 Отмена
               </button>
               <button
                 onClick={onSubmitEditPriorityOfConnection}
-                className="px-4 py-2 bg-orange-500 text-white rounded"
+                disabled={!isPriority && !newMainScheduleId}
+                className={`px-4 py-2 rounded text-white ${
+                  isPriority || newMainScheduleId
+                    ? "bg-orange-500 hover:bg-orange-600"
+                    : "bg-gray-400 cursor-not-allowed"
+                }`}
               >
                 Подтвердить
               </button>
