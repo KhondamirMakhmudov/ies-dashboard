@@ -92,7 +92,7 @@ const menuItems = [
   {
     text: "Командировки",
     icon: <AirlineStopsIcon />,
-    path: "/dashboard/schedule",
+    path: "/dashboard/business-trips",
   },
   {
     text: "Настройки",

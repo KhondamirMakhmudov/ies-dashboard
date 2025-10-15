@@ -828,27 +828,7 @@ const Index = () => {
             <select
               value={selectedPosition}
               onChange={(e) => setSelectedPosition(e.target.value)}
-              className="
-    w-full
-    h-[46px]
-    rounded-xl
-    border
-    border-gray-300
-    bg-white
-    px-3.5
-    text-[15px]
-    text-gray-800
-    shadow-sm
-    transition-all
-    duration-200
-    focus:outline-none
-    focus:ring-2
-    focus:ring-blue-200
-    focus:border-blue-400
-    hover:border-blue-400
-    appearance-none
-    cursor-pointer
-  "
+              className="w-full h-[46px] rounded-xl border border-gray-300 bg-white px-3.5 text-[15px] text-gray-800 shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 hover:border-blue-400 appearance-none cursor-pointer"
               style={{
                 backgroundImage:
                   'url(\'data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="%23666" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="feather feather-chevron-down"><path d="M6 9l6 6 6-6"/></svg>\')',
