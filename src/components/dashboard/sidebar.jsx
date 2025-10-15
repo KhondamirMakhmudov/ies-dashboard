@@ -75,6 +75,10 @@ const menuItems = [
         path: "/dashboard/reports/employee-id",
       },
       {
+        text: "по сотрудникам (test)",
+        path: "/dashboard/reports/employee-uuid",
+      },
+      {
         text: "по структуре организации",
         path: "/dashboard/reports/",
       },
