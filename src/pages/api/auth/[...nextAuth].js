@@ -79,7 +79,9 @@ export const authOptions = {
     signOut: "http://10.20.6.60:3000/",
   },
 
-  secret: process.env.NEXTAUTH_SECRET || "some-hardcoded-secret",
+  secret:
+    process.env.NEXTAUTH_SECRET ||
+    "J4L0vz+n0TdsYc+MQkFbW63dK1FvM13+K0kT38ezU0U=",
 };
 
 export default NextAuth(authOptions);

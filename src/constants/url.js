@@ -24,6 +24,7 @@ export const URLS = {
   logEntersOfEmployeesByStructure: "/api/log_enters/structure/",
   scheduleCameras: "api/cameras/access-schedules/",
   reportOfEmployees: "api/log_enters/dates/all-employees",
+  logsByOrgUnitCodeAndEntrypointId: "api/log_enters/org-unit/",
 
   // schedules
 
@@ -34,6 +35,10 @@ export const URLS = {
   schedulesOfEntrypoints: "api/schedules/entry-point/",
   ScheduleAndEntrypointOfEmployee:
     "api/employees/assign-schedules-info/by-uuid/",
+
+  // jobtrips
+
+  jobTrips: "api/job-trips/create-job-trip",
 
   // Python
   // structure unit type

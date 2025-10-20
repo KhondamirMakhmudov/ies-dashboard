@@ -41,7 +41,7 @@ const CustomSelect = ({
   // ✅ optionsni shartli tartiblash
   const finalOptions = sortOptions
     ? [...options].sort((a, b) =>
-        a.label.localeCompare(b.label, "ru", { sensitivity: "base" })
+        a.label?.localeCompare(b.label, "ru", { sensitivity: "base" })
       )
     : options;
 

@@ -17,7 +17,8 @@ export const KEYS = {
   schedulesOfEntrypoints: "schedulesOfEntrypoints",
   ScheduleAndEntrypointOfEmployee: "ScheduleAndEntrypointOfEmployee",
   connectedEmployeesToSchedule: "connectedEmployeesToSchedule",
-
+  jobTrips: "jobTrips",
+  logsByOrgUnitCodeAndEntrypointId: "logsByOrgUnitCodeAndEntrypointId",
   // Python
 
   unitTypes: "unitTypes",

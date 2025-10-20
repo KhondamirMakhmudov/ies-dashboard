@@ -83,6 +83,10 @@ const menuItems = [
         path: "/dashboard/reports/",
       },
       {
+        text: "по структуре организации (test)",
+        path: "/dashboard/reports/report-by-entrypointid-orgUnit",
+      },
+      {
         text: "отчёты всех сотрудников",
         path: "/dashboard/reports/all-employees",
       },

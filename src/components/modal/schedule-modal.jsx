@@ -243,7 +243,6 @@ const ScheduleModal = ({
                   value={shortName}
                   onChange={(e) => setShortName(e.target.value)}
                   placeholder="например, УС"
-                  maxLength="4"
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors"
                 />
               </div>
