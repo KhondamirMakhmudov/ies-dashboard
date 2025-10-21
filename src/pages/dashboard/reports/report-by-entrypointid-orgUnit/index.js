@@ -10,6 +10,7 @@ import CustomSelect from "@/components/select";
 import Input from "@/components/input";
 import DateRangeIcon from "@mui/icons-material/DateRange";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import useGetPythonQuery from "@/hooks/python/useGetQuery";
 
 const Index = () => {
   const { data: session } = useSession();
@@ -22,10 +23,10 @@ const Index = () => {
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
 
-  const { data: orgUnits } = useGetQuery({
+  const { data: orgUnits } = useGetPythonQuery({
     key: KEYS.organizationalUnits,
     url: URLS.organizationalUnits,
-    params: { is_root: true, limit: 150 },
+    params: { limit: 150 },
   });
 
   const optionsOrgUnits = get(orgUnits, "data", []).map((item) => ({
