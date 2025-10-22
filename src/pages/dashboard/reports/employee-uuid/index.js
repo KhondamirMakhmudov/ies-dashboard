@@ -16,6 +16,8 @@ import { getEmployeesLogsByRange } from "@/utils/getEmployeesLogsByRange";
 import toast from "react-hot-toast";
 import DateRangeIcon from "@mui/icons-material/DateRange";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import { config } from "@/config";
+import { exportToExcelStyled } from "@/utils/exportToExcelStyled";
 
 const Index = () => {
   const { data: session } = useSession();
@@ -112,7 +114,7 @@ const Index = () => {
   const fetchEmployeeData = async (employeeId) => {
     try {
       const response = await fetch(
-        `${URLS.logEntersOfEmployeeById}${employeeId}/dates/new-output?startDate=${startDateTime}&endDate=${endDateTime}`,
+        `${config.JAVA_API_URL}${URLS.logEntersOfEmployeeById}${employeeId}/dates/new-output?startDate=${startDateTime}&endDate=${endDateTime}`,
         {
           headers: {
             Authorization: `Bearer ${session?.accessToken}`,
@@ -149,35 +151,30 @@ const Index = () => {
 
   const token = session?.accessToken;
 
-  const handleExportAll = async () => {
-    if (selectedEmployees.length === 0) {
-      toast.error("Выберите сотрудников");
-      return;
-    }
-
+  const handleExport = async () => {
     try {
       toast.loading("Экспорт данных...", { id: "exporting" });
 
-      for (const employee of selectedEmployees) {
-        const data = await getEmployeesLogsByRange({
-          token,
-          rangeString: employee.id,
-          startDate: startDateTime,
-          endDate: endDateTime,
-        });
+      // Extract employee IDs from selected employees
+      const employeeIds = selectedEmployees.map((emp) => emp.id);
 
-        if (data && data.length > 0) {
-          exportToExcelStyled(
-            data,
-            `${employee.last_name}_${employee.first_name}`
-          );
-        }
+      const data = await getEmployeesLogsByRange({
+        token,
+        employeeIds, // Pass array of IDs instead of rangeString
+        startDate: startDateTime,
+        endDate: endDateTime,
+      });
+
+      if (!data || data.length === 0) {
+        toast.error("Данные не найдены.", { id: "exporting" });
+        return;
       }
 
-      toast.success("Excel файлы успешно загружены", { id: "exporting" });
+      exportToExcelStyled(data);
+      toast.success("Excel файл успешно загружен.", { id: "exporting" });
     } catch (error) {
       console.error("Export error:", error);
-      toast.error("Ошибка при загрузке Excel файлов", { id: "exporting" });
+      toast.error("Ошибка при загрузке Excel файла.", { id: "exporting" });
     }
   };
 
@@ -403,7 +400,7 @@ const Index = () => {
 
         {/* Action Buttons */}
         <div className="flex items-center gap-3 flex-wrap">
-          <button
+          {/* <button
             disabled={
               selectedEmployees.length === 0 || !startDateTime || !endDateTime
             }
@@ -412,13 +409,13 @@ const Index = () => {
           >
             <Search fontSize="small" />
             Загрузить данные
-          </button>
+          </button> */}
 
           <button
             disabled={
               selectedEmployees.length === 0 || !startDateTime || !endDateTime
             }
-            onClick={handleExportAll}
+            onClick={handleExport}
             className="flex items-center gap-2 bg-[#00733B] hover:bg-[#00632F] px-5 py-3 rounded-lg text-white font-medium disabled:bg-gray-400 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg"
           >
             <Image
@@ -432,87 +429,77 @@ const Index = () => {
         </div>
       </motion.div>
 
-      {/* Employee Data Tables */}
-      {selectedEmployees.length > 0 &&
-        Object.keys(employeeDataMap).length > 0 && (
-          <div className="space-y-4">
-            {selectedEmployees.map((employee) => {
-              const employeeData = employeeDataMap[employee.id];
+      {/* {selectedEmployees.length > 0 && (
+        <div className="space-y-4">
+          {selectedEmployees.map((employee) => {
+            const employeeData = employeeDataMap[employee.id];
 
-              return (
-                <motion.div
-                  key={employee.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="bg-white p-6 rounded-md border border-gray-200"
-                >
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <h3 className="text-xl font-bold text-gray-900">
-                        {employee.last_name} {employee.first_name}{" "}
-                        {employee.middle_name}
-                      </h3>
-                      <p className="text-sm text-gray-600">
-                        {employee.workplace?.position?.name}
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => handleRemove(employee.id)}
-                      className="text-red-500 hover:text-red-700 transition"
-                      title="Удалить"
-                    >
-                      <Delete />
-                    </button>
+            return (
+              <motion.div
+                key={employee.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+                className="bg-white p-6 rounded-md border border-gray-200"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900">
+                      {employee.last_name} {employee.first_name}{" "}
+                      {employee.middle_name}
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      {employee.workplace?.position?.name}
+                    </p>
                   </div>
+                  <button
+                    onClick={() => handleRemove(employee.id)}
+                    className="text-red-500 hover:text-red-700 transition"
+                    title="Удалить"
+                  >
+                    <Delete />
+                  </button>
+                </div>
 
-                  {!employeeData ? (
-                    <div className="flex justify-center items-center py-8">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-                    </div>
-                  ) : get(employeeData, "data", []).length > 0 ? (
-                    <div className="overflow-x-auto">
-                      <CustomTable
-                        data={get(employeeData, "data", [])}
-                        columns={[
-                          {
-                            title: "Дата",
-                            dataIndex: "date",
-                            key: "date",
-                          },
-                          {
-                            title: "Время входа",
-                            dataIndex: "enterTime",
-                            key: "enterTime",
-                          },
-                          {
-                            title: "Время выхода",
-                            dataIndex: "exitTime",
-                            key: "exitTime",
-                          },
-                          {
-                            title: "Всего часов",
-                            dataIndex: "totalHours",
-                            key: "totalHours",
-                          },
-                          {
-                            title: "Статус",
-                            dataIndex: "status",
-                            key: "status",
-                          },
-                        ]}
-                      />
-                    </div>
-                  ) : (
-                    <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg">
-                      Нет данных за выбранный период
-                    </div>
-                  )}
-                </motion.div>
-              );
-            })}
-          </div>
-        )}
+                {!employeeData ? (
+                  <div className="flex justify-center items-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                  </div>
+                ) : get(employeeData, "data", []).length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <CustomTable
+                      data={get(employeeData, "data", [])}
+                      columns={[
+                        { title: "Дата", dataIndex: "date", key: "date" },
+                        {
+                          title: "Время входа",
+                          dataIndex: "enterTime",
+                          key: "enterTime",
+                        },
+                        {
+                          title: "Время выхода",
+                          dataIndex: "exitTime",
+                          key: "exitTime",
+                        },
+                        {
+                          title: "Всего часов",
+                          dataIndex: "totalHours",
+                          key: "totalHours",
+                        },
+                        { title: "Статус", dataIndex: "status", key: "status" },
+                      ]}
+                    />
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg">
+                    Нет данных за выбранный период
+                  </div>
+                )}
+              </motion.div>
+            );
+          })}
+        </div>
+      )} */}
     </DashboardLayout>
   );
 };

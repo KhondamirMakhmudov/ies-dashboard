@@ -4,36 +4,48 @@ import { config } from "@/config";
 
 export const getEmployeesLogsByRange = async ({
   token,
-  rangeString,
+  employeeIds,
   startDate,
   endDate,
+  baseUrl = config.JAVA_API_URL, // Allow custom base URL
+  endpoint = URLS.logEntersOfEmployeeById, // Allow custom endpoint
+  pathSuffix = "/dates/new-output", // Allow custom path suffix
 }) => {
-  if (!rangeString || !startDate || !endDate) return [];
+  if (!employeeIds || employeeIds.length === 0 || !startDate || !endDate) {
+    return [];
+  }
 
-  const ids = parseEmployeeIdRange(rangeString);
-  if (ids.length === 0) return [];
-
-  const requests = ids.map((id) =>
+  // Create requests for each employee ID
+  const requests = employeeIds.map((id) =>
     axios
       .get(
-        `${config.JAVA_API_URL}${URLS.logEntersOfEmployeeById}${id}/dates/new-output`,
+        `${baseUrl}${endpoint}${id}${pathSuffix}?startDate=${startDate}&endDate=${endDate}`,
         {
-          params: { startDate, endDate },
           headers: {
             Authorization: `Bearer ${token}`,
             Accept: "application/json",
           },
         }
       )
-      .then((res) => res.data.map((item) => ({ ...item, empId: id })))
-      .catch(() => [])
+      .then((res) => {
+        // Handle both array and object responses
+        const data = res.data?.data || res.data;
+        return Array.isArray(data)
+          ? data.map((item) => ({ ...item, empId: id }))
+          : [];
+      })
+      .catch((error) => {
+        console.error(`Failed to fetch data for employee ${id}:`, error);
+        return [];
+      })
   );
 
   const results = await Promise.all(requests);
   return results.flat();
 };
 
-function parseEmployeeIdRange(input) {
+// Keep this function if you need to support range strings elsewhere
+export function parseEmployeeIdRange(input) {
   const result = new Set();
 
   input.split(",").forEach((part) => {

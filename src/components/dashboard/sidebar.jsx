@@ -70,20 +70,20 @@ const menuItems = [
     text: "Отчёты",
     icon: <AssessmentIcon />,
     submenu: [
+      // {
+      //   text: "по сотрудникам",
+      //   path: "/dashboard/reports/employee-id",
+      // },
       {
         text: "по сотрудникам",
-        path: "/dashboard/reports/employee-id",
-      },
-      {
-        text: "по сотрудникам (test)",
         path: "/dashboard/reports/employee-uuid",
       },
       {
-        text: "по структуре организации",
-        path: "/dashboard/reports/",
+        text: "по подразделениям",
+        path: "/dashboard/reports/report-by-orgUnit",
       },
       {
-        text: "по структуре организации (test)",
+        text: "по подразделениям и точкам доступа",
         path: "/dashboard/reports/report-by-entrypointid-orgUnit",
       },
       {

@@ -61,8 +61,7 @@ const Index = () => {
     return endDate && endTime ? `${endDate}T${endTime}` : "";
   }, [endDate, endTime]);
 
-  const isFormComplete =
-    selectOrgUnitCode && selectEntryPointId && startDateTime && endDateTime;
+  const isFormComplete = selectOrgUnitCode && startDateTime && endDateTime;
 
   const containerVariants = {
     hidden: { opacity: 0, y: 20 },
@@ -92,7 +91,7 @@ const Index = () => {
         baseUrl: `${config.JAVA_API_URL}`,
         endDate: endDateTime,
         endpoint: `${URLS.logsByOrgUnitCodeAndEntrypointId}`, // Your specific endpoint
-        pathSuffix: `/entry-point/${selectEntryPointId}/dates`, // Your specific path
+        pathSuffix: `/dates`, // Your specific path
       });
 
       if (!data || data.length === 0) {
@@ -109,7 +108,7 @@ const Index = () => {
   };
 
   return (
-    <DashboardLayout headerTitle="Аналитика отчётов">
+    <DashboardLayout headerTitle="Отчёты по подразделениям">
       <motion.div
         variants={containerVariants}
         initial="hidden"
@@ -151,7 +150,7 @@ const Index = () => {
                 </span>
                 Выбор подразделения и точки доступа
               </h3>
-              <div className="grid sm:grid-cols-2 gap-4 sm:gap-6">
+              <div className="w-full">
                 <div className="space-y-2">
                   <CustomSelect
                     label="Подразделение"
@@ -159,16 +158,6 @@ const Index = () => {
                     value={selectOrgUnitCode}
                     placeholder="Выберите подразделение"
                     onChange={(val) => setSelectOrgUnitCode(val)}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <CustomSelect
-                    label="Точка доступа"
-                    options={optionsEntryPoint}
-                    value={selectEntryPointId}
-                    placeholder="Выберите точку доступа"
-                    onChange={(val) => setSelectEntryPointId(val)}
                   />
                 </div>
               </div>
@@ -276,11 +265,6 @@ const Index = () => {
                   <div>
                     <p className="text-sm font-semibold text-green-800">
                       Все параметры заполнены
-                    </p>
-                    <p className="text-xs text-green-700">
-                      {isLoading
-                        ? "Загрузка данных..."
-                        : "Готово к генерации отчёта"}
                     </p>
                   </div>
                 </motion.div>
