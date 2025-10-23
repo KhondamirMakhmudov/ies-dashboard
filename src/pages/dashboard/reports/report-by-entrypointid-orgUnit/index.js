@@ -277,11 +277,6 @@ const Index = () => {
                     <p className="text-sm font-semibold text-green-800">
                       Все параметры заполнены
                     </p>
-                    <p className="text-xs text-green-700">
-                      {isLoading
-                        ? "Загрузка данных..."
-                        : "Готово к генерации отчёта"}
-                    </p>
                   </div>
                 </motion.div>
               )}
