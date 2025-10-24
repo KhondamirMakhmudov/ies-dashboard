@@ -33,8 +33,7 @@ const Index = () => {
   const [entryPointName, setEntryPointName] = useState("");
   const [entryPointShortName, setEntryPointShortName] = useState("");
   const [buildingDescription, setBuildingDescription] = useState("");
-  const [unitCodes, setUnitCodes] = useState([]);
-  const [schedules, setSchedules] = useState([]);
+  const [unitCodes, setUnitCodes] = useState([]); // Now contains schedules inside each unit
 
   const [selectedEntryPointId, setSelectedEntryPointId] = useState(null);
   const [selectedEntryPoint, setselectedEntryPoint] = useState(null);
@@ -93,10 +92,20 @@ const Index = () => {
       !entryPointName ||
       !entryPointShortName ||
       !buildingDescription ||
-      unitCodes.length === 0 ||
-      schedules.length === 0
+      unitCodes.length === 0
     ) {
       toast.error("Пожалуйста, заполните все поля", { position: "top-center" });
+      return;
+    }
+
+    // Validate that each unit has at least one schedule
+    const invalidUnit = unitCodes.find(
+      (unit) => !unit.schedules || unit.schedules.length === 0
+    );
+    if (invalidUnit) {
+      toast.error("Каждое подразделение должно иметь хотя бы одно расписание", {
+        position: "top-center",
+      });
       return;
     }
 
@@ -108,7 +117,6 @@ const Index = () => {
           entryPointShortName,
           buildingDescription,
           unitCodes,
-          schedules,
         },
         config: {
           headers: {
@@ -126,7 +134,6 @@ const Index = () => {
           setEntryPointShortName("");
           setBuildingDescription("");
           setUnitCodes([]);
-          setSchedules([]);
           queryClient.invalidateQueries(KEYS.entrypoints);
         },
         onError: (error) => {
@@ -143,17 +150,15 @@ const Index = () => {
 
     const original = selectedEntryPoint.original;
 
-    // Helper functions: normalize formats for backend
+    // Helper function to normalize unitCodes with nested schedules
     const normalizeUnitCodes = (arr = []) =>
       arr.map((u) => ({
         code: String(u.code),
-        isMain: u.isMain !== undefined ? u.isMain : u.isMain ? 1 : 0, // agar boolean bo'lsa 1/0 ga aylantiramiz
-      }));
-
-    const normalizeSchedules = (arr = []) =>
-      arr.map((s) => ({
-        scheduleId: Number(s.scheduleId),
-        isMain: s.isMain !== undefined ? s.isMain : s.main ? 1 : 0,
+        isMain: u.isMain !== undefined ? u.isMain : 0,
+        schedules: (u.schedules || []).map((s) => ({
+          scheduleId: Number(s.scheduleId),
+          isMain: s.isMain !== undefined ? s.isMain : 0,
+        })),
       }));
 
     const updatedData = {};
@@ -174,13 +179,6 @@ const Index = () => {
 
     if (!isEqual(normUnitCodes, origUnitCodes)) {
       updatedData.unitCodes = normUnitCodes;
-    }
-
-    const normSchedules = normalizeSchedules(schedules);
-    const origSchedules = normalizeSchedules(original.schedules || []);
-
-    if (!isEqual(normSchedules, origSchedules)) {
-      updatedData.schedules = normSchedules;
     }
 
     if (Object.keys(updatedData).length === 0) {
@@ -216,7 +214,6 @@ const Index = () => {
       setEntryPointShortName("");
       setBuildingDescription("");
       setUnitCodes([]);
-      setSchedules([]);
       setselectedEntryPoint(null);
 
       queryClient.invalidateQueries(KEYS.entrypoints);
@@ -258,6 +255,14 @@ const Index = () => {
     return unit?.name || code;
   };
 
+  // Helper function to get schedule name by id
+  const getScheduleNameById = (id) => {
+    const schedule = get(allSchedules, "data", []).find(
+      (item) => item.id === id
+    );
+    return schedule?.name || `Schedule ${id}`;
+  };
+
   const columns = [
     {
       header: "№",
@@ -273,20 +278,36 @@ const Index = () => {
     },
     {
       accessorKey: "unitCodes",
-      header: "Подразделения",
+      header: "Подразделения и расписания",
       cell: ({ row }) => {
         const units = row.original.unitCodes || [];
         if (units.length === 0) return "—";
 
         return (
-          <div className="space-y-1">
+          <div className="space-y-2">
             {units.map((unit, idx) => (
-              <div key={idx} className="text-sm">
-                {getUnitNameByCode(unit.code)}
-                {unit.isMain === 1 && (
-                  <span className="ml-2 px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded">
-                    Основной
-                  </span>
+              <div key={idx} className="border-l-2 border-blue-300 pl-2">
+                <div className="text-sm font-medium">
+                  {getUnitNameByCode(unit.code)}
+                  {unit.isMain === 1 && (
+                    <span className="ml-2 px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded">
+                      Основной
+                    </span>
+                  )}
+                </div>
+                {unit.schedules && unit.schedules.length > 0 && (
+                  <div className="ml-2 mt-1 space-y-1">
+                    {unit.schedules.map((sch, schIdx) => (
+                      <div key={schIdx} className="text-xs text-gray-600">
+                        • {getScheduleNameById(sch.scheduleId)}
+                        {sch.isMain === 1 && (
+                          <span className="ml-1 px-1.5 py-0.5 bg-indigo-100 text-indigo-700 text-xs rounded">
+                            Осн.
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
             ))}
@@ -326,7 +347,6 @@ const Index = () => {
               setEntryPointShortName(row.original.entryPointShortName);
               setBuildingDescription(row.original.buildingDescription);
               setUnitCodes(row.original.unitCodes || []);
-              setSchedules(row.original.schedules || []);
               setEditEntryPoint(true);
             }}
             sx={{
@@ -360,16 +380,33 @@ const Index = () => {
     },
   ];
 
-  const handleUnitCodeChange = (index, field, value) => {
+  const handleUnitCodeChange = (unitIndex, field, value) => {
     const updated = [...unitCodes];
-    updated[index][field] = value;
+    updated[unitIndex][field] = value;
     setUnitCodes(updated);
   };
 
-  const handleScheduleChange = (index, field, value) => {
-    const updated = [...schedules];
-    updated[index][field] = value;
-    setSchedules(updated);
+  const handleScheduleChange = (unitIndex, scheduleIndex, field, value) => {
+    const updated = [...unitCodes];
+    updated[unitIndex].schedules[scheduleIndex][field] = value;
+    setUnitCodes(updated);
+  };
+
+  const addScheduleToUnit = (unitIndex) => {
+    const updated = [...unitCodes];
+    if (!updated[unitIndex].schedules) {
+      updated[unitIndex].schedules = [];
+    }
+    updated[unitIndex].schedules.push({ scheduleId: "", isMain: 0 });
+    setUnitCodes(updated);
+  };
+
+  const removeScheduleFromUnit = (unitIndex, scheduleIndex) => {
+    const updated = [...unitCodes];
+    updated[unitIndex].schedules = updated[unitIndex].schedules.filter(
+      (_, i) => i !== scheduleIndex
+    );
+    setUnitCodes(updated);
   };
 
   if (isFetchingEntryPoints || isLoadingEntryPoints) {
@@ -429,15 +466,13 @@ const Index = () => {
             setEntryPointShortName("");
             setBuildingDescription("");
             setUnitCodes([]);
-            setSchedules([]);
           }}
         >
           <Typography variant="h6" className="mb-2">
             Добавить точку доступа
           </Typography>
 
-          {/* Scroll + height fix */}
-          <div className="my-[20px] space-y-[15px] max-h-[60vh] overflow-y-auto ">
+          <div className="my-[20px] space-y-[15px] max-h-[60vh] overflow-y-auto">
             {/* Entry Point Name */}
             <Input
               onChange={(e) => setEntryPointName(e.target.value)}
@@ -468,59 +503,129 @@ const Index = () => {
               required
             />
 
-            {/* Unit Codes */}
+            {/* Unit Codes with nested schedules */}
             <div className="space-y-3">
               <Typography
                 variant="subtitle1"
                 className="font-semibold text-gray-700"
               >
-                Привязать точки доступа к подразделениям
+                Привязать точки доступа к подразделениям и расписаниям
               </Typography>
 
               <AnimatePresence>
-                {unitCodes.map((unit, index) => (
+                {unitCodes.map((unit, unitIndex) => (
                   <motion.div
-                    key={index}
+                    key={unitIndex}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
                     transition={{ duration: 0.3 }}
-                    className="flex items-center gap-3 bg-gray-50 p-3 rounded-xl border border-gray-200"
+                    className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-xl border-2 border-blue-200"
                   >
-                    <CustomSelect
-                      options={optionsEnterprises}
-                      value={unit.code}
-                      placeholder="Выберите подразделение"
-                      onChange={(val) =>
-                        handleUnitCodeChange(index, "code", val)
-                      }
-                      className="flex-1"
-                    />
-                    <label className="flex items-center gap-2 text-sm text-gray-600">
-                      <input
-                        type="checkbox"
-                        checked={unit.isMain === 1}
-                        onChange={(e) =>
-                          handleUnitCodeChange(
-                            index,
-                            "isMain",
-                            e.target.checked ? 1 : 0
+                    {/* Unit Selection */}
+                    <div className="flex items-center gap-3 mb-3">
+                      <CustomSelect
+                        options={optionsEnterprises}
+                        value={unit.code}
+                        placeholder="Выберите подразделение"
+                        onChange={(val) =>
+                          handleUnitCodeChange(unitIndex, "code", val)
+                        }
+                        className="flex-1"
+                      />
+                      <label className="flex items-center gap-2 text-sm text-gray-600">
+                        <input
+                          type="checkbox"
+                          checked={unit.isMain === 1}
+                          onChange={(e) =>
+                            handleUnitCodeChange(
+                              unitIndex,
+                              "isMain",
+                              e.target.checked ? 1 : 0
+                            )
+                          }
+                          className="w-4 h-4 accent-blue-500"
+                        />
+                        Основной
+                      </label>
+                      <button
+                        onClick={() =>
+                          setUnitCodes(
+                            unitCodes.filter((_, i) => i !== unitIndex)
                           )
                         }
-                        className="w-4 h-4 accent-blue-500"
-                      />
-                      Основной
-                    </label>
+                        className="text-red-500 hover:text-red-700 font-bold"
+                      >
+                        ✕
+                      </button>
+                    </div>
 
-                    {/* Delete button */}
-                    <button
-                      onClick={() =>
-                        setUnitCodes(unitCodes.filter((_, i) => i !== index))
-                      }
-                      className="text-red-500 hover:text-red-700"
-                    >
-                      ✕
-                    </button>
+                    {/* Nested Schedules */}
+                    <div className="ml-4 space-y-2">
+                      <Typography
+                        variant="body2"
+                        className="font-medium text-gray-600 mb-2"
+                      >
+                        Расписания для этого подразделения:
+                      </Typography>
+
+                      {unit.schedules &&
+                        unit.schedules.map((sch, scheduleIndex) => (
+                          <motion.div
+                            key={scheduleIndex}
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -10 }}
+                            className="flex items-center gap-2 bg-white p-2 rounded-lg border border-gray-200"
+                          >
+                            <CustomSelect
+                              options={optionsSchedules}
+                              value={sch.scheduleId}
+                              placeholder="Выберите расписание"
+                              onChange={(val) =>
+                                handleScheduleChange(
+                                  unitIndex,
+                                  scheduleIndex,
+                                  "scheduleId",
+                                  val
+                                )
+                              }
+                              className="flex-1"
+                            />
+                            <label className="flex items-center gap-1 text-xs text-gray-600">
+                              <input
+                                type="checkbox"
+                                checked={sch.isMain === 1}
+                                onChange={(e) =>
+                                  handleScheduleChange(
+                                    unitIndex,
+                                    scheduleIndex,
+                                    "isMain",
+                                    e.target.checked ? 1 : 0
+                                  )
+                                }
+                                className="w-3 h-3 accent-indigo-500"
+                              />
+                              Осн.
+                            </label>
+                            <button
+                              onClick={() =>
+                                removeScheduleFromUnit(unitIndex, scheduleIndex)
+                              }
+                              className="text-red-500 hover:text-red-700 text-sm"
+                            >
+                              ✕
+                            </button>
+                          </motion.div>
+                        ))}
+
+                      <button
+                        onClick={() => addScheduleToUnit(unitIndex)}
+                        className="px-3 py-1.5 rounded-lg bg-indigo-100 text-indigo-700 text-xs font-medium hover:bg-indigo-200 transition"
+                      >
+                        + Добавить расписание
+                      </button>
+                    </div>
                   </motion.div>
                 ))}
               </AnimatePresence>
@@ -528,86 +633,19 @@ const Index = () => {
               <motion.button
                 whileTap={{ scale: 0.95 }}
                 onClick={() =>
-                  setUnitCodes([...unitCodes, { code: "", isMain: 0 }])
+                  setUnitCodes([
+                    ...unitCodes,
+                    { code: "", isMain: 0, schedules: [] },
+                  ])
                 }
                 className="px-4 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-sm font-medium shadow-md hover:shadow-lg transition"
               >
-                Добавить
+                Добавить подразделение
               </motion.button>
             </div>
-
-            {/* Schedules */}
-            <div className="space-y-3 mt-6">
-              <Typography
-                variant="subtitle1"
-                className="font-semibold text-gray-700"
-              >
-                Привязать точки доступа к расписаниям
-              </Typography>
-
-              <AnimatePresence>
-                {schedules.map((sch, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.3 }}
-                    className="flex items-center gap-3 bg-gray-50 p-3 rounded-xl border border-gray-200"
-                  >
-                    <CustomSelect
-                      options={optionsSchedules}
-                      value={sch.scheduleId}
-                      placeholder="Выберите расписание"
-                      onChange={(val) =>
-                        handleScheduleChange(index, "scheduleId", val)
-                      }
-                      className="flex-1"
-                    />
-                    <label className="flex items-center gap-2 text-sm text-gray-600">
-                      <input
-                        type="checkbox"
-                        checked={sch.isMain === 1}
-                        onChange={(e) =>
-                          handleScheduleChange(
-                            index,
-                            "isMain",
-                            e.target.checked ? 1 : 0
-                          )
-                        }
-                        className="w-4 h-4 accent-indigo-500"
-                      />
-                      Основной
-                    </label>
-
-                    {/* Delete button */}
-                    <button
-                      onClick={() =>
-                        setSchedules(schedules.filter((_, i) => i !== index))
-                      }
-                      className="text-red-500 hover:text-red-700"
-                    >
-                      ✕
-                    </button>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-
-              <motion.button
-                whileTap={{ scale: 0.95 }}
-                onClick={() =>
-                  setSchedules([...schedules, { scheduleId: "", isMain: 0 }])
-                }
-                className="px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-sm font-medium shadow-md hover:shadow-lg transition"
-              >
-                Добавить
-              </motion.button>
-            </div>
-
-            {/* Submit Button */}
           </div>
 
-          <div className="sticky  bg-white border-t border-gray-200 pt-3 flex justify-end gap-3">
+          <div className="sticky bg-white border-t border-gray-200 pt-3 flex justify-end gap-3">
             <Button
               sx={{
                 textTransform: "initial",
@@ -635,7 +673,6 @@ const Index = () => {
             setEntryPointShortName("");
             setBuildingDescription("");
             setUnitCodes([]);
-            setSchedules([]);
             setselectedEntryPoint(null);
           }}
         >
@@ -674,58 +711,129 @@ const Index = () => {
               required
             />
 
-            {/* Unit Codes */}
+            {/* Unit Codes with nested schedules */}
             <div className="space-y-3">
               <Typography
                 variant="subtitle1"
                 className="font-semibold text-gray-700"
               >
-                Привязать точки доступа к подразделениям
+                Привязать точки доступа к подразделениям и расписаниям
               </Typography>
 
               <AnimatePresence>
-                {unitCodes.map((unit, index) => (
+                {unitCodes.map((unit, unitIndex) => (
                   <motion.div
-                    key={index}
+                    key={unitIndex}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
                     transition={{ duration: 0.3 }}
-                    className="flex items-center gap-3 bg-gray-50 p-3 rounded-xl border border-gray-200"
+                    className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-xl border-2 border-blue-200"
                   >
-                    <CustomSelect
-                      options={optionsEnterprises}
-                      value={unit.code}
-                      placeholder="Выберите подразделение"
-                      onChange={(val) =>
-                        handleUnitCodeChange(index, "code", val)
-                      }
-                      className="flex-1"
-                    />
-                    <label className="flex items-center gap-2 text-sm text-gray-600">
-                      <input
-                        type="checkbox"
-                        checked={unit.isMain === 1}
-                        onChange={(e) =>
-                          handleUnitCodeChange(
-                            index,
-                            "isMain",
-                            e.target.checked ? 1 : 0
+                    {/* Unit Selection */}
+                    <div className="flex items-center gap-3 mb-3">
+                      <CustomSelect
+                        options={optionsEnterprises}
+                        value={unit.code}
+                        placeholder="Выберите подразделение"
+                        onChange={(val) =>
+                          handleUnitCodeChange(unitIndex, "code", val)
+                        }
+                        className="flex-1"
+                      />
+                      <label className="flex items-center gap-2 text-sm text-gray-600">
+                        <input
+                          type="checkbox"
+                          checked={unit.isMain === 1}
+                          onChange={(e) =>
+                            handleUnitCodeChange(
+                              unitIndex,
+                              "isMain",
+                              e.target.checked ? 1 : 0
+                            )
+                          }
+                          className="w-4 h-4 accent-blue-500"
+                        />
+                        Основной
+                      </label>
+                      <button
+                        onClick={() =>
+                          setUnitCodes(
+                            unitCodes.filter((_, i) => i !== unitIndex)
                           )
                         }
-                        className="w-4 h-4 accent-blue-500"
-                      />
-                      Основной
-                    </label>
+                        className="text-red-500 hover:text-red-700 font-bold"
+                      >
+                        ✕
+                      </button>
+                    </div>
 
-                    <button
-                      onClick={() =>
-                        setUnitCodes(unitCodes.filter((_, i) => i !== index))
-                      }
-                      className="text-red-500 hover:text-red-700"
-                    >
-                      ✕
-                    </button>
+                    {/* Nested Schedules */}
+                    <div className="ml-4 space-y-2">
+                      <Typography
+                        variant="body2"
+                        className="font-medium text-gray-600 mb-2"
+                      >
+                        Расписания для этого подразделения:
+                      </Typography>
+
+                      {unit.schedules &&
+                        unit.schedules.map((sch, scheduleIndex) => (
+                          <motion.div
+                            key={scheduleIndex}
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -10 }}
+                            className="flex items-center gap-2 bg-white p-2 rounded-lg border border-gray-200"
+                          >
+                            <CustomSelect
+                              options={optionsSchedules}
+                              value={sch.scheduleId}
+                              placeholder="Выберите расписание"
+                              onChange={(val) =>
+                                handleScheduleChange(
+                                  unitIndex,
+                                  scheduleIndex,
+                                  "scheduleId",
+                                  val
+                                )
+                              }
+                              className="flex-1"
+                            />
+                            <label className="flex items-center gap-1 text-xs text-gray-600">
+                              <input
+                                type="checkbox"
+                                checked={sch.isMain === 1}
+                                onChange={(e) =>
+                                  handleScheduleChange(
+                                    unitIndex,
+                                    scheduleIndex,
+                                    "isMain",
+                                    e.target.checked ? 1 : 0
+                                  )
+                                }
+                                className="w-3 h-3 accent-indigo-500"
+                              />
+                              Осн.
+                            </label>
+                            <button
+                              onClick={() =>
+                                removeScheduleFromUnit(unitIndex, scheduleIndex)
+                              }
+                              className="text-red-500 hover:text-red-700 text-sm"
+                            >
+                              ✕
+                            </button>
+                          </motion.div>
+                        ))}
+
+                      <button
+                        onClick={() => addScheduleToUnit(unitIndex)}
+                        className="px-3 py-1.5 rounded-lg bg-indigo-100 text-indigo-700 text-xs font-medium hover:bg-indigo-200 transition"
+                      >
+                        + Добавить расписание
+                      </button>
+                    </div>
                   </motion.div>
                 ))}
               </AnimatePresence>
@@ -733,78 +841,14 @@ const Index = () => {
               <motion.button
                 whileTap={{ scale: 0.95 }}
                 onClick={() =>
-                  setUnitCodes([...unitCodes, { code: "", isMain: 0 }])
+                  setUnitCodes([
+                    ...unitCodes,
+                    { code: "", isMain: 0, schedules: [] },
+                  ])
                 }
                 className="px-4 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-sm font-medium shadow-md hover:shadow-lg transition"
               >
-                Добавить
-              </motion.button>
-            </div>
-
-            {/* Schedules */}
-            <div className="space-y-3 mt-6">
-              <Typography
-                variant="subtitle1"
-                className="font-semibold text-gray-700"
-              >
-                Привязать точки доступа к расписаниям
-              </Typography>
-
-              <AnimatePresence>
-                {schedules.map((sch, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.3 }}
-                    className="flex items-center gap-3 bg-gray-50 p-3 rounded-xl border border-gray-200"
-                  >
-                    <CustomSelect
-                      options={optionsSchedules}
-                      value={sch.scheduleId}
-                      placeholder="Выберите расписание"
-                      onChange={(val) =>
-                        handleScheduleChange(index, "scheduleId", val)
-                      }
-                      className="flex-1"
-                    />
-                    <label className="flex items-center gap-2 text-sm text-gray-600">
-                      <input
-                        type="checkbox"
-                        checked={sch.isMain === 1}
-                        onChange={(e) =>
-                          handleScheduleChange(
-                            index,
-                            "isMain",
-                            e.target.checked ? 1 : 0
-                          )
-                        }
-                        className="w-4 h-4 accent-indigo-500"
-                      />
-                      Основной
-                    </label>
-
-                    <button
-                      onClick={() =>
-                        setSchedules(schedules.filter((_, i) => i !== index))
-                      }
-                      className="text-red-500 hover:text-red-700"
-                    >
-                      ✕
-                    </button>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-
-              <motion.button
-                whileTap={{ scale: 0.95 }}
-                onClick={() =>
-                  setSchedules([...schedules, { scheduleId: "", isMain: 0 }])
-                }
-                className="px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-sm font-medium shadow-md hover:shadow-lg transition"
-              >
-                Добавить
+                Добавить подразделение
               </motion.button>
             </div>
           </div>
