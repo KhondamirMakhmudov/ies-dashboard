@@ -624,7 +624,6 @@ const Index = () => {
               onChange={(val) => {
                 setLevel1Id(val);
                 setSelectUnitCode(val);
-                setSelectedWorkplace(null);
               }}
               returnObject={false}
             />
