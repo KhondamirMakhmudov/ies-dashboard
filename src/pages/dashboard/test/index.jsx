@@ -1,32 +1,95 @@
 import { useState } from "react";
-import ScheduleModal from "@/components/modal/schedule-modal";
+import SyncIcon from "@mui/icons-material/Sync";
+import { Button } from "@mui/material";
+import { toast } from "react-toastify";
 
-export default function SchedulePage() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+export default function SyncButton({
+  synchronCamera,
+  URLS,
+  id,
+  session,
+  queryClient,
+  KEYS,
+}) {
+  const [loading, setLoading] = useState(false);
 
-  const handleSaveSchedule = (scheduleData) => {
-    console.log("Сохранённое расписание:", scheduleData);
-    // Здесь вы можете отправить данные на сервер
-    // или сохранить в локальном состоянии
-    setIsModalOpen(false);
+  const submitSynchronCamera = async () => {
+    setLoading(true);
+    try {
+      await synchronCamera(
+        {
+          url: `${URLS.newEntryPoints}/${id}/cameras/sync-schedules`,
+          config: {
+            headers: {
+              Authorization: `Bearer ${session?.accessToken}`,
+            },
+          },
+        },
+        {
+          onSuccess: () => {
+            toast.success("Успешно синхрониризирован", {
+              position: "top-center",
+            });
+            queryClient.invalidateQueries(KEYS.entrypoint);
+          },
+          onError: (error) => {
+            toast.error(`Error is ${error}`, { position: "top-right" });
+          },
+        }
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="p-8">
-      <h1 className="text-2xl font-bold mb-4">Управление расписаниями</h1>
+    <Button
+      onClick={submitSynchronCamera}
+      disabled={loading}
+      sx={{
+        textTransform: "initial",
+        fontFamily: "DM Sans, sans-serif",
+        backgroundColor: "#4182F9",
+        boxShadow: "none",
+        color: "white",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: "4px",
+        fontSize: "14px",
+        minWidth: "120px",
+        borderRadius: "8px",
+        "&:disabled": { opacity: 0.7, cursor: "not-allowed" },
+      }}
+      variant="contained"
+    >
+      {loading ? (
+        <>
+          <p className="md:block hidden">Синхронизация...</p>
+          <SyncIcon
+            sx={{
+              animation: "spin 1s linear infinite",
+            }}
+          />
+        </>
+      ) : (
+        <>
+          <p className="md:block hidden">Cинхронизация</p>
+          <SyncIcon />
+        </>
+      )}
 
-      <button
-        onClick={() => setIsModalOpen(true)}
-        className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-      >
-        Создать новое расписание
-      </button>
-
-      <ScheduleModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSave={handleSaveSchedule}
-      />
-    </div>
+      {/* CSS animation */}
+      <style jsx>{`
+        @keyframes spin {
+          from {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(360deg);
+          }
+        }
+      `}</style>
+    </Button>
   );
 }

@@ -146,14 +146,16 @@ const Index = () => {
         {/* Vaqtida kelganlar */}
         <div className="flex-1 bg-[#E8F6F0] border border-green-600 rounded-lg p-4 text-center">
           <h3 className="text-lg font-semibold text-green-700">
-            Пришли вовремя
+            Доступ разрешен
           </h3>
           <p className="text-3xl font-bold text-green-800">{onTimeCount}</p>
         </div>
 
         {/* Kechikkanlar */}
         <div className="flex-1 bg-[#FAE7E7] border border-red-600 rounded-lg p-4 text-center">
-          <h3 className="text-lg font-semibold text-red-700">Опоздавшие</h3>
+          <h3 className="text-lg font-semibold text-red-700">
+            Отказ в доступе
+          </h3>
           <p className="text-3xl font-bold text-red-800">{lateCount}</p>
         </div>
       </div>
@@ -161,7 +163,7 @@ const Index = () => {
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.3 }}
-        className="bg-white col-span-12 p-6 my-[50px] rounded-md shadow-md w-full"
+        className="bg-white col-span-12 p-6 my-[20px] rounded-md border border-gray-200 w-full"
       >
         <div className="flex gap-6 items-end flex-wrap">
           {/* Start date */}
@@ -234,7 +236,7 @@ const Index = () => {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.3 }}
-          className="bg-white col-span-12 p-6 my-[50px] rounded-md shadow-md w-full"
+          className="bg-white col-span-12 p-6 my-[20px] rounded-md border border-gray-200 w-full"
         >
           <CustomTable
             data={get(reportOfEmployees, "data", []).flat()}

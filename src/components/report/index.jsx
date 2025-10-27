@@ -19,7 +19,7 @@ import {
 } from "recharts";
 import NoData from "../no-data";
 
-const COLORS = ["#22C55E", "#7EE1B7"];
+const COLORS = ["#22C55E", "#E7042E"];
 
 const ReportComponent = ({
   data,

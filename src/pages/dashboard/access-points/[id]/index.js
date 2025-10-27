@@ -25,11 +25,14 @@ import DeleteModal from "@/components/modal/delete-modal";
 import useGetPythonQuery from "@/hooks/python/useGetQuery";
 import { config } from "@/config";
 import CustomTable from "@/components/table";
+import SyncIcon from "@mui/icons-material/Sync";
 import usePutQuery from "@/hooks/java/usePutQuery";
+import SyncButton from "@/components/button/sync-button";
 
 const Index = () => {
   const queryClient = useQueryClient();
   const { data: session } = useSession();
+  const [loading, setLoading] = useState(false);
   const [selectScheduleId, setSelectScheduleId] = useState(null);
   const [entryPointScheduleId, setEntryPointScheduleId] = useState(null);
   const [createModal, setCreateModal] = useState(false);
@@ -131,7 +134,7 @@ const Index = () => {
       Authorization: `Bearer ${session?.accessToken}`,
       Accept: "application/json",
     },
-    enabled: !!session?.accessToken,
+    enabled: !!id && !!session?.accessToken,
   });
 
   const options = get(allSchedules, "data", []).map((entry) => ({
@@ -181,6 +184,8 @@ const Index = () => {
       }
     );
   };
+
+  // connect employees to schedule of the entrypoint
 
   const { mutate: connectEmployeesToSchedule } = usePostQuery({
     listKeyId: "connect-employee-to-schedule",
@@ -251,7 +256,7 @@ const Index = () => {
         currentMainSchedule.scheduleId !== selectScheduleId
       ) {
         try {
-          await editPriorityOfConnection({
+          editPriorityOfConnection({
             url: `${URLS.scheduleOfEntrypoints}/${currentMainSchedule.scheduleId}/entry-point/${id}/priority?priority=0`,
             attributes: {
               scheduleId: +currentMainSchedule.scheduleId,
@@ -305,7 +310,7 @@ const Index = () => {
     else if (newMainScheduleId) {
       // First set the old main to non-main
       try {
-        await editPriorityOfConnection({
+        editPriorityOfConnection({
           url: `${URLS.scheduleOfEntrypoints}/${selectScheduleId}/entry-point/${id}/priority?priority=0`,
           attributes: {
             scheduleId: +selectScheduleId,
@@ -392,8 +397,8 @@ const Index = () => {
     );
   }
   const tabs = [
-    { key: "org-units", label: "Подразделения" },
-    { key: "schedule", label: "Расписания" },
+    { key: "org-units", label: "Подразделения и расписание" },
+    // { key: "schedule", label: "Расписания" },
     { key: "employees", label: "Сотрудники" },
   ];
 
@@ -506,9 +511,17 @@ const Index = () => {
         className="bg-white p-6 my-[20px] rounded-md border border-gray-200"
       >
         <div className="bg-white rounded-xl   mx-auto ">
-          <h1 className="text-2xl font-bold text-gray-800 mb-6 border-b border-b-gray-200 pb-3">
-            Точка доступа №{id}
-          </h1>
+          <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
+            <h1 className="text-2xl font-bold text-gray-800  border-b border-b-gray-200 pb-3">
+              Точка доступа №{id}
+            </h1>
+
+            <SyncButton
+              id={id}
+              session={session}
+              url={`${URLS.newEntryPoints}/${id}/cameras/sync-schedules`}
+            />
+          </div>
 
           <div className="space-y-4">
             <div>
@@ -610,29 +623,59 @@ const Index = () => {
                       Подразделения не привязаны
                     </p>
                   ) : (
-                    <ul className="space-y-[10px]">
+                    <ul className="space-y-3">
                       {get(entrypoint, "data.unitCodes", []).map(
                         (unitCode, index) => (
                           <li
                             key={index}
-                            className="border border-gray-200 flex justify-between px-4 py-2 rounded-md"
+                            className="border border-gray-200 bg-white rounded-xl shadow-sm hover:shadow-md transition p-4"
                           >
-                            <div>
-                              <Typography variant="h6">
-                                {get(unitCode, "name")}
-                              </Typography>
-                              <p className="text-gray-300 text-sm">
-                                Код подразделение: {get(unitCode, "code")}
-                              </p>
-                            </div>
-
-                            <div className="flex justify-center items-center">
-                              {get(unitCode, "main") === true && (
-                                <p className="gap-1 px-2 py-1 text-xs font-medium bg-green-100 text-green-500 rounded-full">
-                                  Основная точка доступа
+                            <div className="flex justify-between items-start mb-2">
+                              <div>
+                                <h3 className="text-base font-semibold text-gray-800">
+                                  {get(unitCode, "name")}
+                                </h3>
+                                <p className="text-sm text-gray-500">
+                                  Код подразделения:{" "}
+                                  <span className="font-medium text-gray-700">
+                                    {get(unitCode, "code")}
+                                  </span>
                                 </p>
+                              </div>
+
+                              {get(unitCode, "isMain") === 1 && (
+                                <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-600 rounded-full">
+                                  Основная точка доступа
+                                </span>
                               )}
                             </div>
+
+                            {!isEmpty(get(unitCode, "schedules", [])) && (
+                              <div className="mt-3 border-t border-gray-100 pt-2">
+                                <p className="text-xs text-gray-400 mb-1">
+                                  Графики:
+                                </p>
+                                <ul className="space-y-1">
+                                  {get(unitCode, "schedules", []).map(
+                                    (schedule, idx) => (
+                                      <li
+                                        key={idx}
+                                        className="flex justify-between items-center bg-gray-50 px-3 py-1.5 rounded-md"
+                                      >
+                                        <p className="text-sm font-medium text-gray-700">
+                                          {get(schedule, "scheduleName")}
+                                        </p>
+                                        {get(schedule, "isMain") === 1 && (
+                                          <span className="text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full">
+                                            Основной график
+                                          </span>
+                                        )}
+                                      </li>
+                                    )
+                                  )}
+                                </ul>
+                              </div>
+                            )}
                           </li>
                         )
                       )}
@@ -641,7 +684,7 @@ const Index = () => {
                 </div>
               )}
 
-              {tab === "schedule" && (
+              {/* {tab === "schedule" && (
                 <div>
                   <div className="flex border-b border-b-gray-200 p-3 justify-between items-center">
                     <h2 className="text-xl font-semibold text-gray-800">
@@ -675,7 +718,7 @@ const Index = () => {
                     columns={columns}
                   />
                 </div>
-              )}
+              )} */}
 
               {tab === "employees" && (
                 <motion.div
@@ -765,7 +808,9 @@ const Index = () => {
           open={createConnectModal}
           closeClick={() => {
             setCreateConnectModal(false);
+            setSelectedSchedule(null);
             setSelectedEmployees(new Set());
+            setSelectedPosition(null);
             setSearchTerm(""); // yopilganda qidiruvni tozalaymiz
           }}
         >

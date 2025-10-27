@@ -127,7 +127,7 @@ const Index = () => {
     isFetching: isFetchingReport,
   } = useGetQuery({
     key: KEYS.employeeReport,
-    url: `${URLS.logEntersOfEmployeeById}uuid/${employee_id}/dates/new-output`,
+    url: `${URLS.logEntersOfEmployeeById}${employee_id}/dates/new-output`,
     headers: {
       Authorization: `Bearer ${session?.accessToken}`,
       Accept: "application/json",
@@ -314,11 +314,11 @@ const Index = () => {
         <motion.div
           initial={{ opacity: 0, scale: 0 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-white mb-5 border border-[#E9E9E9] w-full grid grid-cols-1 md:grid-cols-12 mt-[10px] rounded-md"
+          className="bg-white mb-5 border border-[#E9E9E9] w-full grid grid-cols-1 lg:grid-cols-12 mt-[10px] rounded-md"
         >
           {/* Chap tomonda profil */}
-          <div className="md:col-span-3 flex flex-col gap-2 items-center text-center border-b md:border-b-0 md:border-r border-[#E9E9E9] py-5 px-4">
-            <div className="w-[150px] h-[150px] sm:w-[180px] sm:h-[180px] rounded-full overflow-hidden border border-[#C9C9C9]">
+          <div className="lg:col-span-3 flex flex-col gap-2 items-center text-center border-b md:border-b-0 md:border-r border-[#E9E9E9] py-5 px-4">
+            <div className="w-[150px] h-[150px] lg:w-[170px] lg:h-[170px] rounded-full overflow-hidden border border-[#C9C9C9]">
               <Image
                 src={
                   isEmpty(
@@ -370,14 +370,14 @@ const Index = () => {
           </div>
 
           {/* O‘ng tomonda tabs + ma’lumotlar */}
-          <div className="md:col-span-9 w-full">
+          <div className="lg:col-span-9 w-full">
             <motion.div
               initial={{ opacity: 0, scale: 0 }}
               animate={{ opacity: 1, scale: 1 }}
               className="bg-white p-0 border-b border-b-[#E9E9E9]"
             >
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                <div className="flex gap-3 px-3">
+                <div className="flex gap-3 px-3 py-1">
                   {tabs.map((t) => (
                     <button
                       key={t.key}
@@ -393,7 +393,7 @@ const Index = () => {
                       {tab === t.key && (
                         <motion.span
                           layoutId="underline"
-                          className="absolute left-0 bottom-0 h-[2px] w-full bg-blue-600 rounded-full"
+                          className="absolute left-0 -bottom-1 h-[2px] w-full bg-blue-600 rounded-full"
                           transition={{
                             type: "spring",
                             stiffness: 500,

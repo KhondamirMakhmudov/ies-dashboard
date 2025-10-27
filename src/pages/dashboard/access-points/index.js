@@ -22,7 +22,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import useGetPythonQuery from "@/hooks/python/useGetQuery";
 import NoData from "@/components/no-data";
 import { useRouter } from "next/router";
-
+import ReportIcon from "@mui/icons-material/Report";
 const Index = () => {
   const { data: session } = useSession();
   const router = useRouter();
@@ -154,10 +154,10 @@ const Index = () => {
     const normalizeUnitCodes = (arr = []) =>
       arr.map((u) => ({
         code: String(u.code),
-        isMain: u.isMain !== undefined ? u.isMain : 0,
+        isMain: Number(u.isMain), // Convert to number for consistent comparison
         schedules: (u.schedules || []).map((s) => ({
           scheduleId: Number(s.scheduleId),
-          isMain: s.isMain !== undefined ? s.isMain : 0,
+          isMain: Number(s.isMain), // Convert to number for consistent comparison
         })),
       }));
 
@@ -177,7 +177,11 @@ const Index = () => {
     const normUnitCodes = normalizeUnitCodes(unitCodes);
     const origUnitCodes = normalizeUnitCodes(original.unitCodes || []);
 
-    if (!isEqual(normUnitCodes, origUnitCodes)) {
+    // Deep comparison that handles arrays properly
+    const hasUnitCodesChanged =
+      JSON.stringify(normUnitCodes) !== JSON.stringify(origUnitCodes);
+
+    if (hasUnitCodesChanged) {
       updatedData.unitCodes = normUnitCodes;
     }
 
@@ -204,7 +208,7 @@ const Index = () => {
         throw new Error(errorData?.message || "Ошибка при обновлении");
       }
 
-      toast.success("Checkpoint muvaffaqиятно обновлен", {
+      toast.success("Точка доступа успешно обновлена", {
         position: "top-center",
       });
 
@@ -218,7 +222,13 @@ const Index = () => {
 
       queryClient.invalidateQueries(KEYS.entrypoints);
     } catch (err) {
-      toast.error(err.message, { position: "top-right" });
+      const errorMessage =
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        err?.message ||
+        "Произошла ошибка при обновлении";
+
+      toast.error(errorMessage, { position: "top-right" });
     }
   };
 
@@ -460,6 +470,7 @@ const Index = () => {
         <MethodModal
           open={createAccessPoint}
           showCloseIcon={true}
+          width={"50%"}
           closeClick={() => {
             setCreateAccessPoint(false);
             setEntryPointName("");
@@ -468,190 +479,385 @@ const Index = () => {
             setUnitCodes([]);
           }}
         >
-          <Typography variant="h6" className="mb-2">
-            Добавить точку доступа
-          </Typography>
+          {/* Header Section */}
+          <div className="sticky top-0 bg-white z-10 pb-4 border-b border-gray-200">
+            <Typography
+              variant="h5"
+              className="font-bold text-gray-800 flex items-center gap-2"
+            >
+              Добавить точку доступа
+            </Typography>
+            <Typography variant="body2" className="text-gray-500 mt-1 ml-12">
+              Заполните информацию о новой точке доступа
+            </Typography>
+          </div>
 
-          <div className="my-[20px] space-y-[15px] max-h-[60vh] overflow-y-auto">
-            {/* Entry Point Name */}
-            <Input
-              onChange={(e) => setEntryPointName(e.target.value)}
-              label={"Имя точки входа"}
-              placeholder="Введите имя точки входа"
-              inputClass="!h-[45px] rounded-[8px] !border-gray-300 text-[15px]"
-              labelClass="text-sm"
-              required
-            />
+          <div className="my-6 space-y-6 max-h-[60vh] overflow-y-auto px-1">
+            {/* Basic Information Section */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-1 h-6 bg-blue-500 rounded-full"></div>
+                <Typography
+                  variant="subtitle1"
+                  className="font-semibold text-gray-700"
+                >
+                  Основная информация
+                </Typography>
+              </div>
 
-            {/* Short Name */}
-            <Input
-              onChange={(e) => setEntryPointShortName(e.target.value)}
-              label={"Краткое название точки входа"}
-              placeholder="Введите краткое название"
-              inputClass="!h-[45px] rounded-[8px] !border-gray-300 text-[15px]"
-              labelClass="text-sm"
-              required
-            />
+              <div className="bg-gray-50 p-4 rounded-xl space-y-4">
+                {/* Entry Point Name */}
+                <div>
+                  <Input
+                    value={entryPointName}
+                    onChange={(e) => setEntryPointName(e.target.value)}
+                    label={"Имя точки входа"}
+                    placeholder="Например: Главный вход"
+                    inputClass="!h-[48px] rounded-[10px] !border-gray-300 text-[15px] bg-white"
+                    labelClass="text-sm font-medium text-gray-700 mb-1"
+                    required
+                  />
+                  <p className="text-xs text-gray-500 mt-1 ml-1">
+                    Полное название точки входа в здание
+                  </p>
+                </div>
 
-            {/* Building Description */}
-            <Input
-              onChange={(e) => setBuildingDescription(e.target.value)}
-              label={"Описание здания"}
-              placeholder="например: Главный вход в административное здание"
-              inputClass="!h-[45px] rounded-[8px] !border-gray-300 text-[15px]"
-              labelClass="text-sm"
-              required
-            />
+                {/* Short Name */}
+                <div>
+                  <Input
+                    value={entryPointShortName}
+                    onChange={(e) => setEntryPointShortName(e.target.value)}
+                    label={"Краткое название"}
+                    placeholder="Например: Вход 1"
+                    inputClass="!h-[48px] rounded-[10px] !border-gray-300 text-[15px] bg-white"
+                    labelClass="text-sm font-medium text-gray-700 mb-1"
+                    required
+                  />
+                  <p className="text-xs text-gray-500 mt-1 ml-1">
+                    Короткое название для быстрого поиска
+                  </p>
+                </div>
 
-            {/* Unit Codes with nested schedules */}
-            <div className="space-y-3">
-              <Typography
-                variant="subtitle1"
-                className="font-semibold text-gray-700"
-              >
-                Привязать точки доступа к подразделениям и расписаниям
-              </Typography>
+                {/* Building Description */}
+                <div>
+                  <Input
+                    value={buildingDescription}
+                    onChange={(e) => setBuildingDescription(e.target.value)}
+                    label={"Описание"}
+                    placeholder="Например: Главный вход в административное здание"
+                    inputClass="!h-[48px] rounded-[10px] !border-gray-300 text-[15px] bg-white"
+                    labelClass="text-sm font-medium text-gray-700 mb-1"
+                    required
+                  />
+                  <p className="text-xs text-gray-500 mt-1 ml-1">
+                    Дополнительная информация о расположении
+                  </p>
+                </div>
+              </div>
+            </div>
 
-              <AnimatePresence>
-                {unitCodes.map((unit, unitIndex) => (
-                  <motion.div
-                    key={unitIndex}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.3 }}
-                    className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-xl border-2 border-blue-200"
+            {/* Unit Codes Section */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-1 h-6 bg-blue-500  rounded-full"></div>
+                  <Typography
+                    variant="subtitle1"
+                    className="font-semibold text-gray-700"
                   >
-                    {/* Unit Selection */}
-                    <div className="flex items-center gap-3 mb-3">
-                      <CustomSelect
-                        options={optionsEnterprises}
-                        value={unit.code}
-                        placeholder="Выберите подразделение"
-                        onChange={(val) =>
-                          handleUnitCodeChange(unitIndex, "code", val)
-                        }
-                        className="flex-1"
-                      />
-                      <label className="flex items-center gap-2 text-sm text-gray-600">
-                        <input
-                          type="checkbox"
-                          checked={unit.isMain === 1}
-                          onChange={(e) =>
-                            handleUnitCodeChange(
-                              unitIndex,
-                              "isMain",
-                              e.target.checked ? 1 : 0
-                            )
-                          }
-                          className="w-4 h-4 accent-blue-500"
-                        />
-                        Основной
-                      </label>
-                      <button
-                        onClick={() =>
-                          setUnitCodes(
-                            unitCodes.filter((_, i) => i !== unitIndex)
-                          )
-                        }
-                        className="text-red-500 hover:text-red-700 font-bold"
-                      >
-                        ✕
-                      </button>
-                    </div>
+                    Привязка подразделений
+                  </Typography>
+                </div>
+                {unitCodes.length > 0 && (
+                  <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full font-medium">
+                    {unitCodes.length}{" "}
+                    {unitCodes.length === 1 ? "подразделение" : "подразделений"}
+                  </span>
+                )}
+              </div>
 
-                    {/* Nested Schedules */}
-                    <div className="ml-4 space-y-2">
-                      <Typography
-                        variant="body2"
-                        className="font-medium text-gray-600 mb-2"
-                      >
-                        Расписания для этого подразделения:
-                      </Typography>
+              <p className="text-sm text-gray-600 bg-blue-50 border-l-4 border-blue-400 p-3 rounded-r-lg">
+                <ReportIcon /> Привяжите точку доступа к подразделениям и их
+                расписаниям работы
+              </p>
 
-                      {unit.schedules &&
-                        unit.schedules.map((sch, scheduleIndex) => (
-                          <motion.div
-                            key={scheduleIndex}
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -10 }}
-                            className="flex items-center gap-2 bg-white p-2 rounded-lg border border-gray-200"
-                          >
+              {unitCodes.length === 0 ? (
+                <div className="text-center py-8 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
+                  <Typography variant="body2" className="text-gray-500 mb-1">
+                    Подразделения не добавлены
+                  </Typography>
+                  <Typography variant="caption" className="text-gray-400">
+                    Нажмите кнопку ниже, чтобы добавить подразделение
+                  </Typography>
+                </div>
+              ) : (
+                <AnimatePresence>
+                  {unitCodes.map((unit, unitIndex) => (
+                    <motion.div
+                      key={unitIndex}
+                      initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                      transition={{ duration: 0.2 }}
+                      className="bg-white border-2 border-gray-200 rounded-xl  hover:border-indigo-300 transition-all shadow-sm"
+                    >
+                      {/* Unit Header */}
+                      <div className="bg-gradient-to-r from-indigo-50 to-blue-50 p-4 border-b border-gray-200  rounded-t-xl ">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-[#4182F9] rounded-lg flex items-center justify-center text-white font-bold shadow-md">
+                            {unitIndex + 1}
+                          </div>
+                          <div className="flex-1">
                             <CustomSelect
-                              options={optionsSchedules}
-                              value={sch.scheduleId}
-                              placeholder="Выберите расписание"
+                              options={optionsEnterprises}
+                              value={unit.code}
+                              placeholder="Выберите подразделение"
                               onChange={(val) =>
-                                handleScheduleChange(
-                                  unitIndex,
-                                  scheduleIndex,
-                                  "scheduleId",
-                                  val
-                                )
+                                handleUnitCodeChange(unitIndex, "code", val)
                               }
                               className="flex-1"
                             />
-                            <label className="flex items-center gap-1 text-xs text-gray-600">
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <label className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg border border-gray-200 cursor-pointer hover:bg-green-50 transition">
                               <input
                                 type="checkbox"
-                                checked={sch.isMain === 1}
+                                checked={unit.isMain === 1}
                                 onChange={(e) =>
-                                  handleScheduleChange(
+                                  handleUnitCodeChange(
                                     unitIndex,
-                                    scheduleIndex,
                                     "isMain",
                                     e.target.checked ? 1 : 0
                                   )
                                 }
-                                className="w-3 h-3 accent-indigo-500"
+                                className="w-4 h-4"
                               />
-                              Осн.
+                              <span className="text-sm font-medium text-gray-700">
+                                Основной
+                              </span>
                             </label>
                             <button
                               onClick={() =>
-                                removeScheduleFromUnit(unitIndex, scheduleIndex)
+                                setUnitCodes(
+                                  unitCodes.filter((_, i) => i !== unitIndex)
+                                )
                               }
-                              className="text-red-500 hover:text-red-700 text-sm"
+                              className="w-9 h-9 flex items-center justify-center bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition"
+                              title="Удалить подразделение"
                             >
-                              ✕
+                              <svg
+                                className="w-5 h-5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M6 18L18 6M6 6l12 12"
+                                />
+                              </svg>
                             </button>
-                          </motion.div>
-                        ))}
+                          </div>
+                        </div>
+                      </div>
 
-                      <button
-                        onClick={() => addScheduleToUnit(unitIndex)}
-                        className="px-3 py-1.5 rounded-lg bg-indigo-100 text-indigo-700 text-xs font-medium hover:bg-indigo-200 transition"
-                      >
-                        + Добавить расписание
-                      </button>
-                    </div>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
+                      {/* Schedules Section */}
+                      <div className="p-4">
+                        <div className="flex items-center gap-2 mb-3">
+                          <svg
+                            className="w-5 h-5 text-indigo-500"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                          </svg>
+                          <Typography
+                            variant="body2"
+                            className="font-semibold text-gray-700"
+                          >
+                            Расписания доступа
+                          </Typography>
+                          {unit.schedules && unit.schedules.length > 0 && (
+                            <span className="text-xs bg-indigo-100 text-indigo-600 px-2 py-0.5 rounded-full">
+                              {unit.schedules.length}
+                            </span>
+                          )}
+                        </div>
+
+                        {unit.schedules && unit.schedules.length > 0 ? (
+                          <div className="space-y-2">
+                            {unit.schedules.map((sch, scheduleIndex) => (
+                              <motion.div
+                                key={scheduleIndex}
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -10 }}
+                                className="flex items-center gap-2 bg-gray-50 p-3 rounded-lg border border-gray-200 hover:border-indigo-300 transition-all"
+                              >
+                                <span className="w-6 h-6 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center text-xs font-bold">
+                                  {scheduleIndex + 1}
+                                </span>
+                                <CustomSelect
+                                  options={optionsSchedules}
+                                  value={sch.scheduleId}
+                                  placeholder="Выберите расписание"
+                                  onChange={(val) =>
+                                    handleScheduleChange(
+                                      unitIndex,
+                                      scheduleIndex,
+                                      "scheduleId",
+                                      val
+                                    )
+                                  }
+                                  className="flex-1"
+                                />
+                                <label className="flex items-center gap-1.5 bg-white px-2.5 py-1.5 rounded-md border border-gray-200 cursor-pointer hover:bg-green-50 transition">
+                                  <input
+                                    type="checkbox"
+                                    checked={sch.isMain === 1}
+                                    onChange={(e) =>
+                                      handleScheduleChange(
+                                        unitIndex,
+                                        scheduleIndex,
+                                        "isMain",
+                                        e.target.checked ? 1 : 0
+                                      )
+                                    }
+                                    className="w-3.5 h-3.5"
+                                  />
+                                  <span className="text-xs font-medium text-gray-700">
+                                    Осн.
+                                  </span>
+                                </label>
+                                <button
+                                  onClick={() =>
+                                    removeScheduleFromUnit(
+                                      unitIndex,
+                                      scheduleIndex
+                                    )
+                                  }
+                                  className="w-8 h-8 flex items-center justify-center bg-red-50 hover:bg-red-100 text-red-600 rounded-md transition"
+                                  title="Удалить расписание"
+                                >
+                                  <svg
+                                    className="w-4 h-4"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M6 18L18 6M6 6l12 12"
+                                    />
+                                  </svg>
+                                </button>
+                              </motion.div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-6 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                            <svg
+                              className="w-10 h-10 mx-auto text-gray-300 mb-2"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={1.5}
+                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                              />
+                            </svg>
+                            <Typography
+                              variant="caption"
+                              className="text-gray-500"
+                            >
+                              Расписания не добавлены
+                            </Typography>
+                          </div>
+                        )}
+
+                        <button
+                          onClick={() => addScheduleToUnit(unitIndex)}
+                          className="w-full mt-3 px-4 py-2.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-sm font-medium transition-all flex items-center justify-center gap-2 border border-indigo-200"
+                        >
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 4v16m8-8H4"
+                            />
+                          </svg>
+                          Добавить расписание
+                        </button>
+                      </div>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              )}
 
               <motion.button
-                whileTap={{ scale: 0.95 }}
                 onClick={() =>
                   setUnitCodes([
                     ...unitCodes,
                     { code: "", isMain: 0, schedules: [] },
                   ])
                 }
-                className="px-4 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-sm font-medium shadow-md hover:shadow-lg transition"
+                className="w-full px-5 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
               >
                 Добавить подразделение
               </motion.button>
             </div>
           </div>
 
-          <div className="sticky bg-white border-t border-gray-200 pt-3 flex justify-end gap-3">
+          {/* Footer Actions */}
+          <div className="sticky top-0 bg-white border-t-2 border-gray-200 pt-4 mt-6 flex justify-end gap-3">
             <Button
               sx={{
                 textTransform: "initial",
-                backgroundColor: "#4182F9",
+                backgroundColor: "#e5e7eb",
+                color: "#374151",
+                borderRadius: "10px",
+                fontWeight: "600",
+                px: 4,
+                py: 1.5,
+              }}
+              onClick={() => {
+                setCreateAccessPoint(false);
+                setEntryPointName("");
+                setEntryPointShortName("");
+                setBuildingDescription("");
+                setUnitCodes([]);
+              }}
+            >
+              Отмена
+            </Button>
+            <Button
+              sx={{
+                textTransform: "initial",
+                background: "#4182F9",
                 color: "white",
-                borderRadius: "8px",
+                borderRadius: "10px",
+                fontWeight: "600",
+                px: 4,
+                py: 1.5,
               }}
               variant="contained"
               onClick={submitCreateEntryPoint}
@@ -661,7 +867,6 @@ const Index = () => {
           </div>
         </MethodModal>
       )}
-
       {/* EDIT MODAL */}
       {editEntryPoint && selectedEntryPoint && (
         <MethodModal
@@ -676,194 +881,406 @@ const Index = () => {
             setselectedEntryPoint(null);
           }}
         >
-          <Typography variant="h6" className="mb-2">
-            Редактировать точку доступа
-          </Typography>
+          {/* Header Section */}
+          <div className="sticky top-0 bg-white z-10 pb-4 border-b border-gray-200">
+            <Typography
+              variant="h5"
+              className="font-bold text-gray-800 flex items-center gap-2"
+            >
+              Редактировать точку доступа
+            </Typography>
+            <Typography variant="body2" className="text-gray-500 mt-1 ml-12">
+              Внесите необходимые изменения в точку доступа
+            </Typography>
+          </div>
 
-          <div className="my-[20px] space-y-[15px] max-h-[60vh] overflow-y-auto">
-            <Input
-              value={entryPointName}
-              onChange={(e) => setEntryPointName(e.target.value)}
-              label={"Имя точки входа"}
-              placeholder="Введите имя точки входа"
-              inputClass="!h-[45px] rounded-[8px] !border-gray-300 text-[15px]"
-              labelClass="text-sm"
-              required
-            />
+          <div className="my-6 space-y-6 max-h-[60vh] overflow-y-auto px-1">
+            {/* Basic Information Section */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-1 h-6 bg-amber-500 rounded-full"></div>
+                <Typography
+                  variant="subtitle1"
+                  className="font-semibold text-gray-700"
+                >
+                  Основная информация
+                </Typography>
+              </div>
 
-            <Input
-              value={entryPointShortName}
-              onChange={(e) => setEntryPointShortName(e.target.value)}
-              label={"Краткое название точки входа"}
-              placeholder="Введите краткое название"
-              inputClass="!h-[45px] rounded-[8px] !border-gray-300 text-[15px]"
-              labelClass="text-sm"
-              required
-            />
+              <div className="bg-gray-50 p-4 rounded-xl space-y-4">
+                {/* Entry Point Name */}
+                <div>
+                  <Input
+                    value={entryPointName}
+                    onChange={(e) => setEntryPointName(e.target.value)}
+                    label={"Имя точки входа"}
+                    placeholder="Например: Главный вход"
+                    inputClass="!h-[48px] rounded-[10px] !border-gray-300 text-[15px] bg-white"
+                    labelClass="text-sm font-medium text-gray-700 mb-1"
+                    required
+                  />
+                  <p className="text-xs text-gray-500 mt-1 ml-1">
+                    Полное название точки входа в здание
+                  </p>
+                </div>
 
-            <Input
-              value={buildingDescription}
-              onChange={(e) => setBuildingDescription(e.target.value)}
-              label={"Описание здания"}
-              placeholder="например: Главный вход в административное здание"
-              inputClass="!h-[45px] rounded-[8px] !border-gray-300 text-[15px]"
-              labelClass="text-sm"
-              required
-            />
+                {/* Short Name */}
+                <div>
+                  <Input
+                    value={entryPointShortName}
+                    onChange={(e) => setEntryPointShortName(e.target.value)}
+                    label={"Краткое название"}
+                    placeholder="Например: Вход 1"
+                    inputClass="!h-[48px] rounded-[10px] !border-gray-300 text-[15px] bg-white"
+                    labelClass="text-sm font-medium text-gray-700 mb-1"
+                    required
+                  />
+                  <p className="text-xs text-gray-500 mt-1 ml-1">
+                    Короткое название для быстрого поиска
+                  </p>
+                </div>
 
-            {/* Unit Codes with nested schedules */}
-            <div className="space-y-3">
-              <Typography
-                variant="subtitle1"
-                className="font-semibold text-gray-700"
-              >
-                Привязать точки доступа к подразделениям и расписаниям
-              </Typography>
+                {/* Building Description */}
+                <div>
+                  <Input
+                    value={buildingDescription}
+                    onChange={(e) => setBuildingDescription(e.target.value)}
+                    label={"Описание"}
+                    placeholder="Например: Главный вход в административное здание"
+                    inputClass="!h-[48px] rounded-[10px] !border-gray-300 text-[15px] bg-white"
+                    labelClass="text-sm font-medium text-gray-700 mb-1"
+                    required
+                  />
+                  <p className="text-xs text-gray-500 mt-1 ml-1">
+                    Дополнительная информация о расположении
+                  </p>
+                </div>
+              </div>
+            </div>
 
-              <AnimatePresence>
-                {unitCodes.map((unit, unitIndex) => (
-                  <motion.div
-                    key={unitIndex}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.3 }}
-                    className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-xl border-2 border-blue-200"
+            {/* Unit Codes Section */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-1 h-6 bg-indigo-500 rounded-full"></div>
+                  <Typography
+                    variant="subtitle1"
+                    className="font-semibold text-gray-700"
                   >
-                    {/* Unit Selection */}
-                    <div className="flex items-center gap-3 mb-3">
-                      <CustomSelect
-                        options={optionsEnterprises}
-                        value={unit.code}
-                        placeholder="Выберите подразделение"
-                        onChange={(val) =>
-                          handleUnitCodeChange(unitIndex, "code", val)
-                        }
-                        className="flex-1"
+                    Привязка подразделений
+                  </Typography>
+                </div>
+                {unitCodes.length > 0 && (
+                  <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full font-medium">
+                    {unitCodes.length}{" "}
+                    {unitCodes.length === 1 ? "подразделение" : "подразделений"}
+                  </span>
+                )}
+              </div>
+
+              <p className="text-sm text-gray-600 bg-blue-50 border-l-4 border-blue-400 p-3 rounded-r-lg">
+                ℹ️ Привяжите точку доступа к подразделениям и их расписаниям
+                работы
+              </p>
+
+              {unitCodes.length === 0 ? (
+                <div className="text-center py-8 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
+                  <div className="text-gray-400 mb-3">
+                    <svg
+                      className="w-16 h-16 mx-auto"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.5}
+                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
                       />
-                      <label className="flex items-center gap-2 text-sm text-gray-600">
-                        <input
-                          type="checkbox"
-                          checked={unit.isMain === 1}
-                          onChange={(e) =>
-                            handleUnitCodeChange(
-                              unitIndex,
-                              "isMain",
-                              e.target.checked ? 1 : 0
-                            )
-                          }
-                          className="w-4 h-4 accent-blue-500"
-                        />
-                        Основной
-                      </label>
-                      <button
-                        onClick={() =>
-                          setUnitCodes(
-                            unitCodes.filter((_, i) => i !== unitIndex)
-                          )
-                        }
-                        className="text-red-500 hover:text-red-700 font-bold"
-                      >
-                        ✕
-                      </button>
-                    </div>
-
-                    {/* Nested Schedules */}
-                    <div className="ml-4 space-y-2">
-                      <Typography
-                        variant="body2"
-                        className="font-medium text-gray-600 mb-2"
-                      >
-                        Расписания для этого подразделения:
-                      </Typography>
-
-                      {unit.schedules &&
-                        unit.schedules.map((sch, scheduleIndex) => (
-                          <motion.div
-                            key={scheduleIndex}
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -10 }}
-                            className="flex items-center gap-2 bg-white p-2 rounded-lg border border-gray-200"
-                          >
+                    </svg>
+                  </div>
+                  <Typography variant="body2" className="text-gray-500 mb-1">
+                    Подразделения не добавлены
+                  </Typography>
+                  <Typography variant="caption" className="text-gray-400">
+                    Нажмите кнопку ниже, чтобы добавить подразделение
+                  </Typography>
+                </div>
+              ) : (
+                <AnimatePresence>
+                  {unitCodes.map((unit, unitIndex) => (
+                    <motion.div
+                      key={unitIndex}
+                      initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                      transition={{ duration: 0.2 }}
+                      className="bg-white border-2 border-gray-200 rounded-xl overflow-hidden hover:border-indigo-300 transition-all shadow-sm"
+                    >
+                      {/* Unit Header */}
+                      <div className="bg-gradient-to-r from-indigo-50 to-blue-50 p-4 border-b border-gray-200">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-indigo-500 rounded-lg flex items-center justify-center text-white font-bold shadow-md">
+                            {unitIndex + 1}
+                          </div>
+                          <div className="flex-1">
                             <CustomSelect
-                              options={optionsSchedules}
-                              value={sch.scheduleId}
-                              placeholder="Выберите расписание"
+                              options={optionsEnterprises}
+                              value={unit.code}
+                              placeholder="Выберите подразделение"
                               onChange={(val) =>
-                                handleScheduleChange(
-                                  unitIndex,
-                                  scheduleIndex,
-                                  "scheduleId",
-                                  val
-                                )
+                                handleUnitCodeChange(unitIndex, "code", val)
                               }
                               className="flex-1"
                             />
-                            <label className="flex items-center gap-1 text-xs text-gray-600">
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <label className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg border border-gray-200 cursor-pointer hover:bg-green-50 transition">
                               <input
                                 type="checkbox"
-                                checked={sch.isMain === 1}
+                                checked={unit.isMain === 1}
                                 onChange={(e) =>
-                                  handleScheduleChange(
+                                  handleUnitCodeChange(
                                     unitIndex,
-                                    scheduleIndex,
                                     "isMain",
                                     e.target.checked ? 1 : 0
                                   )
                                 }
-                                className="w-3 h-3 accent-indigo-500"
+                                className="w-4 h-4 accent-green-500"
                               />
-                              Осн.
+                              <span className="text-sm font-medium text-gray-700">
+                                Основной
+                              </span>
                             </label>
                             <button
                               onClick={() =>
-                                removeScheduleFromUnit(unitIndex, scheduleIndex)
+                                setUnitCodes(
+                                  unitCodes.filter((_, i) => i !== unitIndex)
+                                )
                               }
-                              className="text-red-500 hover:text-red-700 text-sm"
+                              className="w-9 h-9 flex items-center justify-center bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition"
+                              title="Удалить подразделение"
                             >
-                              ✕
+                              <svg
+                                className="w-5 h-5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M6 18L18 6M6 6l12 12"
+                                />
+                              </svg>
                             </button>
-                          </motion.div>
-                        ))}
+                          </div>
+                        </div>
+                      </div>
 
-                      <button
-                        onClick={() => addScheduleToUnit(unitIndex)}
-                        className="px-3 py-1.5 rounded-lg bg-indigo-100 text-indigo-700 text-xs font-medium hover:bg-indigo-200 transition"
-                      >
-                        + Добавить расписание
-                      </button>
-                    </div>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
+                      {/* Schedules Section */}
+                      <div className="p-4">
+                        <div className="flex items-center gap-2 mb-3">
+                          <svg
+                            className="w-5 h-5 text-indigo-500"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                          </svg>
+                          <Typography
+                            variant="body2"
+                            className="font-semibold text-gray-700"
+                          >
+                            Расписания доступа
+                          </Typography>
+                          {unit.schedules && unit.schedules.length > 0 && (
+                            <span className="text-xs bg-indigo-100 text-indigo-600 px-2 py-0.5 rounded-full">
+                              {unit.schedules.length}
+                            </span>
+                          )}
+                        </div>
+
+                        {unit.schedules && unit.schedules.length > 0 ? (
+                          <div className="space-y-2">
+                            {unit.schedules.map((sch, scheduleIndex) => (
+                              <motion.div
+                                key={scheduleIndex}
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -10 }}
+                                className="flex items-center gap-2 bg-gray-50 p-3 rounded-lg border border-gray-200 hover:border-indigo-300 transition-all"
+                              >
+                                <span className="w-6 h-6 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center text-xs font-bold">
+                                  {scheduleIndex + 1}
+                                </span>
+                                <CustomSelect
+                                  options={optionsSchedules}
+                                  value={sch.scheduleId}
+                                  placeholder="Выберите расписание"
+                                  onChange={(val) =>
+                                    handleScheduleChange(
+                                      unitIndex,
+                                      scheduleIndex,
+                                      "scheduleId",
+                                      val
+                                    )
+                                  }
+                                  className="flex-1"
+                                />
+                                <label className="flex items-center gap-1.5 bg-white px-2.5 py-1.5 rounded-md border border-gray-200 cursor-pointer hover:bg-green-50 transition">
+                                  <input
+                                    type="checkbox"
+                                    checked={sch.isMain === 1}
+                                    onChange={(e) =>
+                                      handleScheduleChange(
+                                        unitIndex,
+                                        scheduleIndex,
+                                        "isMain",
+                                        e.target.checked ? 1 : 0
+                                      )
+                                    }
+                                    className="w-3.5 h-3.5 accent-green-500"
+                                  />
+                                  <span className="text-xs font-medium text-gray-700">
+                                    Осн.
+                                  </span>
+                                </label>
+                                <button
+                                  onClick={() =>
+                                    removeScheduleFromUnit(
+                                      unitIndex,
+                                      scheduleIndex
+                                    )
+                                  }
+                                  className="w-8 h-8 flex items-center justify-center bg-red-50 hover:bg-red-100 text-red-600 rounded-md transition"
+                                  title="Удалить расписание"
+                                >
+                                  <svg
+                                    className="w-4 h-4"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M6 18L18 6M6 6l12 12"
+                                    />
+                                  </svg>
+                                </button>
+                              </motion.div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-6 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                            <svg
+                              className="w-10 h-10 mx-auto text-gray-300 mb-2"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={1.5}
+                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                              />
+                            </svg>
+                            <Typography
+                              variant="caption"
+                              className="text-gray-500"
+                            >
+                              Расписания не добавлены
+                            </Typography>
+                          </div>
+                        )}
+
+                        <button
+                          onClick={() => addScheduleToUnit(unitIndex)}
+                          className="w-full mt-3 px-4 py-2.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-sm font-medium transition-all flex items-center justify-center gap-2 border border-indigo-200"
+                        >
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 4v16m8-8H4"
+                            />
+                          </svg>
+                          Добавить расписание
+                        </button>
+                      </div>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              )}
 
               <motion.button
-                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() =>
                   setUnitCodes([
                     ...unitCodes,
                     { code: "", isMain: 0, schedules: [] },
                   ])
                 }
-                className="px-4 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-sm font-medium shadow-md hover:shadow-lg transition"
+                className="w-full px-5 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
               >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2.5}
+                    d="M12 4v16m8-8H4"
+                  />
+                </svg>
                 Добавить подразделение
               </motion.button>
             </div>
           </div>
 
-          <div className="sticky bg-white border-t border-gray-200 pt-3 flex justify-end gap-3">
+          {/* Footer Actions */}
+          <div className="sticky top-0 bg-white border-t-2 border-gray-200 pt-4 mt-6 flex justify-end gap-3">
             <Button
               sx={{
                 textTransform: "initial",
                 backgroundColor: "#e5e7eb",
-                color: "black",
-                borderRadius: "8px",
+                color: "#374151",
+                borderRadius: "10px",
+                fontWeight: "600",
+                px: 4,
+                py: 1.5,
+                "&:hover": {
+                  backgroundColor: "#d1d5db",
+                },
               }}
               variant="contained"
               onClick={() => {
                 setEditEntryPoint(false);
+                setEntryPointName("");
+                setEntryPointShortName("");
+                setBuildingDescription("");
+                setUnitCodes([]);
                 setselectedEntryPoint(null);
               }}
             >
@@ -872,13 +1289,35 @@ const Index = () => {
             <Button
               sx={{
                 textTransform: "initial",
-                backgroundColor: "#4182F9",
+                background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
                 color: "white",
-                borderRadius: "8px",
+                borderRadius: "10px",
+                fontWeight: "600",
+                px: 4,
+                py: 1.5,
+                boxShadow: "0 4px 12px rgba(245, 158, 11, 0.4)",
+                "&:hover": {
+                  background:
+                    "linear-gradient(135deg, #d97706 0%, #b45309 100%)",
+                  boxShadow: "0 6px 16px rgba(245, 158, 11, 0.5)",
+                },
               }}
               variant="contained"
               onClick={submitEditEntryPoint}
             >
+              <svg
+                className="w-5 h-5 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2.5}
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
               Сохранить изменения
             </Button>
           </div>

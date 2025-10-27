@@ -26,13 +26,12 @@ import * as XLSX from "xlsx-js-style";
 
 const Index = () => {
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 20;
+  const pageSize = 15;
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const router = useRouter();
   const [level1Id, setLevel1Id] = useState(null); // Birinchi select (organizational unit)
   const [selectUnitCode, setSelectUnitCode] = useState(null); // Tanlangan unit_code
-  const [selectedWorkplace, setSelectedWorkplace] = useState(null); // Workplace tanlovi
   const [step, setStep] = useState(1);
   const [errors, setErrors] = useState({});
   const [formData, setFormData] = useState({
@@ -196,11 +195,11 @@ const Index = () => {
       },
     },
     {
-      accessorKey: "phone_number",
-      header: "Номер телефона",
+      accessorKey: "tabel_number",
+      header: "Табельный номер",
       cell: ({ row }) => {
         return (
-          <span className="font-medium">+998{row?.original?.phone_number}</span>
+          <span className="font-medium">№{row?.original?.tabel_number}</span>
         );
       },
     },
@@ -236,6 +235,20 @@ const Index = () => {
       enableSorting: false,
     },
   ];
+
+  const fetchAllEmployeesForExport = async () => {
+    try {
+      const response = await fetch(
+        `${config.PYTHON_API_URL}${URLS.employees}?limit=10000`
+      );
+      const result = await response.json();
+      return result.data || [];
+    } catch (error) {
+      console.error("Error fetching all employees:", error);
+      toast.error("Ошибка при загрузке данных для экспорта");
+      return [];
+    }
+  };
 
   const exportToExcel = (data, filename = "Сотрудники.xlsx") => {
     if (!data || data.length === 0) {
@@ -356,13 +369,28 @@ const Index = () => {
       </div>
       <div className="bg-white p-[15px] mt-[10px] rounded-md border border-[#E9E9E9]">
         <div className="col-span-12 flex justify-between items-center ">
-          <Typography variant="h6">
+          <Typography variant="h6" fontWeight={"600"}>
             Просмотр и управление сотрудниками
           </Typography>
 
           <div className="flex gap-2 items-center">
             <ExcelButton
-              onClick={() => exportToExcel(get(employee, "data.data", []))}
+              onClick={async () => {
+                const loadingToast = toast.loading("Загрузка данных...");
+
+                const allEmployees = await fetchAllEmployeesForExport();
+
+                toast.dismiss(loadingToast);
+
+                if (allEmployees.length > 0) {
+                  exportToExcel(allEmployees);
+                  toast.success(
+                    `Экспортировано ${allEmployees.length} сотрудников`
+                  );
+                } else {
+                  toast.error("Нет данных для экспорта");
+                }
+              }}
             />
 
             <Button
@@ -382,7 +410,7 @@ const Index = () => {
               }}
               variant="contained"
             >
-              <p>Добавить сотрудника</p>
+              <p>Добавить</p>
             </Button>
           </div>
         </div>
