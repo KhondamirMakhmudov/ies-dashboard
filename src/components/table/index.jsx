@@ -82,7 +82,7 @@ const CustomTable = ({ data, columns, pagination }) => {
 
   return (
     <div className="overflow-x-auto border-none rounded-lg">
-      <table className="min-w-full text-base text-left">
+      <table className="min-w-full text-[15px] text-left">
         <thead className="bg-[#F4F7FE]">
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>

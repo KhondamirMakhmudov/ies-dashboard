@@ -1,7 +1,15 @@
+"use client";
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/router";
-import { List, ListItemButton, ListItemIcon, Typography } from "@mui/material";
+import {
+  List,
+  ListItemButton,
+  ListItemIcon,
+  Typography,
+  Collapse,
+} from "@mui/material";
 import ExitToAppIcon from "@mui/icons-material/ExitToApp";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -10,7 +18,6 @@ import {
   PeopleAlt as PeopleAltIcon,
   Mediation as MediationIcon,
   SettingsRounded as SettingsRoundedIcon,
-  SchoolRounded as SchoolRoundedIcon,
   CameraAlt as CameraAltIcon,
   Wifi as WifiIcon,
   Security as SecurityIcon,
@@ -70,14 +77,7 @@ const menuItems = [
     text: "Отчёты",
     icon: <AssessmentIcon />,
     submenu: [
-      // {
-      //   text: "по сотрудникам",
-      //   path: "/dashboard/reports/employee-id",
-      // },
-      {
-        text: "по сотрудникам",
-        path: "/dashboard/reports/employee-uuid",
-      },
+      { text: "по сотрудникам", path: "/dashboard/reports/employee-uuid" },
       {
         text: "по подразделениям",
         path: "/dashboard/reports/report-by-orgUnit",
@@ -92,11 +92,7 @@ const menuItems = [
       },
     ],
   },
-  {
-    text: "Расписание",
-    icon: <EventNoteIcon />,
-    path: "/dashboard/schedule",
-  },
+  { text: "Расписание", icon: <EventNoteIcon />, path: "/dashboard/schedule" },
   {
     text: "Командировки",
     icon: <AirlineStopsIcon />,
@@ -109,13 +105,14 @@ const menuItems = [
   },
 ];
 
-export default function Sidebar({ isOpen = true }) {
+function Sidebar({ isOpen = true }) {
   const [openExitModal, setOpenExitModal] = useState(false);
   const [openSubmenus, setOpenSubmenus] = useState({});
   const router = useRouter();
 
-  // 🔑 Avtomatik submenu ochilishi agar ichki path bo'lsa
+  // Open active submenu on first render
   useEffect(() => {
+    const newOpen = {};
     menuItems.forEach((item, index) => {
       if (
         item.submenu?.some(
@@ -124,13 +121,11 @@ export default function Sidebar({ isOpen = true }) {
             router.pathname.startsWith(sub.path + "/")
         )
       ) {
-        setOpenSubmenus((prev) => ({
-          ...prev,
-          [index]: true,
-        }));
+        newOpen[index] = true;
       }
     });
-  }, [router.pathname]);
+    setOpenSubmenus(newOpen);
+  }, []); // run once
 
   const handleToggleSubmenu = (index) => {
     setOpenSubmenus((prev) => ({
@@ -149,35 +144,46 @@ export default function Sidebar({ isOpen = true }) {
     <aside
       className={`${
         isOpen ? "w-[330px]" : "w-[80px]"
-      } h-screen bg-white px-[16px] py-[25px] transition-all duration-300 overflow-y-auto flex flex-col justify-between`}
+      } h-screen bg-white border-r border-gray-200 px-4 py-6 transition-all duration-300 overflow-y-auto flex flex-col justify-between`}
     >
       <div>
         {/* LOGO */}
         <div
           onClick={() => router.push("/")}
-          className="my-[32px] flex justify-center items-start gap-4 cursor-pointer"
+          className={`mb-8 flex ${
+            isOpen ? "justify-start" : "justify-center"
+          } items-center gap-3 cursor-pointer group transition-all duration-300`}
         >
-          <Image
-            src="/icons/ies_brand.svg"
-            alt="logo"
-            width={53}
-            height={76}
-            priority
-            className="w-[53px] h-auto"
-          />
+          <div className="group-hover:scale-105 transition-transform duration-200">
+            <Image
+              src="/icons/ies_brand.svg"
+              alt="logo"
+              width={36}
+              height={36}
+              priority
+              className="w-9 h-9"
+            />
+          </div>
           {isOpen && (
-            <div className="flex flex-col">
-              <p className="text-[18px] font-medium">
-                "ISSIQLIK ELЕKTR STANSIYALARI" AJ
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="flex flex-col"
+            >
+              <p className="text-base font-semibold text-gray-800 leading-tight">
+                ISSIQLIK ELЕKTR
               </p>
-            </div>
+              <p className="text-sm text-gray-600">STANSIYALARI AJ</p>
+            </motion.div>
           )}
         </div>
 
-        <div className="w-full h-[1px] bg-gray-200 my-[10px]"></div>
+        {isOpen && (
+          <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mb-4"></div>
+        )}
 
         {/* MENU */}
-        <List sx={{ fontFamily: "DM Sans, sans-serif", color: "#A0AEC0" }}>
+        <List sx={{ fontFamily: "DM Sans, sans-serif", padding: 0 }}>
           {menuItems.map((item, index) => {
             const isActive =
               router.pathname === item.path ||
@@ -193,7 +199,7 @@ export default function Sidebar({ isOpen = true }) {
             const isOpenSubmenu = openSubmenus[index] || false;
 
             return (
-              <div key={index}>
+              <div key={index} className="mb-1">
                 {/* Parent item */}
                 <ListItemButton
                   onClick={() =>
@@ -203,96 +209,131 @@ export default function Sidebar({ isOpen = true }) {
                   }
                   selected={isActive || isAnySubmenuActive}
                   sx={{
-                    borderRadius: "8px",
-                    my: 0.5,
+                    borderRadius: "12px",
+                    minHeight: "48px",
                     color:
-                      isActive || isAnySubmenuActive ? "#2D3748" : "#718096",
-                    backgroundColor:
+                      isActive || isAnySubmenuActive ? "#1F2937" : "#6B7280",
+                    background:
                       isActive || isAnySubmenuActive
-                        ? "#EDF2F7"
+                        ? "linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%)"
                         : "transparent",
+                    border:
+                      isActive || isAnySubmenuActive
+                        ? "1px solid #BFDBFE"
+                        : "1px solid transparent",
                     "&:hover": {
-                      backgroundColor: "#F7FAFC",
+                      backgroundColor:
+                        isActive || isAnySubmenuActive ? "#DBEAFE" : "#F9FAFB",
+                      transform: "translateX(4px)",
                     },
+                    transition: "all 0.2s ease",
                     justifyContent: isOpen ? "flex-start" : "center",
-                    px: isOpen ? 2 : 0,
+                    px: isOpen ? 2 : 1,
+                    position: "relative",
+                    overflow: "hidden",
+                    "&::before":
+                      isActive || isAnySubmenuActive
+                        ? {
+                            content: '""',
+                            position: "absolute",
+                            left: 0,
+                            top: "50%",
+                            transform: "translateY(-50%)",
+                            width: "4px",
+                            height: "24px",
+                            backgroundColor: "#3B82F6",
+                            borderRadius: "0 4px 4px 0",
+                          }
+                        : {},
                   }}
                 >
                   <ListItemIcon
                     sx={{
-                      minWidth: "auto",
+                      minWidth: isOpen ? "40px" : "auto",
                       color:
-                        isActive || isAnySubmenuActive ? "#0247b5" : "#A0AEC0",
+                        isActive || isAnySubmenuActive ? "#3B82F6" : "#9CA3AF",
                       justifyContent: "center",
                     }}
                   >
                     {item.icon}
                   </ListItemIcon>
                   {isOpen && (
-                    <Typography
-                      sx={{
-                        fontFamily: "DM Sans, sans-serif",
-                        fontSize: "18px",
-                        marginLeft: "12px",
-                      }}
-                    >
-                      {item.text}
-                    </Typography>
-                  )}
-                  {item.submenu && isOpen && (
-                    <span className="ml-auto">
-                      {isOpenSubmenu ? (
-                        <ExpandLessIcon fontSize="small" />
-                      ) : (
-                        <ExpandMoreIcon fontSize="small" />
+                    <>
+                      <Typography
+                        sx={{
+                          fontFamily: "DM Sans, sans-serif",
+                          fontSize: "15px",
+                          fontWeight:
+                            isActive || isAnySubmenuActive ? 600 : 500,
+                          flex: 1,
+                        }}
+                      >
+                        {item.text}
+                      </Typography>
+                      {item.submenu && (
+                        <span className="transition-transform duration-200">
+                          {isOpenSubmenu ? (
+                            <ExpandLessIcon fontSize="small" />
+                          ) : (
+                            <ExpandMoreIcon fontSize="small" />
+                          )}
+                        </span>
                       )}
-                    </span>
+                    </>
                   )}
                 </ListItemButton>
 
                 {/* Submenu */}
-                {item.submenu && isOpenSubmenu && isOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 50 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 50 }}
-                    transition={{ duration: 0.2 }}
-                    className="ml-10"
-                  >
-                    {item.submenu.map((sub, subIndex) => {
-                      const isSubActive =
-                        router.pathname === sub.path ||
-                        router.pathname.startsWith(sub.path + "/");
+                {item.submenu && isOpen && (
+                  <Collapse in={isOpenSubmenu} timeout="auto" unmountOnExit>
+                    <div className="ml-6 mt-1 space-y-1 border-l-2 border-gray-100 pl-4">
+                      {item.submenu.map((sub, subIndex) => {
+                        const isSubActive =
+                          router.pathname === sub.path ||
+                          router.pathname.startsWith(sub.path + "/");
 
-                      return (
-                        <ListItemButton
-                          key={subIndex}
-                          onClick={() => router.push(sub.path)}
-                          selected={isSubActive}
-                          sx={{
-                            borderRadius: "6px",
-                            my: 0.5,
-                            color: isSubActive ? "#2D3748" : "#A0AEC0",
-                            backgroundColor: isSubActive
-                              ? "#EDF2F7"
-                              : "transparent",
-                            "&:hover": {
-                              backgroundColor: "#F7FAFC",
-                            },
-                          }}
-                        >
-                          <div
-                            className={`w-[7px] h-[7px] rounded-full ${
-                              isSubActive ? "bg-[#2D3748]" : "bg-[#A0AEC0]"
-                            }`}
-                          ></div>
-                          <Typography sx={{ fontSize: "16px", ml: 1 }}>
-                            {sub.text}
-                          </Typography>
-                        </ListItemButton>
-                      );
-                    })}
-                  </motion.div>
+                        return (
+                          <Link key={subIndex} href={sub.path} prefetch>
+                            <ListItemButton
+                              selected={isSubActive}
+                              sx={{
+                                borderRadius: "8px",
+                                minHeight: "40px",
+                                color: isSubActive ? "#1F2937" : "#6B7280",
+                                backgroundColor: isSubActive
+                                  ? "#F3F4F6"
+                                  : "transparent",
+                                "&:hover": {
+                                  backgroundColor: isSubActive
+                                    ? "#E5E7EB"
+                                    : "#F9FAFB",
+                                },
+                                transition: "all 0.15s ease",
+                                px: 2,
+                              }}
+                            >
+                              <div
+                                className={`w-2 h-2 rounded-full mr-3 transition-all duration-200 ${
+                                  isSubActive
+                                    ? "bg-blue-500 scale-110"
+                                    : "bg-gray-300"
+                                }`}
+                              ></div>
+                              <Typography
+                                sx={{
+                                  fontSize: "14px",
+                                  fontWeight: isSubActive ? 600 : 500,
+                                  fontFamily: "DM Sans, sans-serif",
+                                }}
+                              >
+                                {sub.text}
+                              </Typography>
+                            </ListItemButton>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  </Collapse>
                 )}
               </div>
             );
@@ -301,21 +342,31 @@ export default function Sidebar({ isOpen = true }) {
       </div>
 
       {/* LOGOUT */}
-      <div className="mb-4">
+      <div>
+        {isOpen && (
+          <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mb-4"></div>
+        )}
         <ListItemButton
           onClick={() => setOpenExitModal(true)}
           sx={{
-            borderRadius: "8px",
-            backgroundColor: "#FCD8D3",
-            color: "#E53E3E",
+            borderRadius: "12px",
+            minHeight: "48px",
+            backgroundColor: "#FEF2F2",
+            border: "1px solid #FECACA",
+            color: "#DC2626",
             justifyContent: isOpen ? "flex-start" : "center",
-            px: isOpen ? 2 : 0,
+            px: isOpen ? 2 : 1,
+            "&:hover": {
+              backgroundColor: "#FEE2E2",
+              transform: "translateX(4px)",
+            },
+            transition: "all 0.2s ease",
           }}
         >
           <ListItemIcon
             sx={{
-              minWidth: "auto",
-              color: "#991300",
+              minWidth: isOpen ? "40px" : "auto",
+              color: "#DC2626",
               justifyContent: "center",
             }}
           >
@@ -325,9 +376,8 @@ export default function Sidebar({ isOpen = true }) {
             <Typography
               sx={{
                 fontFamily: "DM Sans, sans-serif",
-                color: "#991300",
-                fontSize: "18px",
-                marginLeft: "12px",
+                fontSize: "15px",
+                fontWeight: 600,
               }}
             >
               Выход
@@ -344,3 +394,5 @@ export default function Sidebar({ isOpen = true }) {
     </aside>
   );
 }
+
+export default React.memo(Sidebar);
