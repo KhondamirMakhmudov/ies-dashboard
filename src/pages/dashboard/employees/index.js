@@ -9,6 +9,9 @@ import useGetPythonQuery from "@/hooks/python/useGetQuery";
 import { URLS } from "@/constants/url";
 import { KEYS } from "@/constants/key";
 import { config } from "@/config";
+import { genderOptions } from "@/constants/static-data";
+import { educationLevelOptions } from "@/constants/static-data";
+import { razryadOptions } from "@/constants/static-data";
 import { get, isEmpty } from "lodash";
 import PhoneInputUz from "@/components/input/phone-input";
 import toast from "react-hot-toast";
@@ -19,11 +22,10 @@ import { useQueryClient } from "@tanstack/react-query";
 import ContentLoader from "@/components/loader";
 import BirthDateInput from "@/components/input/birthdate-input";
 import NoData from "@/components/no-data";
-import { saveAs } from "file-saver";
 import ExcelButton from "@/components/button/excel-button";
 import Breadcrumb from "@/components/breadcrumb";
-import * as XLSX from "xlsx-js-style";
-
+import { exportToExcel } from "@/utils/exportToExcelStyled";
+import ReportGmailerrorredIcon from "@mui/icons-material/ReportGmailerrorred";
 const Index = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 15;
@@ -133,18 +135,6 @@ const Index = () => {
     }
   };
 
-  const genderOptions = [
-    { value: "мужской", label: "Мужской" },
-    { value: "женский", label: "Женский" },
-  ];
-
-  const razryadOptions = Array.from({ length: 16 }, (_, i) => {
-    const lvl = i + 1;
-    return {
-      value: lvl,
-      label: `${lvl}-разряд`,
-    };
-  });
   // photoni formdataga qo'shish
   const handlePhotoChange = (file) => {
     setFormData((prev) => ({
@@ -155,19 +145,6 @@ const Index = () => {
   // postda datalarga bosqichma bosqich o'tish uchun buttonlar
   const handleNext = () => setStep((prev) => Math.min(prev + 1, 3));
   const handlePrev = () => setStep((prev) => Math.max(prev - 1, 1));
-
-  const educationLevelOptions = [
-    { value: "школа", label: "Школа" },
-    { value: "среднее", label: "Среднее" },
-    { value: "среднее специальноe", label: "Среднее специальноe" },
-    { value: "военное училище", label: "Военное училище" },
-    { value: "высшее", label: "Высшее" },
-    { value: "бакалавр", label: "бакалавр" },
-    { value: "специалитет", label: "Специалитет" },
-    { value: "магистр", label: "Магистр" },
-    { value: "кандидат наук", label: "Кандидат наук" },
-    { value: "доктор наук", label: "Доктор наук" },
-  ];
 
   const steps = [
     "Asosiy ma'lumotlar",
@@ -248,102 +225,6 @@ const Index = () => {
       toast.error("Ошибка при загрузке данных для экспорта");
       return [];
     }
-  };
-
-  const exportToExcel = (data, filename = "Сотрудники.xlsx") => {
-    if (!data || data.length === 0) {
-      alert("Нет данных для экспорта");
-      return;
-    }
-
-    // 1️⃣ — Faqat kerakli maydonlar va ularning nomlari (rus tilida)
-    const columns = [
-      { key: "full_name", label: "Ф.И.О" },
-      { key: "position", label: "Должность" },
-      { key: "organizational_unit", label: "Подразделение" },
-      { key: "phone_number", label: "Телефон" },
-      { key: "email", label: "Электронная почта" },
-      { key: "hire_date", label: "Дата приема на работу" },
-      { key: "date_of_birth", label: "Дата рождения" },
-      { key: "address", label: "Адрес" },
-      { key: "education_degree", label: "Образование" },
-      { key: "education_place", label: "Место обучения" },
-    ];
-
-    // 2️⃣ — Ma'lumotni qayta formatlash
-    const formattedData = data.map((item) => ({
-      full_name: `${item.last_name || ""} ${item.first_name || ""} ${
-        item.middle_name || ""
-      }`.trim(),
-      position: item?.workplace?.position?.name || "",
-      organizational_unit: item?.workplace?.organizational_unit?.name || "",
-      phone_number: item.phone_number ? `+998${item.phone_number}` : "",
-      email: item.email || "",
-      hire_date: item.hire_date ? item.hire_date.slice(0, 10) : "",
-      date_of_birth: item.date_of_birth ? item.date_of_birth.slice(0, 10) : "",
-      address: item.address || "",
-      education_degree: item.education_degree || "",
-      education_place: item.education_place || "",
-    }));
-
-    // 3️⃣ — Jadval uchun ma’lumot tayyorlash
-    const headers = columns.map((c) => c.label);
-    const sheetData = [
-      headers,
-      ...formattedData.map((obj) => columns.map((c) => obj[c.key])),
-    ];
-
-    const worksheet = XLSX.utils.aoa_to_sheet(sheetData);
-
-    // 4️⃣ — Stil sozlash
-    const headerStyle = {
-      font: { bold: true, color: { rgb: "FFFFFF" }, sz: 13 },
-      alignment: { horizontal: "center", vertical: "center" },
-      fill: { fgColor: { rgb: "4472C4" } }, // Moviy fon
-      border: {
-        top: { style: "thin", color: { rgb: "CCCCCC" } },
-        bottom: { style: "thin", color: { rgb: "CCCCCC" } },
-        left: { style: "thin", color: { rgb: "CCCCCC" } },
-        right: { style: "thin", color: { rgb: "CCCCCC" } },
-      },
-    };
-
-    const bodyStyle = {
-      alignment: { horizontal: "center", vertical: "center", wrapText: true },
-      border: {
-        top: { style: "thin", color: { rgb: "DDDDDD" } },
-        bottom: { style: "thin", color: { rgb: "DDDDDD" } },
-        left: { style: "thin", color: { rgb: "DDDDDD" } },
-        right: { style: "thin", color: { rgb: "DDDDDD" } },
-      },
-    };
-
-    // 5️⃣ — Har bir hujayraga stil berish
-    const range = XLSX.utils.decode_range(worksheet["!ref"]);
-    for (let R = range.s.r; R <= range.e.r; ++R) {
-      for (let C = range.s.c; C <= range.e.c; ++C) {
-        const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
-        if (!worksheet[cellAddress]) continue;
-        worksheet[cellAddress].s = R === 0 ? headerStyle : bodyStyle;
-      }
-    }
-
-    // 6️⃣ — Ustun kengliklarini sozlash
-    worksheet["!cols"] = columns.map((col) => ({ wch: col.label.length + 15 }));
-
-    // 7️⃣ — Workbook yaratish va yuklab berish
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Сотрудники");
-
-    const excelBuffer = XLSX.write(workbook, {
-      bookType: "xlsx",
-      type: "array",
-    });
-    const blob = new Blob([excelBuffer], {
-      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    });
-
-    saveAs(blob, filename);
   };
 
   if (isLoading || isFetching) {
@@ -679,20 +560,10 @@ const Index = () => {
         {step === 3 && (
           <div className="space-y-3">
             <div className="bg-blue-50 border-l-4 border-blue-400 p-3 mb-8 rounded-r-lg">
-              <h2 className="text-[16px] font-semibold text-blue-800 mb-4 flex items-center">
-                <svg
-                  className="w-5 h-5 mr-2"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                    clipRule="evenodd"
-                  ></path>
-                </svg>
-                Требования к фотографии
-              </h2>
+              <div className="text-[16px] font-semibold text-blue-800 mb-4 items-center flex gap-1">
+                <ReportGmailerrorredIcon />
+                <h2>Требования к фотографии</h2>
+              </div>
               <div className="space-y-3 text-sm">
                 <div className="flex items-start">
                   <div className="w-2 h-2 bg-blue-400 rounded-full mt-2 mr-3 flex-shrink-0"></div>
@@ -730,78 +601,6 @@ const Index = () => {
               </div>
             </div>
 
-            {/* <div className="grid md:grid-cols-2 gap-6 mb-8">
-              <div className="text-center">
-                <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4 mb-3">
-                  <div className="w-24 h-24 mx-auto bg-green-100 rounded-full flex items-center justify-center mb-2">
-                    <svg
-                      className="w-12 h-12 text-green-600"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-                        clipRule="evenodd"
-                      ></path>
-                    </svg>
-                  </div>
-                  <div className="text-sm text-green-700 font-medium">
-                    Лицо в центре и четкое
-                  </div>
-                </div>
-                <div className="flex items-center justify-center text-green-600">
-                  <svg
-                    className="w-5 h-5 mr-1"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clipRule="evenodd"
-                    ></path>
-                  </svg>
-                  <span className="text-sm font-medium">Хороший пример</span>
-                </div>
-              </div>
-
-              <div className="text-center">
-                <div className="bg-red-50 border-2 border-red-200 rounded-lg p-4 mb-3">
-                  <div className="w-24 h-24 mx-auto bg-red-100 rounded-full flex items-center justify-center mb-2 relative overflow-hidden">
-                    <svg
-                      className="w-8 h-8 text-red-400 absolute top-1 left-2"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-                        clipRule="evenodd"
-                      ></path>
-                    </svg>
-                    <div className="absolute inset-0 bg-red-200 opacity-50"></div>
-                  </div>
-                  <div className="text-sm text-red-700 font-medium">
-                    Размытое или не в центре
-                  </div>
-                </div>
-                <div className="flex items-center justify-center text-red-600">
-                  <svg
-                    className="w-5 h-5 mr-1"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                      clipRule="evenodd"
-                    ></path>
-                  </svg>
-                  <span className="text-sm font-medium">Избегайте этого</span>
-                </div>
-              </div>
-            </div> */}
             <div>
               <ImageUploader
                 image={formData.photo}

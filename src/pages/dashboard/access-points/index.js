@@ -190,6 +190,8 @@ const Index = () => {
       return;
     }
 
+    console.log(updatedData);
+
     try {
       const res = await fetch(
         `${config.JAVA_API_URL}${URLS.newEntryPoints}/${selectedEntryPointId}`,
@@ -390,16 +392,25 @@ const Index = () => {
     },
   ];
 
-  const handleUnitCodeChange = (unitIndex, field, value) => {
-    const updated = [...unitCodes];
-    updated[unitIndex][field] = value;
-    setUnitCodes(updated);
+  const handleUnitCodeChange = (index, field, value) => {
+    setUnitCodes((prev) =>
+      prev.map((u, i) => (i === index ? { ...u, [field]: value } : u))
+    );
   };
 
   const handleScheduleChange = (unitIndex, scheduleIndex, field, value) => {
-    const updated = [...unitCodes];
-    updated[unitIndex].schedules[scheduleIndex][field] = value;
-    setUnitCodes(updated);
+    setUnitCodes((prev) =>
+      prev.map((u, i) =>
+        i === unitIndex
+          ? {
+              ...u,
+              schedules: u.schedules.map((s, si) =>
+                si === scheduleIndex ? { ...s, [field]: value } : s
+              ),
+            }
+          : u
+      )
+    );
   };
 
   const addScheduleToUnit = (unitIndex) => {
@@ -872,6 +883,7 @@ const Index = () => {
         <MethodModal
           open={editEntryPoint}
           showCloseIcon={true}
+          width={"50%"}
           closeClick={() => {
             setEditEntryPoint(false);
             setEntryPointName("");
@@ -1016,7 +1028,7 @@ const Index = () => {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: -20, scale: 0.95 }}
                       transition={{ duration: 0.2 }}
-                      className="bg-white border-2 border-gray-200 rounded-xl overflow-hidden hover:border-indigo-300 transition-all shadow-sm"
+                      className="bg-white border-2 border-gray-200 rounded-xl  hover:border-indigo-300 transition-all shadow-sm"
                     >
                       {/* Unit Header */}
                       <div className="bg-gradient-to-r from-indigo-50 to-blue-50 p-4 border-b border-gray-200">
@@ -1047,7 +1059,7 @@ const Index = () => {
                                     e.target.checked ? 1 : 0
                                   )
                                 }
-                                className="w-4 h-4 accent-green-500"
+                                className="w-4 h-4 bg-[#4182F9]"
                               />
                               <span className="text-sm font-medium text-gray-700">
                                 Основной
@@ -1148,7 +1160,7 @@ const Index = () => {
                                         e.target.checked ? 1 : 0
                                       )
                                     }
-                                    className="w-3.5 h-3.5 accent-green-500"
+                                    className="w-3.5 h-3.5 bg-[#4182F9]"
                                   />
                                   <span className="text-xs font-medium text-gray-700">
                                     Осн.

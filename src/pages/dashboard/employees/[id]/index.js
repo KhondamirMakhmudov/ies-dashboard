@@ -7,7 +7,7 @@ import { useRouter } from "next/router";
 import { motion } from "framer-motion";
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import { get, isEmpty, set } from "lodash";
+import { get, isEmpty } from "lodash";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import dayjs from "dayjs";
@@ -24,14 +24,17 @@ import BirthDateInput from "@/components/input/birthdate-input";
 import PhoneInputUz from "@/components/input/phone-input";
 import CustomSelect from "@/components/select";
 import Breadcrumb from "@/components/breadcrumb";
-
+import { genderOptions } from "@/constants/static-data";
+import { educationLevelOptions } from "@/constants/static-data";
+import { razryadOptions } from "@/constants/static-data";
 import ReportComponent from "@/components/report";
 
 const Index = () => {
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
   const queryClient = useQueryClient();
   const router = useRouter();
+  const { id: employee_id } = router.query;
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const { data: session } = useSession();
   const [editModal, setEditModal] = useState(false);
   const [deleteModal, setDeleteModal] = useState(false);
@@ -65,8 +68,6 @@ const Index = () => {
     workplace_id: "",
     photo: null,
   });
-
-  const { id: employee_id } = router.query;
 
   // GET employee all informations
   const {
@@ -201,7 +202,6 @@ const Index = () => {
       toast.success("Успешно удалено");
       router.push("/dashboard/employees");
       queryClient.invalidateQueries(KEYS.unitTypes);
-      console.log("Deleted successfully");
     } catch (error) {
       console.error(error);
       toast.error("Не удалось удалить");
@@ -261,31 +261,6 @@ const Index = () => {
 
     setIsCameraOpen(false);
   };
-
-  const genderOptions = [
-    { value: "мужской", label: "Мужской" },
-    { value: "женский", label: "Женский" },
-  ];
-  const educationLevelOptions = [
-    { value: "школа", label: "Школа" },
-    { value: "среднее", label: "Среднее" },
-    { value: "среднее специальноe", label: "Среднее специальноe" },
-    { value: "военное училище", label: "Военное училище" },
-    { value: "высшее", label: "Высшее" },
-    { value: "бакалавр", label: "бакалавр" },
-    { value: "специалитет", label: "Специалитет" },
-    { value: "магистр", label: "Магистр" },
-    { value: "кандидат наук", label: "Кандидат наук" },
-    { value: "доктор наук", label: "Доктор наук" },
-  ];
-
-  const razryadOptions = Array.from({ length: 16 }, (_, i) => {
-    const lvl = i + 1;
-    return {
-      value: lvl,
-      label: `${lvl}-разряд`,
-    };
-  });
 
   return (
     <DashboardLayout headerTitle={`Полная информация о сотруднике`}>
