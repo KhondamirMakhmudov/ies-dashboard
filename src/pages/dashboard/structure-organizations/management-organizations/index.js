@@ -204,7 +204,6 @@ const Index = () => {
   const [selectEditId, setSelectEditId] = useState(null);
   const [editModal, setEditModal] = useState(false);
   const [deleteModal, setDeleteModal] = useState(false);
-  const [editModalOrgid, setEditOrgId] = useState(null);
   const [name, setName] = useState("");
   const [unitCode, setUnitCode] = useState("");
   const [unitTypeId, setUnitTypeId] = useState(null);

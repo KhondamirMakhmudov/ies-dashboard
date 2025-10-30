@@ -2,15 +2,16 @@ import { toast } from "react-hot-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { requestPython } from "@/services/api";
 
-// PATCH so‘rovni yuboruvchi funksiya
-const patchRequest = (url, attributes, config = {}) =>
-  requestPython.patch(url, attributes, {
+const patchRequest = async (url, attributes, config = {}) => {
+  const response = await requestPython.patch(url, attributes, {
     headers: {
       "Content-Type": "application/json",
       ...(config.headers || {}),
     },
     ...config,
   });
+  return response.data;
+};
 
 const usePatchPythonQuery = ({
   hideSuccessToast = false,
@@ -19,33 +20,32 @@ const usePatchPythonQuery = ({
 }) => {
   const queryClient = useQueryClient();
 
-  const { mutate, isLoading, isError, error, isFetching } = useMutation(
-    ({ url, attributes, config = {} }) => patchRequest(url, attributes, config),
-    {
-      onSuccess: (data) => {
-        if (!hideSuccessToast) {
-          toast.success(data?.data?.message || "SUCCESS");
-        }
+  const mutation = useMutation({
+    mutationFn: ({ url, attributes, config }) =>
+      patchRequest(url, attributes, config),
 
-        if (listKeyId) {
-          queryClient.invalidateQueries(listKeyId);
-        }
-      },
-      onError: (data) => {
-        if (!hideErrorToast) {
-          toast.error(data?.response?.data?.message || "ERROR");
-        }
-      },
-    }
-  );
+    onSuccess: (data) => {
+      if (!hideSuccessToast) {
+        toast.success(data?.message || "Ma’lumot muvaffaqiyatli yangilandi");
+      }
 
-  return {
-    mutate,
-    isLoading,
-    isError,
-    error,
-    isFetching,
-  };
+      if (listKeyId) {
+        queryClient.invalidateQueries([listKeyId]);
+      }
+    },
+
+    onError: (error) => {
+      const msg =
+        error?.response?.data?.detail ||
+        error?.response?.data?.message ||
+        "Xatolik yuz berdi";
+      if (!hideErrorToast) {
+        toast.error(msg);
+      }
+    },
+  });
+
+  return mutation;
 };
 
 export default usePatchPythonQuery;

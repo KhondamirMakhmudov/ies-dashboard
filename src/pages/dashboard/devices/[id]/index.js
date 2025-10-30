@@ -6,8 +6,6 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { motion } from "framer-motion";
 import { get } from "lodash";
-import { useState } from "react";
-import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import ApartmentIcon from "@mui/icons-material/Apartment";
 import LanguageIcon from "@mui/icons-material/Language";
 import PersonIcon from "@mui/icons-material/Person";
@@ -19,7 +17,6 @@ const Index = () => {
   const router = useRouter();
   const { id } = router.query;
   const { data: session } = useSession();
-  const [showModal, setShowModal] = useState(false);
 
   const {
     data: allCameras,
@@ -123,21 +120,6 @@ const Index = () => {
               );
             })}
           </div>
-
-          {/* <div className="mt-6 flex justify-center space-x-3">
-            <button
-              onClick={() => setShowModal(true)}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors duration-200 shadow-sm"
-            >
-              Редактировать
-            </button>
-            <button
-              onClick={() => router.back()}
-              className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors duration-200"
-            >
-              Назад
-            </button>
-          </div> */}
         </div>
       </motion.div>
     </DashboardLayout>

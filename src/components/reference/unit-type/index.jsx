@@ -19,7 +19,8 @@ import { config } from "@/config";
 import DeleteModal from "@/components/modal/delete-modal";
 import usePatchPythonQuery from "@/hooks/python/usePatchQuery";
 import NoData from "@/components/no-data";
-
+import PrimaryButton from "@/components/button/primary-button";
+import ActiveStatusRadio from "@/components/activeStatusRadio";
 const UnitType = () => {
   const queryClient = useQueryClient();
   const [currentPage, setCurrentPage] = useState(1);
@@ -32,6 +33,7 @@ const UnitType = () => {
   const [selectedUnitType, setSelectedUnitType] = useState(null);
   const [isActive, setIsActive] = useState(true);
   const [selectStatus, setSelectStatus] = useState(true);
+  const [originalUnitType, setOriginalUnitType] = useState(null);
   const {
     data: unitType,
     isLoading,
@@ -74,41 +76,58 @@ const UnitType = () => {
           queryClient.invalidateQueries(KEYS.unitTypes);
         },
         onError: (error) => {
-          toast.error(`Error is ${error}`, { position: "top-right" });
+          console.log(error, "error");
+
+          toast.error(`${error?.response?.data?.detail}`, {
+            position: "top-right",
+          });
         },
       }
     );
   };
 
   // edit unit type
-  const { mutate: editUnitType } = usePatchPythonQuery({
-    listKeyId: "edit-unit-type",
-  });
+  const onSubmitEditUnitType = async (id) => {
+    try {
+      // Build update object with only changed fields
+      const updates = {};
 
-  const onSubmitEditUnitType = (id) => {
-    editUnitType(
-      {
-        url: `${URLS.unitTypes}${id}`,
-        attributes: {
-          name: name,
-          is_active: isActive,
-        },
-      },
-
-      {
-        onSuccess: () => {
-          setEditModal(false);
-          toast.success("unitType muvaffaqiyatli tahrirlandi", {
-            position: "top-center",
-          });
-
-          queryClient.invalidateQueries(KEYS.unitTypes);
-        },
-        onError: (error) => {
-          toast.error(`Error is ${error}`, { position: "top-right" });
-        },
+      if (name !== originalUnitType.name) {
+        updates.name = name;
       }
-    );
+
+      if (isActive !== originalUnitType.is_active) {
+        updates.is_active = isActive;
+      }
+
+      // If nothing changed, just close modal
+      if (Object.keys(updates).length === 0) {
+        toast.info("Изменений не обнаружено");
+        setEditModal(false);
+        return;
+      }
+
+      const response = await fetch(
+        `${config.PYTHON_API_URL}${URLS.unitTypes}${id}/`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(updates),
+        }
+      );
+
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData?.detail || "Xatolik yuz berdi");
+      }
+
+      toast.success("UnitType muvaffaqiyatli tahrirlandi");
+      setEditModal(false);
+      setOriginalUnitType(null);
+      queryClient.invalidateQueries([KEYS.unitTypes]);
+    } catch (err) {
+      toast.error(err.message);
+    }
   };
 
   // delete unit type
@@ -174,6 +193,10 @@ const UnitType = () => {
               setSelectedUnitType(row.original.id);
               setName(row.original.name);
               setIsActive(row.original.is_active);
+              setOriginalUnitType({
+                name: row.original.name,
+                is_active: row.original.is_active,
+              });
             }}
             sx={{
               width: "32px",
@@ -222,23 +245,12 @@ const UnitType = () => {
         >
           <div className="space-y-[15px]">
             <div className="flex justify-between items-center">
-              <Button
+              <PrimaryButton
                 onClick={() => setCreateModal(true)}
-                sx={{
-                  textTransform: "initial",
-                  fontFamily: "DM Sans, sans-serif",
-                  backgroundColor: "#4182F9",
-                  boxShadow: "none",
-                  color: "white",
-                  display: "flex",
-                  gap: "4px",
-                  fontSize: "14px",
-                  borderRadius: "8px",
-                }}
                 variant="contained"
               >
                 <p>Создать</p>
-              </Button>
+              </PrimaryButton>
 
               <div className="flex justify-between items-center gap-2">
                 <button
@@ -280,10 +292,10 @@ const UnitType = () => {
               />
             )}
           </div>
-
-          {/* create modal */}
         </motion.div>
       )}
+
+      {/* create modal */}
       <MethodModal
         open={createModal}
         onClose={() => {
@@ -294,14 +306,10 @@ const UnitType = () => {
       >
         <Typography variant="h6">Создать</Typography>
 
-        <form
-          onSubmit={onSubmitCreateUnitType}
-          className="space-y-[15px] my-[30px]"
-        >
+        <div className="space-y-[10px] my-[10px]">
           <Input
             label="Имя"
             type="text"
-            // name="ipAddress"
             placeholder="Введите имя"
             classNames="col-span-4"
             inputClass={"!h-[45px] rounded-[8px] !border-gray-300 text-[15px]"}
@@ -311,51 +319,17 @@ const UnitType = () => {
             required
           />
 
-          <div className="col-span-2 flex items-center gap-4">
-            <label className="flex items-center gap-1">
-              <input
-                type="radio"
-                name="isActive"
-                value="true"
-                checked={isActive === true}
-                onChange={() => setIsActive(true)}
-              />
-              <span>Активный</span>
-            </label>
-            <label className="flex items-center gap-1">
-              <input
-                type="radio"
-                name="isActive"
-                value="false"
-                checked={isActive === false}
-                onChange={() => setIsActive(false)}
-              />
-              <span>Неактивный</span>
-            </label>
+          <div className="col-span-2">
+            <ActiveStatusRadio isActive={isActive} setIsActive={setIsActive} />
           </div>
-          <Button
-            sx={{
-              textTransform: "initial",
-              fontFamily: "DM Sans, sans-serif",
-              backgroundColor: "#4182F9",
-              boxShadow: "none",
-              color: "white",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "4px",
-              fontSize: "14px",
-              minWidth: "100px",
-              borderRadius: "8px",
-              marginTop: "15px",
-            }}
+          <PrimaryButton
             variant="contained"
-            type="submit"
+            type={"submit"}
+            onClick={onSubmitCreateUnitType}
           >
-            {" "}
-            Создать{" "}
-          </Button>
-        </form>
+            Создать
+          </PrimaryButton>
+        </div>
       </MethodModal>
 
       {/* edit modal */}
@@ -366,11 +340,12 @@ const UnitType = () => {
           setEditModal(false);
           setName("");
           setIsActive();
+          setOriginalUnitType(null);
         }}
       >
         <Typography variant="h6">Изменить</Typography>
 
-        <form className="space-y-[15px] my-[30px]">
+        <div className="space-y-[10px] my-[10px]">
           <Input
             label="Имя"
             type="text"
@@ -384,27 +359,8 @@ const UnitType = () => {
             required
           />
 
-          <div className="col-span-2 flex items-center gap-4">
-            <label className="flex items-center gap-1">
-              <input
-                type="radio"
-                name="isActive"
-                value="true"
-                checked={isActive === true}
-                onChange={() => setIsActive(true)}
-              />
-              <span>Активный</span>
-            </label>
-            <label className="flex items-center gap-1">
-              <input
-                type="radio"
-                name="isActive"
-                value="false"
-                checked={isActive === false}
-                onChange={() => setIsActive(false)}
-              />
-              <span>Неактивный</span>
-            </label>
+          <div className="col-span-2">
+            <ActiveStatusRadio isActive={isActive} setIsActive={setIsActive} />
           </div>
           <button
             onClick={() => onSubmitEditUnitType(selectedUnitType)}
@@ -413,7 +369,7 @@ const UnitType = () => {
           >
             Изменить
           </button>
-        </form>
+        </div>
       </MethodModal>
 
       {/* Delete modal */}

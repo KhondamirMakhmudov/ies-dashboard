@@ -14,6 +14,7 @@ import { useRouter } from "next/router";
 import CustomTable from "@/components/table";
 import ContentLoader from "@/components/loader";
 import ScheduleModal from "@/components/modal/schedule-modal";
+import PrimaryButton from "@/components/button/primary-button";
 
 const Index = () => {
   const router = useRouter();
@@ -98,23 +99,12 @@ const Index = () => {
           animate={{ opacity: 1, scale: 1 }}
           className="bg-white p-[12px] my-[50px] rounded-md border border-gray-200"
         >
-          <Button
+          <PrimaryButton
             onClick={() => setCreateModal(true)}
-            sx={{
-              textTransform: "initial",
-              fontFamily: "DM Sans, sans-serif",
-              backgroundColor: "#4182F9",
-              boxShadow: "none",
-              color: "white",
-              display: "flex",
-              gap: "4px",
-              fontSize: "14px",
-              borderRadius: "8px",
-            }}
-            variant="contained"
+            variant={"contained"}
           >
             <p>Создать расписание</p>
-          </Button>
+          </PrimaryButton>
 
           <div className="my-[30px]">
             <CustomTable

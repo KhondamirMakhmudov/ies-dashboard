@@ -73,11 +73,6 @@ export const exportToExcelStyled = (data) => {
     },
   ];
 
-  console.log("DATA =>", data);
-  console.log("FLATTED =>", flatData);
-  console.log("FLATTED IS ARRAY:", Array.isArray(flatData));
-  console.log("FLATTED LENGTH:", flatData.length);
-
   // 5. Har bir xodim uchun ma'lumot
   Object.entries(groupedData).forEach(([employee, logs]) => {
     // Xodim sarlavhasi

@@ -1,7 +1,7 @@
 import DashboardLayout from "@/layouts/dashboard/DashboardLayout";
 import { useState } from "react";
 import Input from "@/components/input";
-import { Typography, Button } from "@mui/material";
+import { Typography } from "@mui/material";
 import ImageUploader from "@/components/image-uploader";
 import CustomSelect from "@/components/select";
 import MethodModal from "@/components/modal/method-modal";
@@ -26,6 +26,7 @@ import ExcelButton from "@/components/button/excel-button";
 import Breadcrumb from "@/components/breadcrumb";
 import { exportToExcel } from "@/utils/exportToExcelStyled";
 import ReportGmailerrorredIcon from "@mui/icons-material/ReportGmailerrorred";
+import PrimaryButton from "@/components/button/primary-button";
 const Index = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 15;
@@ -274,25 +275,9 @@ const Index = () => {
               }}
             />
 
-            <Button
-              onClick={() => setOpen(true)}
-              sx={{
-                textTransform: "initial",
-                fontFamily: "DM Sans, sans-serif",
-                backgroundColor: "#4182F9",
-                boxShadow: "none",
-                color: "white",
-                display: "flex",
-                gap: "4px",
-                fontSize: "14px",
-                borderRadius: "8px",
-                paddingY: "8px",
-                paddingX: "20px",
-              }}
-              variant="contained"
-            >
-              <p>Добавить</p>
-            </Button>
+            <PrimaryButton onClick={() => setOpen(true)}>
+              Добавить
+            </PrimaryButton>
           </div>
         </div>
       </div>
@@ -613,54 +598,22 @@ const Index = () => {
         {/* Navigation */}
         <div className="flex justify-between pt-4">
           {step > 1 ? (
-            <Button
-              sx={{
-                textTransform: "initial",
-                fontFamily: "DM Sans, sans-serif",
-                backgroundColor: "#EDEDF2",
-                boxShadow: "none",
-                color: "black",
-                display: "flex",
-                gap: "4px",
-                fontSize: "14px",
-                borderRadius: "8px",
-                paddingY: "8px",
-                paddingX: "20px",
-              }}
+            <PrimaryButton
               onClick={handlePrev}
-              variant="secondary"
+              backgroundColor="#EDEDF2"
+              color="black"
             >
               Назад
-            </Button>
+            </PrimaryButton>
           ) : (
             <div />
           )}
           {step < 3 ? (
-            <Button
-              sx={{
-                textTransform: "initial",
-                fontFamily: "DM Sans, sans-serif",
-                backgroundColor: "#4182F9",
-                boxShadow: "none",
-                color: "white",
-                display: "flex",
-                gap: "4px",
-                fontSize: "14px",
-                borderRadius: "8px",
-                paddingY: "8px",
-                paddingX: "20px",
-              }}
-              onClick={handleNext}
-            >
-              Вперёд
-            </Button>
+            <PrimaryButton onClick={handleNext}>Вперёд</PrimaryButton>
           ) : (
-            <Button
-              sx={{ textTransform: "initial" }}
-              onClick={onSubmitCreateEmployee}
-            >
+            <PrimaryButton onClick={onSubmitCreateEmployee}>
               Закончить
-            </Button>
+            </PrimaryButton>
           )}
         </div>
       </MethodModal>

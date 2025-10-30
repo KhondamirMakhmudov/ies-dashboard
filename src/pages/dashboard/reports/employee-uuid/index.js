@@ -400,17 +400,6 @@ const Index = () => {
 
         {/* Action Buttons */}
         <div className="flex items-center gap-3 flex-wrap">
-          {/* <button
-            disabled={
-              selectedEmployees.length === 0 || !startDateTime || !endDateTime
-            }
-            onClick={handleFetchAllData}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 px-5 py-3 rounded-lg text-white font-medium disabled:bg-gray-400 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg"
-          >
-            <Search fontSize="small" />
-            Загрузить данные
-          </button> */}
-
           <button
             disabled={
               selectedEmployees.length === 0 || !startDateTime || !endDateTime

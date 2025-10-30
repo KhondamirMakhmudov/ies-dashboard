@@ -25,6 +25,7 @@ import CustomSearch from "@/components/search";
 import { useGlobalStore } from "@/store/globalStore";
 import { useRouter } from "next/router";
 import NoData from "@/components/no-data";
+import PrimaryButton from "@/components/button/primary-button";
 const ipRegex =
   /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
 
@@ -108,7 +109,6 @@ const Index = () => {
           ipAddress,
           building,
           login,
-          // departmentId: selectedDepartment,
           password,
           checkPointId: selectedCheckPoint,
           doorTypeId: doorType === "in" ? 1 : 2,
@@ -253,7 +253,7 @@ const Index = () => {
       },
     },
     { accessorKey: "doorType", header: "Тип двери" },
-    // { accessorKey: "depName", header: "Подразделение" },
+
     { accessorKey: "checkPointName", header: "Контрольная точка" },
     { accessorKey: "entryPointName", header: "Входная точка" },
     {
@@ -346,23 +346,9 @@ const Index = () => {
         >
           <div className="col-span-12 space-y-[15px]">
             <div className="flex justify-between items-center">
-              <Button
-                onClick={() => setCreateCameraModal(true)}
-                sx={{
-                  textTransform: "initial",
-                  fontFamily: "DM Sans, sans-serif",
-                  backgroundColor: "#4182F9",
-                  boxShadow: "none",
-                  color: "white",
-                  display: "flex",
-                  gap: "4px",
-                  fontSize: "14px",
-                  borderRadius: "8px",
-                }}
-                variant="contained"
-              >
+              <PrimaryButton onClick={() => setCreateCameraModal(true)}>
                 <p>Создать</p>
-              </Button>
+              </PrimaryButton>
             </div>
             <CustomTable data={get(allCameras, "data", [])} columns={columns} />
           </div>
@@ -380,16 +366,6 @@ const Index = () => {
           open={createCameraModal}
           showCloseIcon={true}
           closeClick={() => {
-            setCreateCameraModal(false);
-
-            setSelectedEntryPoint("");
-            setSelectedCheckPoint("");
-            setIpAddress("");
-            setBuilding("");
-            setLogin("");
-            setPassword("");
-          }}
-          onClose={() => {
             setCreateCameraModal(false);
 
             setSelectedEntryPoint("");
@@ -583,17 +559,6 @@ const Index = () => {
             setDoorType("");
             setEditCameraModal(false);
           }}
-          onClose={() => {
-            setCreateCameraModal(false);
-            setIpAddress("");
-            setBuilding("");
-            setLogin("");
-            setPassword("");
-            setSelectedEntryPoint(null);
-            setSelectedCheckPoint(null);
-            setDoorType("");
-            setEditCameraModal(false);
-          }}
         >
           <Typography variant="h6" className="mb-2">
             Изменить
@@ -709,40 +674,16 @@ const Index = () => {
               </div>
 
               <div className="col-span-4">
-                <Button
-                  sx={{
-                    textTransform: "initial",
-                    fontFamily: "DM Sans, sans-serif",
-                    backgroundColor: "#F07427",
-                    boxShadow: "none",
-                    color: "white",
-                    display: "block", // inline-block emas
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: "4px",
-                    fontSize: "14px",
-                    minWidth: "100px",
-                    width: "20%", // yoki widthni kengroq bering
-                    borderRadius: "8px",
-                    marginTop: "15px",
-                  }}
+                <PrimaryButton
+                  backgroundColor="#F07427"
+                  color="white"
                   variant="contained"
                   onClick={() => onSubmitEditCamera(selectedCamera)}
-                  type="submit"
                 >
+                  {" "}
                   Изменить
-                </Button>
+                </PrimaryButton>
               </div>
-
-              {/* <div className="col-span-4 flex justify-center mt-4">
-                <Image
-                  src="/images/secure-img.png"
-                  alt="secure"
-                  width={400}
-                  height={300}
-                  className="w-full max-w-[350px] h-auto object-cover"
-                />
-              </div> */}
             </form>
           </div>
         </MethodModal>
