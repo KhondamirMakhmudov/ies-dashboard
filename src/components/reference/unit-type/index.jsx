@@ -2,7 +2,6 @@ import CustomTable from "@/components/table";
 import { KEYS } from "@/constants/key";
 import { URLS } from "@/constants/url";
 import useGetPythonQuery from "@/hooks/python/useGetQuery";
-import DashboardLayout from "@/layouts/dashboard/DashboardLayout";
 import { motion } from "framer-motion";
 import { get, isEmpty } from "lodash";
 import EditIcon from "@mui/icons-material/Edit";
@@ -17,7 +16,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { config } from "@/config";
 import DeleteModal from "@/components/modal/delete-modal";
-import usePatchPythonQuery from "@/hooks/python/usePatchQuery";
 import NoData from "@/components/no-data";
 import PrimaryButton from "@/components/button/primary-button";
 import ActiveStatusRadio from "@/components/activeStatusRadio";
@@ -48,8 +46,15 @@ const UnitType = () => {
     },
   });
 
-  const handlePaginationChange = ({ page, offset, limit }) => {
+  const handlePaginationChange = ({ page }) => {
     setCurrentPage(page);
+  };
+
+  const handleRemoveAll = () => {
+    setIsActive();
+    setSelectedUnitType(null);
+    setName("");
+    setOriginalUnitType(null);
   };
 
   // create unit type
@@ -69,7 +74,8 @@ const UnitType = () => {
       {
         onSuccess: () => {
           setCreateModal(false);
-          toast.success("unitType muvaffaqiyatli yaratildi", {
+          handleRemoveAll();
+          toast.success("Тип единицы успешно создан", {
             position: "top-center",
           });
 
@@ -102,13 +108,15 @@ const UnitType = () => {
 
       // If nothing changed, just close modal
       if (Object.keys(updates).length === 0) {
-        toast.info("Изменений не обнаружено");
+        toast("Изменений не обнаружено", {
+          icon: "⚠",
+        });
         setEditModal(false);
         return;
       }
 
       const response = await fetch(
-        `${config.PYTHON_API_URL}${URLS.unitTypes}${id}/`,
+        `${config.PYTHON_API_URL}${URLS.unitTypes}${id}`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -118,12 +126,12 @@ const UnitType = () => {
 
       if (!response.ok) {
         const errData = await response.json();
-        throw new Error(errData?.detail || "Xatolik yuz berdi");
+        throw new Error(errData?.detail || "Ошибка");
       }
 
-      toast.success("UnitType muvaffaqiyatli tahrirlandi");
+      toast.success("Тип единицы успешно отредактирован");
       setEditModal(false);
-      setOriginalUnitType(null);
+      handleRemoveAll();
       queryClient.invalidateQueries([KEYS.unitTypes]);
     } catch (err) {
       toast.error(err.message);
@@ -313,8 +321,8 @@ const UnitType = () => {
             placeholder="Введите имя"
             classNames="col-span-4"
             inputClass={"!h-[45px] rounded-[8px] !border-gray-300 text-[15px]"}
-            value={name}
             labelClass={"text-sm"}
+            value={name}
             onChange={(e) => setName(e.target.value)}
             required
           />
@@ -349,12 +357,11 @@ const UnitType = () => {
           <Input
             label="Имя"
             type="text"
-            // name="ipAddress"
             placeholder="Введите имя"
             classNames="col-span-4"
             inputClass={"!h-[45px] rounded-[8px] !border-gray-300 text-[15px]"}
-            value={name}
             labelClass={"text-sm"}
+            value={name}
             onChange={(e) => setName(e.target.value)}
             required
           />

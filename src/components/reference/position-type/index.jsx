@@ -46,8 +46,14 @@ const PositionType = () => {
     },
   });
 
-  const handlePaginationChange = ({ page, offset, limit }) => {
+  const handlePaginationChange = ({ page }) => {
     setCurrentPage(page);
+  };
+
+  const handleRemoveAll = () => {
+    setIsActive();
+    setName("");
+    setSelectedUnitType();
   };
 
   // create unit type
@@ -67,14 +73,17 @@ const PositionType = () => {
       {
         onSuccess: () => {
           setCreateModal(false);
-          toast.success("positionType muvaffaqiyatli yaratildi", {
+          handleRemoveAll();
+          toast.success("Тип позиции успешно создан", {
             position: "top-center",
           });
 
           queryClient.invalidateQueries(KEYS.positionTypes);
         },
         onError: (error) => {
-          toast.error(`Error is ${error}`, { position: "top-right" });
+          toast.error(`${error.response?.data?.detail}`, {
+            position: "top-right",
+          });
         },
       }
     );
@@ -98,6 +107,7 @@ const PositionType = () => {
       {
         onSuccess: () => {
           setEditModal(false);
+          handleRemoveAll();
           toast.success("positionType muvaffaqiyatli tahrirlandi", {
             position: "top-center",
           });

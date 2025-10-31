@@ -2,7 +2,6 @@ import CustomTable from "@/components/table";
 import { KEYS } from "@/constants/key";
 import { URLS } from "@/constants/url";
 import useGetPythonQuery from "@/hooks/python/useGetQuery";
-import DashboardLayout from "@/layouts/dashboard/DashboardLayout";
 import { motion } from "framer-motion";
 import { get, isEmpty } from "lodash";
 import EditIcon from "@mui/icons-material/Edit";
@@ -20,7 +19,8 @@ import DeleteModal from "@/components/modal/delete-modal";
 import usePatchPythonQuery from "@/hooks/python/usePatchQuery";
 import CustomSelect from "@/components/select";
 import NoData from "@/components/no-data";
-
+import PrimaryButton from "@/components/button/primary-button";
+import ActiveStatusRadio from "@/components/activeStatusRadio";
 const Position = () => {
   const queryClient = useQueryClient();
   const [currentPage, setCurrentPage] = useState(1);
@@ -35,6 +35,7 @@ const Position = () => {
   const [selectStatus, setSelectStatus] = useState(true);
   const [positionTypeId, setPositionTypeId] = useState(null);
   const [positionParentId, setPositionParentId] = useState(null);
+  const [originalUnitType, setOriginalUnitType] = useState(null);
 
   const {
     data: positions,
@@ -76,6 +77,13 @@ const Position = () => {
     setCurrentPage(page);
   };
 
+  const handleRemoveAll = () => {
+    setOriginalUnitType(null);
+    setPositionTypeId(null);
+    setIsActive();
+    setName("");
+  };
+
   // create unit type
   const { mutate: createUnitType } = usePostPythonQuery({
     listKeyId: "create-position",
@@ -88,7 +96,6 @@ const Position = () => {
         url: URLS.positions,
         attributes: {
           name: name,
-          // parent_id: positionParentId,
           position_type_id: positionTypeId,
           is_active: isActive,
         },
@@ -96,49 +103,68 @@ const Position = () => {
       {
         onSuccess: () => {
           setCreateModal(false);
-          toast.success("position muvaffaqiyatli yaratildi", {
+          handleRemoveAll();
+          toast.success("Позиция успешно создана.", {
             position: "top-center",
           });
 
           queryClient.invalidateQueries(KEYS.positions);
         },
         onError: (error) => {
-          toast.error(`Error is ${error}`, { position: "top-right" });
+          toast.error(`${error.response?.data.detail}`, {
+            position: "top-right",
+          });
         },
       }
     );
   };
 
-  // edit unit type
-  const { mutate: editUnitType } = usePatchPythonQuery({
-    listKeyId: "edit-unit-type",
-  });
+  // edit position
+  const onSubmitEditPosition = async (id) => {
+    try {
+      // Build update object with only changed fields
+      const updates = {};
 
-  const onSubmitEditPosition = (id) => {
-    editUnitType(
-      {
-        url: `${URLS.positions}${id}`,
-        attributes: {
-          name: name,
-          position_type_id: positionTypeId,
-          is_active: isActive,
-        },
-      },
-
-      {
-        onSuccess: () => {
-          // setEditModal(false);
-          toast.success("unitType muvaffaqiyatli tahrirlandi", {
-            position: "top-center",
-          });
-
-          queryClient.invalidateQueries(KEYS.unitTypes);
-        },
-        onError: (error) => {
-          toast.error(`Error is ${error}`, { position: "top-right" });
-        },
+      if (name !== originalUnitType.name) {
+        updates.name = name;
       }
-    );
+
+      if (isActive !== originalUnitType.is_active) {
+        updates.is_active = isActive;
+      }
+
+      if (positionTypeId !== originalUnitType.position_type_id) {
+        updates.position_type_id = positionTypeId;
+      }
+
+      // If nothing changed, just close modal
+      if (Object.keys(updates).length === 0) {
+        toast.info("Изменений не обнаружено");
+        setEditModal(false);
+        return;
+      }
+
+      const response = await fetch(
+        `${config.PYTHON_API_URL}${URLS.positions}${id}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(updates),
+        }
+      );
+
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData?.detail || "Xatolik yuz berdi");
+      }
+
+      toast.success("Позиция успешно отредактирован");
+      setEditModal(false);
+      handleRemoveAll();
+      queryClient.invalidateQueries([KEYS.positions]);
+    } catch (err) {
+      toast.error(err.message);
+    }
   };
 
   // delete unit type
@@ -204,6 +230,12 @@ const Position = () => {
               setSelectedUnitType(row.original.id);
               setName(row.original.name);
               setIsActive(row.original.is_active);
+              setPositionTypeId(row.original.position_type_id);
+              setOriginalUnitType({
+                name: row.original.name,
+                position_type_id: row.original.position_type_id,
+                is_active: row.original.is_active,
+              }); // Add this line
             }}
             sx={{
               width: "32px",
@@ -252,23 +284,12 @@ const Position = () => {
         >
           <div className="space-y-[15px]">
             <div className="flex justify-between items-center">
-              <Button
+              <PrimaryButton
                 onClick={() => setCreateModal(true)}
-                sx={{
-                  textTransform: "initial",
-                  fontFamily: "DM Sans, sans-serif",
-                  backgroundColor: "#4182F9",
-                  boxShadow: "none",
-                  color: "white",
-                  display: "flex",
-                  gap: "4px",
-                  fontSize: "14px",
-                  borderRadius: "8px",
-                }}
                 variant="contained"
               >
                 <p>Создать</p>
-              </Button>
+              </PrimaryButton>
 
               <div className="flex justify-between items-center gap-2">
                 <button
@@ -317,72 +338,44 @@ const Position = () => {
         open={createModal}
         onClose={() => {
           setCreateModal(false);
-          setPositionParentId(null);
-          setPositionTypeId(null);
-          setName("");
+          handleRemoveAll();
         }}
       >
         <Typography variant="h6">Создать позицию</Typography>
 
-        <form
-          onSubmit={onSubmitCreatePosition}
-          className="space-y-[15px] my-[30px]"
-        >
+        <div className="space-y-[15px] my-[30px]">
           <Input
             label="Имя"
             type="text"
             placeholder="Введите имя"
             classNames="col-span-4"
             inputClass={"!h-[45px] rounded-[8px] !border-gray-300 text-[15px]"}
-            value={name}
             labelClass={"text-sm"}
+            value={name}
             onChange={(e) => setName(e.target.value)}
             required
           />
-          {/* <CustomSelect
-            options={optionsPosition}
-            value={positionParentId}
-            placeholder="Выберите позицию"
-            onChange={(val) => setPositionParentId(val)}
-          /> */}
 
           <CustomSelect
+            label={"Тип единицы"}
             options={optionsPositionType}
-            value={positionTypeId} // faqat value (id) ni beramiz
-            onChange={(val) => setPositionTypeId(val)} // object emas
+            value={positionTypeId}
+            onChange={(val) => setPositionTypeId(val)}
             placeholder="Выберите тип позиции"
-            returnObject={false} // (ixtiyoriy, default ham false)
+            returnObject={false}
           />
 
-          <div className="col-span-2 flex items-center gap-4">
-            <label className="flex items-center gap-1">
-              <input
-                type="radio"
-                name="isActive"
-                value="true"
-                checked={isActive === true}
-                onChange={() => setIsActive(true)}
-              />
-              <span>Активный</span>
-            </label>
-            <label className="flex items-center gap-1">
-              <input
-                type="radio"
-                name="isActive"
-                value="false"
-                checked={isActive === false}
-                onChange={() => setIsActive(false)}
-              />
-              <span>Неактивный</span>
-            </label>
+          <div className="col-span-2">
+            <ActiveStatusRadio isActive={isActive} setIsActive={setIsActive} />
           </div>
           <button
+            onClick={onSubmitCreatePosition}
             type="submit"
             className=" bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 w-1/4 rounded-xl transition-all duration-200"
           >
             Создать
           </button>
-        </form>
+        </div>
       </MethodModal>
 
       {/* edit modal */}
@@ -391,70 +384,43 @@ const Position = () => {
         open={editModal}
         onClose={() => {
           setEditModal(false);
-          setName("");
-          setPositionParentId(null);
-          setPositionTypeId(null);
-          setIsActive();
+          handleRemoveAll();
         }}
       >
         <Typography variant="h6">Изменить</Typography>
 
-        <form
-          className="space-y-[15px] my-[30px] "
-          onSubmit={(e) => {
-            e.preventDefault(); // sahifa reload bo‘lmasligi uchun
-            onSubmitEditPosition(selectedUnitType);
-          }}
-        >
+        <div className="space-y-[15px] my-[30px] ">
           <Input
             label="Имя"
             type="text"
-            // name="ipAddress"
             placeholder="Введите имя"
             classNames="col-span-4"
             inputClass={"!h-[45px] rounded-[8px] !border-gray-300 text-[15px]"}
-            value={name}
             labelClass={"text-sm"}
+            value={name}
             onChange={(e) => setName(e.target.value)}
             required
           />
 
           <CustomSelect
+            label={"Тип единицы"}
             options={optionsPositionType}
             value={positionTypeId}
             placeholder="Выберите тип позиции"
             onChange={(val) => setPositionTypeId(val)}
           />
 
-          <div className="col-span-2 flex items-center gap-4">
-            <label className="flex items-center gap-1">
-              <input
-                type="radio"
-                name="isActive"
-                value="true"
-                checked={isActive === true}
-                onChange={() => setIsActive(true)}
-              />
-              <span>Активный</span>
-            </label>
-            <label className="flex items-center gap-1">
-              <input
-                type="radio"
-                name="isActive"
-                value="false"
-                checked={isActive === false}
-                onChange={() => setIsActive(false)}
-              />
-              <span>Неактивный</span>
-            </label>
+          <div className="col-span-2">
+            <ActiveStatusRadio isActive={isActive} setIsActive={setIsActive} />
           </div>
           <button
+            onClick={() => onSubmitEditPosition(selectedUnitType)}
             type="submit"
             className=" bg-orange-400 hover:bg-orange-500 text-white font-semibold py-2 w-1/4 rounded-xl transition-all duration-200"
           >
             Изменить
           </button>
-        </form>
+        </div>
       </MethodModal>
 
       {/* Delete modal */}
@@ -466,7 +432,7 @@ const Position = () => {
           setDeleteModal(false);
           setSelectedUnitType(null);
         }}
-        title="Вы уверены, что хотите удалить эту ...?"
+        title="Вы уверены, что хотите удалить эту позицию?"
       />
     </>
   );
