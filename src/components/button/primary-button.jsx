@@ -7,10 +7,12 @@ const PrimaryButton = ({
   backgroundColor = "#4182F9",
   color = "white",
   type,
+  disabled,
 }) => {
   return (
     <Button
       onClick={onClick}
+      disabled={disabled}
       sx={{
         textTransform: "initial",
         fontFamily: "DM Sans, sans-serif",

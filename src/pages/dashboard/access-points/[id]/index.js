@@ -81,8 +81,8 @@ const Index = () => {
 
   const scheduleOptions = get(schedulesOfEntrypoints, "data.schedules", []).map(
     (item) => ({
-      label: item.scheduleName,
-      value: item.entryPointScheduleId, // shu yerda ID yuborayapmiz
+      label: `${item.scheduleName} - ${item.unitCodeName}`,
+      value: item.entryPointScheduleId,
     })
   );
 
@@ -811,7 +811,7 @@ const Index = () => {
             setSelectedSchedule(null);
             setSelectedEmployees(new Set());
             setSelectedPosition(null);
-            setSearchTerm(""); // yopilganda qidiruvni tozalaymiz
+            setSearchTerm("");
           }}
         >
           <Typography variant="h6" className="mb-4">
@@ -822,7 +822,7 @@ const Index = () => {
             <CustomSelect
               options={scheduleOptions}
               value={selectedSchedule}
-              onChange={(val) => setSelectedSchedule(val)} // bu yerda val = entryPointScheduleId
+              onChange={(val) => setSelectedSchedule(val)}
               label="Расписание"
               required
               placeholder="Выберите расписание"

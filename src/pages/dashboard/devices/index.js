@@ -20,8 +20,7 @@ import { useSession } from "next-auth/react";
 import CustomSelect from "@/components/select";
 import usePutQuery from "@/hooks/java/usePutQuery";
 import { useQueryClient } from "@tanstack/react-query";
-import CustomSearch from "@/components/search";
-
+import ActiveStatusRadio from "@/components/activeStatusRadio";
 import { useGlobalStore } from "@/store/globalStore";
 import { useRouter } from "next/router";
 import NoData from "@/components/no-data";
@@ -47,6 +46,7 @@ const Index = () => {
   const [selectedCheckPoint, setSelectedCheckPoint] = useState(null);
   const [selectedCamera, setSelectedCamera] = useState(null);
 
+  // all cameras get
   const {
     data: allCameras,
     isLoading,
@@ -93,6 +93,18 @@ const Index = () => {
     value: entry.id,
     label: entry.checkPointName,
   }));
+
+  const handleRemoveAll = () => {
+    setCreateCameraModal(false);
+    setIpAddress("");
+    setBuilding("");
+    setLogin("");
+    setPassword("");
+    setSelectedEntryPoint(null);
+    setSelectedCheckPoint(null);
+    setDoorType("");
+  };
+
   // create camera
   const { mutate: createCamera } = usePostQuery({
     listKeyId: "create-camera",
@@ -125,15 +137,8 @@ const Index = () => {
           toast.success("Камера успешно установлена", {
             position: "top-center",
           });
-          setCreateCameraModal(false);
-          setIpAddress("");
-          setBuilding("");
-          setLogin("");
-          setPassword("");
-          setSelectedEntryPoint(null);
-          setSelectedCheckPoint(null);
-          setDoorType("");
-          queryClient.invalidateQueries(KEYS.checkpoints);
+          handleRemoveAll();
+          queryClient.invalidateQueries(KEYS.allCameras);
         },
         onError: (error) => {
           const resData = error?.response?.data;
@@ -175,18 +180,12 @@ const Index = () => {
       },
       {
         onSuccess: () => {
-          toast.success("Kamera muvaffaqiyatli tahrirlandi", {
+          toast.success("Данные камеры успешно отредактированы.", {
             position: "top-center",
           });
           setEditCameraModal(false);
-          setIpAddress("");
-          setBuilding("");
-          setLogin("");
-          setPassword("");
-          setSelectedEntryPoint("");
-          setSelectedCheckPoint("");
-          setDoorType("");
-          queryClient.invalidateQueries(KEYS.checkpoints);
+          handleRemoveAll();
+          queryClient.invalidateQueries(KEYS.allCameras);
         },
         onError: (error) => {
           toast.error(`Error is ${error}`, { position: "top-right" });
@@ -367,13 +366,7 @@ const Index = () => {
           showCloseIcon={true}
           closeClick={() => {
             setCreateCameraModal(false);
-
-            setSelectedEntryPoint("");
-            setSelectedCheckPoint("");
-            setIpAddress("");
-            setBuilding("");
-            setLogin("");
-            setPassword("");
+            handleRemoveAll();
           }}
         >
           <Typography variant="h6" className="mb-2">
@@ -381,7 +374,7 @@ const Index = () => {
           </Typography>
 
           <div className="my-[15px]">
-            <form
+            <div
               onSubmit={onSubmitCreateCamera}
               className="grid grid-cols-4 my-[30px] gap-[15px]"
             >
@@ -469,30 +462,14 @@ const Index = () => {
                 className="col-span-2"
               />
 
-              <div className="col-span-2 flex items-center gap-4">
-                <label className="flex items-center gap-1">
-                  <input
-                    type="radio"
-                    name="isActive"
-                    value="true"
-                    checked={isActive === true}
-                    onChange={() => setIsActive(true)}
-                  />
-                  <span>Активный</span>
-                </label>
-                <label className="flex items-center gap-1">
-                  <input
-                    type="radio"
-                    name="isActive"
-                    value="false"
-                    checked={isActive === false}
-                    onChange={() => setIsActive(false)}
-                  />
-                  <span>Неактивный</span>
-                </label>
+              <div className="col-span-2 flex items-center">
+                <ActiveStatusRadio
+                  isActive={isActive}
+                  setIsActive={setIsActive}
+                />
               </div>
-
-              <Button
+              <PrimaryButton
+                onClick={onSubmitCreateCamera}
                 disabled={
                   !ipAddress?.trim() ||
                   !building?.trim() ||
@@ -501,45 +478,10 @@ const Index = () => {
                   !selectedCheckPoint ||
                   !doorType
                 }
-                sx={{
-                  textTransform: "initial",
-                  fontFamily: "DM Sans, sans-serif",
-                  backgroundColor: "#4182F9",
-                  boxShadow: "none",
-                  color: "white",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "4px",
-                  fontSize: "14px",
-                  minWidth: "100px",
-                  borderRadius: "8px",
-                  marginTop: "15px",
-                  opacity:
-                    !ipAddress?.trim() ||
-                    !building?.trim() ||
-                    !login?.trim() ||
-                    !password?.trim() ||
-                    !selectedCheckPoint ||
-                    !doorType
-                      ? 0.6
-                      : 1, // disabled bo‘lsa biroz xiralashadi
-                  cursor:
-                    !ipAddress?.trim() ||
-                    !building?.trim() ||
-                    !login?.trim() ||
-                    !password?.trim() ||
-                    !selectedCheckPoint ||
-                    !doorType
-                      ? "not-allowed"
-                      : "pointer",
-                }}
-                variant="contained"
-                type="submit"
               >
                 Создать
-              </Button>
-            </form>
+              </PrimaryButton>
+            </div>
           </div>
         </MethodModal>
       )}
@@ -549,15 +491,8 @@ const Index = () => {
           open={editCameraModal}
           showCloseIcon={true}
           closeClick={() => {
-            setCreateCameraModal(false);
-            setIpAddress("");
-            setBuilding("");
-            setLogin("");
-            setPassword("");
-            setSelectedEntryPoint(null);
-            setSelectedCheckPoint(null);
-            setDoorType("");
             setEditCameraModal(false);
+            handleRemoveAll();
           }}
         >
           <Typography variant="h6" className="mb-2">
@@ -650,27 +585,11 @@ const Index = () => {
                 className="col-span-2"
               />
 
-              <div className="col-span-2 flex items-center gap-4">
-                <label className="flex items-center gap-1">
-                  <input
-                    type="radio"
-                    name="isActive"
-                    value="true"
-                    checked={isActive === true}
-                    onChange={() => setIsActive(true)}
-                  />
-                  <span>Активный</span>
-                </label>
-                <label className="flex items-center gap-1">
-                  <input
-                    type="radio"
-                    name="isActive"
-                    value="false"
-                    checked={isActive === false}
-                    onChange={() => setIsActive(false)}
-                  />
-                  <span>Неактивный</span>
-                </label>
+              <div className="col-span-2 flex items-center">
+                <ActiveStatusRadio
+                  isActive={isActive}
+                  setIsActive={setIsActive}
+                />
               </div>
 
               <div className="col-span-4">

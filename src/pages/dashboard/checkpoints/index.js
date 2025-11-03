@@ -21,6 +21,7 @@ import CustomSelect from "@/components/select";
 import { useSession } from "next-auth/react";
 import { useQueryClient } from "@tanstack/react-query";
 import NoData from "@/components/no-data";
+import PrimaryButton from "@/components/button/primary-button";
 const Index = () => {
   const queryClient = useQueryClient();
   const { data: session } = useSession();
@@ -30,6 +31,8 @@ const Index = () => {
   const [nameOfCheckpointName, setNameOfCheckpointName] = useState("");
   const [deleteCheckpoints, setDeleteCheckpoints] = useState(false);
   const [selectedCheckpointId, setSelectedCheckpointId] = useState(null);
+
+  // checkpoint get
   const {
     data: checkpoints,
     isLoading,
@@ -56,15 +59,24 @@ const Index = () => {
     enabled: !!session?.accessToken && (createCheckpoints || editCheckpoints),
   });
 
+  // options of the entrypoint
   const options = get(entrypoints, "data", []).map((entry) => ({
     value: entry.id,
     label: entry.entryPointName,
   }));
 
+  // remove all after submission
+  const handleRemoveAll = () => {
+    setNameOfCheckpointName("");
+    setCreateCheckpoints(false);
+    setSelectedEntryPoint([]);
+  };
+
+  // create checkpoint
   const { mutate: createCheckpoint } = usePostQuery({
     listKeyId: "create-checkpoint",
   });
-  // checkpoint yaratish
+
   const submitCreateCheckPoint = () => {
     createCheckpoint(
       {
@@ -81,16 +93,16 @@ const Index = () => {
       },
       {
         onSuccess: () => {
-          toast.success("Checkpoint muvaffaqiyatli joylandi", {
+          toast.success("Контрольная точка успешно создана", {
             position: "top-center",
           });
-          setNameOfCheckpointName("");
-          setCreateCheckpoints(false);
-          setSelectedEntryPoint([]);
+          handleRemoveAll();
           queryClient.invalidateQueries(KEYS.checkpoints);
         },
         onError: (error) => {
-          toast.error(`Error is ${error}`, { position: "top-right" });
+          toast.error(`${error?.response?.data?.detail}`, {
+            position: "top-right",
+          });
         },
       }
     );
@@ -118,17 +130,17 @@ const Index = () => {
       },
       {
         onSuccess: () => {
-          toast.success("Checkpoint muvaffaqiyatli tahrirlandi", {
+          toast.success("Контрольная точка успешно отредактирована", {
             position: "top-center",
           });
           setEditCheckpoints(false);
-          setNameOfCheckpointName("");
-          setSelectedEntryPoint(null);
-          setCreateCheckpoints(false);
+          handleRemoveAll();
           queryClient.invalidateQueries(KEYS.checkpoints);
         },
         onError: (error) => {
-          toast.error(`Error is ${error}`, { position: "top-right" });
+          toast.error(`${error?.response?.data?.detail}`, {
+            position: "top-right",
+          });
         },
       }
     );
@@ -244,26 +256,12 @@ const Index = () => {
         >
           <div className="col-span-12 space-y-[15px]">
             <div className="max-w-[100px]">
-              <Button
+              <PrimaryButton
                 onClick={() => setCreateCheckpoints(true)}
-                sx={{
-                  textTransform: "initial",
-                  fontFamily: "DM Sans, sans-serif",
-                  backgroundColor: "#4182F9",
-                  boxShadow: "none",
-                  color: "white",
-                  display: "flex", // inline-block emas
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "4px",
-                  fontSize: "14px",
-                  minWidth: "100px", // yoki widthni kengroq bering
-                  borderRadius: "8px",
-                }}
-                variant="contained"
+                variant={"contained"}
               >
                 Создать
-              </Button>
+              </PrimaryButton>
             </div>
             <CustomTable data={get(checkpoints, "data")} columns={columns} />
           </div>
@@ -276,13 +274,11 @@ const Index = () => {
           showCloseIcon={true}
           closeClick={() => {
             setCreateCheckpoints(false);
-            setNameOfCheckpointName("");
-            setSelectedEntryPoint(null);
+            handleRemoveAll();
           }}
           onClose={() => {
             setCreateCheckpoints(false);
-            setNameOfCheckpointName("");
-            setSelectedEntryPoint(null);
+            handleRemoveAll();
           }}
         >
           <Typography variant="h6" className="mb-2">
@@ -312,30 +308,13 @@ const Index = () => {
               required
               placeholder="Выберите точку входа"
             />
-
-            <Button
+            <PrimaryButton
               disabled={nameOfCheckpointName === "" || !selectedEntryPoint}
-              sx={{
-                textTransform: "initial",
-                fontFamily: "DM Sans, sans-serif",
-                backgroundColor: "#4182F9",
-                boxShadow: "none",
-                color: "white",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "4px",
-                fontSize: "14px",
-                minWidth: "100px",
-                borderRadius: "8px",
-                marginTop: "15px",
-              }}
               variant="contained"
               onClick={submitCreateCheckPoint}
-              type="submit"
             >
               Создать
-            </Button>
+            </PrimaryButton>
           </div>
         </MethodModal>
       )}
@@ -346,12 +325,11 @@ const Index = () => {
           showCloseIcon={true}
           closeClick={() => {
             setEditCheckpoints(false);
-            setNameOfCheckpointName("");
-            setSelectedEntryPoint(null);
+            handleRemoveAll();
           }}
           onClose={() => {
             setEditCheckpoints(false);
-            setSelectedEntryPoint(null);
+            handleRemoveAll();
           }}
         >
           <Typography variant="h6" className="mb-2">
@@ -379,29 +357,14 @@ const Index = () => {
               value={selectedEntryPoint}
               onChange={(val) => setSelectedEntryPoint(val)}
             />
-
-            <Button
-              sx={{
-                textTransform: "initial",
-                fontFamily: "DM Sans, sans-serif",
-                backgroundColor: "#F07427",
-                boxShadow: "none",
-                color: "white",
-                display: "flex", // inline-block emas
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "4px",
-                fontSize: "14px",
-                minWidth: "100px", // yoki widthni kengroq bering
-                borderRadius: "8px",
-                marginTop: "15px",
-              }}
+            <PrimaryButton
               variant="contained"
+              backgroundColor="#F07427"
+              color="white"
               onClick={() => submitEditCheckPoint(selectedCheckpointId)}
-              type="submit"
             >
               Изменить
-            </Button>
+            </PrimaryButton>
           </div>
         </MethodModal>
       )}
