@@ -23,6 +23,10 @@ import useGetPythonQuery from "@/hooks/python/useGetQuery";
 import NoData from "@/components/no-data";
 import { useRouter } from "next/router";
 import ReportIcon from "@mui/icons-material/Report";
+import PrimaryButton from "@/components/button/primary-button";
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import AddIcon from "@mui/icons-material/Add";
+import ClearIcon from "@mui/icons-material/Clear";
 const Index = () => {
   const { data: session } = useSession();
   const router = useRouter();
@@ -87,6 +91,14 @@ const Index = () => {
     key: "create-EntryPoint",
   });
 
+  const handleRemoveAll = () => {
+    setEntryPointName("");
+    setEntryPointShortName("");
+    setBuildingDescription("");
+    setUnitCodes([]);
+    setselectedEntryPoint(null);
+  };
+
   const submitCreateEntryPoint = () => {
     if (
       !entryPointName ||
@@ -130,10 +142,7 @@ const Index = () => {
             position: "top-center",
           });
           setCreateAccessPoint(false);
-          setEntryPointName("");
-          setEntryPointShortName("");
-          setBuildingDescription("");
-          setUnitCodes([]);
+          handleRemoveAll();
           queryClient.invalidateQueries(KEYS.entrypoints);
         },
         onError: (error) => {
@@ -216,11 +225,7 @@ const Index = () => {
 
       // Reset states
       setEditEntryPoint(false);
-      setEntryPointName("");
-      setEntryPointShortName("");
-      setBuildingDescription("");
-      setUnitCodes([]);
-      setselectedEntryPoint(null);
+      handleRemoveAll();
 
       queryClient.invalidateQueries(KEYS.entrypoints);
     } catch (err) {
@@ -446,33 +451,20 @@ const Index = () => {
         <motion.div
           initial={{ opacity: 0, scale: 0 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-white p-[12px] my-[50px] rounded-md border border-gray-200"
+          className="bg-white p-[12px] my-[20px] rounded-md border border-gray-200"
         >
-          <div className="col-span-12 space-y-[15px]">
-            <div className="max-w-[100px]">
-              <Button
-                onClick={() => setCreateAccessPoint(true)}
-                sx={{
-                  textTransform: "initial",
-                  fontFamily: "DM Sans, sans-serif",
-                  backgroundColor: "#4182F9",
-                  boxShadow: "none",
-                  color: "white",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "4px",
-                  fontSize: "14px",
-                  minWidth: "100px",
-                  borderRadius: "8px",
-                }}
-                variant="contained"
-              >
-                Создать
-              </Button>
-            </div>
-            <CustomTable data={get(entrypoints, "data")} columns={columns} />
-          </div>
+          <PrimaryButton
+            onClick={() => setCreateAccessPoint(true)}
+            variant="contained"
+          >
+            Создать
+          </PrimaryButton>
+
+          <CustomTable
+            data={get(entrypoints, "data", [])}
+            columns={columns}
+            tableClassName={"mt-[10px]"}
+          />
         </motion.div>
       )}
 
@@ -484,20 +476,12 @@ const Index = () => {
           width={"50%"}
           closeClick={() => {
             setCreateAccessPoint(false);
-            setEntryPointName("");
-            setEntryPointShortName("");
-            setBuildingDescription("");
-            setUnitCodes([]);
+            handleRemoveAll();
           }}
         >
           {/* Header Section */}
           <div className="sticky top-0 bg-white z-10 pb-4 border-b border-gray-200">
-            <Typography
-              variant="h5"
-              className="font-bold text-gray-800 flex items-center gap-2"
-            >
-              Добавить точку доступа
-            </Typography>
+            <Typography variant="h5">Добавить точку доступа</Typography>
             <Typography variant="body2" className="text-gray-500 mt-1 ml-12">
               Заполните информацию о новой точке доступа
             </Typography>
@@ -654,21 +638,9 @@ const Index = () => {
                                 )
                               }
                               className="w-9 h-9 flex items-center justify-center bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition"
-                              title="Удалить подразделение"
+                              title="   "
                             >
-                              <svg
-                                className="w-5 h-5"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M6 18L18 6M6 6l12 12"
-                                />
-                              </svg>
+                              <ClearIcon />
                             </button>
                           </div>
                         </div>
@@ -677,19 +649,7 @@ const Index = () => {
                       {/* Schedules Section */}
                       <div className="p-4">
                         <div className="flex items-center gap-2 mb-3">
-                          <svg
-                            className="w-5 h-5 text-indigo-500"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                            />
-                          </svg>
+                          <AccessTimeIcon />
                           <Typography
                             variant="body2"
                             className="font-semibold text-gray-700"
@@ -758,38 +718,14 @@ const Index = () => {
                                   className="w-8 h-8 flex items-center justify-center bg-red-50 hover:bg-red-100 text-red-600 rounded-md transition"
                                   title="Удалить расписание"
                                 >
-                                  <svg
-                                    className="w-4 h-4"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M6 18L18 6M6 6l12 12"
-                                    />
-                                  </svg>
+                                  <ClearIcon />
                                 </button>
                               </motion.div>
                             ))}
                           </div>
                         ) : (
                           <div className="text-center py-6 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-                            <svg
-                              className="w-10 h-10 mx-auto text-gray-300 mb-2"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={1.5}
-                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                              />
-                            </svg>
+                            <AccessTimeIcon className="text-gray-500" /> <br />
                             <Typography
                               variant="caption"
                               className="text-gray-500"
@@ -803,19 +739,7 @@ const Index = () => {
                           onClick={() => addScheduleToUnit(unitIndex)}
                           className="w-full mt-3 px-4 py-2.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-sm font-medium transition-all flex items-center justify-center gap-2 border border-indigo-200"
                         >
-                          <svg
-                            className="w-5 h-5"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M12 4v16m8-8H4"
-                            />
-                          </svg>
+                          <AddIcon />
                           Добавить расписание
                         </button>
                       </div>
@@ -840,41 +764,20 @@ const Index = () => {
 
           {/* Footer Actions */}
           <div className="sticky top-0 bg-white border-t-2 border-gray-200 pt-4 mt-6 flex justify-end gap-3">
-            <Button
-              sx={{
-                textTransform: "initial",
-                backgroundColor: "#e5e7eb",
-                color: "#374151",
-                borderRadius: "10px",
-                fontWeight: "600",
-                px: 4,
-                py: 1.5,
-              }}
+            <PrimaryButton
+              variant="contained"
               onClick={() => {
                 setCreateAccessPoint(false);
-                setEntryPointName("");
-                setEntryPointShortName("");
-                setBuildingDescription("");
-                setUnitCodes([]);
+                handleRemoveAll();
               }}
+              backgroundColor="#e5e7eb"
+              color="black"
             >
               Отмена
-            </Button>
-            <Button
-              sx={{
-                textTransform: "initial",
-                background: "#4182F9",
-                color: "white",
-                borderRadius: "10px",
-                fontWeight: "600",
-                px: 4,
-                py: 1.5,
-              }}
-              variant="contained"
-              onClick={submitCreateEntryPoint}
-            >
+            </PrimaryButton>
+            <PrimaryButton variant="contained" onClick={submitCreateEntryPoint}>
               Создать
-            </Button>
+            </PrimaryButton>
           </div>
         </MethodModal>
       )}
@@ -886,11 +789,7 @@ const Index = () => {
           width={"50%"}
           closeClick={() => {
             setEditEntryPoint(false);
-            setEntryPointName("");
-            setEntryPointShortName("");
-            setBuildingDescription("");
-            setUnitCodes([]);
-            setselectedEntryPoint(null);
+            handleRemoveAll();
           }}
         >
           {/* Header Section */}
@@ -991,8 +890,8 @@ const Index = () => {
               </div>
 
               <p className="text-sm text-gray-600 bg-blue-50 border-l-4 border-blue-400 p-3 rounded-r-lg">
-                ℹ️ Привяжите точку доступа к подразделениям и их расписаниям
-                работы
+                <ReportIcon /> Привяжите точку доступа к подразделениям и их
+                расписаниям работы
               </p>
 
               {unitCodes.length === 0 ? (
@@ -1072,21 +971,9 @@ const Index = () => {
                                 )
                               }
                               className="w-9 h-9 flex items-center justify-center bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition"
-                              title="Удалить подразделение"
+                              title="   "
                             >
-                              <svg
-                                className="w-5 h-5"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M6 18L18 6M6 6l12 12"
-                                />
-                              </svg>
+                              <ClearIcon />
                             </button>
                           </div>
                         </div>
@@ -1095,19 +982,7 @@ const Index = () => {
                       {/* Schedules Section */}
                       <div className="p-4">
                         <div className="flex items-center gap-2 mb-3">
-                          <svg
-                            className="w-5 h-5 text-indigo-500"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                            />
-                          </svg>
+                          <AccessTimeIcon />
                           <Typography
                             variant="body2"
                             className="font-semibold text-gray-700"
@@ -1176,38 +1051,14 @@ const Index = () => {
                                   className="w-8 h-8 flex items-center justify-center bg-red-50 hover:bg-red-100 text-red-600 rounded-md transition"
                                   title="Удалить расписание"
                                 >
-                                  <svg
-                                    className="w-4 h-4"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M6 18L18 6M6 6l12 12"
-                                    />
-                                  </svg>
+                                  <ClearIcon />
                                 </button>
                               </motion.div>
                             ))}
                           </div>
                         ) : (
                           <div className="text-center py-6 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-                            <svg
-                              className="w-10 h-10 mx-auto text-gray-300 mb-2"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={1.5}
-                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                              />
-                            </svg>
+                            <AccessTimeIcon className="text-gray-500" /> <br />
                             <Typography
                               variant="caption"
                               className="text-gray-500"
@@ -1221,19 +1072,7 @@ const Index = () => {
                           onClick={() => addScheduleToUnit(unitIndex)}
                           className="w-full mt-3 px-4 py-2.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-sm font-medium transition-all flex items-center justify-center gap-2 border border-indigo-200"
                         >
-                          <svg
-                            className="w-5 h-5"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M12 4v16m8-8H4"
-                            />
-                          </svg>
+                          <AddIcon />
                           Добавить расписание
                         </button>
                       </div>
@@ -1243,29 +1082,14 @@ const Index = () => {
               )}
 
               <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
                 onClick={() =>
                   setUnitCodes([
                     ...unitCodes,
                     { code: "", isMain: 0, schedules: [] },
                   ])
                 }
-                className="w-full px-5 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
+                className="w-full px-5 py-3 rounded-xl bg-blue-400 hover:bg-blue-500 cursor-pointer   text-white font-semibold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
               >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2.5}
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
                 Добавить подразделение
               </motion.button>
             </div>
@@ -1273,65 +1097,25 @@ const Index = () => {
 
           {/* Footer Actions */}
           <div className="sticky top-0 bg-white border-t-2 border-gray-200 pt-4 mt-6 flex justify-end gap-3">
-            <Button
-              sx={{
-                textTransform: "initial",
-                backgroundColor: "#e5e7eb",
-                color: "#374151",
-                borderRadius: "10px",
-                fontWeight: "600",
-                px: 4,
-                py: 1.5,
-                "&:hover": {
-                  backgroundColor: "#d1d5db",
-                },
-              }}
-              variant="contained"
+            <PrimaryButton
+              backgroundColor="#e5e7eb"
+              color="black"
               onClick={() => {
                 setEditEntryPoint(false);
-                setEntryPointName("");
-                setEntryPointShortName("");
-                setBuildingDescription("");
-                setUnitCodes([]);
-                setselectedEntryPoint(null);
+                handleRemoveAll();
               }}
             >
               Отмена
-            </Button>
-            <Button
-              sx={{
-                textTransform: "initial",
-                background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
-                color: "white",
-                borderRadius: "10px",
-                fontWeight: "600",
-                px: 4,
-                py: 1.5,
-                boxShadow: "0 4px 12px rgba(245, 158, 11, 0.4)",
-                "&:hover": {
-                  background:
-                    "linear-gradient(135deg, #d97706 0%, #b45309 100%)",
-                  boxShadow: "0 6px 16px rgba(245, 158, 11, 0.5)",
-                },
-              }}
+            </PrimaryButton>
+
+            <PrimaryButton
+              backgroundColor="#d97706"
+              color="white"
               variant="contained"
               onClick={submitEditEntryPoint}
             >
-              <svg
-                className="w-5 h-5 mr-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2.5}
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
               Сохранить изменения
-            </Button>
+            </PrimaryButton>
           </div>
         </MethodModal>
       )}
