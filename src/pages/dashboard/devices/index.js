@@ -21,10 +21,9 @@ import CustomSelect from "@/components/select";
 import usePutQuery from "@/hooks/java/usePutQuery";
 import { useQueryClient } from "@tanstack/react-query";
 import ActiveStatusRadio from "@/components/activeStatusRadio";
-import { useGlobalStore } from "@/store/globalStore";
-import { useRouter } from "next/router";
 import NoData from "@/components/no-data";
 import PrimaryButton from "@/components/button/primary-button";
+import Link from "next/link";
 const ipRegex =
   /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
 
@@ -233,21 +232,13 @@ const Index = () => {
       accessorKey: "ipAddress",
       header: "IP-адрес",
       cell: ({ row }) => {
-        const setSelectedCamera = useGlobalStore(
-          (state) => state.setSelectedCamera
-        );
-        const router = useRouter();
-
         return (
-          <span
-            onClick={() => {
-              setSelectedCamera(row.original);
-              router.push(`/dashboard/devices/${row.original.id}`);
-            }}
+          <Link
+            href={`/dashboard/devices/${row.original.id}`}
             className="text-blue-600 hover:underline cursor-pointer"
           >
             {row.original.ipAddress}
-          </span>
+          </Link>
         );
       },
     },

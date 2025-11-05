@@ -27,6 +27,7 @@ import PrimaryButton from "@/components/button/primary-button";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import AddIcon from "@mui/icons-material/Add";
 import ClearIcon from "@mui/icons-material/Clear";
+import Link from "next/link";
 const Index = () => {
   const { data: session } = useSession();
   const router = useRouter();
@@ -199,8 +200,6 @@ const Index = () => {
       return;
     }
 
-    console.log(updatedData);
-
     try {
       const res = await fetch(
         `${config.JAVA_API_URL}${URLS.newEntryPoints}/${selectedEntryPointId}`,
@@ -336,11 +335,10 @@ const Index = () => {
       accessorKey: "actions",
       header: "Действия",
       cell: ({ row }) => (
-        <div className="flex gap-2">
-          <Button
-            onClick={() =>
-              router.push(`/dashboard/access-points/${row.original.id}`)
-            }
+        <div className="flex gap-2 items-center ">
+          <Link
+            href={`/dashboard/access-points/${row.original.id}`}
+            className="text-sm px-3 py-1.5 bg-[#4182F9] text-white hover:bg-blue-600 rounded-md transition-all"
             sx={{
               textTransform: "initial",
               fontFamily: "DM Sans, sans-serif",
@@ -355,7 +353,7 @@ const Index = () => {
             variant="contained"
           >
             <p>Подробнее</p>
-          </Button>
+          </Link>
           <Button
             onClick={() => {
               setselectedEntryPoint(row);

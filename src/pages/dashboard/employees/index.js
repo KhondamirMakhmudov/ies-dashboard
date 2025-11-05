@@ -17,7 +17,6 @@ import PhoneInputUz from "@/components/input/phone-input";
 import toast from "react-hot-toast";
 import CustomTable from "@/components/table";
 import dayjs from "dayjs";
-import { useRouter } from "next/router";
 import { useQueryClient } from "@tanstack/react-query";
 import ContentLoader from "@/components/loader";
 import BirthDateInput from "@/components/input/birthdate-input";
@@ -27,12 +26,12 @@ import Breadcrumb from "@/components/breadcrumb";
 import { exportToExcel } from "@/utils/exportToExcelStyled";
 import ReportGmailerrorredIcon from "@mui/icons-material/ReportGmailerrorred";
 import PrimaryButton from "@/components/button/primary-button";
+import Link from "next/link";
 const Index = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 15;
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
-  const router = useRouter();
   const [level1Id, setLevel1Id] = useState(null); // Birinchi select (organizational unit)
   const [selectUnitCode, setSelectUnitCode] = useState(null); // Tanlangan unit_code
   const [step, setStep] = useState(1);
@@ -203,12 +202,14 @@ const Index = () => {
       accessorKey: "actions",
       header: "Действия",
       cell: ({ row }) => (
-        <button
-          onClick={() => router.push(`employees/${row.original.id}`)}
-          className="bg-[#EDEDF2] font-semibold px-4 py-2 rounded-md cursor-pointer hover:bg-gray-400 transition-all duration-200"
-        >
-          Подробнее
-        </button>
+        <div className="my-2">
+          <Link
+            href={`employees/${row.original.id}`}
+            className="bg-[#EDEDF2] font-semibold px-4 py-2 rounded-md cursor-pointer hover:bg-gray-400 transition-all duration-200"
+          >
+            Подробнее
+          </Link>
+        </div>
       ),
       enableSorting: false,
     },
