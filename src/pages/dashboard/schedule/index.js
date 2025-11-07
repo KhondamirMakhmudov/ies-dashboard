@@ -15,6 +15,7 @@ import CustomTable from "@/components/table";
 import ContentLoader from "@/components/loader";
 import ScheduleModal from "@/components/modal/schedule-modal";
 import PrimaryButton from "@/components/button/primary-button";
+import Link from "next/link";
 
 const Index = () => {
   const router = useRouter();
@@ -52,25 +53,12 @@ const Index = () => {
       header: "Действия",
       cell: ({ row }) => (
         <div className="flex gap-2">
-          <Button
-            onClick={() =>
-              router.push(`/dashboard/schedule/${row.original.id}`)
-            }
-            sx={{
-              textTransform: "initial",
-              fontFamily: "DM Sans, sans-serif",
-              backgroundColor: "#A3CBFB",
-              boxShadow: "none",
-              color: "white",
-              display: "flex",
-              gap: "4px",
-              fontSize: "14px",
-              borderRadius: "8px",
-            }}
-            variant="contained"
+          <Link
+            href={`/dashboard/schedule/${row.original.id}`}
+            className="px-4 py-2 bg-[#4182F9] text-white rounded-md transition-all text-sm"
           >
             <p>Подробнее</p>
-          </Button>
+          </Link>
         </div>
       ),
       enableSorting: false,
