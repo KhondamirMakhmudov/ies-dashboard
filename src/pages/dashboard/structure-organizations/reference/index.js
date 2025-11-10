@@ -19,12 +19,12 @@ const Index = () => {
 
   return (
     <DashboardLayout headerTitle={"Справочник"}>
-      <div className="p-2 bg-white mt-[30px]">
+      <div className="p-2 bg-white mt-[20px] border border-gray-200 rounded-md">
         <div className="flex text-base items-center gap-[20px]">
           {/* First Tab */}
           <button
             onClick={() => handleTab("unit-type")}
-            className={`py-[11px] px-[15px] rounded-md flex flex-col items-center ${
+            className={`py-[11px] px-[15px] rounded-md flex flex-col items-center cursor-pointer ${
               tab === "unit-type"
                 ? "bg-[#F5F5F5] text-black"
                 : "bg-white text-[#828282]"
@@ -49,7 +49,7 @@ const Index = () => {
           {/* Second Tab */}
           <button
             onClick={() => handleTab("position-type")}
-            className={`py-[11px] px-[15px] rounded-md flex flex-col items-center ${
+            className={`py-[11px] px-[15px] rounded-md flex flex-col items-center cursor-pointer ${
               tab === "position-type"
                 ? "bg-[#F5F5F5] text-black"
                 : "bg-white text-[#828282]"
@@ -74,7 +74,7 @@ const Index = () => {
           {/* Third Tab */}
           <button
             onClick={() => handleTab("position")}
-            className={`py-[11px] px-[15px] rounded-md flex flex-col items-center ${
+            className={`py-[11px] px-[15px] rounded-md flex flex-col items-center cursor-pointer ${
               tab === "position"
                 ? "bg-[#F5F5F5] text-black"
                 : "bg-white text-[#828282]"

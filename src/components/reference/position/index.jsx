@@ -21,6 +21,7 @@ import CustomSelect from "@/components/select";
 import NoData from "@/components/no-data";
 import PrimaryButton from "@/components/button/primary-button";
 import ActiveStatusRadio from "@/components/activeStatusRadio";
+
 const Position = () => {
   const queryClient = useQueryClient();
   const [currentPage, setCurrentPage] = useState(1);
@@ -235,7 +236,7 @@ const Position = () => {
                 name: row.original.name,
                 position_type_id: row.original.position_type_id,
                 is_active: row.original.is_active,
-              }); // Add this line
+              });
             }}
             sx={{
               width: "32px",
@@ -274,48 +275,43 @@ const Position = () => {
       : offset + limit + 1;
   return (
     <>
+      <div className="flex justify-between items-center bg-white p-[12px] mt-[20px]  rounded-md">
+        <PrimaryButton onClick={() => setCreateModal(true)} variant="contained">
+          <p>Создать</p>
+        </PrimaryButton>
+
+        <div className="inline-flex items-center bg-gray-100 rounded-lg p-1 gap-1">
+          <button
+            className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 cursor-pointer ${
+              selectStatus === true
+                ? "bg-white text-green-600 shadow-sm"
+                : "text-gray-600 hover:text-gray-900"
+            }`}
+            onClick={() => setSelectStatus(true)}
+          >
+            Активные
+          </button>
+          <button
+            className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 cursor-pointer ${
+              selectStatus === false
+                ? "bg-white text-red-600 shadow-sm"
+                : "text-gray-600 hover:text-gray-900"
+            }`}
+            onClick={() => setSelectStatus(false)}
+          >
+            Неактивные
+          </button>
+        </div>
+      </div>
       {isEmpty(get(positions, "data", [])) ? (
         <NoData onCreate={() => setCreateModal(true)} />
       ) : (
         <motion.div
-          initial={{ opacity: 0, scale: 0 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="bg-white p-[12px] mt-[20px] mb-[50px] rounded-md"
+          initial={{ opacity: 0, translateY: "20px" }}
+          animate={{ opacity: 1, translateY: "0" }}
+          className="bg-white p-[12px] mb-[50px] rounded-md"
         >
           <div className="space-y-[15px]">
-            <div className="flex justify-between items-center">
-              <PrimaryButton
-                onClick={() => setCreateModal(true)}
-                variant="contained"
-              >
-                <p>Создать</p>
-              </PrimaryButton>
-
-              <div className="flex justify-between items-center gap-2">
-                <button
-                  className={` font-medium cursor-pointer p-1 text-sm rounded-md border  ${
-                    selectStatus === true
-                      ? "text-green-600 border-green-600 bg-[#E8F6F0]"
-                      : "text-gray-400 border-gray-400 bg-white"
-                  } scale-100 active:scale-95 transition-all duration-200`}
-                  onClick={() => setSelectStatus(true)}
-                >
-                  Активные
-                </button>
-                <div className="w-[1px] h-[20px] bg-gray-200"></div>
-                <button
-                  className={` font-medium cursor-pointer p-1 text-sm rounded-md border ${
-                    selectStatus === false
-                      ? "text-red-600 border-red-600  bg-[#FAE7E7]"
-                      : "text-gray-400 border-gray-400 bg-white"
-                  } scale-100 active:scale-95 transition-all duration-200`}
-                  onClick={() => setSelectStatus(false)}
-                >
-                  Неактивные
-                </button>
-              </div>
-            </div>
-
             {isLoading || isFetching ? (
               <ContentLoader />
             ) : (

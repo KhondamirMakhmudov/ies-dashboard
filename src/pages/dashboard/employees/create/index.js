@@ -6,9 +6,21 @@ import { useQueryClient } from "@tanstack/react-query";
 import { URLS } from "@/constants/url";
 import { KEYS } from "@/constants/key";
 import useGetPythonQuery from "@/hooks/python/useGetQuery";
+import Input from "@/components/input";
+import PhoneInputUz from "@/components/input/phone-input";
+import BirthDateInput from "@/components/input/birthdate-input";
+import CustomSelect from "@/components/select";
+import { genderOptions } from "@/constants/static-data";
+import PrimaryButton from "@/components/button/primary-button";
+import { educationLevelOptions } from "@/constants/static-data";
+import { razryadOptions } from "@/constants/static-data";
+import { get } from "lodash";
+import ReportGmailerrorredIcon from "@mui/icons-material/ReportGmailerrorred";
+import ImageUploader from "@/components/image-uploader";
 
 const Index = () => {
   const queryClient = useQueryClient();
+  const [level1Id, setLevel1Id] = useState(null);
   const [step, setStep] = useState(1);
   const [selectUnitCode, setSelectUnitCode] = useState(null);
   const [errors, setErrors] = useState({});
@@ -97,6 +109,21 @@ const Index = () => {
     }
   };
 
+  const handleChange = (e) => {
+    const { name, value, files } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: files ? files[0] : value,
+    }));
+  };
+
+  const handlePhotoChange = (file) => {
+    setFormData((prev) => ({
+      ...prev,
+      photo: file,
+    }));
+  };
+
   return (
     <DashboardLayout headerTitle={"Создать сотрудника"}>
       <div className="bg-white p-[15px] mt-[10px] rounded-md border border-[#E9E9E9]">
@@ -139,6 +166,268 @@ const Index = () => {
               </div>
             );
           })}
+        </div>
+
+        {/* Step 1 */}
+        {step === 1 && (
+          <div className="space-y-3">
+            <Input
+              label={"Имя сотрудника"}
+              name="first_name"
+              value={formData.first_name}
+              onChange={handleChange}
+              placeholder="Имя"
+              inputClass="!h-[45px] border !border-gray-200"
+              required
+              error={errors.first_name}
+            />
+            <Input
+              label={"Фамилия сотрудника"}
+              name="last_name"
+              value={formData.last_name}
+              onChange={handleChange}
+              placeholder="Фамилия"
+              inputClass="!h-[45px] border !border-gray-200"
+              required={true}
+            />
+            <Input
+              label={"Отчество сотрудника"}
+              name="middle_name"
+              value={formData.middle_name}
+              onChange={handleChange}
+              placeholder="Отчество"
+              inputClass="!h-[45px] border !border-gray-200"
+            />
+
+            <Input
+              label={"Электронная почта"}
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="Электронная почта"
+              inputClass="!h-[45px] border !border-gray-200"
+              error={errors.email}
+            />
+            <PhoneInputUz
+              label={"Телефон номер сотрудника"}
+              name="phone_number"
+              value={formData.phone_number}
+              onChange={handleChange}
+              placeholder="Телефонный номер"
+              inputClass="!h-[45px] border !border-gray-200"
+              error={errors.phone_number}
+            />
+
+            <div className="flex gap-2">
+              <BirthDateInput
+                value={formData.date_of_birth}
+                onChange={handleChange}
+                error={errors.date_of_birth}
+                inputClass="!h-[45px] border !border-gray-200"
+                required
+              />
+
+              <CustomSelect
+                label={"Пол"}
+                options={genderOptions}
+                value={formData.gender}
+                placeholder="Выберите пол"
+                onChange={(val) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    gender: val,
+                  }))
+                }
+                required
+                returnObject={false}
+              />
+            </div>
+
+            <Input
+              name="address"
+              value={formData.address}
+              label={"Адрес проживания"}
+              onChange={handleChange}
+              placeholder="Введите"
+              inputClass="!h-[45px] border !border-gray-200"
+              required={true}
+            />
+          </div>
+        )}
+
+        {/* Step 2 */}
+        {step === 2 && (
+          <div className="space-y-3">
+            <CustomSelect
+              options={educationLevelOptions}
+              value={formData.education_degree} // ✅ faqat value (string/number)
+              label="Степень образования"
+              placeholder="Выберите уровень образования"
+              onChange={(val) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  education_degree: val, // faqat value saqlanadi
+                }))
+              }
+              required
+              returnObject={false} // ⚡ faqat value qaytarish uchun
+            />
+
+            <Input
+              name="education_place"
+              value={formData.education_place}
+              onChange={handleChange}
+              placeholder={"Введите"}
+              label="Место получения образования"
+              inputClass="!h-[45px] border !border-gray-200"
+              required={true}
+            />
+            <div className="flex gap-2 ">
+              <Input
+                name="tabel_number"
+                label={"Табельный номер"}
+                value={formData.tabel_number}
+                onChange={handleChange}
+                placeholder="Введите"
+                inputClass="!h-[45px] border !border-gray-200"
+                error={errors.tabel_number}
+                required
+              />
+
+              <CustomSelect
+                label={"Выберите разряд"}
+                options={razryadOptions}
+                value={formData.level}
+                placeholder="Выберите разряд"
+                onChange={(val) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    level: val,
+                  }))
+                }
+                sortOptions={false}
+                returnObject={false} // ✅ faqat value qaytaradi
+              />
+            </div>
+            <Input
+              name="hire_date"
+              type="date"
+              label={"Дата приема на работу"}
+              value={formData.hire_date}
+              onChange={handleChange}
+              inputClass="!h-[45px] border !border-gray-200"
+              error={errors.hire_date}
+              required
+            />
+
+            {/* LEVEL 1 */}
+            <CustomSelect
+              options={get(level1List, "data", []).map((i) => ({
+                value: i.unit_code,
+                label: i.name,
+              }))}
+              value={level1Id}
+              placeholder="Выберите"
+              onChange={(val) => {
+                setLevel1Id(val);
+                setSelectUnitCode(val);
+              }}
+              returnObject={false}
+            />
+
+            <CustomSelect
+              options={get(workplaceData, "data", []).map((w) => ({
+                value: w.id,
+                label: `${w.organizational_unit.name} - ${w.position.name}`,
+              }))}
+              value={formData.workplace_id}
+              placeholder="Выберите рабочее место"
+              onChange={(val) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  workplace_id: val, // faqat value keladi
+                }))
+              }
+              isLoading={isLoadingWorkplace}
+              returnObject={false} // ✅ faqat value qaytarish uchun
+            />
+          </div>
+        )}
+
+        {/* Step 3 */}
+        {step === 3 && (
+          <div className="space-y-3">
+            <div className="bg-blue-50 border-l-4 border-blue-400 p-3 mb-8 rounded-r-lg">
+              <div className="text-[16px] font-semibold text-blue-800 mb-4 items-center flex gap-1">
+                <ReportGmailerrorredIcon />
+                <h2>Требования к фотографии</h2>
+              </div>
+              <div className="space-y-3 text-sm">
+                <div className="flex items-start">
+                  <div className="w-2 h-2 bg-blue-400 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                  <div>
+                    <span className="font-medium text-blue-800">
+                      Размер файла:
+                    </span>
+                    <span className="text-blue-700"> Максимум 10МБ</span>
+                  </div>
+                </div>
+                <div className="flex items-start">
+                  <div className="w-2 h-2 bg-blue-400 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                  <div>
+                    <span className="font-medium text-blue-800">
+                      Положение лица:
+                    </span>
+                    <span className="text-blue-700">
+                      {" "}
+                      Ваше лицо должно быть в центре фотографии
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-start">
+                  <div className="w-2 h-2 bg-blue-400 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                  <div>
+                    <span className="font-medium text-blue-800">
+                      Качество изображения:
+                    </span>
+                    <span className="text-blue-700">
+                      {" "}
+                      Четкое, хорошо освещенное фото с резким фокусом
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <ImageUploader
+                image={formData.photo}
+                onFileChange={handlePhotoChange}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Navigation */}
+        <div className="flex justify-between pt-4">
+          {step > 1 ? (
+            <PrimaryButton
+              onClick={handlePrev}
+              backgroundColor="#EDEDF2"
+              color="black"
+            >
+              Назад
+            </PrimaryButton>
+          ) : (
+            <div />
+          )}
+          {step < 3 ? (
+            <PrimaryButton onClick={handleNext}>Вперёд</PrimaryButton>
+          ) : (
+            <PrimaryButton onClick={onSubmitCreateEmployee}>
+              Закончить
+            </PrimaryButton>
+          )}
         </div>
       </div>
     </DashboardLayout>

@@ -1,5 +1,5 @@
 import DashboardLayout from "@/layouts/dashboard/DashboardLayout";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Input from "@/components/input";
 import { Typography } from "@mui/material";
 import ImageUploader from "@/components/image-uploader";
@@ -22,20 +22,24 @@ import ContentLoader from "@/components/loader";
 import BirthDateInput from "@/components/input/birthdate-input";
 import NoData from "@/components/no-data";
 import ExcelButton from "@/components/button/excel-button";
-import Breadcrumb from "@/components/breadcrumb";
 import { exportToExcel } from "@/utils/exportToExcelStyled";
 import ReportGmailerrorredIcon from "@mui/icons-material/ReportGmailerrorred";
 import PrimaryButton from "@/components/button/primary-button";
 import Link from "next/link";
+
 const Index = () => {
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 15;
+  const [pageSize] = useState(15);
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
-  const [level1Id, setLevel1Id] = useState(null); // Birinchi select (organizational unit)
-  const [selectUnitCode, setSelectUnitCode] = useState(null); // Tanlangan unit_code
+  const [level1Id, setLevel1Id] = useState(null);
+  const [selectUnitCode, setSelectUnitCode] = useState(null);
   const [step, setStep] = useState(1);
   const [errors, setErrors] = useState({});
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
+
   const [formData, setFormData] = useState({
     first_name: "",
     last_name: "",
@@ -54,28 +58,42 @@ const Index = () => {
     photo: null,
   });
 
-  // employee GET method
+  // Debounce search with loading state
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+      setIsSearching(false);
+    }, 500);
 
+    return () => clearTimeout(timeout);
+  }, [searchTerm]);
+
+  // Employee data query with optimized loading states
   const {
     data: employee,
     isLoading,
     isFetching,
   } = useGetPythonQuery({
-    key: KEYS.employees,
+    key: [KEYS.employees, currentPage, debouncedSearch],
     url: URLS.employees,
+    enabled: true, // Always enabled since we handle search via params
+    keepPreviousData: true, // This prevents flashing by keeping old data
+    staleTime: 30000, // Consider data fresh for 30 seconds
     params: {
       limit: pageSize,
       offset: (currentPage - 1) * pageSize,
+      ...(debouncedSearch ? { first_name: debouncedSearch } : {}),
     },
   });
 
-  // organization units
+  // Organization units
   const { data: level1List, isLoading: isLoadingLevel1 } = useGetPythonQuery({
     key: KEYS.organizationalUnits,
     url: URLS.organizationalUnits,
     params: { is_root: true, limit: 150 },
   });
-  // workplace
+
+  // Workplace data
   const { data: workplaceData, isLoading: isLoadingWorkplace } =
     useGetPythonQuery({
       key: [KEYS.workplace, selectUnitCode],
@@ -85,7 +103,7 @@ const Index = () => {
         unit_code: selectUnitCode ? +selectUnitCode : undefined,
         is_vacant: true,
       },
-      enabled: !!selectUnitCode, // faqat selectUnitCode tanlanganda chaqilsin
+      enabled: !!selectUnitCode,
     });
 
   const handleChange = (e) => {
@@ -95,7 +113,17 @@ const Index = () => {
       [name]: files ? files[0] : value,
     }));
   };
-  // employee yaratish POST
+
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+    setCurrentPage(1);
+    if (value.trim()) {
+      setIsSearching(true);
+    }
+  };
+
+  // Employee creation POST
   const onSubmitCreateEmployee = async () => {
     try {
       const form = new FormData();
@@ -114,13 +142,11 @@ const Index = () => {
       const result = await response.json();
 
       if (!response.ok) {
-        // server validation error
         if (result?.detail && typeof result.detail === "object") {
-          setErrors(result.detail); // ✅ errorlarni inputlarga ulash uchun
+          setErrors(result.detail);
           toast.error("Iltimos, kiritilgan ma'lumotlarni tekshiring.");
           return;
         }
-
         toast.error("Xatolik yuz berdi.");
         return;
       }
@@ -128,27 +154,44 @@ const Index = () => {
       toast.success("Xodim muvaffaqiyatli qo'shildi!");
       setErrors({});
       setStep(1);
+      setFormData({
+        first_name: "",
+        last_name: "",
+        middle_name: "",
+        email: "",
+        phone_number: "",
+        level: 1,
+        hire_date: "",
+        date_of_birth: "",
+        tabel_number: "",
+        gender: "",
+        address: "",
+        education_degree: "школа",
+        education_place: "",
+        workplace_id: "",
+        photo: null,
+      });
       queryClient.invalidateQueries(KEYS.employees);
+      setOpen(false);
     } catch (error) {
       console.error("Xatolik:", error);
       toast.error("Tarmoqda xatolik yuz berdi.");
     }
   };
 
-  // photoni formdataga qo'shish
   const handlePhotoChange = (file) => {
     setFormData((prev) => ({
       ...prev,
       photo: file,
     }));
   };
-  // postda datalarga bosqichma bosqich o'tish uchun buttonlar
+
   const handleNext = () => setStep((prev) => Math.min(prev + 1, 3));
   const handlePrev = () => setStep((prev) => Math.max(prev - 1, 1));
 
   const steps = [
     "Asosiy ma'lumotlar",
-    "Qo‘shimcha ma'lumotlar",
+    "Qo'shimcha ma'lumotlar",
     "Rasm va yakun",
   ];
 
@@ -197,7 +240,6 @@ const Index = () => {
         );
       },
     },
-
     {
       accessorKey: "actions",
       header: "Действия",
@@ -229,7 +271,8 @@ const Index = () => {
     }
   };
 
-  if (isLoading || isFetching) {
+  // Show loader only for initial load, not for searches
+  if (isLoading && !employee) {
     return (
       <DashboardLayout>
         <ContentLoader />
@@ -240,17 +283,6 @@ const Index = () => {
   return (
     <DashboardLayout headerTitle={"Сотрудники"}>
       <div className="bg-white p-[15px] mt-[10px] rounded-md border border-[#E9E9E9]">
-        <Breadcrumb
-          paths={[
-            {
-              label: "Сотрудники",
-              href: "/dashboard/employees",
-              isCurrent: true,
-            },
-          ]}
-        />
-      </div>
-      <div className="bg-white p-[15px] mt-[10px] rounded-md border border-[#E9E9E9]">
         <div className="col-span-12 flex justify-between items-center ">
           <Typography variant="h6" fontWeight={"600"}>
             Просмотр и управление сотрудниками
@@ -260,9 +292,7 @@ const Index = () => {
             <ExcelButton
               onClick={async () => {
                 const loadingToast = toast.loading("Загрузка данных...");
-
                 const allEmployees = await fetchAllEmployeesForExport();
-
                 toast.dismiss(loadingToast);
 
                 if (allEmployees.length > 0) {
@@ -282,22 +312,72 @@ const Index = () => {
           </div>
         </div>
       </div>
-      {isEmpty(get(employee, "data.data", [])) ? (
+
+      <div className="bg-white p-4 mt-3 rounded-md border border-gray-200">
+        <div className="relative">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={1.5}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1010.5 18a7.5 7.5 0 006.15-3.35z"
+            />
+          </svg>
+
+          <input
+            type="text"
+            placeholder="Поиск сотрудника..."
+            value={searchTerm}
+            onChange={handleSearchChange}
+            className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all placeholder:text-gray-400 text-gray-800"
+          />
+
+          {/* Search loading indicator */}
+          {isSearching && (
+            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Table with smooth loading states */}
+      {isSearching && isFetching ? (
+        <div className="bg-white p-4 mt-3 rounded-md border border-gray-200">
+          <ContentLoader />
+        </div>
+      ) : isEmpty(get(employee, "data.data", [])) ? (
         <NoData onCreate={() => setOpen(true)} />
       ) : (
-        <div className="bg-white p-[12px] mt-[5px] mb-[50px] rounded-md border border-[#E9E9E9]">
+        <div className="bg-white p-[12px] mt-[10px] mb-[50px] rounded-md border border-[#E9E9E9]">
           <div className="grid grid-cols-12 gap-[12px] p-2">
-            <div className="col-span-12 ">
+            <div className="col-span-12">
               <CustomTable
                 data={get(employee, "data.data", [])}
                 columns={columns}
                 pagination={{
                   currentPage,
-                  pageSize: pageSize,
-                  total: get(employee, "data.count", 0), // 👈 bu umumiy son (backenddan kelmasa qo‘lda berish kerak)
+                  pageSize,
+                  total: get(employee, "data.count", 0),
                   onPaginationChange: ({ page }) => setCurrentPage(page),
                 }}
               />
+
+              {/* Small loading indicator for background refetches */}
+              {isFetching && (
+                <div className="flex justify-center py-2 mt-2">
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+                    Обновление данных...
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -308,7 +388,23 @@ const Index = () => {
         closeClick={() => {
           setOpen(false);
           setStep(1);
-          setFormData({});
+          setFormData({
+            first_name: "",
+            last_name: "",
+            middle_name: "",
+            email: "",
+            phone_number: "",
+            level: 1,
+            hire_date: "",
+            date_of_birth: "",
+            tabel_number: "",
+            gender: "",
+            address: "",
+            education_degree: "школа",
+            education_place: "",
+            workplace_id: "",
+            photo: null,
+          });
         }}
         showCloseIcon={true}
       >
@@ -325,23 +421,21 @@ const Index = () => {
               <div
                 key={index}
                 className="flex items-center w-full cursor-pointer"
-                onClick={() => setStep(current)} // ✅ stepni update qilish
+                onClick={() => setStep(current)}
               >
-                {/* Step circle */}
                 <div
                   className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold transition-colors
-          ${
-            isActive
-              ? "bg-blue-600"
-              : isCompleted
-              ? "bg-green-500 hover:bg-green-600"
-              : "bg-gray-300 hover:bg-gray-400"
-          }`}
+                    ${
+                      isActive
+                        ? "bg-blue-600"
+                        : isCompleted
+                        ? "bg-green-500 hover:bg-green-600"
+                        : "bg-gray-300 hover:bg-gray-400"
+                    }`}
                 >
                   {current}
                 </div>
 
-                {/* Line (except after the last step) */}
                 {index !== steps.length - 1 && (
                   <div className="flex-1 h-[2px] bg-gray-300 mx-2 relative">
                     <div
@@ -448,17 +542,17 @@ const Index = () => {
           <div className="space-y-3">
             <CustomSelect
               options={educationLevelOptions}
-              value={formData.education_degree} // ✅ faqat value (string/number)
+              value={formData.education_degree}
               label="Степень образования"
               placeholder="Выберите уровень образования"
               onChange={(val) =>
                 setFormData((prev) => ({
                   ...prev,
-                  education_degree: val, // faqat value saqlanadi
+                  education_degree: val,
                 }))
               }
               required
-              returnObject={false} // ⚡ faqat value qaytarish uchun
+              returnObject={false}
             />
 
             <Input
@@ -494,7 +588,7 @@ const Index = () => {
                   }))
                 }
                 sortOptions={false}
-                returnObject={false} // ✅ faqat value qaytaradi
+                returnObject={false}
               />
             </div>
             <Input
@@ -533,11 +627,11 @@ const Index = () => {
               onChange={(val) =>
                 setFormData((prev) => ({
                   ...prev,
-                  workplace_id: val, // faqat value keladi
+                  workplace_id: val,
                 }))
               }
               isLoading={isLoadingWorkplace}
-              returnObject={false} // ✅ faqat value qaytarish uchun
+              returnObject={false}
             />
           </div>
         )}
