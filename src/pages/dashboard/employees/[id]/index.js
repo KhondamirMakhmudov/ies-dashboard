@@ -28,6 +28,7 @@ import { genderOptions } from "@/constants/static-data";
 import { educationLevelOptions } from "@/constants/static-data";
 import { razryadOptions } from "@/constants/static-data";
 import ReportComponent from "@/components/report";
+import PrimaryButton from "@/components/button/primary-button";
 
 const Index = () => {
   const queryClient = useQueryClient();
@@ -38,19 +39,25 @@ const Index = () => {
   const { data: session } = useSession();
   const [editModal, setEditModal] = useState(false);
   const [deleteModal, setDeleteModal] = useState(false);
+  const [connectScheduleModal, setConnectScheduleModal] = useState(false);
+  const [selectEntrypointId, setSelectEntrypointId] = useState(false);
   const [photoPreview, setPhotoPreview] = useState("");
-
   const [photoFile, setPhotoFile] = useState(null);
-
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const [tab, setTab] = useState("personal");
+
+  // Connect schedule states
+  const [selectedEntryPoint, setSelectedEntryPoint] = useState(null);
+  const [selectedSchedule, setSelectedSchedule] = useState(null);
+
   const tabs = [
     { key: "personal", label: "Основная информация" },
     { key: "employee", label: "Данные о сотрудниках" },
     { key: "schedule", label: "Доступ и расписание" },
   ];
+
   const [formData, setFormData] = useState({
     first_name: "",
     last_name: "",
@@ -105,7 +112,6 @@ const Index = () => {
   }, [employeePhoto?.data]);
 
   // GET schedule and entrypoint which are connected to employee
-
   const {
     data: ScheduleAndEntrypointOfEmployee,
     isLoading: isLoadingScheduleAndEntrypointOfEmployee,
@@ -120,8 +126,33 @@ const Index = () => {
     enabled: !!employee_id && !!session?.accessToken,
   });
 
-  // GET report of the employee by employee_id (right now used table_number instead of id)
+  const {
+    data: schedulesOfEntrypoints,
+    isLoading: isLoadingSchedules,
+    isFetching: isFetchingSchedules,
+  } = useGetQuery({
+    key: KEYS.schedulesOfEntrypoints,
+    url: `${URLS.schedulesOfEntrypoints}${selectEntrypointId}/schedules`,
+    headers: {
+      Authorization: `Bearer ${session?.accessToken}`,
+      Accept: "application/json",
+    },
+    enabled: !!selectEntrypointId && !!session?.accessToken,
+  });
 
+  const tableNumberPrefix = get(employeePhoto, "data.tabel_number")?.split(
+    "-"
+  )[0];
+
+  const scheduleOptions = get(schedulesOfEntrypoints, "data.schedules", [])
+    // Filter schedules where unitCode matches table number prefix
+    .filter((item) => item.unitCode === tableNumberPrefix)
+    .map((item) => ({
+      label: `${item.scheduleName} - ${item.unitCodeName}`,
+      value: item.entryPointScheduleId,
+    }));
+
+  // GET report of the employee by employee_id
   const {
     data: employeeReport,
     isLoading: isLoadingReport,
@@ -138,8 +169,49 @@ const Index = () => {
       ...(endDate && { endDate }),
     },
     enabled:
-      !!employee_id && !!session?.accessToken && !!startDate && !!endDate, // ✅ faqat sanalar bo‘lsa fetch qiladi
+      !!employee_id && !!session?.accessToken && !!startDate && !!endDate,
   });
+
+  // Connect schedule to employee
+  const handleConnectSchedule = async () => {
+    if (!selectedSchedule) {
+      toast.warning("Пожалуйста, выберите расписание!");
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `${config.JAVA_API_URL}${URLS.connectScheduleAndEmployee}?entryPointScheduleId=${selectedSchedule}`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${session?.accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify([employee_id]),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Ошибка при подключении расписания");
+      }
+
+      toast.success("Расписание успешно подключено!", {
+        position: "top-center",
+      });
+
+      queryClient.invalidateQueries(KEYS.ScheduleAndEntrypointOfEmployee);
+      queryClient.invalidateQueries(KEYS.connectScheduleAndEmployee);
+
+      // Reset and close
+      setSelectedEntryPoint(null);
+      setSelectedSchedule(null);
+      setConnectScheduleModal(false);
+    } catch (error) {
+      console.error("Error connecting schedule:", error);
+      toast.error(`Ошибка: ${error.message}`, { position: "top-right" });
+    }
+  };
 
   // edit(patch) Employee
   const onSubmitEditEmployee = async () => {
@@ -157,8 +229,6 @@ const Index = () => {
     if (photoFile) {
       formDataToSend.append("photo", photoFile);
     }
-
-    // Debug uchun
 
     try {
       const res = await fetch(
@@ -216,6 +286,14 @@ const Index = () => {
     }));
   };
 
+  // Reset connect modal when closed
+  useEffect(() => {
+    if (!connectScheduleModal) {
+      setSelectedEntryPoint(null);
+      setSelectedSchedule(null);
+    }
+  }, [connectScheduleModal]);
+
   if (isLoadingPhoto || isFetchingPhoto) {
     return (
       <DashboardLayout>
@@ -243,19 +321,16 @@ const Index = () => {
     const canvas = canvasRef.current;
     const context = canvas.getContext("2d");
 
-    // Canvas o‘lchamini video bilan teng qilamiz
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
 
-    // Videodan rasmni canvasga chizamiz
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-    // Blob (file) obyektini olamiz
     canvas.toBlob((blob) => {
       if (blob) {
         const file = new File([blob], "photo.jpg", { type: "image/jpeg" });
         setPhotoPreview(URL.createObjectURL(file));
-        setPhotoFile(file); // 🚀 bu yerda file real "File" obyekt bo‘ladi
+        setPhotoFile(file);
       }
     }, "image/jpeg");
 
@@ -272,7 +347,6 @@ const Index = () => {
               href: "/dashboard/employees",
               isCurrent: false,
             },
-
             {
               label: `${get(employeePhoto, "data.first_name")} ${get(
                 employeePhoto,
@@ -344,7 +418,7 @@ const Index = () => {
             </div>
           </div>
 
-          {/* O‘ng tomonda tabs + ma’lumotlar */}
+          {/* O'ng tomonda tabs + ma'lumotlar */}
           <div className="lg:col-span-9 w-full">
             <motion.div
               initial={{ opacity: 0, scale: 0 }}
@@ -622,11 +696,20 @@ const Index = () => {
             {/* Connected schedule and entrypoint to employee */}
             {tab === "schedule" && (
               <div className="space-y-[10px] p-2 sm:p-4">
-                <Typography variant="h6">Точки доступа и расписания</Typography>
-                <p className="text-gray-500">
-                  Точки входа, к которым у сотрудника есть доступ, и связанные с
-                  ними расписания.
-                </p>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <Typography variant="h6">
+                      Точки доступа и расписания
+                    </Typography>
+                    <p className="text-gray-500">
+                      Точки входа, к которым у сотрудника есть доступ, и
+                      связанные с ними расписания.
+                    </p>
+                  </div>
+                  {/* <PrimaryButton onClick={() => setConnectScheduleModal(true)}>
+                    Подключить расписание
+                  </PrimaryButton> */}
+                </div>
 
                 <div className="space-y-[10px]">
                   {get(
@@ -649,29 +732,49 @@ const Index = () => {
                               "Название точки не указано"}
                           </Typography>
 
-                          <Button
-                            onClick={() =>
-                              router.push(
-                                `/dashboard/access-points/${
-                                  get(item, "entryPointId") || ""
-                                }`
-                              )
-                            }
-                            sx={{
-                              textTransform: "initial",
-                              fontFamily: "DM Sans, sans-serif",
-                              backgroundColor: "#4182F9",
-                              boxShadow: "none",
-                              color: "white",
-                              display: "flex",
-                              gap: "4px",
-                              fontSize: "14px",
-                              borderRadius: "8px",
-                            }}
-                            variant="contained"
-                          >
-                            <p>Перейти к точке доступа</p>
-                          </Button>
+                          <div className="flex gap-2 items-center">
+                            <Button
+                              onClick={() => {
+                                setConnectScheduleModal(true);
+                                setSelectEntrypointId(
+                                  get(item, "entryPointId")
+                                );
+                              }}
+                              sx={{
+                                width: "32px",
+                                height: "32px",
+                                minWidth: "32px",
+                                background: "#F0D8C8",
+                                color: "#FF6200",
+                              }}
+                            >
+                              <EditIcon fontSize="small" />
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                router.push(
+                                  `/dashboard/access-points/${
+                                    get(item, "entryPointId") || ""
+                                  }`
+                                )
+                              }
+                              sx={{
+                                textTransform: "initial",
+                                fontFamily: "DM Sans, sans-serif",
+                                backgroundColor: "#4182F9",
+                                boxShadow: "none",
+                                height: "32px",
+                                color: "white",
+                                display: "flex",
+                                gap: "4px",
+                                fontSize: "14px",
+                                borderRadius: "8px",
+                              }}
+                              variant="contained"
+                            >
+                              <p>Перейти к точке доступа</p>
+                            </Button>
+                          </div>
                         </div>
 
                         <div className="mt-[10px] bg-gray-100 p-3 rounded-md">
@@ -697,8 +800,6 @@ const Index = () => {
                             </button>
                           </div>
                         </div>
-                        {/* change the schedule of the employee  */}
-                        <div></div>
                       </div>
                     ))
                   ) : (
@@ -725,8 +826,62 @@ const Index = () => {
           isFetchingReport={isFetchingReport}
         />
       </div>
-      {/* edit modal */}
 
+      {/* Connect Schedule Modal */}
+      {connectScheduleModal && (
+        <MethodModal
+          open={connectScheduleModal}
+          closeClick={() => {
+            setConnectScheduleModal(false);
+            setSelectEntrypointId(null);
+          }}
+          showCloseIcon={true}
+        >
+          <Typography variant="h6" className="text-xl font-bold mb-4">
+            Подключить расписание к сотруднику
+          </Typography>
+
+          <div className="space-y-4 my-[15px]">
+            <CustomSelect
+              label="Выберите расписание"
+              options={scheduleOptions}
+              value={selectedSchedule}
+              placeholder="Выберите расписание"
+              onChange={(val) => {
+                setSelectedSchedule(val);
+              }}
+              returnObject={false}
+            />
+
+            {selectedSchedule && (
+              <div className="bg-blue-50 border-l-4 border-blue-400 p-3 rounded-r-lg">
+                <p className="text-sm text-blue-800">
+                  Выбранное расписание будет подключено к этому сотруднику для
+                  выбранной точки доступа.
+                </p>
+              </div>
+            )}
+          </div>
+
+          <div className="flex justify-end gap-3 mt-6">
+            <PrimaryButton
+              onClick={() => setConnectScheduleModal(false)}
+              backgroundColor="#EDEDF2"
+              color="black"
+            >
+              Отмена
+            </PrimaryButton>
+            <PrimaryButton
+              onClick={handleConnectSchedule}
+              disabled={!selectedSchedule}
+            >
+              Подключить
+            </PrimaryButton>
+          </div>
+        </MethodModal>
+      )}
+
+      {/* edit modal */}
       {editModal && (
         <MethodModal open={editModal} width={1000} padding={0}>
           <div className="bg-[#E57F3A] p-[16px] text-white rounded-t-[8px] flex justify-between items-center">
@@ -993,17 +1148,17 @@ const Index = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <CustomSelect
                   options={educationLevelOptions}
-                  value={formData.education_degree || ""} // ✅ faqat value (string/number)
+                  value={formData.education_degree || ""}
                   label="Степень образования"
                   placeholder="Выберите уровень образования"
                   onChange={(val) =>
                     setFormData((prev) => ({
                       ...prev,
-                      education_degree: val, // faqat value saqlanadi
+                      education_degree: val,
                     }))
                   }
                   required
-                  returnObject={false} // ⚡ faqat value qaytarish uchun
+                  returnObject={false}
                 />
 
                 <Input
@@ -1050,7 +1205,7 @@ const Index = () => {
                     }))
                   }
                   sortOptions={false}
-                  returnObject={false} // ✅ faqat value qaytaradi
+                  returnObject={false}
                 />
                 <Input
                   name="hire_date"
@@ -1065,7 +1220,7 @@ const Index = () => {
             </div>
           </div>
 
-          <div className="sticky  bg-white border-t border-t-gray-200 p-4 flex justify-end gap-3">
+          <div className="sticky bg-white border-t border-t-gray-200 p-4 flex justify-end gap-3">
             <button
               onClick={() => setEditModal(false)}
               className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-sm font-medium"
@@ -1082,6 +1237,7 @@ const Index = () => {
           </div>
         </MethodModal>
       )}
+
       {/* delete modal */}
       {deleteModal && (
         <DeleteModal

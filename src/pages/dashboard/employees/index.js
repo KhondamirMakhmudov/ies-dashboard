@@ -127,8 +127,22 @@ const Index = () => {
   const onSubmitCreateEmployee = async () => {
     try {
       const form = new FormData();
+
+      // Only append fields that have values
       for (const key in formData) {
-        form.append(key, formData[key]);
+        const value = formData[key];
+
+        // Skip empty or null values
+        // For strings, check if not empty after trimming
+        // For numbers, allow 0 but skip null/undefined
+        // For files, check if not null
+        if (value !== null && value !== undefined && value !== "") {
+          // For string fields, trim whitespace and check again
+          if (typeof value === "string" && value.trim() === "") {
+            continue;
+          }
+          form.append(key, value);
+        }
       }
 
       const response = await fetch(
@@ -138,9 +152,7 @@ const Index = () => {
           body: form,
         }
       );
-
       const result = await response.json();
-
       if (!response.ok) {
         if (result?.detail && typeof result.detail === "object") {
           setErrors(result.detail);
@@ -150,7 +162,6 @@ const Index = () => {
         toast.error("Xatolik yuz berdi.");
         return;
       }
-
       toast.success("Xodim muvaffaqiyatli qo'shildi!");
       setErrors({});
       setStep(1);
@@ -460,7 +471,7 @@ const Index = () => {
               onChange={handleChange}
               placeholder="Имя"
               inputClass="!h-[45px] border !border-gray-200"
-              required
+              // required
               error={errors.first_name}
             />
             <Input
@@ -470,7 +481,7 @@ const Index = () => {
               onChange={handleChange}
               placeholder="Фамилия"
               inputClass="!h-[45px] border !border-gray-200"
-              required={true}
+              // required={true}
             />
             <Input
               label={"Отчество сотрудника"}
@@ -506,7 +517,7 @@ const Index = () => {
                 onChange={handleChange}
                 error={errors.date_of_birth}
                 inputClass="!h-[45px] border !border-gray-200"
-                required
+                // required
               />
 
               <CustomSelect
@@ -520,7 +531,7 @@ const Index = () => {
                     gender: val,
                   }))
                 }
-                required
+                // required
                 returnObject={false}
               />
             </div>
@@ -532,7 +543,7 @@ const Index = () => {
               onChange={handleChange}
               placeholder="Введите"
               inputClass="!h-[45px] border !border-gray-200"
-              required={true}
+              // required={true}
             />
           </div>
         )}
@@ -551,7 +562,7 @@ const Index = () => {
                   education_degree: val,
                 }))
               }
-              required
+              // required
               returnObject={false}
             />
 
@@ -562,7 +573,7 @@ const Index = () => {
               placeholder={"Введите"}
               label="Место получения образования"
               inputClass="!h-[45px] border !border-gray-200"
-              required={true}
+              // required={true}
             />
             <div className="flex gap-2 ">
               <Input
@@ -573,7 +584,7 @@ const Index = () => {
                 placeholder="Введите"
                 inputClass="!h-[45px] border !border-gray-200"
                 error={errors.tabel_number}
-                required
+                // required
               />
 
               <CustomSelect
@@ -599,7 +610,7 @@ const Index = () => {
               onChange={handleChange}
               inputClass="!h-[45px] border !border-gray-200"
               error={errors.hire_date}
-              required
+              // required
             />
 
             {/* LEVEL 1 */}

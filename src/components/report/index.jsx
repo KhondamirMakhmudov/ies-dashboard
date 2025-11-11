@@ -175,13 +175,18 @@ const ReportComponent = ({
             isEmpty(data) ? "col-span-12" : "col-span-8"
           } p-6 rounded-md border border-[#E9E9E9] `}
         >
-          <div className="border-b border-b-gray-200 pb-[10px]">
+          <div className="border-b border-b-gray-200 pb-[10px] flex justify-between">
             <Typography
               variant="h6"
               sx={{ fontSize: "20px", fontWeight: "600" }}
             >
               Отчёты о сотруднике
             </Typography>
+
+            <ExcelButton
+              onClick={() => exportToExcel(data)}
+              enableHover={false}
+            />
           </div>
           <div className="flex gap-6 items-end flex-wrap mt-[15px]">
             {/* Start date */}
@@ -285,14 +290,31 @@ const ReportComponent = ({
             </div>
           </div>
 
-          <ExcelButton
-            onClick={() => exportToExcel(data)}
-            enableHover={false}
-          />
+          {isEmpty(data) ? (
+            <NoData
+              title="Нет данных"
+              description="За выбранный период данные по сотрудникам не найдены. Попробуйте изменить диапазон дат"
+            />
+          ) : (
+            <div>
+              {isLoadingReport || isFetchingReport ? (
+                <ContentLoader />
+              ) : (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.3 }}
+                  className="bg-white my-[20px]   w-full p-3 rounded-md border border-gray-200"
+                >
+                  <CustomTable data={data} columns={columns} />
+                </motion.div>
+              )}
+            </div>
+          )}
         </motion.div>
 
         {!isEmpty(data) && (
-          <div className="bg-white col-span-4 p-6 rounded-md border border-gray-200">
+          <div className="bg-white col-span-4 self-start p-6 rounded-md border border-gray-200">
             <h3 className="text-lg font-semibold mb-4">Статистика доступа</h3>
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
@@ -316,28 +338,6 @@ const ReportComponent = ({
           </div>
         )}
       </div>
-
-      {isEmpty(data) ? (
-        <NoData
-          title="Нет данных"
-          description="За выбранный период данные по сотрудникам не найдены. Попробуйте изменить диапазон дат"
-        />
-      ) : (
-        <div>
-          {isLoadingReport || isFetchingReport ? (
-            <ContentLoader />
-          ) : (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.3 }}
-              className="bg-white my-[20px]   w-full p-3 rounded-md border border-gray-200"
-            >
-              <CustomTable data={data} columns={columns} />
-            </motion.div>
-          )}
-        </div>
-      )}
     </>
   );
 };
