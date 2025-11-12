@@ -17,13 +17,13 @@ import { useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { config } from "@/config";
 import DeleteModal from "@/components/modal/delete-modal";
-import usePatchPythonQuery from "@/hooks/python/usePatchQuery";
 import NoData from "@/components/no-data";
 import PrimaryButton from "@/components/button/primary-button";
 
 const PositionType = () => {
   const queryClient = useQueryClient();
   const [currentPage, setCurrentPage] = useState(1);
+  const [originalUnitType, setOriginalUnitType] = useState(null);
   const limit = 150;
   const offset = (currentPage - 1) * limit;
   const [createModal, setCreateModal] = useState(false);
@@ -55,6 +55,7 @@ const PositionType = () => {
     setIsActive();
     setName("");
     setSelectedUnitType();
+    setOriginalUnitType(null);
   };
 
   // create unit type
@@ -90,36 +91,49 @@ const PositionType = () => {
     );
   };
 
-  // edit unit type
-  const { mutate: editPositionType } = usePatchPythonQuery({
-    listKeyId: "edit-position-type",
-  });
+  const onSubmitEditPositionType = async (id) => {
+    try {
+      // Build update object with only changed fields
+      const updates = {};
 
-  const onSubmitEditPositionType = (id) => {
-    editPositionType(
-      {
-        url: `${URLS.positionTypes}${id}`,
-        attributes: {
-          name: name,
-          is_active: isActive,
-        },
-      },
-
-      {
-        onSuccess: () => {
-          setEditModal(false);
-          handleRemoveAll();
-          toast.success("positionType muvaffaqiyatli tahrirlandi", {
-            position: "top-center",
-          });
-
-          queryClient.invalidateQueries(KEYS.positionTypes);
-        },
-        onError: (error) => {
-          toast.error(`Error is ${error}`, { position: "top-right" });
-        },
+      if (name !== originalUnitType.name) {
+        updates.name = name;
       }
-    );
+
+      if (isActive !== originalUnitType.is_active) {
+        updates.is_active = isActive;
+      }
+
+      // If nothing changed, just close modal
+      if (Object.keys(updates).length === 0) {
+        toast("Изменений не обнаружено", {
+          icon: "⚠",
+        });
+        setEditModal(false);
+        return;
+      }
+
+      const response = await fetch(
+        `${config.PYTHON_API_URL}${URLS.positionTypes}${id}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(updates),
+        }
+      );
+
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData?.detail || "Ошибка");
+      }
+
+      toast.success("Тип позиции успешно отредактирован");
+      setEditModal(false);
+      handleRemoveAll();
+      queryClient.invalidateQueries([KEYS.positionTypes]);
+    } catch (err) {
+      toast.error(err.message);
+    }
   };
 
   // delete unit type
@@ -184,6 +198,10 @@ const PositionType = () => {
               setSelectedUnitType(row.original.id);
               setName(row.original.name);
               setIsActive(row.original.is_active);
+              setOriginalUnitType({
+                name: row.original.name,
+                is_active: row.original.is_active,
+              });
             }}
             sx={{
               width: "32px",

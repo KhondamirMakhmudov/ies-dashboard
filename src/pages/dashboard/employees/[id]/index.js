@@ -29,6 +29,14 @@ import { educationLevelOptions } from "@/constants/static-data";
 import { razryadOptions } from "@/constants/static-data";
 import ReportComponent from "@/components/report";
 import PrimaryButton from "@/components/button/primary-button";
+import LocationOnIcon from "@mui/icons-material/LocationOn";
+import BusinessIcon from "@mui/icons-material/Business";
+import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import InboxIcon from "@mui/icons-material/Inbox";
+
+import Link from "next/link";
 
 const Index = () => {
   const queryClient = useQueryClient();
@@ -711,7 +719,7 @@ const Index = () => {
                   </PrimaryButton> */}
                 </div>
 
-                <div className="space-y-[10px]">
+                <div className="space-y-[16px]">
                   {get(
                     ScheduleAndEntrypointOfEmployee,
                     "data.entryPointSchedules",
@@ -724,88 +732,140 @@ const Index = () => {
                     ).map((item, index) => (
                       <div
                         key={index}
-                        className="border border-gray-200 p-3 rounded-md hover:shadow-md transition-all duration-200"
+                        className="bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden"
                       >
-                        <div className="flex justify-between">
-                          <Typography variant="h6">
-                            {get(item, "entryPointName") ||
-                              "Название точки не указано"}
-                          </Typography>
+                        {/* Header Section */}
+                        <div className="bg-[#DFEDFE] px-5 py-4">
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center gap-3">
+                              <div className="bg-[#3B82F6] backdrop-blur-sm p-2 rounded-lg">
+                                <LocationOnIcon
+                                  className="text-white"
+                                  sx={{ fontSize: 20 }}
+                                />
+                              </div>
+                              <Typography
+                                variant="h6"
+                                className="text-gray-800 font-semibold tracking-wide"
+                              >
+                                {get(item, "entryPointName") ||
+                                  "Название точки не указано"}
+                              </Typography>
+                            </div>
 
-                          <div className="flex gap-2 items-center">
-                            <Button
-                              onClick={() => {
-                                setConnectScheduleModal(true);
-                                setSelectEntrypointId(
-                                  get(item, "entryPointId")
-                                );
-                              }}
-                              sx={{
-                                width: "32px",
-                                height: "32px",
-                                minWidth: "32px",
-                                background: "#F0D8C8",
-                                color: "#FF6200",
-                              }}
-                            >
-                              <EditIcon fontSize="small" />
-                            </Button>
-                            <Button
-                              onClick={() =>
-                                router.push(
-                                  `/dashboard/access-points/${
-                                    get(item, "entryPointId") || ""
-                                  }`
-                                )
-                              }
-                              sx={{
-                                textTransform: "initial",
-                                fontFamily: "DM Sans, sans-serif",
-                                backgroundColor: "#4182F9",
-                                boxShadow: "none",
-                                height: "32px",
-                                color: "white",
-                                display: "flex",
-                                gap: "4px",
-                                fontSize: "14px",
-                                borderRadius: "8px",
-                              }}
-                              variant="contained"
-                            >
-                              <p>Перейти к точке доступа</p>
-                            </Button>
+                            <div className="flex gap-2 items-center">
+                              <Button
+                                onClick={() => {
+                                  setConnectScheduleModal(true);
+                                  setSelectEntrypointId(
+                                    get(item, "entryPointId")
+                                  );
+                                }}
+                                sx={{
+                                  width: "40px",
+                                  height: "38px",
+                                  minWidth: "40px",
+                                  background: "#F0D8C8",
+                                  color: "#FF6200",
+                                  borderRadius: "10px",
+                                  "&:hover": {
+                                    background: "#F0B28B",
+                                    transform: "scale(1.05)",
+                                  },
+                                  transition: "all 0.2s",
+                                }}
+                              >
+                                <EditIcon fontSize="small" />
+                              </Button>
+                              <Link
+                                href={`/dashboard/access-points/${
+                                  get(item, "entryPointId") || ""
+                                }`}
+                                className="flex items-center gap-2 bg-white text-[#3B82F6] px-4 py-2 rounded-lg font-semibold text-sm hover:bg-[#b9d6fa] hover:text-white transition-all duration-200 shadow-sm hover:shadow-md"
+                              >
+                                Перейти к точке
+                                <ArrowForwardIcon sx={{ fontSize: 16 }} />
+                              </Link>
+                            </div>
                           </div>
                         </div>
 
-                        <div className="mt-[10px] bg-gray-100 p-3 rounded-md">
-                          <p className="text-[17px] font-semibold">
-                            Расписание:
-                          </p>
-                          <div className="flex justify-between">
-                            <p className="text-[17px] font-medium">
-                              {get(item, "scheduleName") ||
-                                "Расписание не указано"}
-                            </p>
-                            <button
-                              onClick={() =>
-                                router.push(
-                                  `/dashboard/schedule/${
+                        {/* Content Section */}
+                        <div className="p-5">
+                          {/* Combined Information Card */}
+                          <div className=" border border-[#3B82F6]/20 rounded-lg p-4 hover:bg-[#DFEDFE]/80 transition-colors duration-200 ">
+                            <div className="space-y-4">
+                              {/* Unit Information */}
+                              <div className="flex items-start gap-3">
+                                <div className="bg-[#3B82F6] p-2 rounded-lg mt-1">
+                                  <BusinessIcon
+                                    className="text-white"
+                                    sx={{ fontSize: 16 }}
+                                  />
+                                </div>
+                                <div className="flex-1">
+                                  <p className="text-xs text-[#3B82F6] font-semibold uppercase tracking-wider mb-1">
+                                    Подразделение
+                                  </p>
+                                  <p className="text-[15px] font-bold text-gray-800">
+                                    {get(item, "unitCodeName") ||
+                                      "Подразделение не указано"}
+                                  </p>
+                                </div>
+                              </div>
+
+                              {/* Divider */}
+                              <div className="border-t border-[#3B82F6]/20"></div>
+
+                              {/* Schedule Information */}
+                              <div className="flex justify-between items-start">
+                                <div className="flex items-start gap-3 flex-1">
+                                  <div className="bg-[#3B82F6] p-2 rounded-lg mt-1">
+                                    <CalendarMonthIcon
+                                      className="text-white"
+                                      sx={{ fontSize: 16 }}
+                                    />
+                                  </div>
+                                  <div className="flex-1">
+                                    <p className="text-xs text-[#3B82F6] font-semibold uppercase tracking-wider mb-1">
+                                      Расписание
+                                    </p>
+                                    <p className="text-[15px] font-bold text-gray-800">
+                                      {get(item, "scheduleName") ||
+                                        "Расписание не указано"}
+                                    </p>
+                                  </div>
+                                </div>
+                                <Link
+                                  href={`/dashboard/schedule/${
                                     get(item, "scheduleId") || ""
-                                  }`
-                                )
-                              }
-                              className="text-blue-600 hover:text-blue-800 text-sm font-medium cursor-pointer"
-                            >
-                              Подробнее →
-                            </button>
+                                  }`}
+                                  className="flex items-center gap-1 text-[#3B82F6] hover:text-[#2563EB] text-sm font-semibold bg-white px-3 py-2 rounded-lg hover:bg-[#DFEDFE] transition-all duration-200 border border-[#3B82F6]/30 ml-2 whitespace-nowrap"
+                                >
+                                  Подробнее
+                                  <ChevronRightIcon sx={{ fontSize: 16 }} />
+                                </Link>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
                     ))
                   ) : (
-                    <p className="text-gray-500">
-                      Нет данных по точкам доступа и расписаниям
-                    </p>
+                    <div className="flex flex-col items-center justify-center py-16 px-4 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border-2 border-dashed border-gray-300">
+                      <div className="bg-gray-200 p-4 rounded-full mb-4">
+                        <InboxIcon
+                          className="text-gray-400"
+                          sx={{ fontSize: 48 }}
+                        />
+                      </div>
+                      <p className="text-gray-600 font-semibold text-lg mb-1">
+                        Нет данных
+                      </p>
+                      <p className="text-gray-400 text-sm">
+                        Точки доступа и расписания не найдены
+                      </p>
+                    </div>
                   )}
                 </div>
               </div>

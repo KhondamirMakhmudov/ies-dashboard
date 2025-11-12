@@ -3,6 +3,7 @@ import { IconButton } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import Avatar from "@mui/material/Avatar";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import MarkUnreadChatAltOutlinedIcon from "@mui/icons-material/MarkUnreadChatAltOutlined";
@@ -24,6 +25,9 @@ const MainContentHeader = ({ children, toggleSidebar }) => {
   const profileRef = useRef(null);
   const notificationRef = useRef(null);
 
+  // Hide back button on main dashboard page
+  const showBackButton = router.pathname !== "/dashboard";
+
   const handleLogout = () => {
     signOut({ redirect: true, callbackUrl: "http://10.20.6.30:3000" });
   };
@@ -33,6 +37,10 @@ const MainContentHeader = ({ children, toggleSidebar }) => {
   const handleClickProfile = () => {
     setOpenProfile(!openProfile);
     setOpenNotification(false);
+  };
+
+  const handleBack = () => {
+    router.back();
   };
 
   // Handle scroll effect
@@ -121,7 +129,30 @@ const MainContentHeader = ({ children, toggleSidebar }) => {
           : "bg-white border-gray-200"
       }`}
     >
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
+        {/* Back Button */}
+        {showBackButton && (
+          <IconButton
+            onClick={handleBack}
+            sx={{
+              backgroundColor: "#DFEDFE",
+              width: "40px",
+              height: "40px",
+              "&:hover": {
+                backgroundColor: "#3B82F6",
+                "& .MuiSvgIcon-root": {
+                  color: "white",
+                },
+                transform: "translateX(-2px)",
+              },
+              transition: "all 0.2s",
+            }}
+          >
+            <ArrowBackIcon sx={{ color: "#3B82F6", fontSize: 20 }} />
+          </IconButton>
+        )}
+
+        {/* Menu Button */}
         <IconButton
           aria-label="menu"
           onClick={toggleSidebar}
@@ -133,6 +164,8 @@ const MainContentHeader = ({ children, toggleSidebar }) => {
         >
           <MenuIcon />
         </IconButton>
+
+        {/* Title */}
         <Typography
           sx={{
             fontFamily: "DM Sans, sans-serif",

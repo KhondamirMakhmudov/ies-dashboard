@@ -28,4 +28,5 @@ export const KEYS = {
   workplace: "workplace",
   employeePhoto: "employeePhoto",
   organizationalUnitsChildren: "organizationalUnitsChildren",
+  organisation: "organisation",
 };

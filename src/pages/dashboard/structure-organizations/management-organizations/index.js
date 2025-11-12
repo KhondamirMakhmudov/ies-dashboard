@@ -32,6 +32,8 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import DeleteModal from "@/components/modal/delete-modal";
 import { config } from "@/config";
 import { useRouter } from "next/router";
+import PrimaryButton from "@/components/button/primary-button";
+import Link from "next/link";
 
 const WorkplaceEmployeeSection = ({ workplace = [], levelColor }) => {
   const router = useRouter();
@@ -381,29 +383,14 @@ const Index = () => {
         className="bg-white p-4 my-10 rounded-md space-y-2 shadow"
       >
         <div className="mb-[20px]">
-          <Button
+          <PrimaryButton
             onClick={() => {
               setCreateModal(true);
               setCreateModalParentId(null);
             }}
-            sx={{
-              textTransform: "initial",
-              fontFamily: "DM Sans, sans-serif",
-              backgroundColor: "#4182F9",
-              boxShadow: "none",
-              color: "white",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "4px",
-              fontSize: "14px",
-              minWidth: "100px",
-              borderRadius: "8px",
-            }}
-            variant="contained"
           >
             Создать
-          </Button>
+          </PrimaryButton>
         </div>
 
         {get(level1List, "data", []).map((level1) => {
@@ -432,7 +419,12 @@ const Index = () => {
                     }}
                   />
                   <div>
-                    <h4 className="text-lg font-semibold">{level1.name}</h4>
+                    <Link
+                      href={`/dashboard/structure-organizations/management-organizations/${level1.id}`}
+                      className="hover:text-[#1E5EFF] text-black hover:underline transition-all duration-200"
+                    >
+                      <h4 className="text-lg font-semibold">{level1.name}</h4>
+                    </Link>
                     {level1.workplace && level1.workplace.length > 0 && (
                       <div className="flex items-center gap-2 mt-1">
                         <WorkIcon sx={{ fontSize: 14, color: "#1E5EFF" }} />
