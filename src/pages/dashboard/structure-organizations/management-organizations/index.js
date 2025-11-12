@@ -33,7 +33,6 @@ import DeleteModal from "@/components/modal/delete-modal";
 import { config } from "@/config";
 import { useRouter } from "next/router";
 import PrimaryButton from "@/components/button/primary-button";
-import Link from "next/link";
 
 const WorkplaceEmployeeSection = ({ workplace = [], levelColor }) => {
   const router = useRouter();
@@ -419,12 +418,7 @@ const Index = () => {
                     }}
                   />
                   <div>
-                    <Link
-                      href={`/dashboard/structure-organizations/management-organizations/${level1.id}`}
-                      className="hover:text-[#1E5EFF] text-black hover:underline transition-all duration-200"
-                    >
-                      <h4 className="text-lg font-semibold">{level1.name}</h4>
-                    </Link>
+                    <h4 className="text-lg font-semibold">{level1.name}</h4>
                     {level1.workplace && level1.workplace.length > 0 && (
                       <div className="flex items-center gap-2 mt-1">
                         <WorkIcon sx={{ fontSize: 14, color: "#1E5EFF" }} />
