@@ -247,6 +247,7 @@ const Index = () => {
                 is_active={get(item, "is_active")}
                 is_vacant={get(item, "is_vacant")}
                 employee={get(item, "employee")}
+                employeeURL={`/dashboard/employees/${get(item, "employee.id")}`}
                 deleteWorkplace={() => {
                   setDeleteModal(true);
                   setSelect(get(item, "id"));
