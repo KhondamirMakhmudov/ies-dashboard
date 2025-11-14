@@ -7,16 +7,18 @@ import { URLS } from "@/constants/url";
 import useGetPythonQuery from "@/hooks/python/useGetQuery";
 import usePostPythonQuery from "@/hooks/python/usePostQuery";
 import DashboardLayout from "@/layouts/dashboard/DashboardLayout";
-import { Typography, Button } from "@mui/material";
+import { Typography, Button, TextField, InputAdornment } from "@mui/material";
 import { motion } from "framer-motion";
 import { get } from "lodash";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Image from "next/image";
 import { useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import DeleteModal from "@/components/modal/delete-modal";
 import { config } from "@/config";
 import CustomSelect from "@/components/select";
+import SearchIcon from "@mui/icons-material/Search";
+import ClearIcon from "@mui/icons-material/Clear";
 
 const Index = () => {
   const queryClient = useQueryClient();
@@ -26,7 +28,12 @@ const Index = () => {
   const [select, setSelect] = useState(null);
   const [positionId, setPositionId] = useState(null);
   const [orgUnitsId, setOrgUnitsId] = useState(null);
+  const [search, setSearch] = useState("");
   const [selectedParentCode, setSelectedParentCode] = useState(null);
+
+  // Filter states
+  const [filterPosition, setFilterPosition] = useState(null);
+  const [filterStatus, setFilterStatus] = useState(null);
 
   const {
     data: orgUnits,
@@ -83,6 +90,56 @@ const Index = () => {
     value: item.id,
     label: item.organizational_unit.name,
   }));
+
+  // Status filter options
+  const statusOptions = [
+    { value: "all", label: "Все" },
+    { value: "active", label: "Активный" },
+    { value: "vacant", label: "Вакантный" },
+    { value: "inactive", label: "Неактивный" },
+  ];
+
+  // Filtered and searched workplace data
+  const filteredWorkplaceData = useMemo(() => {
+    let filtered = get(workplace, "data", []);
+
+    // Search filter (by organizational unit name and position name)
+    if (search) {
+      const searchLower = search.toLowerCase().trim();
+      filtered = filtered.filter((item) => {
+        const orgName = get(item, "organizational_unit.name", "").toLowerCase();
+        const positionName = get(item, "position.name", "").toLowerCase();
+        return (
+          orgName.includes(searchLower) || positionName.includes(searchLower)
+        );
+      });
+    }
+
+    // Position filter
+    if (filterPosition) {
+      filtered = filtered.filter(
+        (item) => get(item, "position.id") === filterPosition
+      );
+    }
+
+    // Status filter
+    if (filterStatus && filterStatus !== "all") {
+      filtered = filtered.filter((item) => {
+        if (filterStatus === "active") {
+          return get(item, "is_active") && !get(item, "is_vacant");
+        }
+        if (filterStatus === "vacant") {
+          return get(item, "is_vacant");
+        }
+        if (filterStatus === "inactive") {
+          return !get(item, "is_active");
+        }
+        return true;
+      });
+    }
+
+    return filtered;
+  }, [workplace, search, filterPosition, filterStatus]);
 
   const { mutate: createWorkplace } = usePostPythonQuery({
     listKeyId: "create-workplace",
@@ -144,6 +201,12 @@ const Index = () => {
     }
   };
 
+  const handleClearFilters = () => {
+    setSearch("");
+    setFilterPosition(null);
+    setFilterStatus(null);
+  };
+
   if (isLoadingWorkplace || isFetchingWorkplace) {
     return (
       <DashboardLayout>
@@ -169,7 +232,7 @@ const Index = () => {
                 <div
                   key={index}
                   onClick={() => setSelectUnitCode(get(item, "unit_code"))}
-                  className="col-span-6 relative min-h-[150px] border p-2 border-gray-200 rounded-md shadow-sm cursor-pointer"
+                  className="col-span-6 relative min-h-[150px] border p-2 border-gray-200 rounded-md shadow-sm cursor-pointer hover:shadow-md transition-shadow"
                 >
                   <div className="absolute bottom-2 right-2">
                     <Image
@@ -210,7 +273,7 @@ const Index = () => {
           transition={{ duration: 0.4 }}
           className="bg-white p-4 my-10 rounded-md space-y-2 shadow"
         >
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between items-center mb-4">
             <button
               onClick={() => setSelectUnitCode(null)}
               className="bg-gray-200 px-4 py-2 rounded-md hover:bg-gray-300 transition-all duration-200 cursor-pointer"
@@ -236,25 +299,105 @@ const Index = () => {
             </Button>
           </div>
 
+          {/* Search and Filter Section */}
+          <div className="bg-gray-50 p-4 rounded-lg space-y-3">
+            <div className="grid grid-cols-12 gap-3">
+              {/* Search Input */}
+              <div className="col-span-12 md:col-span-6">
+                <TextField
+                  fullWidth
+                  size="small"
+                  sx={{ height: "55px" }}
+                  placeholder="Поиск по отделу или должности..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchIcon sx={{ color: "#9CA3AF" }} />
+                      </InputAdornment>
+                    ),
+                    endAdornment: search && (
+                      <InputAdornment position="end">
+                        <ClearIcon
+                          sx={{ color: "#9CA3AF", cursor: "pointer" }}
+                          onClick={() => setSearch("")}
+                        />
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "8px",
+                    },
+                  }}
+                />
+              </div>
+
+              {/* Status Filter */}
+              <div className="col-span-12 md:col-span-3">
+                <CustomSelect
+                  options={statusOptions}
+                  value={filterStatus}
+                  placeholder="Фильтр по статусу"
+                  onChange={(val) => setFilterStatus(val)}
+                  returnObject={false}
+                  isClearable
+                />
+              </div>
+            </div>
+
+            {/* Clear Filters Button */}
+            {(search || filterPosition || filterStatus) && (
+              <div className="flex justify-end">
+                <button
+                  onClick={handleClearFilters}
+                  className="text-sm text-blue-600 hover:text-blue-800 underline"
+                >
+                  Очистить все фильтры
+                </button>
+              </div>
+            )}
+
+            {/* Results Count */}
+            <div className="text-sm text-gray-600">
+              Найдено: {filteredWorkplaceData.length} из{" "}
+              {get(workplace, "data", []).length}
+            </div>
+          </div>
+
+          {/* Workplace List */}
           <div className="my-[30px] space-y-[10px]">
-            {get(workplace, "data", []).map((item, index) => (
-              <WorkPlaceCard
-                key={index}
-                workplace={get(item, "organizational_unit.name")}
-                unitCode={get(item, "organizational_unit.unit_code")}
-                unitType={get(item, "organizational_unit.unit_type.name")}
-                position={get(item, "position.name")}
-                is_active={get(item, "is_active")}
-                is_vacant={get(item, "is_vacant")}
-                employee={get(item, "employee")}
-                employeeURL={`/dashboard/employees/${get(item, "employee.id")}`}
-                deleteWorkplace={() => {
-                  setDeleteModal(true);
-                  setSelect(get(item, "id"));
-                }}
-                id={get(item, "id")}
-              />
-            ))}
+            {filteredWorkplaceData.length > 0 ? (
+              filteredWorkplaceData.map((item, index) => (
+                <WorkPlaceCard
+                  key={index}
+                  workplace={get(item, "organizational_unit.name")}
+                  unitCode={get(item, "organizational_unit.unit_code")}
+                  unitType={get(item, "organizational_unit.unit_type.name")}
+                  position={get(item, "position.name")}
+                  is_active={get(item, "is_active")}
+                  is_vacant={get(item, "is_vacant")}
+                  employee={get(item, "employee")}
+                  employeeURL={`/dashboard/employees/${get(
+                    item,
+                    "employee.id"
+                  )}`}
+                  deleteWorkplace={() => {
+                    setDeleteModal(true);
+                    setSelect(get(item, "id"));
+                  }}
+                  id={get(item, "id")}
+                />
+              ))
+            ) : (
+              <div className="text-center py-10">
+                <Typography variant="body1" sx={{ color: "#9CA3AF" }}>
+                  Рабочие места не найдены
+                </Typography>
+              </div>
+            )}
           </div>
         </motion.div>
       )}
@@ -275,7 +418,7 @@ const Index = () => {
               options={optionsPosition}
               value={positionId}
               placeholder="Выберите позицию"
-              onChange={(val) => setPositionId(val)} // ❌ val.value emas, to‘g‘ridan-to‘g‘ri val
+              onChange={(val) => setPositionId(val)}
               required
               label="Выберите позицию"
               returnObject={false}
@@ -288,7 +431,7 @@ const Index = () => {
               }))}
               value={selectedParentCode}
               onChange={(val) => {
-                setSelectedParentCode(val); // ❌ e.value emas, to‘g‘ridan-to‘g‘ri val
+                setSelectedParentCode(val);
                 setOrgUnitsId(null);
               }}
               placeholder="Выберите филиал"
@@ -300,9 +443,9 @@ const Index = () => {
                 label: unit.name,
                 value: unit.id,
               }))}
-              value={orgUnitsId} // faqat ID saqlaymiz
+              value={orgUnitsId}
               isLoading={isChildLoading}
-              onChange={(val) => setOrgUnitsId(val)} // ❌ e.value emas
+              onChange={(val) => setOrgUnitsId(val)}
               placeholder="Выберите тип позицию"
               isDisabled={!selectedParentCode}
             />
