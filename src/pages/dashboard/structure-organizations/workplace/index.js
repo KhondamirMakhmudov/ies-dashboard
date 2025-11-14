@@ -307,7 +307,6 @@ const Index = () => {
                 <TextField
                   fullWidth
                   size="small"
-                  sx={{ height: "55px" }}
                   placeholder="Поиск по отделу или должности..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
