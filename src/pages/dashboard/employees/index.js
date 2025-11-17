@@ -26,6 +26,7 @@ import { exportToExcel } from "@/utils/exportToExcelStyled";
 import ReportGmailerrorredIcon from "@mui/icons-material/ReportGmailerrorred";
 import PrimaryButton from "@/components/button/primary-button";
 import Link from "next/link";
+import { Search, FilterList, Close } from "@mui/icons-material";
 
 const Index = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -39,6 +40,16 @@ const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [isSearching, setIsSearching] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+
+  // Filter states
+  const [filters, setFilters] = useState({
+    gender: "",
+    level: "",
+    education_degree: "",
+    hire_date_from: "",
+    hire_date_to: "",
+  });
 
   const [formData, setFormData] = useState({
     first_name: "",
@@ -68,22 +79,41 @@ const Index = () => {
     return () => clearTimeout(timeout);
   }, [searchTerm]);
 
+  // Build query params based on filters and search
+  const buildQueryParams = () => {
+    const params = {
+      limit: pageSize,
+      offset: (currentPage - 1) * pageSize,
+    };
+
+    // Add search term to BOTH first_name and last_name
+    if (debouncedSearch) {
+      params.first_name = debouncedSearch;
+    }
+
+    // Add other filters
+    if (filters.gender) params.gender = filters.gender;
+    if (filters.level) params.level = filters.level;
+    if (filters.education_degree)
+      params.education_degree = filters.education_degree;
+    if (filters.hire_date_from) params.hire_date_from = filters.hire_date_from;
+    if (filters.hire_date_to) params.hire_date_to = filters.hire_date_to;
+
+    return params;
+  };
+
   // Employee data query with optimized loading states
   const {
     data: employee,
     isLoading,
     isFetching,
   } = useGetPythonQuery({
-    key: [KEYS.employees, currentPage, debouncedSearch],
+    key: [KEYS.employees, currentPage, debouncedSearch, filters],
     url: URLS.employees,
-    enabled: true, // Always enabled since we handle search via params
-    keepPreviousData: true, // This prevents flashing by keeping old data
-    staleTime: 30000, // Consider data fresh for 30 seconds
-    params: {
-      limit: pageSize,
-      offset: (currentPage - 1) * pageSize,
-      ...(debouncedSearch ? { first_name: debouncedSearch } : {}),
-    },
+    enabled: true,
+    keepPreviousData: true,
+    staleTime: 30000,
+    params: buildQueryParams(),
   });
 
   // Organization units
@@ -123,21 +153,45 @@ const Index = () => {
     }
   };
 
+  const handleFilterChange = (name, value) => {
+    setFilters((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+    setCurrentPage(1);
+  };
+
+  const clearAllFilters = () => {
+    setFilters({
+      gender: "",
+      level: "",
+      education_degree: "",
+      hire_date_from: "",
+      hire_date_to: "",
+    });
+    setSearchTerm("");
+    setCurrentPage(1);
+  };
+
+  const hasActiveFilters = () => {
+    return (
+      filters.gender ||
+      filters.level ||
+      filters.education_degree ||
+      filters.hire_date_from ||
+      filters.hire_date_to ||
+      searchTerm
+    );
+  };
+
   // Employee creation POST
   const onSubmitCreateEmployee = async () => {
     try {
       const form = new FormData();
 
-      // Only append fields that have values
       for (const key in formData) {
         const value = formData[key];
-
-        // Skip empty or null values
-        // For strings, check if not empty after trimming
-        // For numbers, allow 0 but skip null/undefined
-        // For files, check if not null
         if (value !== null && value !== undefined && value !== "") {
-          // For string fields, trim whitespace and check again
           if (typeof value === "string" && value.trim() === "") {
             continue;
           }
@@ -282,7 +336,6 @@ const Index = () => {
     }
   };
 
-  // Show loader only for initial load, not for searches
   if (isLoading && !employee) {
     return (
       <DashboardLayout>
@@ -324,39 +377,165 @@ const Index = () => {
         </div>
       </div>
 
+      {/* Search and Filter Section */}
       <div className="bg-white p-4 mt-3 rounded-md border border-gray-200">
-        <div className="relative">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={1.5}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1010.5 18a7.5 7.5 0 006.15-3.35z"
+        <div className="flex gap-3 items-center">
+          {/* Search Input */}
+          <div className="relative flex-1">
+            <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+
+            <input
+              type="text"
+              placeholder="Поиск по имени"
+              value={searchTerm}
+              onChange={handleSearchChange}
+              className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all placeholder:text-gray-400 text-gray-800"
             />
-          </svg>
 
-          <input
-            type="text"
-            placeholder="Поиск сотрудника..."
-            value={searchTerm}
-            onChange={handleSearchChange}
-            className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all placeholder:text-gray-400 text-gray-800"
-          />
+            {isSearching && (
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+              </div>
+            )}
+          </div>
 
-          {/* Search loading indicator */}
-          {isSearching && (
-            <div className="absolute right-3 top-1/2 -translate-y-1/2">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
-            </div>
-          )}
+          {/* Filter Toggle Button */}
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-all ${
+              showFilters || hasActiveFilters()
+                ? "bg-blue-500 text-white hover:bg-blue-600"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            }`}
+          >
+            <FilterList className="w-5 h-5" />
+            Фильтры
+            {hasActiveFilters() && (
+              <span className="bg-white text-blue-500 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
+                !
+              </span>
+            )}
+          </button>
         </div>
+
+        {/* Filters Panel */}
+        {showFilters && (
+          <div className="mt-4 pt-4 border-t border-gray-200">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Gender Filter */}
+              <div>
+                <CustomSelect
+                  label={"Пол"}
+                  options={genderOptions}
+                  value={filters.gender}
+                  placeholder="Выберите пол"
+                  onChange={(val) =>
+                    setFilters((prev) => ({
+                      ...prev,
+                      gender: val,
+                    }))
+                  }
+                  // required
+                  returnObject={false}
+                />
+              </div>
+
+              {/* Level Filter */}
+              <CustomSelect
+                label={"Выберите разряд"}
+                options={razryadOptions}
+                value={filters.level}
+                placeholder="Выберите разряд"
+                onChange={(val) =>
+                  setFilters((prev) => ({
+                    ...prev,
+                    level: val,
+                  }))
+                }
+                sortOptions={false}
+                returnObject={false}
+              />
+
+              {/* Education Filter */}
+              <CustomSelect
+                options={educationLevelOptions}
+                value={filters.education_degree}
+                label="Степень образования"
+                placeholder="Выберите уровень образования"
+                onChange={(val) =>
+                  setFilters((prev) => ({
+                    ...prev,
+                    education_degree: val,
+                  }))
+                }
+                // required
+                returnObject={false}
+              />
+            </div>
+
+            {/* Clear Filters Button */}
+            {hasActiveFilters() && (
+              <div className="mt-4 flex justify-end">
+                <button
+                  onClick={clearAllFilters}
+                  className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-all font-medium"
+                >
+                  <Close className="w-4 h-4" />
+                  Очистить фильтры
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
+
+      {/* Active Filters Summary */}
+      {hasActiveFilters() && (
+        <div className="bg-blue-50 p-3 mt-3 rounded-md border border-blue-200">
+          <div className="flex flex-wrap gap-2 items-center">
+            <span className="text-sm font-medium text-blue-700">
+              Активные фильтры:
+            </span>
+            {searchTerm && (
+              <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">
+                Поиск: {searchTerm}
+              </span>
+            )}
+            {filters.gender && (
+              <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">
+                Пол:{" "}
+                {genderOptions.find((o) => o.value === filters.gender)?.label ||
+                  filters.gender}
+              </span>
+            )}
+            {filters.level && (
+              <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">
+                Разряд:{" "}
+                {razryadOptions.find((o) => o.value === filters.level)?.label ||
+                  filters.level}
+              </span>
+            )}
+            {filters.education_degree && (
+              <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">
+                Образование:{" "}
+                {educationLevelOptions.find(
+                  (o) => o.value === filters.education_degree
+                )?.label || filters.education_degree}
+              </span>
+            )}
+            {filters.hire_date_from && (
+              <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">
+                От: {dayjs(filters.hire_date_from).format("DD.MM.YYYY")}
+              </span>
+            )}
+            {filters.hire_date_to && (
+              <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">
+                До: {dayjs(filters.hire_date_to).format("DD.MM.YYYY")}
+              </span>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Table with smooth loading states */}
       {isSearching && isFetching ? (
@@ -380,7 +559,6 @@ const Index = () => {
                 }}
               />
 
-              {/* Small loading indicator for background refetches */}
               {isFetching && (
                 <div className="flex justify-center py-2 mt-2">
                   <div className="flex items-center gap-2 text-sm text-gray-600">
