@@ -38,7 +38,7 @@ export const URLS = {
 
   // jobtrips
 
-  jobTrips: "api/job-trips/create-job-trip",
+  jobTrips: "api/job-trips",
 
   // Python
   // structure unit type
