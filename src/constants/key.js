@@ -5,6 +5,7 @@ export const KEYS = {
   checkpoints: "checkpoints",
   entrypoints: "entrypoints",
   entrypoint: "entrypoint",
+  entrypointSchedules: "entrypointSchedules",
   logEntersOfEmployees: "logEntersOfEmployees",
   logEntersOfEmployeeById: "logEntersOfEmployeeById",
   logEntersOfEmployeesByStructure: "logEntersOfEmployeesByStructure",

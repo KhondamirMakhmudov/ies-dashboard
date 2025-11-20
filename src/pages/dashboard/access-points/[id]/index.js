@@ -515,7 +515,7 @@ const Index = () => {
       )}
       {/* create connection between employee and schedule */}
       {createConnectModal && (
-        // Inside your modal component:
+        // create connection between employee and schedule
 
         <MethodModal
           showCloseIcon={true}
