@@ -109,7 +109,6 @@ const Index = () => {
   const { mutate: createJobTrip } = usePostQuery({
     listKeyId: "create-job-trip",
   });
-
   const submitCreateJobTrip = () => {
     // Validation
     if (selectedEmployeesForJobTrip.size === 0) {
@@ -132,7 +131,7 @@ const Index = () => {
           numOrder: numOrder,
           startDate: startDate,
           endDate: endDate,
-          entryPointScheduleId: selectedSchedule.value,
+          entryPointScheduleId: selectedSchedule, // ✅ Convert to number
         },
         config: {
           headers: {
@@ -332,6 +331,9 @@ const Index = () => {
     );
   }
 
+  console.log("Schedule Options:", scheduleOptions);
+  console.log("Selected Schedule:", selectedSchedule);
+
   return (
     <DashboardLayout headerTitle={"Командировки"}>
       <motion.div
@@ -417,8 +419,11 @@ const Index = () => {
             </div>
           </div>
 
+          {/* Divider */}
+          <div className="border-t border-[#10B981]/20"></div>
+
           {/* Employee Selection Section */}
-          <div className="border-t pt-4">
+          <div className="pt-2">
             <h3 className="text-lg font-semibold text-gray-900 mb-3">
               Выбор сотрудников ({selectedEmployeesForJobTrip.size} выбрано)
             </h3>
