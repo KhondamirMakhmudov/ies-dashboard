@@ -402,29 +402,49 @@ const Index = () => {
               />
             </div>
 
-            <div>
-              <div className="space-[10px] gap-x-2 flex flex-wrap justify-center items-center">
-                <Typography
-                  variant="h7"
-                  sx={{ fontSize: "20px", fontWeight: "600" }}
-                >
-                  {get(employeePhoto, "data.first_name")}
-                </Typography>
-
+            <div className="flex flex-col items-center space-y-3">
+              {/* Full Name */}
+              <div className="flex flex-wrap gap-x-2 justify-center items-center">
                 <Typography
                   variant="h7"
                   sx={{ fontSize: "20px", fontWeight: "600" }}
                 >
                   {get(employeePhoto, "data.last_name")}
                 </Typography>
+                <Typography
+                  variant="h7"
+                  sx={{ fontSize: "20px", fontWeight: "600" }}
+                >
+                  {get(employeePhoto, "data.first_name")}
+                </Typography>
+                <Typography
+                  variant="h7"
+                  sx={{ fontSize: "20px", fontWeight: "600" }}
+                >
+                  {get(employeePhoto, "data.middle_name")}
+                </Typography>
               </div>
-              <p className="text-gray-400 text-sm">
+
+              {/* Email */}
+              <p className="text-gray-500 text-sm">
                 {get(employeePhoto, "data.email")}
               </p>
 
-              <p className="text-[13px] py-1 rounded-xl inline-block px-3 bg-gray-200 font-medium mt-2">
-                {get(employeePhoto, "data.workplace.position.name", "")}
+              {/* Department */}
+              <p className="text-base font-medium text-gray-700 text-center max-w-xl px-4">
+                {get(
+                  employeePhoto,
+                  "data.workplace.organizational_unit.name"
+                ) || "Отдел не указан"}
               </p>
+
+              {/* Position Badge */}
+              <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-blue-50 border border-blue-200">
+                <p className="text-sm font-medium text-blue-700">
+                  {get(employeePhoto, "data.workplace.position.name") ||
+                    "Должность не указана"}
+                </p>
+              </div>
             </div>
           </div>
 
@@ -707,198 +727,201 @@ const Index = () => {
             {tab === "schedule" && (
               <div className="space-y-[10px] p-2 sm:p-4">
                 <div className="flex justify-between items-start">
-                  <div>
-                    <Typography variant="h6">
-                      Точки доступа и расписания
-                    </Typography>
-                    <p className="text-gray-500">
-                      Точки входа, к которым у сотрудника есть доступ, и
-                      связанные с ними расписания.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Regular Schedule Assignments Section */}
-                <div className="space-y-[16px]">
-                  <div className="flex items-center gap-2 mb-3">
+                  <div className="flex items-center gap-2">
                     <div className="bg-[#3B82F6] p-2 rounded-lg">
                       <CalendarMonthIcon
                         className="text-white"
                         sx={{ fontSize: 20 }}
                       />
                     </div>
-                    <Typography
-                      variant="h6"
-                      className="text-gray-800 font-semibold"
-                    >
-                      Обычные расписания
-                    </Typography>
+                    <div>
+                      <Typography variant="h6">
+                        Точки доступа и расписания
+                      </Typography>
+                      <p className="text-gray-500">
+                        Точки входа, к которым у сотрудника есть доступ, и
+                        связанные с ними расписания.
+                      </p>
+                    </div>
                   </div>
+                </div>
 
-                  {get(
-                    ScheduleAndEntrypointOfEmployee,
-                    "data.scheduleAssignments",
-                    []
-                  ).length > 0 ? (
-                    get(
+                {/* Regular Schedule Assignments Section */}
+                <div className="space-y-[16px]">
+                  <div className="flex items-center gap-2 mb-3"></div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    {get(
                       ScheduleAndEntrypointOfEmployee,
                       "data.scheduleAssignments",
                       []
-                    ).map((item, index) => (
-                      <div
-                        key={index}
-                        className="bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden"
-                      >
-                        {/* Header Section */}
-                        <div className="bg-[#DFEDFE] px-5 py-4">
-                          <div className="flex justify-between items-center">
-                            <div className="flex items-center gap-3">
-                              <div className="bg-[#3B82F6] backdrop-blur-sm p-2 rounded-lg">
-                                <LocationOnIcon
-                                  className="text-white"
-                                  sx={{ fontSize: 20 }}
-                                />
-                              </div>
-                              <Typography
-                                variant="h6"
-                                className="text-gray-800 font-semibold tracking-wide"
-                              >
-                                {get(item, "entryPointName") ||
-                                  "Название точки не указано"}
-                              </Typography>
-                            </div>
-
-                            <div className="flex gap-2 items-center">
-                              <Button
-                                onClick={() => {
-                                  setConnectScheduleModal(true);
-                                  setSelectEntrypointId(
-                                    get(item, "entryPointId")
-                                  );
-                                }}
-                                sx={{
-                                  width: "40px",
-                                  height: "38px",
-                                  minWidth: "40px",
-                                  background: "#F0D8C8",
-                                  color: "#FF6200",
-                                  borderRadius: "10px",
-                                  "&:hover": {
-                                    background: "#F0B28B",
-                                    transform: "scale(1.05)",
-                                  },
-                                  transition: "all 0.2s",
-                                }}
-                              >
-                                <EditIcon fontSize="small" />
-                              </Button>
-                              <Link
-                                href={`/dashboard/access-points/${
-                                  get(item, "entryPointId") || ""
-                                }`}
-                                className="flex items-center gap-2 bg-white text-[#3B82F6] px-4 py-2 rounded-lg font-semibold text-sm hover:bg-[#b9d6fa] hover:text-white transition-all duration-200 shadow-sm hover:shadow-md"
-                              >
-                                Перейти к точке
-                                <ArrowForwardIcon sx={{ fontSize: 16 }} />
-                              </Link>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Content Section */}
-                        <div className="p-5">
-                          {/* Combined Information Card */}
-                          <div className=" border border-[#3B82F6]/20 rounded-lg p-4 hover:bg-[#DFEDFE]/80 transition-colors duration-200 ">
-                            <div className="space-y-4">
-                              {/* Unit Information */}
-                              <div className="flex items-start gap-3">
-                                <div className="bg-[#3B82F6] p-2 rounded-lg mt-1">
-                                  <BusinessIcon
+                    ).length > 0 ? (
+                      get(
+                        ScheduleAndEntrypointOfEmployee,
+                        "data.scheduleAssignments",
+                        []
+                      ).map((item, index) => (
+                        <div
+                          key={index}
+                          className=" col-span-1 bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden"
+                        >
+                          {/* Header Section */}
+                          <div className="bg-[#DFEDFE] px-5 py-4">
+                            <div className="flex justify-between items-center">
+                              <div className="flex items-center gap-3">
+                                <div className="bg-[#3B82F6] backdrop-blur-sm p-2 rounded-lg">
+                                  <LocationOnIcon
                                     className="text-white"
-                                    sx={{ fontSize: 16 }}
+                                    sx={{ fontSize: 20 }}
                                   />
                                 </div>
-                                <div className="flex-1">
-                                  <p className="text-xs text-[#3B82F6] font-semibold uppercase tracking-wider mb-1">
-                                    Подразделение
-                                  </p>
-                                  <p className="text-[15px] font-bold text-gray-800">
-                                    {get(item, "unitCodeName") ||
-                                      "Подразделение не указано"}
-                                  </p>
-                                </div>
+                                <Typography
+                                  variant="h6"
+                                  className="text-gray-800 font-semibold tracking-wide"
+                                >
+                                  {get(item, "entryPointName") ||
+                                    "Название точки не указано"}
+                                </Typography>
                               </div>
 
-                              {/* Divider */}
-                              <div className="border-t border-[#3B82F6]/20"></div>
+                              <div className="flex gap-2 items-center">
+                                <Button
+                                  onClick={() => {
+                                    setConnectScheduleModal(true);
+                                    setSelectEntrypointId(
+                                      get(item, "entryPointId")
+                                    );
+                                  }}
+                                  sx={{
+                                    width: "40px",
+                                    height: "38px",
+                                    minWidth: "40px",
+                                    background: "#F0D8C8",
+                                    color: "#FF6200",
+                                    borderRadius: "10px",
+                                    "&:hover": {
+                                      background: "#F0B28B",
+                                      transform: "scale(1.05)",
+                                    },
+                                    transition: "all 0.2s",
+                                  }}
+                                >
+                                  <EditIcon fontSize="small" />
+                                </Button>
+                                <Link
+                                  href={`/dashboard/access-points/${
+                                    get(item, "entryPointId") || ""
+                                  }`}
+                                  className="flex items-center gap-2 bg-white text-[#3B82F6] px-4 py-2 rounded-lg font-semibold text-sm hover:bg-[#b9d6fa] hover:text-white transition-all duration-200 shadow-sm hover:shadow-md"
+                                >
+                                  Перейти к точке
+                                  <ArrowForwardIcon sx={{ fontSize: 16 }} />
+                                </Link>
+                              </div>
+                            </div>
+                          </div>
 
-                              {/* Schedule Information */}
-                              <div className="flex justify-between items-start">
-                                <div className="flex items-start gap-3 flex-1">
+                          {/* Content Section */}
+                          <div className="p-5">
+                            {/* Combined Information Card */}
+                            <div className=" border border-[#3B82F6]/20 rounded-lg p-4 hover:bg-[#DFEDFE]/80 transition-colors duration-200 ">
+                              <div className="space-y-4">
+                                {/* Unit Information */}
+                                <div className="flex items-start gap-3">
                                   <div className="bg-[#3B82F6] p-2 rounded-lg mt-1">
-                                    <CalendarMonthIcon
+                                    <BusinessIcon
                                       className="text-white"
                                       sx={{ fontSize: 16 }}
                                     />
                                   </div>
                                   <div className="flex-1">
                                     <p className="text-xs text-[#3B82F6] font-semibold uppercase tracking-wider mb-1">
-                                      Расписание
+                                      Подразделение
                                     </p>
                                     <p className="text-[15px] font-bold text-gray-800">
-                                      {get(item, "scheduleName") ||
-                                        "Расписание не указано"}
+                                      {get(item, "unitCodeName") ||
+                                        "Подразделение не указано"}
                                     </p>
                                   </div>
                                 </div>
-                                <Link
-                                  href={`/dashboard/schedule/${
-                                    get(item, "scheduleId") || ""
-                                  }`}
-                                  className="flex items-center gap-1 text-[#3B82F6] hover:text-[#2563EB] text-sm font-semibold bg-white px-3 py-2 rounded-lg hover:bg-[#DFEDFE] transition-all duration-200 border border-[#3B82F6]/30 ml-2 whitespace-nowrap"
-                                >
-                                  Подробнее
-                                  <ChevronRightIcon sx={{ fontSize: 16 }} />
-                                </Link>
+
+                                {/* Divider */}
+                                <div className="border-t border-[#3B82F6]/20"></div>
+
+                                {/* Schedule Information */}
+                                <div className="flex justify-between items-start">
+                                  <div className="flex items-start gap-3 flex-1">
+                                    <div className="bg-[#3B82F6] p-2 rounded-lg mt-1">
+                                      <CalendarMonthIcon
+                                        className="text-white"
+                                        sx={{ fontSize: 16 }}
+                                      />
+                                    </div>
+                                    <div className="flex-1">
+                                      <p className="text-xs text-[#3B82F6] font-semibold uppercase tracking-wider mb-1">
+                                        Расписание
+                                      </p>
+                                      <p className="text-[15px] font-bold text-gray-800">
+                                        {get(item, "scheduleName") ||
+                                          "Расписание не указано"}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <Link
+                                    href={`/dashboard/schedule/${
+                                      get(item, "scheduleId") || ""
+                                    }`}
+                                    className="flex items-center gap-1 text-[#3B82F6] hover:text-[#2563EB] text-sm font-semibold bg-white px-3 py-2 rounded-lg hover:bg-[#DFEDFE] transition-all duration-200 border border-[#3B82F6]/30 ml-2 whitespace-nowrap"
+                                  >
+                                    Подробнее
+                                    <ChevronRightIcon sx={{ fontSize: 16 }} />
+                                  </Link>
+                                </div>
                               </div>
                             </div>
                           </div>
                         </div>
+                      ))
+                    ) : (
+                      <div className="flex flex-col items-center justify-center py-12 px-4 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border-2 border-dashed border-gray-300">
+                        <div className="bg-gray-200 p-4 rounded-full mb-4">
+                          <InboxIcon
+                            className="text-gray-400"
+                            sx={{ fontSize: 48 }}
+                          />
+                        </div>
+                        <p className="text-gray-600 font-semibold text-lg mb-1">
+                          Нет данных
+                        </p>
+                        <p className="text-gray-400 text-sm">
+                          Обычные расписания не найдены
+                        </p>
                       </div>
-                    ))
-                  ) : (
-                    <div className="flex flex-col items-center justify-center py-12 px-4 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border-2 border-dashed border-gray-300">
-                      <div className="bg-gray-200 p-4 rounded-full mb-4">
-                        <InboxIcon
-                          className="text-gray-400"
-                          sx={{ fontSize: 48 }}
-                        />
-                      </div>
-                      <p className="text-gray-600 font-semibold text-lg mb-1">
-                        Нет данных
-                      </p>
-                      <p className="text-gray-400 text-sm">
-                        Обычные расписания не найдены
-                      </p>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
 
                 {/* Job Trip Schedules Section */}
                 <div className="space-y-[16px] mt-8">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="bg-[#10B981] p-2 rounded-lg">
-                      <FlightTakeoffIcon
-                        className="text-white"
-                        sx={{ fontSize: 20 }}
-                      />
+                  <div className="flex justify-between items-center">
+                    {" "}
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="bg-[#10B981] p-2 rounded-lg">
+                        <FlightTakeoffIcon
+                          className="text-white"
+                          sx={{ fontSize: 20 }}
+                        />
+                      </div>
+                      <Typography
+                        variant="h6"
+                        className="text-gray-800 font-semibold"
+                      >
+                        Командировки
+                      </Typography>
                     </div>
-                    <Typography
-                      variant="h6"
-                      className="text-gray-800 font-semibold"
-                    >
-                      Командировки
-                    </Typography>
+                    <PrimaryButton backgroundColor="#10B981">
+                      Назначить командировку
+                    </PrimaryButton>
                   </div>
 
                   {get(

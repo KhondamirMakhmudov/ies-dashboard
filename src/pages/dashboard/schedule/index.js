@@ -7,10 +7,8 @@ import useGetQuery from "@/hooks/java/useGetQuery";
 import { URLS } from "@/constants/url";
 import { KEYS } from "@/constants/key";
 import { useSession } from "next-auth/react";
-import { Button } from "@mui/material";
 import usePostQuery from "@/hooks/java/usePostQuery";
 import toast from "react-hot-toast";
-import { useRouter } from "next/router";
 import CustomTable from "@/components/table";
 import ContentLoader from "@/components/loader";
 import ScheduleModal from "@/components/modal/schedule-modal";
@@ -18,7 +16,6 @@ import PrimaryButton from "@/components/button/primary-button";
 import Link from "next/link";
 
 const Index = () => {
-  const router = useRouter();
   const { data: session } = useSession();
   const [createModal, setCreateModal] = useState(false);
 

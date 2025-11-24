@@ -94,8 +94,9 @@ const Index = () => {
   // Status filter options
   const statusOptions = [
     { value: "all", label: "Все" },
-    { value: "active", label: "Активный" },
     { value: "vacant", label: "Вакантный" },
+    { value: "no_vacant", label: "Невакантный" },
+    { value: "active", label: "Активный" },
     { value: "inactive", label: "Неактивный" },
   ];
 
@@ -130,6 +131,9 @@ const Index = () => {
         }
         if (filterStatus === "vacant") {
           return get(item, "is_vacant");
+        }
+        if (filterStatus === "novacant") {
+          return !get(item, "is_vacant");
         }
         if (filterStatus === "inactive") {
           return !get(item, "is_active");
@@ -341,6 +345,7 @@ const Index = () => {
                   value={filterStatus}
                   placeholder="Фильтр по статусу"
                   onChange={(val) => setFilterStatus(val)}
+                  sortOptions={false}
                   returnObject={false}
                   isClearable
                 />

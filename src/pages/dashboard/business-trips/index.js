@@ -21,14 +21,32 @@ import { useQueryClient } from "@tanstack/react-query";
 import MethodModal from "@/components/modal/method-modal";
 import useGetPythonQuery from "@/hooks/python/useGetQuery";
 import CustomSelect from "@/components/select";
+import { config } from "@/config";
+import {
+  Search,
+  Check,
+  Clear,
+  Person,
+  Group,
+  Cancel,
+  Delete,
+  Assignment,
+  Schedule,
+  Event,
+  EventAvailable,
+  ChevronRight,
+} from "@mui/icons-material";
+import DeleteModal from "@/components/modal/delete-modal";
 
 const Index = () => {
   const queryClient = useQueryClient();
   const { data: session } = useSession();
   const [currentPage, setCurrentPage] = useState(1);
   const [createModal, setCreateModal] = useState(false);
+  const [deleteModal, setDeleteModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedPosition, setSelectedPosition] = useState("");
+  const [selectedJobTrip, setSelectedJobTrip] = useState(null);
   const [selectedEmployeesForJobTrip, setSelectedEmployeesForJobTrip] =
     useState(new Set());
   const [pageSize] = useState(15);
@@ -102,10 +120,10 @@ const Index = () => {
   });
 
   const scheduleOptions = get(entrypointSchedules, "data", []).map((item) => ({
-    label: `${item.entryPoint.entryPointName} - ${item.schedule.name}`,
+    label: `${item.unitCode.nameLong} - ${item.entryPoint.entryPointName} - ${item.schedule.name}`,
     value: item.id,
   }));
-
+  // create business-trip for employees
   const { mutate: createJobTrip } = usePostQuery({
     listKeyId: "create-job-trip",
   });
@@ -156,6 +174,37 @@ const Index = () => {
         },
       }
     );
+  };
+
+  // delete business-trip
+
+  const submitDeleteJobTrip = async () => {
+    try {
+      const response = await fetch(
+        `${config.JAVA_API_URL}${URLS.jobTrips}/${selectedJobTrip}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session?.accessToken}`,
+          },
+          body: JSON.stringify({ jobTripId: selectedJobTrip }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Ошибка при удалении");
+      }
+
+      toast.success("Успешно удалено");
+      setSelectedJobTrip(null);
+      setDeleteModal(false);
+      queryClient.invalidateQueries(KEYS.jobTrips);
+      console.log("Deleted successfully");
+    } catch (error) {
+      console.error(error);
+      toast.error("Не удалось удалить");
+    }
   };
 
   const handleToggleEmployee = (employeeId) => {
@@ -287,7 +336,7 @@ const Index = () => {
           >
             <VisibilityIcon fontSize="small" />
           </Link>
-          <Button
+          {/* <Button
             onClick={() => {
               setEditModal(true);
               setSelectedUnitType(row.original.id);
@@ -301,11 +350,11 @@ const Index = () => {
             }}
           >
             <EditIcon fontSize="small" />
-          </Button>
+          </Button> */}
           <Button
             onClick={() => {
               setDeleteModal(true);
-              setSelectedUnitType(row.original.id);
+              setSelectedJobTrip(row.original.jobTripID);
             }}
             sx={{
               width: "32px",
@@ -330,9 +379,6 @@ const Index = () => {
       </DashboardLayout>
     );
   }
-
-  console.log("Schedule Options:", scheduleOptions);
-  console.log("Selected Schedule:", selectedSchedule);
 
   return (
     <DashboardLayout headerTitle={"Командировки"}>
@@ -363,239 +409,333 @@ const Index = () => {
         showCloseIcon={true}
         open={createModal}
         closeClick={handleCloseCreateModal}
-        title="Назначить командировку"
+        width="max-w-2xl"
       >
-        <div className="space-y-4">
-          {/* Basic Information */}
-          <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
-            <div className="col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Номер приказа *
-              </label>
-              <input
-                type="text"
-                value={numOrder}
-                onChange={(e) => setNumOrder(e.target.value)}
-                className="w-full h-[46px] rounded-md border border-gray-300 bg-white px-3.5 text-[15px] text-gray-800 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 hover:border-blue-400"
-                placeholder="Введите номер приказа"
-              />
-            </div>
-
-            <div className="col-span-2">
-              <CustomSelect
-                options={scheduleOptions}
-                value={selectedSchedule}
-                onChange={(val) => {
-                  setSelectedSchedule(val);
-                }}
-                label="Расписание *"
-                required
-                placeholder="Выберите расписание"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Дата начала *
-              </label>
-              <input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="w-full h-[46px] rounded-md border border-gray-300 bg-white px-3.5 text-[15px] text-gray-800 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 hover:border-blue-400"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Дата окончания *
-              </label>
-              <input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="w-full h-[46px] rounded-md border border-gray-300 bg-white px-3.5 text-[15px] text-gray-800 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 hover:border-blue-400"
-              />
-            </div>
+        <div className="space-y-6 max-h-[80vh] overflow-y-auto overflow-x-hidden">
+          {/* Header */}
+          <div className="text-center sticky z-50 top-0 bg-white pt-2 pb-4 border-b border-gray-200 -mx-6 px-6">
+            <h2 className="text-2xl font-bold text-gray-900">
+              Создание командировки
+            </h2>
+            <p className="text-gray-600 mt-1">
+              Заполните информацию о командировке и выберите сотрудников
+            </p>
           </div>
 
-          {/* Divider */}
-          <div className="border-t border-[#10B981]/20"></div>
-
-          {/* Employee Selection Section */}
-          <div className="pt-2">
-            <h3 className="text-lg font-semibold text-gray-900 mb-3">
-              Выбор сотрудников ({selectedEmployeesForJobTrip.size} выбрано)
+          {/* Basic Information Card */}
+          <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+              Основная информация
             </h3>
 
-            {/* Search Input */}
-            <div className="mb-4">
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Поиск сотрудника"
-                className="w-full h-[46px] rounded-md border border-gray-300 bg-white px-3.5 text-[15px] text-gray-800 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 hover:border-blue-400"
-              />
-            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Номер приказа *
+                </label>
+                <input
+                  type="text"
+                  value={numOrder}
+                  onChange={(e) => setNumOrder(e.target.value)}
+                  className="w-full h-12 rounded-lg border border-gray-300 bg-white px-4 text-gray-900 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-gray-400"
+                  placeholder="Например: 123-К"
+                />
+              </div>
 
-            {/* Selected Employees Badge */}
-            <SelectedEmployeesBadge
-              employees={filteredEmployees.filter((emp) =>
-                selectedEmployeesForJobTrip.has(emp.id)
-              )}
-              onRemove={(id) => {
-                const newSelected = new Set(selectedEmployeesForJobTrip);
-                newSelected.delete(id);
-                setSelectedEmployeesForJobTrip(newSelected);
-              }}
-            />
+              <div>
+                <CustomSelect
+                  options={scheduleOptions}
+                  value={selectedSchedule}
+                  onChange={(val) => setSelectedSchedule(val)}
+                  label="Расписание *"
+                  required
+                  placeholder="Выберите расписание"
+                />
+              </div>
 
-            {/* Action Buttons and Filter */}
-            <div className="flex flex-wrap items-center gap-3 mb-4">
-              <button
-                onClick={handleSelectAll}
-                className="px-4 py-2 bg-blue-100 text-blue-700 font-medium rounded-lg hover:bg-blue-200 transition"
-              >
-                Выбрать всех сотрудников
-              </button>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Дата начала *
+                </label>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="w-full h-12 rounded-lg border border-gray-300 bg-white px-4 text-gray-900 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-gray-400"
+                />
+              </div>
 
-              <button
-                onClick={handleClearAll}
-                className="px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition"
-              >
-                Очистить
-              </button>
-
-              <select
-                value={selectedPosition}
-                onChange={(e) => setSelectedPosition(e.target.value)}
-                className="w-full md:w-auto h-[46px] rounded-md border border-gray-300 bg-white px-3.5 text-[15px] text-gray-800 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 hover:border-blue-400 appearance-none cursor-pointer"
-                style={{
-                  backgroundImage:
-                    'url(\'data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="%23666" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="feather feather-chevron-down"><path d="M6 9l6 6 6-6"/></svg>\')',
-                  backgroundRepeat: "no-repeat",
-                  backgroundPosition: "right 0.9rem center",
-                  backgroundSize: "1rem",
-                }}
-              >
-                <option value="">Все позиции</option>
-                {positions.map((pos, i) => (
-                  <option key={i} value={pos}>
-                    {pos}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Employee List */}
-            <div className="space-y-[10px] gap-3 max-h-[250px] overflow-y-auto pr-1 my-[10px]">
-              {filteredEmployees.length === 0 ? (
-                <div className="text-center text-gray-500 py-8">
-                  Сотрудники не найдены
-                </div>
-              ) : (
-                filteredEmployees.map((emp) => (
-                  <div
-                    key={emp.id}
-                    onClick={() => handleToggleEmployee(emp.id)}
-                    className={`group transition-all duration-200 border-2 rounded-xl p-4 cursor-pointer shadow-sm hover:shadow-md
-                      ${
-                        selectedEmployeesForJobTrip.has(emp.id)
-                          ? "bg-blue-600 border-blue-600 text-white"
-                          : "bg-white border-gray-200 hover:border-blue-300"
-                      }`}
-                  >
-                    <div className="flex items-center space-x-3">
-                      <div
-                        className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg shadow-inner 
-                          ${
-                            selectedEmployeesForJobTrip.has(emp.id)
-                              ? "bg-white bg-opacity-20"
-                              : "bg-blue-100 text-blue-700"
-                          }`}
-                      >
-                        {emp.first_name?.[0]?.toUpperCase() || "?"}
-                      </div>
-
-                      <div className="flex-1">
-                        <p
-                          className={`font-medium truncate ${
-                            selectedEmployeesForJobTrip.has(emp.id)
-                              ? "text-white"
-                              : "text-gray-900"
-                          }`}
-                        >
-                          {emp.first_name} {emp.last_name}
-                        </p>
-                        <p
-                          className={`text-sm ${
-                            selectedEmployeesForJobTrip.has(emp.id)
-                              ? "text-blue-100"
-                              : "text-gray-500"
-                          }`}
-                        >
-                          {emp.workplace?.position?.name ||
-                            "Должность не указана"}
-                        </p>
-                      </div>
-
-                      <div
-                        className={`w-5 h-5 rounded-full flex items-center justify-center border-2
-                          ${
-                            selectedEmployeesForJobTrip.has(emp.id)
-                              ? "bg-white border-white"
-                              : "border-gray-300"
-                          }`}
-                      >
-                        {selectedEmployeesForJobTrip.has(emp.id) && (
-                          <svg
-                            className="w-3 h-3 text-blue-600"
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                              clipRule="evenodd"
-                            ></path>
-                          </svg>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))
-              )}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Дата окончания *
+                </label>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="w-full h-12 rounded-lg border border-gray-300 bg-white px-4 text-gray-900 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-gray-400"
+                />
+              </div>
             </div>
           </div>
 
-          {/* Submit Button */}
-          <div className="flex items-end justify-end pt-4">
-            <Button
-              onClick={submitCreateJobTrip}
-              sx={{
-                textTransform: "initial",
-                fontFamily: "DM Sans, sans-serif",
-                backgroundColor: "#4182F9",
-                boxShadow: "none",
-                color: "white",
-                display: "flex",
-                gap: "4px",
-                fontSize: "14px",
-                borderRadius: "8px",
-                padding: "8px 16px",
-                "&:hover": {
-                  backgroundColor: "#3369d6",
-                  boxShadow: "none",
-                },
-              }}
-              variant="contained"
-            >
-              Создать командировку
-            </Button>
+          {/* Employee Selection Card */}
+          <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                Выбор сотрудников
+              </h3>
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-gray-600 bg-white px-3 py-1 rounded-full border border-gray-300">
+                  Выбрано:{" "}
+                  <strong className="text-blue-600">
+                    {selectedEmployeesForJobTrip.size}
+                  </strong>
+                </span>
+              </div>
+            </div>
+
+            {/* Search and Filters */}
+            <div className="space-y-4 mb-6">
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="flex-1">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      placeholder="Поиск по имени или должности..."
+                      className="w-full h-12 rounded-lg border border-gray-300 bg-white pl-11 pr-4 text-gray-900 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-gray-400"
+                    />
+                    <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+                      <Search fontSize="small" />
+                    </div>
+                  </div>
+                </div>
+
+                <select
+                  value={selectedPosition}
+                  onChange={(e) => setSelectedPosition(e.target.value)}
+                  className="h-12 rounded-lg border border-gray-300 bg-white px-4 text-gray-900 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-gray-400 min-w-[180px]"
+                >
+                  <option value="">Все должности</option>
+                  {positions.map((pos, i) => (
+                    <option key={i} value={pos}>
+                      {pos}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Selection Actions */}
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={handleSelectAll}
+                  className="px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-lg hover:bg-blue-600 transition-colors duration-200 flex items-center gap-2"
+                >
+                  <Check fontSize="small" />
+                  Выбрать всех
+                </button>
+
+                <button
+                  onClick={handleClearAll}
+                  className="px-4 py-2 bg-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-300 transition-colors duration-200 flex items-center gap-2"
+                >
+                  <Clear fontSize="small" />
+                  Очистить
+                </button>
+              </div>
+            </div>
+
+            {/* Selected Employees Preview - Collapsible */}
+            {selectedEmployeesForJobTrip.size > 0 && (
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-3">
+                  <label className="block text-sm font-medium text-gray-700 flex items-center gap-2">
+                    <Group fontSize="small" />
+                    Выбранные сотрудники:
+                  </label>
+                  <span className="text-sm text-gray-500">
+                    {selectedEmployeesForJobTrip.size} сотрудников
+                  </span>
+                </div>
+
+                {/* Compact selected employees view */}
+                <div className="max-h-32 overflow-y-auto border border-gray-200 rounded-lg bg-white p-3">
+                  <div className="flex flex-wrap gap-2">
+                    {filteredEmployees
+                      .filter((emp) => selectedEmployeesForJobTrip.has(emp.id))
+                      .slice(0, 20) // Show only first 20 to prevent overflow
+                      .map((emp) => (
+                        <div
+                          key={emp.id}
+                          className="bg-blue-500 text-white px-3 py-1 rounded-lg flex items-center gap-1 text-sm group hover:bg-blue-600 transition-colors"
+                        >
+                          <span className="max-w-[120px] truncate">
+                            {emp.first_name} {emp.last_name}
+                          </span>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleToggleEmployee(emp.id);
+                            }}
+                            className="text-white hover:text-gray-200 transition-colors font-bold text-md leading-none flex-shrink-0"
+                          >
+                            <Cancel fontSize="small" />
+                          </button>
+                        </div>
+                      ))}
+
+                    {/* Show count if more than 20 selected */}
+                    {selectedEmployeesForJobTrip.size > 20 && (
+                      <div className="bg-blue-300 text-blue-800 px-3 py-1 rounded-lg text-sm flex items-center gap-1">
+                        +{selectedEmployeesForJobTrip.size - 20} еще
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Bulk actions when many employees selected */}
+                {selectedEmployeesForJobTrip.size > 5 && (
+                  <div className="mt-2 flex justify-end">
+                    <button
+                      onClick={handleClearAll}
+                      className="text-sm text-red-600 hover:text-red-700 font-medium flex items-center gap-1"
+                    >
+                      <Delete fontSize="small" />
+                      Очистить все
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Employee List with fixed height */}
+            <div className="border border-gray-200 rounded-lg bg-white">
+              <div className="max-h-48 min-h-[200px] overflow-y-auto">
+                {filteredEmployees.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    <Person
+                      sx={{ fontSize: 48 }}
+                      className="mx-auto text-gray-400 mb-3"
+                    />
+                    <p>Сотрудники не найдены</p>
+                    <p className="text-sm mt-1">
+                      Попробуйте изменить параметры поиска
+                    </p>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-gray-100">
+                    {filteredEmployees.map((emp) => {
+                      const isSelected = selectedEmployeesForJobTrip.has(
+                        emp.id
+                      );
+                      return (
+                        <div
+                          key={emp.id}
+                          onClick={() => handleToggleEmployee(emp.id)}
+                          className={`p-3 cursor-pointer transition-all duration-200 group ${
+                            isSelected
+                              ? "bg-blue-50 border-l-4 border-l-blue-500"
+                              : "hover:bg-gray-50"
+                          }`}
+                        >
+                          <div className="flex items-center space-x-3">
+                            {/* Avatar */}
+                            <div
+                              className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-white text-sm ${
+                                isSelected ? "bg-blue-500" : "bg-gray-400"
+                              }`}
+                            >
+                              {emp.first_name?.[0]?.toUpperCase() || "?"}
+                            </div>
+
+                            {/* Employee Info */}
+                            <div className="flex-1 min-w-0">
+                              <p
+                                className={`font-medium truncate text-sm ${
+                                  isSelected ? "text-blue-900" : "text-gray-900"
+                                }`}
+                              >
+                                {emp.first_name} {emp.last_name}
+                              </p>
+                              <p
+                                className={`text-xs truncate ${
+                                  isSelected ? "text-blue-700" : "text-gray-500"
+                                }`}
+                              >
+                                {emp.workplace?.position?.name ||
+                                  "Должность не указана"}
+                              </p>
+                            </div>
+
+                            {/* Checkbox */}
+                            <div
+                              className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                                isSelected
+                                  ? "bg-blue-500 border-blue-500"
+                                  : "border-gray-300 group-hover:border-gray-400"
+                              }`}
+                            >
+                              {isSelected && (
+                                <Check
+                                  sx={{ fontSize: 14 }}
+                                  className="text-white"
+                                />
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Action Buttons - Sticky at bottom */}
+          <div className="sticky bottom-0 bg-white pt-4 pb-2 border-t border-gray-200 -mx-6 px-6">
+            <div className="flex items-center justify-between">
+              <button
+                onClick={handleCloseCreateModal}
+                className="px-6 py-3 text-gray-700 font-medium rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors duration-200 flex items-center gap-2"
+              >
+                <Clear fontSize="small" />
+                Отмена
+              </button>
+
+              <button
+                onClick={submitCreateJobTrip}
+                disabled={
+                  selectedEmployeesForJobTrip.size === 0 ||
+                  !numOrder ||
+                  !startDate ||
+                  !endDate ||
+                  !selectedSchedule
+                }
+                className="px-8 py-3 bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-600 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                <Check fontSize="small" />
+                Создать командировку ({selectedEmployeesForJobTrip.size})
+              </button>
+            </div>
           </div>
         </div>
       </MethodModal>
+
+      <DeleteModal
+        open={deleteModal}
+        onClose={() => setDeleteModal(false)}
+        deleting={() => {
+          submitDeleteJobTrip();
+          setDeleteModal(false);
+          setSelectedJobTrip(null);
+        }}
+        title="Вы уверены, что хотите удалить эту назначенную командировку"
+      />
     </DashboardLayout>
   );
 };
