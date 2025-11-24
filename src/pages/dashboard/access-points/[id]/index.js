@@ -45,7 +45,6 @@ const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedPosition, setSelectedPosition] = useState("");
   const [selectedSchedule, setSelectedSchedule] = useState(null);
-  const [newMainScheduleId, setNewMainScheduleId] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
   const { id } = router.query;
