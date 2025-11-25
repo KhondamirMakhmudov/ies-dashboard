@@ -929,160 +929,162 @@ const Index = () => {
                     "data.jobTripSchedules",
                     []
                   ).length > 0 ? (
-                    get(
-                      ScheduleAndEntrypointOfEmployee,
-                      "data.jobTripSchedules",
-                      []
-                    ).map((item, index) => (
-                      <div
-                        key={index}
-                        className="bg-gradient-to-br from-white to-emerald-50 border border-emerald-200 rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden"
-                      >
-                        {/* Header Section */}
-                        <div className="bg-[#D1FAE5] px-5 py-4">
-                          <div className="flex justify-between items-center">
-                            <div className="flex items-center gap-3">
-                              <div className="bg-[#10B981] backdrop-blur-sm p-2 rounded-lg">
-                                <LocationOnIcon
-                                  className="text-white"
-                                  sx={{ fontSize: 20 }}
-                                />
-                              </div>
-                              <Typography
-                                variant="h6"
-                                className="text-gray-800 font-semibold tracking-wide"
-                              >
-                                {get(item, "entryPointName") ||
-                                  "Название точки не указано"}
-                              </Typography>
-                            </div>
-
-                            <div className="flex gap-2 items-center">
-                              <Link
-                                href={`/dashboard/access-points/${
-                                  get(item, "entryPointId") || ""
-                                }`}
-                                className="flex items-center gap-2 bg-white text-[#10B981] px-4 py-2 rounded-lg font-semibold text-sm hover:bg-[#A7F3D0] hover:text-white transition-all duration-200 shadow-sm hover:shadow-md"
-                              >
-                                Перейти к точке
-                                <ArrowForwardIcon sx={{ fontSize: 16 }} />
-                              </Link>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Content Section */}
-                        <div className="p-5">
-                          {/* Combined Information Card */}
-                          <div className=" border border-[#10B981]/20 rounded-lg p-4 hover:bg-[#D1FAE5]/80 transition-colors duration-200 ">
-                            <div className="space-y-4">
-                              <div className="flex justify-between items-center">
-                                {/* Order Number */}
-                                <div className="flex items-start gap-3">
-                                  <div className="bg-[#10B981] p-2 rounded-lg mt-1">
-                                    <DescriptionIcon
-                                      className="text-white"
-                                      sx={{ fontSize: 16 }}
-                                    />
-                                  </div>
-                                  <div className="flex-1">
-                                    <p className="text-xs text-[#10B981] font-semibold uppercase tracking-wider mb-1">
-                                      Номер приказа
-                                    </p>
-                                    <p className="text-[15px] font-bold text-gray-800">
-                                      {get(item, "numOrder") ||
-                                        "Номер приказа не указан"}
-                                    </p>
-                                  </div>
-                                </div>
-
-                                {/* Date Range */}
-                                <div className="flex items-start gap-3">
-                                  <div className="bg-[#10B981] p-2 rounded-lg mt-1">
-                                    <DateRangeIcon
-                                      className="text-white"
-                                      sx={{ fontSize: 16 }}
-                                    />
-                                  </div>
-                                  <div className="flex-1">
-                                    <p className="text-xs text-[#10B981] font-semibold uppercase tracking-wider mb-1">
-                                      Период командировки
-                                    </p>
-                                    <p className="text-[15px] font-bold text-gray-800">
-                                      {get(item, "startDate") &&
-                                      get(item, "endDate")
-                                        ? `${new Date(
-                                            get(item, "startDate")
-                                          ).toLocaleDateString(
-                                            "ru-RU"
-                                          )} - ${new Date(
-                                            get(item, "endDate")
-                                          ).toLocaleDateString("ru-RU")}`
-                                        : "Период не указан"}
-                                    </p>
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Divider */}
-                              <div className="border-t border-[#10B981]/20"></div>
-
-                              {/* Unit Information */}
-                              <div className="flex items-start gap-3">
-                                <div className="bg-[#10B981] p-2 rounded-lg mt-1">
-                                  <BusinessIcon
+                    <div className="grid grid-cols-2 gap-4">
+                      {get(
+                        ScheduleAndEntrypointOfEmployee,
+                        "data.jobTripSchedules",
+                        []
+                      ).map((item, index) => (
+                        <div
+                          key={index}
+                          className="bg-gradient-to-br col-span-1 from-white to-emerald-50 border border-emerald-200 rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden"
+                        >
+                          {/* Header Section */}
+                          <div className="bg-[#D1FAE5] px-5 py-4">
+                            <div className="flex justify-between items-center">
+                              <div className="flex items-center gap-3">
+                                <div className="bg-[#10B981] backdrop-blur-sm p-2 rounded-lg">
+                                  <LocationOnIcon
                                     className="text-white"
-                                    sx={{ fontSize: 16 }}
+                                    sx={{ fontSize: 20 }}
                                   />
                                 </div>
-                                <div className="flex-1">
-                                  <p className="text-xs text-[#10B981] font-semibold uppercase tracking-wider mb-1">
-                                    Подразделение
-                                  </p>
-                                  <p className="text-[15px] font-bold text-gray-800">
-                                    {get(item, "unitCodeName") ||
-                                      "Подразделение не указано"}
-                                  </p>
-                                </div>
+                                <Typography
+                                  variant="h6"
+                                  className="text-gray-800 font-semibold tracking-wide"
+                                >
+                                  {get(item, "entryPointName") ||
+                                    "Название точки не указано"}
+                                </Typography>
                               </div>
 
-                              {/* Divider */}
-                              <div className="border-t border-[#10B981]/20"></div>
-
-                              {/* Schedule Information */}
-                              <div className="flex justify-between items-start">
-                                <div className="flex items-start gap-3 flex-1">
-                                  <div className="bg-[#10B981] p-2 rounded-lg mt-1">
-                                    <CalendarMonthIcon
-                                      className="text-white"
-                                      sx={{ fontSize: 16 }}
-                                    />
-                                  </div>
-                                  <div className="flex-1">
-                                    <p className="text-xs text-[#10B981] font-semibold uppercase tracking-wider mb-1">
-                                      Расписание
-                                    </p>
-                                    <p className="text-[15px] font-bold text-gray-800">
-                                      {get(item, "scheduleName") ||
-                                        "Расписание не указано"}
-                                    </p>
-                                  </div>
-                                </div>
+                              <div className="flex gap-2 items-center">
                                 <Link
-                                  href={`/dashboard/schedule/${
-                                    get(item, "scheduleId") || ""
+                                  href={`/dashboard/access-points/${
+                                    get(item, "entryPointId") || ""
                                   }`}
-                                  className="flex items-center gap-1 text-[#10B981] hover:text-[#059669] text-sm font-semibold bg-white px-3 py-2 rounded-lg hover:bg-[#D1FAE5] transition-all duration-200 border border-[#10B981]/30 ml-2 whitespace-nowrap"
+                                  className="flex items-center gap-2 bg-white text-[#10B981] px-4 py-2 rounded-lg font-semibold text-sm hover:bg-[#A7F3D0] hover:text-white transition-all duration-200 shadow-sm hover:shadow-md"
                                 >
-                                  Подробнее
-                                  <ChevronRightIcon sx={{ fontSize: 16 }} />
+                                  Перейти к точке
+                                  <ArrowForwardIcon sx={{ fontSize: 16 }} />
                                 </Link>
                               </div>
                             </div>
                           </div>
+
+                          {/* Content Section */}
+                          <div className="p-5">
+                            {/* Combined Information Card */}
+                            <div className=" border border-[#10B981]/20 rounded-lg p-4 hover:bg-[#D1FAE5]/80 transition-colors duration-200 ">
+                              <div className="space-y-4">
+                                <div className="flex justify-between items-center">
+                                  {/* Order Number */}
+                                  <div className="flex items-start gap-3">
+                                    <div className="bg-[#10B981] p-2 rounded-lg mt-1">
+                                      <DescriptionIcon
+                                        className="text-white"
+                                        sx={{ fontSize: 16 }}
+                                      />
+                                    </div>
+                                    <div className="flex-1">
+                                      <p className="text-xs text-[#10B981] font-semibold uppercase tracking-wider mb-1">
+                                        Номер приказа
+                                      </p>
+                                      <p className="text-[15px] font-bold text-gray-800">
+                                        {get(item, "numOrder") ||
+                                          "Номер приказа не указан"}
+                                      </p>
+                                    </div>
+                                  </div>
+
+                                  {/* Date Range */}
+                                  <div className="flex items-start gap-3">
+                                    <div className="bg-[#10B981] p-2 rounded-lg mt-1">
+                                      <DateRangeIcon
+                                        className="text-white"
+                                        sx={{ fontSize: 16 }}
+                                      />
+                                    </div>
+                                    <div className="flex-1">
+                                      <p className="text-xs text-[#10B981] font-semibold uppercase tracking-wider mb-1">
+                                        Период командировки
+                                      </p>
+                                      <p className="text-[15px] font-bold text-gray-800">
+                                        {get(item, "startDate") &&
+                                        get(item, "endDate")
+                                          ? `${new Date(
+                                              get(item, "startDate")
+                                            ).toLocaleDateString(
+                                              "ru-RU"
+                                            )} - ${new Date(
+                                              get(item, "endDate")
+                                            ).toLocaleDateString("ru-RU")}`
+                                          : "Период не указан"}
+                                      </p>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Divider */}
+                                <div className="border-t border-[#10B981]/20"></div>
+
+                                {/* Unit Information */}
+                                <div className="flex items-start gap-3">
+                                  <div className="bg-[#10B981] p-2 rounded-lg mt-1">
+                                    <BusinessIcon
+                                      className="text-white"
+                                      sx={{ fontSize: 16 }}
+                                    />
+                                  </div>
+                                  <div className="flex-1">
+                                    <p className="text-xs text-[#10B981] font-semibold uppercase tracking-wider mb-1">
+                                      Подразделение
+                                    </p>
+                                    <p className="text-[15px] font-bold text-gray-800">
+                                      {get(item, "unitCodeName") ||
+                                        "Подразделение не указано"}
+                                    </p>
+                                  </div>
+                                </div>
+
+                                {/* Divider */}
+                                <div className="border-t border-[#10B981]/20"></div>
+
+                                {/* Schedule Information */}
+                                <div className="flex justify-between items-start">
+                                  <div className="flex items-start gap-3 flex-1">
+                                    <div className="bg-[#10B981] p-2 rounded-lg mt-1">
+                                      <CalendarMonthIcon
+                                        className="text-white"
+                                        sx={{ fontSize: 16 }}
+                                      />
+                                    </div>
+                                    <div className="flex-1">
+                                      <p className="text-xs text-[#10B981] font-semibold uppercase tracking-wider mb-1">
+                                        Расписание
+                                      </p>
+                                      <p className="text-[15px] font-bold text-gray-800">
+                                        {get(item, "scheduleName") ||
+                                          "Расписание не указано"}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <Link
+                                    href={`/dashboard/schedule/${
+                                      get(item, "scheduleId") || ""
+                                    }`}
+                                    className="flex items-center gap-1 text-[#10B981] hover:text-[#059669] text-sm font-semibold bg-white px-3 py-2 rounded-lg hover:bg-[#D1FAE5] transition-all duration-200 border border-[#10B981]/30 ml-2 whitespace-nowrap"
+                                  >
+                                    Подробнее
+                                    <ChevronRightIcon sx={{ fontSize: 16 }} />
+                                  </Link>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    ))
+                      ))}
+                    </div>
                   ) : (
                     <div className="flex flex-col items-center justify-center py-12 px-4 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border-2 border-dashed border-gray-300">
                       <div className="bg-gray-200 p-4 rounded-full mb-4">
@@ -1116,6 +1118,10 @@ const Index = () => {
           endDate={endDate}
           isLoadingReport={isLoadingReport}
           isFetchingReport={isFetchingReport}
+          fileNameEmployee={`${get(employeePhoto, "data.first_name")} ${get(
+            employeePhoto,
+            "data.last_name"
+          )}`}
         />
       </div>
 

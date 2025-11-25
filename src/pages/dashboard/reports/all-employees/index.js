@@ -16,7 +16,8 @@ const Index = () => {
   const { data: session } = useSession();
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-
+  const [currentPage, setCurrentPage] = useState(2);
+  const [pageSize] = useState(30);
   // Format function: converts to 'YYYY-MM-DDTHH:mm'
   const formatDateTime = (date) => {
     return date.toISOString().slice(0, 16);
@@ -44,15 +45,20 @@ const Index = () => {
       Accept: "application/json",
     },
     params: {
+      size: pageSize,
+      page: Math.max(0, currentPage - 1),
       ...(startDate && { startDate }),
       ...(endDate && { endDate }),
     },
+    enabled: !!session?.accessToken,
   });
 
   const columns = [
     {
       header: "№",
-      cell: ({ row }) => row.index + 1,
+      cell: ({ row }) => {
+        return (currentPage - 1) * pageSize + (row.index + 1);
+      },
     },
     { accessorKey: "empName", header: "Имя сотрудника" },
     {
@@ -85,9 +91,7 @@ const Index = () => {
                 : "text-red-600 font-medium bg-[#FAE7E7] p-1 rounded-md border border-red-600"
             }
           >
-            {errorCode === 0
-              ? "доступ разрешен"
-              : "отказ в доступе (режим графика)"}
+            {errorCode === 0 ? "доступ разрешен" : "отказ в доступе"}
           </span>
         );
       },
@@ -134,7 +138,7 @@ const Index = () => {
     { accessorKey: "structureName", header: "Отдел" },
   ];
 
-  const employees = get(reportOfEmployees, "data", []).flat();
+  const employees = get(reportOfEmployees, "data.content", []).flat();
 
   // Statistikalar
   const onTimeCount = employees.filter((emp) => emp.errorCode === 0).length;
@@ -142,23 +146,6 @@ const Index = () => {
 
   return (
     <DashboardLayout headerTitle={"Отчёты всех сотрудников"}>
-      <div className="flex gap-6 my-6">
-        {/* Vaqtida kelganlar */}
-        <div className="flex-1 bg-[#E8F6F0] border border-green-600 rounded-lg p-4 text-center">
-          <h3 className="text-lg font-semibold text-green-700">
-            Доступ разрешен
-          </h3>
-          <p className="text-3xl font-bold text-green-800">{onTimeCount}</p>
-        </div>
-
-        {/* Kechikkanlar */}
-        <div className="flex-1 bg-[#FAE7E7] border border-red-600 rounded-lg p-4 text-center">
-          <h3 className="text-lg font-semibold text-red-700">
-            Отказ в доступе
-          </h3>
-          <p className="text-3xl font-bold text-red-800">{lateCount}</p>
-        </div>
-      </div>
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -239,8 +226,14 @@ const Index = () => {
           className="bg-white col-span-12 p-6 my-[20px] rounded-md border border-gray-200 w-full"
         >
           <CustomTable
-            data={get(reportOfEmployees, "data", []).flat()}
+            data={get(reportOfEmployees, "data.content", []).flat()}
             columns={columns}
+            pagination={{
+              currentPage,
+              pageSize,
+              total: get(reportOfEmployees, "data.totalElements", 0),
+              onPaginationChange: ({ page }) => setCurrentPage(page),
+            }}
           />
         </motion.div>
       )}

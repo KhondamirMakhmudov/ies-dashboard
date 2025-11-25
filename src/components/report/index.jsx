@@ -1,5 +1,5 @@
 import CustomTable from "../table";
-import { useEffect } from "react";
+import { useEffect, useState } from "react"; // ✅ useState qo'shildi
 import { Typography } from "@mui/material";
 import { motion } from "framer-motion";
 import ContentLoader from "../loader";
@@ -7,6 +7,7 @@ import { get, isEmpty } from "lodash";
 import EmojiEmotionsIcon from "@mui/icons-material/EmojiEmotions";
 import dayjs from "dayjs";
 import ExcelButton from "../button/excel-button";
+import { exportReportToExcel } from "@/utils/exportReportToExcel";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import {
@@ -29,7 +30,11 @@ const ReportComponent = ({
   setEndDate,
   isLoadingReport,
   isFetchingReport,
+  fileNameEmployee,
 }) => {
+  // ✅ Yangi state: tanlangan davr turi
+  const [selectedPeriod, setSelectedPeriod] = useState("today");
+
   const formatDateTime = (date) => {
     return date.toISOString().slice(0, 16);
   };
@@ -43,8 +48,25 @@ const ReportComponent = ({
 
       setStartDate(formatDateTime(start));
       setEndDate(formatDateTime(end));
+      setSelectedPeriod("today"); // ✅ Boshlang'ich qiymat
     }
   }, [startDate, endDate, setStartDate, setEndDate]);
+
+  // ✅ Davr nomlarini olish funksiyasi
+  const getPeriodTitle = () => {
+    switch (selectedPeriod) {
+      case "today":
+        return "Статистика доступа за сегодня";
+      case "yesterday":
+        return "Статистика доступа за вчера";
+      case "week":
+        return "Статистика доступа за неделю";
+      case "month":
+        return "Статистика доступа за месяц";
+      default:
+        return "Статистика доступа";
+    }
+  };
 
   const exportToExcel = (data, filename = "employees.xlsx") => {
     if (!data || data.length === 0) {
@@ -52,14 +74,10 @@ const ReportComponent = ({
       return;
     }
 
-    // 1. API dan kelgan obyektlarni oddiy array-of-objects ko‘rinishga o‘tkazamiz
     const worksheet = XLSX.utils.json_to_sheet(data);
-
-    // 2. Workbook yaratamiz
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Employees");
 
-    // 3. Blob qilib olish va yuklab berish
     const excelBuffer = XLSX.write(workbook, {
       bookType: "xlsx",
       type: "array",
@@ -77,12 +95,11 @@ const ReportComponent = ({
       header: "№",
       cell: ({ row }) => row.index + 1,
     },
-
     {
       accessorKey: "time",
       header: "Время действие",
       cell: ({ getValue }) => {
-        const datetime = getValue(); // masalan: "2025-07-22T11:14:56"
+        const datetime = getValue();
         const date = dayjs(datetime).format("DD.MM.YYYY");
         const time = dayjs(datetime).format("HH:mm:ss");
 
@@ -108,9 +125,7 @@ const ReportComponent = ({
                 : "text-red-600 font-medium bg-[#FAE7E7] p-1 rounded-md border border-red-600"
             }
           >
-            {errorCode === 0
-              ? "доступ разрешен"
-              : "отказ в доступе (режим графика)"}
+            {errorCode === 0 ? "доступ разрешен" : "отказ в доступе"}
           </span>
         );
       },
@@ -152,9 +167,7 @@ const ReportComponent = ({
         );
       },
     },
-
     { accessorKey: "entryPointName", header: "Точка входа" },
-    // { accessorKey: "structureName", header: "Отдел" },
   ];
 
   const accessGranted = data.filter((e) => e.errorCode === 0).length;
@@ -164,6 +177,7 @@ const ReportComponent = ({
     { name: "Доступ разрешен", value: accessGranted },
     { name: "Отказ в доступе", value: accessDenied },
   ];
+
   return (
     <>
       <div className="grid grid-cols-12 gap-4 self-start">
@@ -184,7 +198,9 @@ const ReportComponent = ({
             </Typography>
 
             <ExcelButton
-              onClick={() => exportToExcel(data)}
+              onClick={() =>
+                exportReportToExcel(data, getPeriodTitle(), fileNameEmployee)
+              }
               enableHover={false}
             />
           </div>
@@ -197,7 +213,10 @@ const ReportComponent = ({
               <input
                 type="datetime-local"
                 value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
+                onChange={(e) => {
+                  setStartDate(e.target.value);
+                  setSelectedPeriod("custom"); // ✅ Custom tanlanganida
+                }}
                 className="!h-[44px] border !border-[#C9C9C9] px-2 rounded-md"
               />
             </div>
@@ -210,7 +229,10 @@ const ReportComponent = ({
               <input
                 type="datetime-local"
                 value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
+                onChange={(e) => {
+                  setEndDate(e.target.value);
+                  setSelectedPeriod("custom"); // ✅ Custom tanlanganida
+                }}
                 className="!h-[44px] border !border-[#C9C9C9] px-2 rounded-md"
               />
             </div>
@@ -220,15 +242,19 @@ const ReportComponent = ({
               <button
                 onClick={() => {
                   const start = new Date();
-                  start.setHours(0, 0, 0, 0); // bugun 00:00
-
+                  start.setHours(0, 0, 0, 0);
                   const end = new Date();
-                  end.setHours(23, 59, 59, 999); // bugun 23:59
+                  end.setHours(23, 59, 59, 999);
 
                   setStartDate(formatDateTime(start));
                   setEndDate(formatDateTime(end));
+                  setSelectedPeriod("today"); // ✅ Davrni belgilash
                 }}
-                className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition cursor-pointer"
+                className={`px-4 py-2 rounded-md transition cursor-pointer ${
+                  selectedPeriod === "today"
+                    ? "bg-blue-600 text-white"
+                    : "bg-blue-500 text-white hover:bg-blue-600"
+                }`}
               >
                 Сегодня
               </button>
@@ -238,16 +264,20 @@ const ReportComponent = ({
                 onClick={() => {
                   const start = new Date();
                   start.setDate(start.getDate() - 1);
-                  start.setHours(0, 0, 0, 0); // kecha 00:00
-
+                  start.setHours(0, 0, 0, 0);
                   const end = new Date();
                   end.setDate(end.getDate() - 1);
-                  end.setHours(23, 59, 59, 999); // kecha 23:59
+                  end.setHours(23, 59, 59, 999);
 
                   setStartDate(formatDateTime(start));
                   setEndDate(formatDateTime(end));
+                  setSelectedPeriod("yesterday"); // ✅ Davrni belgilash
                 }}
-                className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition cursor-pointer"
+                className={`px-4 py-2 rounded-md transition cursor-pointer ${
+                  selectedPeriod === "yesterday"
+                    ? "bg-blue-600 text-white"
+                    : "bg-blue-500 text-white hover:bg-blue-600"
+                }`}
               >
                 Вчера
               </button>
@@ -256,16 +286,20 @@ const ReportComponent = ({
               <button
                 onClick={() => {
                   const end = new Date();
-                  end.setHours(23, 59, 59, 999); // bugun 23:59
-
+                  end.setHours(23, 59, 59, 999);
                   const start = new Date();
-                  start.setDate(start.getDate() - 6); // oxirgi 7 kun (bugun ham ichida)
+                  start.setDate(start.getDate() - 6);
                   start.setHours(0, 0, 0, 0);
 
                   setStartDate(formatDateTime(start));
                   setEndDate(formatDateTime(end));
+                  setSelectedPeriod("week"); // ✅ Davrni belgilash
                 }}
-                className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition cursor-pointer"
+                className={`px-4 py-2 rounded-md transition cursor-pointer ${
+                  selectedPeriod === "week"
+                    ? "bg-blue-600 text-white"
+                    : "bg-blue-500 text-white hover:bg-blue-600"
+                }`}
               >
                 Неделя
               </button>
@@ -274,16 +308,20 @@ const ReportComponent = ({
               <button
                 onClick={() => {
                   const end = new Date();
-                  end.setHours(23, 59, 59, 999); // bugun 23:59
-
+                  end.setHours(23, 59, 59, 999);
                   const start = new Date();
-                  start.setMonth(start.getMonth() - 1); // 1 oy oldin
+                  start.setMonth(start.getMonth() - 1);
                   start.setHours(0, 0, 0, 0);
 
                   setStartDate(formatDateTime(start));
                   setEndDate(formatDateTime(end));
+                  setSelectedPeriod("month"); // ✅ Davrni belgilash
                 }}
-                className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition cursor-pointer"
+                className={`px-4 py-2 rounded-md transition cursor-pointer ${
+                  selectedPeriod === "month"
+                    ? "bg-blue-600 text-white"
+                    : "bg-blue-500 text-white hover:bg-blue-600"
+                }`}
               >
                 Месяц
               </button>
@@ -314,9 +352,32 @@ const ReportComponent = ({
         </motion.div>
 
         {!isEmpty(data) && (
-          <div className="bg-white col-span-4 self-start p-6 rounded-md border border-gray-200">
-            <h3 className="text-lg font-semibold mb-4">Статистика доступа</h3>
-            <ResponsiveContainer width="100%" height={300}>
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3 }}
+            className="bg-white col-span-4 self-start p-6 rounded-md border border-gray-200"
+          >
+            {/* ✅ Yangilangan sarlavha */}
+            <h3 className="text-lg font-semibold mb-4">{getPeriodTitle()}</h3>
+
+            {/* Statistik ma'lumotlar */}
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
+                <div className="text-2xl font-bold text-green-600">
+                  {accessGranted}
+                </div>
+                <div className="text-sm text-green-700">Разрешено</div>
+              </div>
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-center">
+                <div className="text-2xl font-bold text-red-600">
+                  {accessDenied}
+                </div>
+                <div className="text-sm text-red-700">Запрещено</div>
+              </div>
+            </div>
+
+            <ResponsiveContainer width="100%" height={250}>
               <PieChart>
                 <Pie
                   data={pieData}
@@ -324,18 +385,23 @@ const ReportComponent = ({
                   nameKey="name"
                   cx="50%"
                   cy="50%"
-                  outerRadius={100}
-                  label
+                  outerRadius={80}
+                  label={({ name, percent }) =>
+                    `${name}: ${(percent * 100).toFixed(1)}%`
+                  }
                 >
                   {pieData.map((_, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index]} />
                   ))}
                 </Pie>
-                <Tooltip />
+                <Tooltip
+                  formatter={(value, name) => [value, name]}
+                  labelFormatter={(label) => `Количество: ${label}`}
+                />
                 <Legend />
               </PieChart>
             </ResponsiveContainer>
-          </div>
+          </motion.div>
         )}
       </div>
     </>

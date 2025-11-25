@@ -57,6 +57,11 @@ const menuItems = [
     icon: <SecurityIcon />,
     submenu: [
       {
+        text: "Контрольные точки",
+        icon: <SecurityIcon />,
+        path: "/dashboard/checkpoints",
+      },
+      {
         text: "Устройства (камеры)",
         icon: <CameraAltIcon />,
         path: "/dashboard/devices",
@@ -65,11 +70,6 @@ const menuItems = [
         text: "Точки доступа",
         icon: <WifiIcon />,
         path: "/dashboard/access-points",
-      },
-      {
-        text: "Контрольные точки",
-        icon: <SecurityIcon />,
-        path: "/dashboard/checkpoints",
       },
     ],
   },

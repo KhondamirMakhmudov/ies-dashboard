@@ -21,10 +21,8 @@ import { exportToExcelStyled } from "@/utils/exportToExcelStyled";
 
 const Index = () => {
   const { data: session } = useSession();
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [startTime, setStartTime] = useState("09:00");
-  const [endTime, setEndTime] = useState("18:00");
+  const [startDateTime, setStartDateTime] = useState("");
+  const [endDateTime, setEndDateTime] = useState("");
   const [selectedEmployees, setSelectedEmployees] = useState([]); // Array of selected employees
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedPosition, setSelectedPosition] = useState("");
@@ -46,15 +44,6 @@ const Index = () => {
   });
 
   const employeeList = get(employees, "data.data", []);
-
-  // Combine date and time into datetime strings
-  const startDateTime = useMemo(() => {
-    return startDate && startTime ? `${startDate}T${startTime}` : "";
-  }, [startDate, startTime]);
-
-  const endDateTime = useMemo(() => {
-    return endDate && endTime ? `${endDate}T${endTime}` : "";
-  }, [endDate, endTime]);
 
   // Get unique positions from employee list
   const uniquePositions = [
@@ -330,65 +319,25 @@ const Index = () => {
           <div className="grid sm:grid-cols-2 gap-4 sm:gap-6">
             <div className="space-y-2">
               <label className=" text-sm font-semibold text-gray-700 mb-2 flex items-center  gap-2">
-                <DateRangeIcon /> <p>Дата начала</p>
+                <DateRangeIcon /> <p>Дата и время начала</p>
               </label>
               <Input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
+                type="datetime-local"
+                value={startDateTime}
+                onChange={(e) => setStartDateTime(e.target.value)}
                 inputClass="!h-[48px] !border-2 !border-gray-200 !rounded-lg hover:!border-blue-400 focus:!border-blue-500 transition-colors"
               />
             </div>
 
             <div className="space-y-2">
               <label className=" text-sm font-semibold text-gray-700 mb-2 flex items-center  gap-2">
-                <DateRangeIcon /> <p>Дата окончания</p>
+                <DateRangeIcon /> <p>Дата и время окончания</p>
               </label>
 
               <Input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                inputClass="!h-[48px] !border-2 !border-gray-200 !rounded-lg hover:!border-blue-400 focus:!border-blue-500 transition-colors"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Divider */}
-        <div className="border-t border-gray-200 my-6"></div>
-
-        {/* Time Range */}
-        <div className="mb-6">
-          <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-            <span className="flex items-center justify-center w-7 h-7 rounded-full bg-blue-100 text-blue-700 text-sm font-bold">
-              3
-            </span>
-            Временной интервал
-          </h3>
-          <div className="grid sm:grid-cols-2 gap-4 sm:gap-6">
-            <div className="space-y-2">
-              <label className=" text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1">
-                <AccessTimeIcon /> <p>Время начала</p>
-              </label>
-
-              <Input
-                type="time"
-                value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
-                inputClass="!h-[48px] !border-2 !border-gray-200 !rounded-lg hover:!border-blue-400 focus:!border-blue-500 transition-colors"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className=" text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1">
-                <AccessTimeIcon /> <p>Время окончания</p>
-              </label>
-
-              <Input
-                type="time"
-                value={endTime}
-                onChange={(e) => setEndTime(e.target.value)}
+                type="datetime-local"
+                value={endDateTime}
+                onChange={(e) => setEndDateTime(e.target.value)}
                 inputClass="!h-[48px] !border-2 !border-gray-200 !rounded-lg hover:!border-blue-400 focus:!border-blue-500 transition-colors"
               />
             </div>
