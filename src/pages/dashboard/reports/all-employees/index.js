@@ -135,14 +135,8 @@ const Index = () => {
     },
 
     { accessorKey: "entryPointName", header: "Точка входа" },
-    { accessorKey: "structureName", header: "Отдел" },
+    // { accessorKey: "structureName", header: "Отдел" },
   ];
-
-  const employees = get(reportOfEmployees, "data.content", []).flat();
-
-  // Statistikalar
-  const onTimeCount = employees.filter((emp) => emp.errorCode === 0).length;
-  const lateCount = employees.filter((emp) => emp.errorCode !== 0).length;
 
   return (
     <DashboardLayout headerTitle={"Отчёты всех сотрудников"}>

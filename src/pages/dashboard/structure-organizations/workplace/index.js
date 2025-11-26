@@ -81,7 +81,7 @@ const Index = () => {
     key: [KEYS.workplace, selectUnitCode],
     url: URLS.workplace,
     params: {
-      limit: 150,
+      limit: 1000,
       unit_code: +selectUnitCode,
     },
   });
@@ -413,6 +413,9 @@ const Index = () => {
           onClose={() => {
             setCreateModal(false);
             setSelect(null);
+            setSelectedParentCode(null);
+            setPositionId(null);
+            setOrgUnitsId(null);
           }}
         >
           <Typography variant="h6">Создать рабочие место</Typography>

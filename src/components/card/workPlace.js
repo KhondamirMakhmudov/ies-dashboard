@@ -96,7 +96,7 @@ const WorkPlaceCard = ({
           <div className="text-xs">
             <Link
               href={employeeURL}
-              className="text-green-600 hover:bg-green-600 hover:text-white border border-green-600 px-2 py-1 rounded-md transition-all duration-100"
+              className="text-white hover:bg-green-600 hover:text-white bg-green-600 px-2 py-1 rounded-md transition-all duration-100"
             >
               Страница сотрудника
             </Link>
