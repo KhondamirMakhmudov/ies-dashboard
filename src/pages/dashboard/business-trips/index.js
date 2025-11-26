@@ -336,21 +336,6 @@ const Index = () => {
           >
             <VisibilityIcon fontSize="small" />
           </Link>
-          {/* <Button
-            onClick={() => {
-              setEditModal(true);
-              setSelectedUnitType(row.original.id);
-            }}
-            sx={{
-              width: "32px",
-              height: "32px",
-              minWidth: "32px",
-              background: "#F0D8C8",
-              color: "#FF6200",
-            }}
-          >
-            <EditIcon fontSize="small" />
-          </Button> */}
           <Button
             onClick={() => {
               setDeleteModal(true);
@@ -409,7 +394,7 @@ const Index = () => {
         showCloseIcon={true}
         open={createModal}
         closeClick={handleCloseCreateModal}
-        width="max-w-2xl"
+        width="min-w-2xl"
       >
         <div className="space-y-6 max-h-[80vh] overflow-y-auto overflow-x-hidden">
           {/* Header */}
@@ -448,7 +433,7 @@ const Index = () => {
                   options={scheduleOptions}
                   value={selectedSchedule}
                   onChange={(val) => setSelectedSchedule(val)}
-                  label="Расписание *"
+                  label="Расписание"
                   required
                   placeholder="Выберите расписание"
                 />

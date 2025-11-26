@@ -27,8 +27,11 @@ import ReportGmailerrorredIcon from "@mui/icons-material/ReportGmailerrorred";
 import PrimaryButton from "@/components/button/primary-button";
 import Link from "next/link";
 import { Search, FilterList, Close } from "@mui/icons-material";
+import useAppTheme from "@/hooks/useAppTheme";
+import { color } from "framer-motion";
 
 const Index = () => {
+  const { isDark, bg, text, border } = useAppTheme();
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(15);
   const queryClient = useQueryClient();
@@ -312,7 +315,8 @@ const Index = () => {
         <div className="my-2">
           <Link
             href={`employees/${row.original.id}`}
-            className="bg-[#EDEDF2] font-semibold px-4 py-2 rounded-md cursor-pointer hover:bg-gray-400 transition-all duration-200"
+            style={{ color: text("black", "black") }}
+            className="bg-[#EDEDF2] font-semibold px-4 py-2 rounded-md cursor-pointer hover:bg-gray-400  transition-all duration-200"
           >
             Подробнее
           </Link>
@@ -346,7 +350,13 @@ const Index = () => {
 
   return (
     <DashboardLayout headerTitle={"Сотрудники"}>
-      <div className="bg-white p-[15px] mt-[10px] rounded-md border border-[#E9E9E9]">
+      <div
+        className=" p-[15px] mt-[10px] rounded-md border border-[#E9E9E9]"
+        style={{
+          background: bg("white", "#1E1E1E"),
+          borderColor: border("#d1d5db", "#4b5563"),
+        }}
+      >
         <div className="col-span-12 flex justify-between items-center ">
           <Typography variant="h6" fontWeight={"600"}>
             Просмотр и управление сотрудниками
@@ -378,7 +388,13 @@ const Index = () => {
       </div>
 
       {/* Search and Filter Section */}
-      <div className="bg-white p-4 mt-3 rounded-md border border-gray-200">
+      <div
+        className="bg-white p-4 mt-3 rounded-md border border-gray-200"
+        style={{
+          background: bg("white", "#1E1E1E"),
+          borderColor: border("#d1d5db", "#4b5563"),
+        }}
+      >
         <div className="flex gap-3 items-center">
           {/* Search Input */}
           <div className="relative flex-1">

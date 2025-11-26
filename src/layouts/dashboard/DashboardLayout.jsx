@@ -1,5 +1,6 @@
-"use client"; // agar Next.js app router bo'lsa
+"use client";
 
+import useAppTheme from "@/hooks/useAppTheme";
 import Sidebar from "@/components/dashboard/sidebar";
 import Head from "next/head";
 import MainContentHeader from "@/components/dashboard/mainContentHeader";
@@ -10,18 +11,24 @@ export default function DashboardLayout({ children, headerTitle }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
 
+  const { bg } = useAppTheme();
   const mainRef = useRef(null);
 
   return (
-    <div className="flex w-full h-screen">
+    <div
+      className="flex w-full h-screen"
+      style={{ backgroundColor: bg("#fff", "#0a0a0a") }}
+    >
       <Head>
         <title>{headerTitle} | СКУД</title>
       </Head>
+
       <Sidebar isOpen={isSidebarOpen} />
 
       <main
         ref={mainRef}
-        className="flex-1 p-6 bg-[#F4F7FEFF] overflow-auto relative"
+        className="flex-1 p-6 overflow-auto relative transition-colors duration-200"
+        style={{ backgroundColor: bg("#F4F7FEFF", "#121212") }}
       >
         <MainContentHeader toggleSidebar={toggleSidebar}>
           {headerTitle}
@@ -29,7 +36,6 @@ export default function DashboardLayout({ children, headerTitle }) {
 
         {children}
 
-        {/* Scroll button */}
         <ScrollToTopButton containerRef={mainRef} />
       </main>
     </div>
