@@ -39,8 +39,10 @@ import FlightTakeoffIcon from "@mui/icons-material/FlightTakeoff";
 import DescriptionIcon from "@mui/icons-material/Description";
 import DateRangeIcon from "@mui/icons-material/DateRange";
 import Link from "next/link";
+import useAppTheme from "@/hooks/useAppTheme";
 
 const Index = () => {
+  const { bg, text, isDark, border } = useAppTheme();
   const queryClient = useQueryClient();
   const router = useRouter();
   const { id: employee_id } = router.query;
@@ -349,7 +351,13 @@ const Index = () => {
 
   return (
     <DashboardLayout headerTitle={`Полная информация о сотруднике`}>
-      <div className="bg-white p-[15px] mt-[10px] rounded-md border border-[#E9E9E9]">
+      <div
+        className="bg-white p-[15px] mt-[10px] rounded-md border border-[#E9E9E9]"
+        style={{
+          backgroundColor: bg("#ffffff", "#1e1e1e"),
+          borderColor: border("#e5e7eb", "#333333"),
+        }}
+      >
         <Breadcrumb
           paths={[
             {
@@ -374,9 +382,16 @@ const Index = () => {
           initial={{ opacity: 0, scale: 0 }}
           animate={{ opacity: 1, scale: 1 }}
           className="bg-white mb-5 border border-[#E9E9E9] w-full grid grid-cols-1 lg:grid-cols-12 mt-[10px] rounded-md"
+          style={{
+            backgroundColor: bg("#ffffff", "#1e1e1e"),
+            borderColor: border("#e5e7eb", "#333333"),
+          }}
         >
           {/* Chap tomonda profil */}
-          <div className="lg:col-span-3 flex flex-col gap-2 items-center text-center border-b md:border-b-0 md:border-r border-[#E9E9E9] py-5 px-4">
+          <div
+            className="lg:col-span-3 flex flex-col gap-2 items-center text-center border-b md:border-b-0 md:border-r border-[#E9E9E9] py-5 px-4"
+            style={{ borderColor: border("#e5e7eb", "#333333") }}
+          >
             <div className="w-[150px] h-[150px] lg:w-[170px] lg:h-[170px] rounded-full overflow-hidden border border-[#C9C9C9]">
               <Image
                 src={
@@ -439,7 +454,13 @@ const Index = () => {
               </p>
 
               {/* Position Badge */}
-              <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-blue-50 border border-blue-200">
+              <div
+                className={`inline-flex items-center px-4 py-1.5 rounded-full ${
+                  !isDark
+                    ? "bg-blue-50 border border-blue-200"
+                    : "border border-blue-700 bg-blue-900/30"
+                }`}
+              >
                 <p className="text-sm font-medium text-blue-700">
                   {get(employeePhoto, "data.workplace.position.name") ||
                     "Должность не указана"}
@@ -454,6 +475,10 @@ const Index = () => {
               initial={{ opacity: 0, scale: 0 }}
               animate={{ opacity: 1, scale: 1 }}
               className="bg-white p-0 border-b border-b-[#E9E9E9]"
+              style={{
+                backgroundColor: bg("#ffffff", "#1e1e1e"),
+                borderColor: border("#e5e7eb", "#333333"),
+              }}
             >
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                 <div className="flex gap-3 px-3 py-1">
@@ -517,7 +542,10 @@ const Index = () => {
             {tab === "personal" && (
               <div className="p-2 sm:p-4">
                 {/* Личная информация */}
-                <div className="border border-gray-200 p-4 rounded-xl mb-5">
+                <div
+                  className="border border-gray-200 p-4 rounded-xl mb-5"
+                  style={{ borderColor: border("#e5e7eb", "#333333") }}
+                >
                   <Typography
                     variant="h7"
                     sx={{ fontSize: "18px", fontWeight: "600" }}
@@ -569,7 +597,10 @@ const Index = () => {
                 </div>
 
                 {/* Контактные данные */}
-                <div className="border border-gray-200 p-4 rounded-xl mb-5">
+                <div
+                  className="border border-gray-200 p-4 rounded-xl mb-5"
+                  style={{ borderColor: border("#e5e7eb", "#333333") }}
+                >
                   <Typography
                     variant="h7"
                     sx={{ fontSize: "18px", fontWeight: "600" }}
@@ -610,7 +641,10 @@ const Index = () => {
                 </div>
 
                 {/* Образование */}
-                <div className="border border-gray-200 p-4 rounded-xl">
+                <div
+                  className="border border-gray-200 p-4 rounded-xl"
+                  style={{ borderColor: border("#e5e7eb", "#333333") }}
+                >
                   <Typography
                     variant="h7"
                     sx={{ fontSize: "18px", fontWeight: "600" }}
@@ -645,7 +679,10 @@ const Index = () => {
             {/* EMPLOYEE INFO */}
             {tab === "employee" && (
               <div className="p-2 sm:p-4">
-                <div className="border border-gray-200 p-4 rounded-xl">
+                <div
+                  className="border border-gray-200 p-4 rounded-xl"
+                  style={{ borderColor: border("#e5e7eb", "#333333") }}
+                >
                   <Typography
                     variant="h7"
                     sx={{ fontSize: "18px", fontWeight: "600" }}
@@ -709,7 +746,11 @@ const Index = () => {
                       <span
                         className={`px-3 py-1 text-xs font-medium rounded-full ${
                           get(employeePhoto, "data.is_active")
-                            ? "bg-green-100 text-green-800"
+                            ? isDark
+                              ? "bg-green-900/30 text-green-400"
+                              : "bg-green-100 text-green-800"
+                            : isDark
+                            ? "bg-red-900/30 text-red-400"
                             : "bg-red-100 text-red-800"
                         }`}
                       >

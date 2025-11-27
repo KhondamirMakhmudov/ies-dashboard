@@ -561,7 +561,13 @@ const Index = () => {
       ) : isEmpty(get(employee, "data.data", [])) ? (
         <NoData onCreate={() => setOpen(true)} />
       ) : (
-        <div className="bg-white p-[12px] mt-[10px] mb-[50px] rounded-md border border-[#E9E9E9]">
+        <div
+          className="p-[12px] mt-[10px] mb-[50px] rounded-md border border-[#E9E9E9]"
+          style={{
+            backgroundColor: bg("#ffffff", "#1e1e1e"),
+            borderColor: border("#e5e7eb", "#333333"),
+          }}
+        >
           <div className="grid grid-cols-12 gap-[12px] p-2">
             <div className="col-span-12">
               <CustomTable

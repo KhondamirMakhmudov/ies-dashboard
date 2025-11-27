@@ -1,5 +1,7 @@
 import React from "react";
 import Link from "next/link";
+import useAppTheme from "@/hooks/useAppTheme";
+
 // Custom SVG Icons
 const HomeIcon = ({ size = 18, className = "" }) => (
   <svg
@@ -36,6 +38,8 @@ const ChevronRightIcon = ({ size = 16, className = "" }) => (
 
 // Breadcrumb Component
 const Breadcrumb = ({ paths = [] }) => {
+  const { isDark, text } = useAppTheme();
+
   return (
     <nav
       className="flex items-center space-x-1 text-sm"
@@ -44,7 +48,14 @@ const Breadcrumb = ({ paths = [] }) => {
       {/* Home Icon */}
       <Link
         href="/"
-        className="flex items-center text-gray-500 hover:text-gray-700 transition-colors duration-200"
+        className="flex items-center transition-colors duration-200"
+        style={{ color: text("#6b7280", "#9ca3af") }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.color = text("#374151", "#d1d5db");
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.color = text("#6b7280", "#9ca3af");
+        }}
       >
         <HomeIcon size={18} />
       </Link>
@@ -52,14 +63,29 @@ const Breadcrumb = ({ paths = [] }) => {
       {/* Breadcrumb Items */}
       {paths.map((crumb, index) => (
         <React.Fragment key={index}>
-          <ChevronRightIcon size={16} className="text-gray-400" />
+          <ChevronRightIcon
+            size={16}
+            style={{ color: text("#9ca3af", "#6b7280") }}
+          />
 
           {crumb.isCurrent ? (
-            <span className="text-gray-900 font-medium">{crumb.label}</span>
+            <span
+              className="font-medium"
+              style={{ color: text("#111827", "#f3f4f6") }}
+            >
+              {crumb.label}
+            </span>
           ) : (
             <Link
               href={crumb.href}
-              className="text-gray-500 hover:text-gray-700 transition-colors duration-200"
+              className="transition-colors duration-200"
+              style={{ color: text("#6b7280", "#9ca3af") }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = text("#374151", "#d1d5db");
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = text("#6b7280", "#9ca3af");
+              }}
             >
               {crumb.label}
             </Link>

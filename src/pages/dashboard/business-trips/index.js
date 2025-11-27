@@ -30,11 +30,6 @@ import {
   Group,
   Cancel,
   Delete,
-  Assignment,
-  Schedule,
-  Event,
-  EventAvailable,
-  ChevronRight,
 } from "@mui/icons-material";
 import DeleteModal from "@/components/modal/delete-modal";
 
