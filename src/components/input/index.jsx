@@ -1,6 +1,7 @@
 import { useState } from "react";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
+import useAppTheme from "@/hooks/useAppTheme";
 
 const Input = ({
   label,
@@ -16,6 +17,7 @@ const Input = ({
   labelClass = "",
   ...props
 }) => {
+  const { isDark, bg, text, border } = useAppTheme();
   const [showPassword, setShowPassword] = useState(false);
   const isPassword = type === "password";
   const inputType = isPassword ? (showPassword ? "text" : "password") : type;
@@ -25,7 +27,8 @@ const Input = ({
       {label && (
         <label
           htmlFor={name}
-          className={`block mb-1 text-sm text-gray-700 ${labelClass}`}
+          className={`block mb-1 text-sm ${labelClass}`}
+          style={{ color: text("#374151", "#d1d5db") }}
         >
           {label}
           {required && <span className="text-red-500"> *</span>}
@@ -40,18 +43,22 @@ const Input = ({
         placeholder={placeholder}
         value={value}
         onChange={onChange}
-        className={`w-full h-[55px] border ${
-          error ? "border-red-500" : "border-gray-400"
-        } rounded-[5px] p-2 pr-10 focus:outline-none focus:ring-2 ${
+        className={`w-full h-[55px] border rounded-[5px] p-2 pr-10 focus:outline-none focus:ring-2 ${
           error ? "focus:ring-red-500" : "focus:ring-blue-500"
         } ${inputClass}`}
+        style={{
+          backgroundColor: bg("#ffffff", "#2a2a2a"),
+          borderColor: error ? "#ef4444" : border("#9ca3af", "#4b5563"),
+          color: text("#000000", "#f3f4f6"),
+        }}
       />
 
       {isPassword && (
         <button
           type="button"
           onClick={() => setShowPassword((prev) => !prev)}
-          className="absolute right-3 top-[65%] transform -translate-y-1/2 text-gray-500"
+          className="absolute right-3 top-[65%] transform -translate-y-1/2"
+          style={{ color: text("#6b7280", "#9ca3af") }}
         >
           {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
         </button>

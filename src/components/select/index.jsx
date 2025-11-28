@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { KeyboardArrowDown } from "@mui/icons-material";
 import clsx from "clsx";
+import useAppTheme from "@/hooks/useAppTheme";
 
 const CustomSelect = ({
   label,
@@ -11,9 +12,10 @@ const CustomSelect = ({
   onChange,
   placeholder = "Выберите контрольную точку",
   className = "",
-  returnObject = false, // ✅ true => object qaytaradi, false => faqat value
-  sortOptions = true, // ✅ yangi prop: true => alfavit bo‘yicha sort
+  returnObject = false,
+  sortOptions = true,
 }) => {
+  const { isDark, bg, text, border } = useAppTheme();
   const [isOpen, setIsOpen] = useState(false);
   const selectRef = useRef(null);
 
@@ -38,7 +40,6 @@ const CustomSelect = ({
     ? value?.label
     : options.find((opt) => opt.value === value)?.label;
 
-  // ✅ optionsni shartli tartiblash
   const finalOptions = sortOptions
     ? [...options].sort((a, b) =>
         a.label?.localeCompare(b.label, "ru", { sensitivity: "base" })
@@ -48,7 +49,10 @@ const CustomSelect = ({
   return (
     <div className={`relative w-full ${className}`} ref={selectRef}>
       {label && (
-        <label className="block mb-1 text-sm text-gray-700">
+        <label
+          className="block mb-1 text-sm"
+          style={{ color: text("#374151", "#d1d5db") }}
+        >
           {label}
           {required && <span className="text-red-500"> *</span>}
         </label>
@@ -58,33 +62,71 @@ const CustomSelect = ({
         type="button"
         onClick={toggleDropdown}
         className={clsx(
-          "w-full h-[45px] border rounded-md p-2 text-[15px] text-left text-black flex items-center justify-between focus:outline-none focus:ring-2",
-          error
-            ? "border-red-500 focus:ring-red-500"
-            : "border-gray-300 focus:ring-blue-500"
+          "w-full h-[45px] border rounded-md p-2 text-[15px] text-left flex items-center justify-between focus:outline-none focus:ring-2",
+          error ? "border-red-500 focus:ring-red-500" : "focus:ring-blue-500"
         )}
+        style={{
+          backgroundColor: bg("#ffffff", "#2a2a2a"),
+          borderColor: error ? "#ef4444" : border("#d1d5db", "#4b5563"),
+          color: text("#000000", "#f3f4f6"),
+        }}
       >
-        <span className={clsx("truncate", !value && "text-gray-400")}>
+        <span
+          className="truncate"
+          style={{
+            color: !value
+              ? text("#9ca3af", "#6b7280")
+              : text("#000000", "#f3f4f6"),
+          }}
+        >
           {selectedLabel || placeholder}
         </span>
         <KeyboardArrowDown
           className={`transition-transform duration-200 ${
             isOpen ? "rotate-180" : ""
           }`}
+          style={{ color: text("#6b7280", "#9ca3af") }}
         />
       </button>
 
       {isOpen && (
-        <ul className="absolute z-9999 mt-2 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+        <ul
+          className="absolute z-9999 mt-2 w-full border rounded-md shadow-lg max-h-60 overflow-auto"
+          style={{
+            backgroundColor: bg("#ffffff", "#1e1e1e"),
+            borderColor: border("#d1d5db", "#4b5563"),
+          }}
+        >
           {finalOptions.map((opt, idx) => (
             <li
               key={idx}
               className={clsx(
-                "px-4 py-2 hover:bg-blue-100 cursor-pointer",
+                "px-4 py-2 cursor-pointer transition-colors",
                 (returnObject ? value?.value : value) === opt.value &&
-                  "bg-blue-50 font-medium"
+                  "font-medium"
               )}
+              style={{
+                backgroundColor:
+                  (returnObject ? value?.value : value) === opt.value
+                    ? isDark
+                      ? "#1e3a8a"
+                      : "#eff6ff"
+                    : "transparent",
+                color: text("#000000", "#f3f4f6"),
+              }}
               onClick={() => handleSelect(opt)}
+              onMouseEnter={(e) => {
+                if ((returnObject ? value?.value : value) !== opt.value) {
+                  e.currentTarget.style.backgroundColor = isDark
+                    ? "#2a2a2a"
+                    : "#dbeafe";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if ((returnObject ? value?.value : value) !== opt.value) {
+                  e.currentTarget.style.backgroundColor = "transparent";
+                }
+              }}
             >
               {opt.label}
             </li>

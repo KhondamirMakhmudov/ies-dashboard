@@ -5,18 +5,17 @@ import { URLS } from "@/constants/url";
 import { config } from "@/config";
 import { Button, Typography } from "@mui/material";
 import CustomTable from "@/components/table";
-import { get, isEmpty, isEqual } from "lodash";
+import { get, isEmpty } from "lodash";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { motion, AnimatePresence } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import MethodModal from "@/components/modal/method-modal";
 import Input from "@/components/input";
 import usePostQuery from "@/hooks/java/usePostQuery";
 import CustomSelect from "@/components/select";
 import ContentLoader from "@/components/loader";
 import toast from "react-hot-toast";
-import DeleteModal from "@/components/modal/delete-modal";
 import { useSession } from "next-auth/react";
 import { useQueryClient } from "@tanstack/react-query";
 import useGetPythonQuery from "@/hooks/python/useGetQuery";
@@ -28,10 +27,11 @@ import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import AddIcon from "@mui/icons-material/Add";
 import ClearIcon from "@mui/icons-material/Clear";
 import Link from "next/link";
-
+import useAppTheme from "@/hooks/useAppTheme";
+import DeleteModal from "@/components/modal/delete-modal";
 const Index = () => {
   const { data: session } = useSession();
-  const router = useRouter();
+  const { bg, text, border, isDark } = useAppTheme();
   const [createAccessPoint, setCreateAccessPoint] = useState(false);
   const [editEntryPoint, setEditEntryPoint] = useState(false);
   const [deleteAccessPoint, setDeleteAccessPoint] = useState(false);
@@ -512,6 +512,10 @@ const Index = () => {
           initial={{ opacity: 0, scale: 0 }}
           animate={{ opacity: 1, scale: 1 }}
           className="bg-white p-[12px] my-[20px] rounded-md border border-gray-200"
+          style={{
+            background: bg("white", "#1E1E1E"),
+            borderColor: border("#d1d5db", "#4b5563"),
+          }}
         >
           <PrimaryButton
             onClick={() => setCreateAccessPoint(true)}
@@ -529,7 +533,353 @@ const Index = () => {
       )}
 
       {/* CREATE MODAL - o'zgarmadi */}
+      {/* CREATE MODAL */}
+      {createAccessPoint && (
+        <MethodModal
+          open={createAccessPoint}
+          showCloseIcon={true}
+          width={"50%"}
+          closeClick={() => {
+            setCreateAccessPoint(false);
+            handleRemoveAll();
+          }}
+        >
+          {/* Header Section */}
+          <div className="sticky top-0 bg-white z-10 pb-4 border-b border-gray-200">
+            <Typography
+              variant="h5"
+              className="font-bold text-gray-800 flex items-center gap-2"
+            >
+              <AddIcon className="text-green-600" />
+              Создать новую точку доступа
+            </Typography>
+            <Typography variant="body2" className="text-gray-500 mt-1 ml-1">
+              Заполните информацию для новой точки доступа
+            </Typography>
+          </div>
 
+          <div className="my-6 space-y-6 max-h-[60vh] overflow-y-auto px-1">
+            {/* Basic Information Section */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-1 h-6 bg-green-500 rounded-full"></div>
+                <Typography
+                  variant="subtitle1"
+                  className="font-semibold text-gray-700"
+                >
+                  Основная информация
+                </Typography>
+              </div>
+
+              <div className="bg-green-50/50 p-4 rounded-xl space-y-4 border border-green-100">
+                {/* Entry Point Name */}
+                <div>
+                  <Input
+                    value={entryPointName}
+                    onChange={(e) => setEntryPointName(e.target.value)}
+                    label={"Имя точки входа"}
+                    placeholder="Например: Главный вход"
+                    inputClass="!h-[48px] rounded-[10px] !border-gray-300 text-[15px] bg-white focus:border-green-500"
+                    labelClass="text-sm font-medium text-gray-700 mb-1"
+                    required
+                  />
+                </div>
+
+                {/* Short Name */}
+                <div>
+                  <Input
+                    value={entryPointShortName}
+                    onChange={(e) => setEntryPointShortName(e.target.value)}
+                    label={"Краткое название"}
+                    placeholder="Например: Вход 1"
+                    inputClass="!h-[48px] rounded-[10px] !border-gray-300 text-[15px] bg-white focus:border-green-500"
+                    labelClass="text-sm font-medium text-gray-700 mb-1"
+                    required
+                  />
+                </div>
+
+                {/* Building Description */}
+                <div>
+                  <Input
+                    value={buildingDescription}
+                    onChange={(e) => setBuildingDescription(e.target.value)}
+                    label={"Описание"}
+                    placeholder="Например: Главный вход в административное здание"
+                    inputClass="!h-[48px] rounded-[10px] !border-gray-300 text-[15px] bg-white focus:border-green-500"
+                    labelClass="text-sm font-medium text-gray-700 mb-1"
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Unit Codes Section */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-1 h-6 bg-indigo-500 rounded-full"></div>
+                  <Typography
+                    variant="subtitle1"
+                    className="font-semibold text-gray-700"
+                  >
+                    Привязка подразделений
+                  </Typography>
+                </div>
+                {unitCodes.length > 0 && (
+                  <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full font-medium">
+                    {unitCodes.length}{" "}
+                    {unitCodes.length === 1 ? "подразделение" : "подразделений"}
+                  </span>
+                )}
+              </div>
+
+              <div className="bg-blue-50 border-l-4 border-blue-400 p-3 rounded-r-lg">
+                <div className="flex items-start gap-2">
+                  <ReportIcon className="text-blue-500 mt-0.5" />
+                  <div>
+                    <Typography
+                      variant="body2"
+                      className="text-gray-700 font-medium"
+                    >
+                      Привяжите точку доступа к подразделениям
+                    </Typography>
+                    <Typography variant="caption" className="text-gray-600">
+                      Каждое подразделение должно иметь хотя бы одно расписание
+                    </Typography>
+                  </div>
+                </div>
+              </div>
+
+              {unitCodes.length === 0 ? (
+                <div className="text-center py-8 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
+                  <div className="text-gray-400 mb-3">
+                    <svg
+                      className="w-16 h-16 mx-auto"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.5}
+                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                      />
+                    </svg>
+                  </div>
+                  <Typography variant="body2" className="text-gray-500 mb-1">
+                    Подразделения не добавлены
+                  </Typography>
+                  <Typography variant="caption" className="text-gray-400">
+                    Нажмите кнопку ниже, чтобы добавить первое подразделение
+                  </Typography>
+                </div>
+              ) : (
+                <AnimatePresence>
+                  {unitCodes.map((unit, unitIndex) => (
+                    <motion.div
+                      key={unitIndex}
+                      initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                      transition={{ duration: 0.2 }}
+                      className="bg-white border-2 border-gray-200 rounded-xl hover:border-indigo-300 transition-all shadow-sm"
+                    >
+                      {/* Unit Header */}
+                      <div className="bg-gradient-to-r from-indigo-50 to-blue-50 p-4 border-b border-gray-200 rounded-t-xl">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-indigo-500 rounded-lg flex items-center justify-center text-white font-bold shadow-md">
+                            {unitIndex + 1}
+                          </div>
+                          <div className="flex-1">
+                            <CustomSelect
+                              options={optionsEnterprises}
+                              value={unit.code}
+                              placeholder="Выберите подразделение"
+                              onChange={(val) =>
+                                handleUnitCodeChange(unitIndex, "code", val)
+                              }
+                              className="flex-1"
+                            />
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <label className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg border border-gray-200 cursor-pointer hover:bg-green-50 transition shadow-sm">
+                              <input
+                                type="checkbox"
+                                checked={unit.isMain === 1}
+                                onChange={(e) =>
+                                  handleUnitCodeChange(
+                                    unitIndex,
+                                    "isMain",
+                                    e.target.checked ? 1 : 0
+                                  )
+                                }
+                                className="w-4 h-4 text-indigo-600 focus:ring-indigo-500"
+                              />
+                              <span className="text-sm font-medium text-gray-700">
+                                Основной
+                              </span>
+                            </label>
+                            <button
+                              onClick={() => removeUnit(unitIndex)}
+                              className="w-9 h-9 flex items-center justify-center bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition shadow-sm"
+                              title="Удалить подразделение"
+                            >
+                              <ClearIcon fontSize="small" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Schedules Section */}
+                      <div className="p-4">
+                        <div className="flex items-center gap-2 mb-3">
+                          <AccessTimeIcon className="text-gray-600" />
+                          <Typography
+                            variant="body2"
+                            className="font-semibold text-gray-700"
+                          >
+                            Расписания доступа
+                          </Typography>
+                          {unit.schedules && unit.schedules.length > 0 && (
+                            <span className="text-xs bg-indigo-100 text-indigo-600 px-2 py-0.5 rounded-full">
+                              {unit.schedules.length}
+                            </span>
+                          )}
+                        </div>
+
+                        {unit.schedules && unit.schedules.length > 0 ? (
+                          <div className="space-y-2">
+                            {unit.schedules.map((sch, scheduleIndex) => (
+                              <motion.div
+                                key={scheduleIndex}
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -10 }}
+                                className="flex items-center gap-2 bg-gray-50 p-3 rounded-lg border border-gray-200 hover:border-indigo-300 transition-all"
+                              >
+                                <span className="w-6 h-6 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center text-xs font-bold shadow-sm">
+                                  {scheduleIndex + 1}
+                                </span>
+                                <CustomSelect
+                                  options={optionsSchedules}
+                                  value={sch.scheduleId}
+                                  placeholder="Выберите расписание"
+                                  onChange={(val) =>
+                                    handleScheduleChange(
+                                      unitIndex,
+                                      scheduleIndex,
+                                      "scheduleId",
+                                      val
+                                    )
+                                  }
+                                  className="flex-1"
+                                />
+                                <label className="flex items-center gap-1.5 bg-white px-2.5 py-1.5 rounded-md border border-gray-200 cursor-pointer hover:bg-green-50 transition shadow-sm">
+                                  <input
+                                    type="checkbox"
+                                    checked={sch.isMain === 1}
+                                    onChange={(e) =>
+                                      handleScheduleChange(
+                                        unitIndex,
+                                        scheduleIndex,
+                                        "isMain",
+                                        e.target.checked ? 1 : 0
+                                      )
+                                    }
+                                    className="w-3.5 h-3.5 text-indigo-600"
+                                  />
+                                  <span className="text-xs font-medium text-gray-700">
+                                    Осн.
+                                  </span>
+                                </label>
+                                <button
+                                  onClick={() =>
+                                    removeScheduleFromUnit(
+                                      unitIndex,
+                                      scheduleIndex
+                                    )
+                                  }
+                                  className="w-8 h-8 flex items-center justify-center bg-red-50 hover:bg-red-100 text-red-600 rounded-md transition shadow-sm"
+                                  title="Удалить расписание"
+                                >
+                                  <ClearIcon fontSize="small" />
+                                </button>
+                              </motion.div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-6 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                            <AccessTimeIcon className="text-gray-400 text-3xl mb-2" />
+                            <Typography
+                              variant="caption"
+                              className="text-gray-500 block"
+                            >
+                              Расписания не добавлены
+                            </Typography>
+                          </div>
+                        )}
+
+                        <button
+                          onClick={() => addScheduleToUnit(unitIndex)}
+                          className="w-full mt-3 px-4 py-2.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-sm font-medium transition-all flex items-center justify-center gap-2 border border-indigo-200 shadow-sm"
+                        >
+                          <AddIcon fontSize="small" />
+                          Добавить расписание
+                        </button>
+                      </div>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              )}
+
+              <motion.button
+                onClick={() =>
+                  setUnitCodes([
+                    ...unitCodes,
+                    {
+                      code: "",
+                      isMain: unitCodes.length === 0 ? 1 : 0,
+                      schedules: [],
+                    },
+                  ])
+                }
+                className="w-full px-5 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <AddIcon />
+                Добавить подразделение
+              </motion.button>
+            </div>
+          </div>
+
+          {/* Footer Actions */}
+          <div className="sticky top-0 bg-white border-t-2 border-gray-200 pt-4 mt-6 flex justify-end gap-3">
+            <PrimaryButton
+              backgroundColor="#f3f4f6"
+              color="#374151"
+              onClick={() => {
+                setCreateAccessPoint(false);
+                handleRemoveAll();
+              }}
+              className="hover:bg-gray-200"
+            >
+              Отмена
+            </PrimaryButton>
+
+            <PrimaryButton
+              backgroundColor="#10b981"
+              color="white"
+              variant="contained"
+              onClick={submitCreateEntryPoint}
+              className="hover:bg-green-700"
+            >
+              Создать точку доступа
+            </PrimaryButton>
+          </div>
+        </MethodModal>
+      )}
       {/* EDIT MODAL - UI yaxshilandi */}
       {editEntryPoint && selectedEntryPoint && (
         <MethodModal
@@ -932,6 +1282,20 @@ const Index = () => {
       )}
 
       {/* DELETE MODAL - o'zgarmadi */}
+      <DeleteModal
+        open={deleteAccessPoint}
+        onClose={() => {
+          setDeleteAccessPoint(false);
+          setSelectedEntryPointId(null);
+        }}
+        deleting={() => {
+          handleDeleteCheckPoint(selectedEntryPointId);
+          setDeleteAccessPoint(false);
+          setSelectedEntryPointId(null);
+        }}
+        title="Вы уверены, что хотите удалить эту точку доступа?"
+        description="Это действие нельзя будет отменить. Все данные, связанные с этой точкой доступа, будут удалены."
+      />
     </DashboardLayout>
   );
 };

@@ -14,8 +14,10 @@ import ContentLoader from "@/components/loader";
 import ScheduleModal from "@/components/modal/schedule-modal";
 import PrimaryButton from "@/components/button/primary-button";
 import Link from "next/link";
+import useAppTheme from "@/hooks/useAppTheme";
 
 const Index = () => {
+  const { bg, text, border, isDark } = useAppTheme();
   const { data: session } = useSession();
   const [createModal, setCreateModal] = useState(false);
 
@@ -83,6 +85,10 @@ const Index = () => {
           initial={{ opacity: 0, scale: 0 }}
           animate={{ opacity: 1, scale: 1 }}
           className="bg-white p-[12px] my-[50px] rounded-md border border-gray-200"
+          style={{
+            background: bg("white", "#1E1E1E"),
+            borderColor: border("#d1d5db", "#4b5563"),
+          }}
         >
           <PrimaryButton
             onClick={() => setCreateModal(true)}

@@ -24,10 +24,12 @@ import ActiveStatusRadio from "@/components/activeStatusRadio";
 import NoData from "@/components/no-data";
 import PrimaryButton from "@/components/button/primary-button";
 import Link from "next/link";
+import useAppTheme from "@/hooks/useAppTheme";
 const ipRegex =
   /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
 
 const Index = () => {
+  const { bg, text, border, isDark } = useAppTheme();
   const { data: session } = useSession();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
@@ -253,11 +255,15 @@ const Index = () => {
         const isActive = getValue();
         return (
           <span
-            className={
+            className={`font-medium p-1 rounded-md border ${
               isActive
-                ? "text-green-600 font-medium bg-[#E8F6F0] p-1 rounded-md border border-green-600"
-                : "text-red-600 font-medium bg-[#FAE7E7] p-1 rounded-md border border-red-600"
-            }
+                ? isDark
+                  ? "text-green-400 bg-green-900/30 border-green-600"
+                  : "text-green-600 bg-[#E8F6F0] border-green-600"
+                : isDark
+                ? "text-red-400 bg-red-900/30 border-red-600"
+                : "text-red-600 bg-[#FAE7E7] border-red-600"
+            }`}
           >
             {isActive ? "Активный" : "Неактивный"}
           </span>
@@ -289,8 +295,11 @@ const Index = () => {
               width: "32px",
               height: "32px",
               minWidth: "32px",
-              background: "#F0D8C8",
-              color: "#FF6200",
+              background: isDark ? "#7c2d12" : "#F0D8C8",
+              color: isDark ? "#fb923c" : "#FF6200",
+              "&:hover": {
+                background: isDark ? "#9a3412" : "#F0B28B",
+              },
             }}
           >
             <EditIcon fontSize="small" />
@@ -304,8 +313,11 @@ const Index = () => {
               width: "32px",
               height: "32px",
               minWidth: "32px",
-              background: "#FCD8D3",
-              color: "#FF1E00",
+              background: isDark ? "#7f1d1d" : "#FCD8D3",
+              color: isDark ? "#fca5a5" : "#FF1E00",
+              "&:hover": {
+                background: isDark ? "#991b1b" : "#FCA89D",
+              },
             }}
           >
             <DeleteIcon fontSize="small" />
@@ -332,7 +344,11 @@ const Index = () => {
         <motion.div
           initial={{ opacity: 0, scale: 0 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-white p-[12px] my-[50px] rounded-md border border-gray-200"
+          className="p-[12px] my-[50px] rounded-md border border-gray-200"
+          style={{
+            background: bg("white", "#1E1E1E"),
+            borderColor: border("#d1d5db", "#4b5563"),
+          }}
         >
           <div className="col-span-12 space-y-[15px]">
             <div className="flex justify-between items-center">

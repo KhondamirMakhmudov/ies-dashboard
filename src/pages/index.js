@@ -10,8 +10,10 @@ import toast from "react-hot-toast";
 import { motion } from "framer-motion";
 import ContentLoader from "@/components/loader";
 import Link from "next/link";
+import useAppTheme from "@/hooks/useAppTheme";
 
 export default function Home() {
+  const { bg, text, border, isDark } = useAppTheme();
   const { data: session } = useSession();
   const router = useRouter();
 
@@ -19,7 +21,6 @@ export default function Home() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  // saved logins
   const [savedLogins, setSavedLogins] = useState([]);
 
   useEffect(() => {
@@ -63,7 +64,7 @@ export default function Home() {
 
       if (response?.ok && !response?.error) {
         toast.success("Добро пожаловать");
-        saveLogin(username, password); // saqlash
+        saveLogin(username, password);
         router.push("/dashboard/employees");
       } else {
         toast.error(
@@ -79,13 +80,21 @@ export default function Home() {
 
   return (
     <motion.div
-      className="login h-screen"
+      className={
+        bg("bg-white", "bg-[#0D0D0D]") +
+        " login h-screen transition-colors duration-300"
+      }
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
     >
       {isLoading && (
-        <div className="fixed inset-0 z-[9999] bg-white/80 backdrop-blur-sm flex items-center justify-center">
+        <div
+          className={
+            bg("bg-white/80", "bg-black/60") +
+            " fixed inset-0 z-[9999] backdrop-blur-sm flex items-center justify-center"
+          }
+        >
           <ContentLoader />
         </div>
       )}
@@ -103,7 +112,11 @@ export default function Home() {
 
         {/* Right side form */}
         <motion.div
-          className="col-span-6 w-full flex flex-col items-center justify-center h-full bg-white rounded-md p-[24px]"
+          className={
+            bg("bg-white", "bg-[#1A1A1A]") +
+            " col-span-6 w-full flex flex-col items-center justify-center h-full rounded-md p-[24px] transition-colors duration-300 " +
+            border("border border-gray-200", "border border-gray-700")
+          }
           initial={{ x: 80, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.3 }}
@@ -115,14 +128,25 @@ export default function Home() {
             transition={{ duration: 0.5, delay: 0.5 }}
           >
             <Brand />
-            <div className="w-full h-[1px] bg-gray-200 my-[10px]" />
+
+            <div
+              className={
+                bg("bg-gray-200", "bg-gray-700") +
+                " w-full h-[1px] my-[10px] transition-colors"
+              }
+            />
 
             <div className="mb-[20px]">
-              <h1 className="text-[36px] mb-[12px] font-semibold">
+              <h1
+                className={
+                  text("text-black", "text-white") +
+                  " text-[36px] mb-[12px] font-semibold"
+                }
+              >
                 Вход в систему
               </h1>
               {!session?.accessToken && (
-                <p className="text-gray-400">
+                <p className={text("text-gray-400", "text-gray-300")}>
                   Для входа в систему введите ваше имя пользователя и пароль!
                 </p>
               )}
@@ -149,20 +173,38 @@ export default function Home() {
                 {/* Saved logins */}
                 {savedLogins.length > 0 && (
                   <div className="mb-4">
-                    <p className="text-sm text-gray-600 mb-2">
+                    <p
+                      className={
+                        text("text-gray-600", "text-gray-300") + " text-sm mb-2"
+                      }
+                    >
                       Сохраненные логины:
                     </p>
+
                     <div className="flex flex-wrap gap-2">
                       {savedLogins.map((login, i) => (
                         <div
                           key={i}
                           onClick={() => handleSelectLogin(login)}
-                          className="flex items-center gap-2 px-3 py-2 rounded-full bg-blue-50 text-blue-600 cursor-pointer hover:bg-blue-100 transition-all"
+                          className={
+                            bg("bg-blue-50", "bg-blue-900/30") +
+                            " flex items-center gap-2 px-3 py-2 rounded-full text-blue-600 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-800/40 transition-all"
+                          }
                         >
-                          <span className="w-6 h-6 flex items-center justify-center rounded-full bg-blue-500 text-white text-xs">
+                          <span
+                            className={
+                              bg("bg-blue-500", "bg-blue-700") +
+                              " w-6 h-6 flex items-center justify-center rounded-full text-white text-xs"
+                            }
+                          >
                             {login.username.charAt(0).toUpperCase()}
                           </span>
-                          <span>{login.username}</span>
+                          <span
+                            className={text("text-blue-600", "text-blue-300")}
+                          >
+                            {login.username}
+                          </span>
+
                           <button
                             type="button"
                             onClick={(e) => {
@@ -179,23 +221,40 @@ export default function Home() {
                   </div>
                 )}
 
+                {/* Inputs */}
                 <Input
                   label="Имя пользователя"
                   type="text"
                   value={username}
-                  inputClass="!h-[48px] rounded-[8px] !border-gray-300 text-[15px]"
+                  inputClass={
+                    bg("bg-white", "bg-[#262626]") +
+                    " " +
+                    text("text-black", "text-white") +
+                    " " +
+                    border("!border-gray-300", "!border-gray-600") +
+                    " !h-[48px] rounded-[8px] text-[15px]"
+                  }
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="Введите имя пользователя"
                 />
+
                 <Input
                   label="Пароль"
                   type="password"
                   value={password}
-                  inputClass="!h-[48px] rounded-[8px] !border-gray-300 text-[15px]"
+                  inputClass={
+                    bg("bg-white", "bg-[#262626]") +
+                    " " +
+                    text("text-black", "text-white") +
+                    " " +
+                    border("!border-gray-300", "!border-gray-600") +
+                    " !h-[48px] rounded-[8px] text-[15px]"
+                  }
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Введите пароль"
                 />
 
+                {/* Submit button */}
                 <motion.div
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.97 }}

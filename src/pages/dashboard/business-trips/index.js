@@ -32,9 +32,11 @@ import {
   Delete,
 } from "@mui/icons-material";
 import DeleteModal from "@/components/modal/delete-modal";
+import useAppTheme from "@/hooks/useAppTheme";
 
 const Index = () => {
   const queryClient = useQueryClient();
+  const { bg, border, text, isDark } = useAppTheme();
   const { data: session } = useSession();
   const [currentPage, setCurrentPage] = useState(1);
   const [createModal, setCreateModal] = useState(false);
@@ -296,9 +298,11 @@ const Index = () => {
       cell: ({ row }) => {
         return (
           <span
-            className={
-              "text-green-600 font-medium text-sm bg-[#E8F6F0] p-1 rounded-md border border-green-600"
-            }
+            className={`${
+              isDark
+                ? "text-green-600 bg-green-900/30"
+                : "bg-[#E8F6F0] text-green-600"
+            } font-medium text-sm  p-1 rounded-md border border-green-600`}
           >
             {dayjs(row.original.startDate).format("DD.MM.YYYY")}
           </span>
@@ -311,9 +315,11 @@ const Index = () => {
       cell: ({ row }) => {
         return (
           <span
-            className={
-              "text-red-600 font-medium text-sm bg-[#f7dcdc] p-1 rounded-md border border-red-600"
-            }
+            className={`${
+              isDark
+                ? "text-red-600 bg-red-900/30"
+                : "bg-[#f7dcdc] text-red-600"
+            } font-medium text-sm  p-1 rounded-md border `}
           >
             {dayjs(row.original.endDate).format("DD.MM.YYYY")}
           </span>
@@ -326,7 +332,11 @@ const Index = () => {
       cell: ({ row }) => (
         <div className="flex gap-2">
           <Link
-            className="bg-[#bfd2f5] text-[#4182F9] h-[32px] px-2 flex justify-center items-center rounded-md"
+            className={`${
+              isDark
+                ? "bg-blue-900/30 text-blue-600 border border-blue-600"
+                : "bg-[#bfd2f5] text-[#4182F9]"
+            } h-[32px] px-2 flex justify-center items-center rounded-md`}
             href={`/dashboard/employees/${row.original.uuidSus}`}
           >
             <VisibilityIcon fontSize="small" />
@@ -340,8 +350,11 @@ const Index = () => {
               width: "32px",
               height: "32px",
               minWidth: "32px",
-              background: "#FCD8D3",
-              color: "#FF1E00",
+              background: isDark ? "#7f1d1d" : "#FCD8D3",
+              color: isDark ? "#fca5a5" : "#FF1E00",
+              "&:hover": {
+                background: isDark ? "#991b1b" : "#FCA89D",
+              },
             }}
           >
             <DeleteIcon fontSize="small" />
@@ -366,6 +379,10 @@ const Index = () => {
         initial={{ opacity: 0, translateY: "20px" }}
         animate={{ opacity: 1, translateY: "0" }}
         className="bg-white p-[12px] mb-[50px] rounded-md border border-gray-200 my-[20px]"
+        style={{
+          background: bg("white", "#1E1E1E"),
+          borderColor: border("#d1d5db", "#4b5563"),
+        }}
       >
         <div className="my-[10px]">
           <PrimaryButton onClick={() => setCreateModal(true)}>
@@ -393,33 +410,71 @@ const Index = () => {
       >
         <div className="space-y-6 max-h-[80vh] overflow-y-auto overflow-x-hidden">
           {/* Header */}
-          <div className="text-center sticky z-50 top-0 bg-white pt-2 pb-4 border-b border-gray-200 -mx-6 px-6">
-            <h2 className="text-2xl font-bold text-gray-900">
+          <div
+            className="text-center sticky z-50 top-0 pt-2 pb-4 border-b -mx-6 px-6"
+            style={{
+              backgroundColor: bg("#ffffff", "#1e1e1e"),
+              borderColor: border("#e5e7eb", "#333333"),
+            }}
+          >
+            <h2
+              className="text-2xl font-bold"
+              style={{ color: text("#111827", "#f3f4f6") }}
+            >
               Создание командировки
             </h2>
-            <p className="text-gray-600 mt-1">
+            <p style={{ color: text("#6b7280", "#9ca3af") }} className="mt-1">
               Заполните информацию о командировке и выберите сотрудников
             </p>
           </div>
 
           {/* Basic Information Card */}
-          <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+          <div
+            className="rounded-xl p-6 border"
+            style={{
+              backgroundColor: bg("#f9fafb", "#2a2a2a"),
+              borderColor: border("#e5e7eb", "#333333"),
+            }}
+          >
+            <h3
+              className="text-lg font-semibold mb-4 flex items-center gap-2"
+              style={{ color: text("#111827", "#f3f4f6") }}
+            >
               <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
               Основная информация
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  className="block text-sm font-medium mb-2"
+                  style={{ color: text("#374151", "#d1d5db") }}
+                >
                   Номер приказа *
                 </label>
                 <input
                   type="text"
                   value={numOrder}
                   onChange={(e) => setNumOrder(e.target.value)}
-                  className="w-full h-12 rounded-lg border border-gray-300 bg-white px-4 text-gray-900 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-gray-400"
+                  className="w-full h-12 rounded-lg border px-4 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  style={{
+                    backgroundColor: bg("#ffffff", "#1e1e1e"),
+                    borderColor: border("#d1d5db", "#4b5563"),
+                    color: text("#111827", "#f3f4f6"),
+                  }}
                   placeholder="Например: 123-К"
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = border(
+                      "#9ca3af",
+                      "#6b7280"
+                    );
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = border(
+                      "#d1d5db",
+                      "#4b5563"
+                    );
+                  }}
                 />
               </div>
 
@@ -435,40 +490,96 @@ const Index = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  className="block text-sm font-medium mb-2"
+                  style={{ color: text("#374151", "#d1d5db") }}
+                >
                   Дата начала *
                 </label>
                 <input
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full h-12 rounded-lg border border-gray-300 bg-white px-4 text-gray-900 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-gray-400"
+                  className="w-full h-12 rounded-lg border px-4 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  style={{
+                    backgroundColor: bg("#ffffff", "#1e1e1e"),
+                    borderColor: border("#d1d5db", "#4b5563"),
+                    color: text("#111827", "#f3f4f6"),
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = border(
+                      "#9ca3af",
+                      "#6b7280"
+                    );
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = border(
+                      "#d1d5db",
+                      "#4b5563"
+                    );
+                  }}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  className="block text-sm font-medium mb-2"
+                  style={{ color: text("#374151", "#d1d5db") }}
+                >
                   Дата окончания *
                 </label>
                 <input
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
-                  className="w-full h-12 rounded-lg border border-gray-300 bg-white px-4 text-gray-900 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-gray-400"
+                  className="w-full h-12 rounded-lg border px-4 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  style={{
+                    backgroundColor: bg("#ffffff", "#1e1e1e"),
+                    borderColor: border("#d1d5db", "#4b5563"),
+                    color: text("#111827", "#f3f4f6"),
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = border(
+                      "#9ca3af",
+                      "#6b7280"
+                    );
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = border(
+                      "#d1d5db",
+                      "#4b5563"
+                    );
+                  }}
                 />
               </div>
             </div>
           </div>
 
           {/* Employee Selection Card */}
-          <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
+          <div
+            className="rounded-xl p-6 border"
+            style={{
+              backgroundColor: bg("#f9fafb", "#2a2a2a"),
+              borderColor: border("#e5e7eb", "#333333"),
+            }}
+          >
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+              <h3
+                className="text-lg font-semibold flex items-center gap-2"
+                style={{ color: text("#111827", "#f3f4f6") }}
+              >
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                 Выбор сотрудников
               </h3>
               <div className="flex items-center gap-3">
-                <span className="text-sm text-gray-600 bg-white px-3 py-1 rounded-full border border-gray-300">
+                <span
+                  className="text-sm px-3 py-1 rounded-full border"
+                  style={{
+                    color: text("#6b7280", "#9ca3af"),
+                    backgroundColor: bg("#ffffff", "#1e1e1e"),
+                    borderColor: border("#d1d5db", "#4b5563"),
+                  }}
+                >
                   Выбрано:{" "}
                   <strong className="text-blue-600">
                     {selectedEmployeesForJobTrip.size}
@@ -487,9 +598,29 @@ const Index = () => {
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       placeholder="Поиск по имени или должности..."
-                      className="w-full h-12 rounded-lg border border-gray-300 bg-white pl-11 pr-4 text-gray-900 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-gray-400"
+                      className="w-full h-12 rounded-lg border pl-11 pr-4 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      style={{
+                        backgroundColor: bg("#ffffff", "#1e1e1e"),
+                        borderColor: border("#d1d5db", "#4b5563"),
+                        color: text("#111827", "#f3f4f6"),
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = border(
+                          "#9ca3af",
+                          "#6b7280"
+                        );
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = border(
+                          "#d1d5db",
+                          "#4b5563"
+                        );
+                      }}
                     />
-                    <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+                    <div
+                      className="absolute left-4 top-1/2 transform -translate-y-1/2"
+                      style={{ color: text("#9ca3af", "#6b7280") }}
+                    >
                       <Search fontSize="small" />
                     </div>
                   </div>
@@ -498,7 +629,24 @@ const Index = () => {
                 <select
                   value={selectedPosition}
                   onChange={(e) => setSelectedPosition(e.target.value)}
-                  className="h-12 rounded-lg border border-gray-300 bg-white px-4 text-gray-900 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-gray-400 min-w-[180px]"
+                  className="h-12 rounded-lg border px-4 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-w-[180px]"
+                  style={{
+                    backgroundColor: bg("#ffffff", "#1e1e1e"),
+                    borderColor: border("#d1d5db", "#4b5563"),
+                    color: text("#111827", "#f3f4f6"),
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = border(
+                      "#9ca3af",
+                      "#6b7280"
+                    );
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = border(
+                      "#d1d5db",
+                      "#4b5563"
+                    );
+                  }}
                 >
                   <option value="">Все должности</option>
                   {positions.map((pos, i) => (
@@ -521,7 +669,23 @@ const Index = () => {
 
                 <button
                   onClick={handleClearAll}
-                  className="px-4 py-2 bg-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-300 transition-colors duration-200 flex items-center gap-2"
+                  className="px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200 flex items-center gap-2"
+                  style={{
+                    backgroundColor: bg("#e5e7eb", "#4b5563"),
+                    color: text("#374151", "#d1d5db"),
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = bg(
+                      "#d1d5db",
+                      "#6b7280"
+                    );
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = bg(
+                      "#e5e7eb",
+                      "#4b5563"
+                    );
+                  }}
                 >
                   <Clear fontSize="small" />
                   Очистить
@@ -529,25 +693,37 @@ const Index = () => {
               </div>
             </div>
 
-            {/* Selected Employees Preview - Collapsible */}
+            {/* Selected Employees Preview */}
             {selectedEmployeesForJobTrip.size > 0 && (
               <div className="mb-6">
                 <div className="flex items-center justify-between mb-3">
-                  <label className="block text-sm font-medium text-gray-700 flex items-center gap-2">
+                  <label
+                    className="block text-sm font-medium flex items-center gap-2"
+                    style={{ color: text("#374151", "#d1d5db") }}
+                  >
                     <Group fontSize="small" />
                     Выбранные сотрудники:
                   </label>
-                  <span className="text-sm text-gray-500">
+                  <span
+                    className="text-sm"
+                    style={{ color: text("#6b7280", "#9ca3af") }}
+                  >
                     {selectedEmployeesForJobTrip.size} сотрудников
                   </span>
                 </div>
 
                 {/* Compact selected employees view */}
-                <div className="max-h-32 overflow-y-auto border border-gray-200 rounded-lg bg-white p-3">
+                <div
+                  className="max-h-32 overflow-y-auto border rounded-lg p-3"
+                  style={{
+                    backgroundColor: bg("#ffffff", "#1e1e1e"),
+                    borderColor: border("#e5e7eb", "#333333"),
+                  }}
+                >
                   <div className="flex flex-wrap gap-2">
                     {filteredEmployees
                       .filter((emp) => selectedEmployeesForJobTrip.has(emp.id))
-                      .slice(0, 20) // Show only first 20 to prevent overflow
+                      .slice(0, 20)
                       .map((emp) => (
                         <div
                           key={emp.id}
@@ -568,7 +744,6 @@ const Index = () => {
                         </div>
                       ))}
 
-                    {/* Show count if more than 20 selected */}
                     {selectedEmployeesForJobTrip.size > 20 && (
                       <div className="bg-blue-300 text-blue-800 px-3 py-1 rounded-lg text-sm flex items-center gap-1">
                         +{selectedEmployeesForJobTrip.size - 20} еще
@@ -577,7 +752,7 @@ const Index = () => {
                   </div>
                 </div>
 
-                {/* Bulk actions when many employees selected */}
+                {/* Bulk actions */}
                 {selectedEmployeesForJobTrip.size > 5 && (
                   <div className="mt-2 flex justify-end">
                     <button
@@ -592,14 +767,24 @@ const Index = () => {
               </div>
             )}
 
-            {/* Employee List with fixed height */}
-            <div className="border border-gray-200 rounded-lg bg-white">
+            {/* Employee List */}
+            <div
+              className=" border rounded-lg"
+              style={{
+                backgroundColor: bg("#ffffff", "#1e1e1e"),
+                borderColor: border("#e5e7eb", "#333333"),
+              }}
+            >
               <div className="max-h-48 min-h-[200px] overflow-y-auto">
                 {filteredEmployees.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
+                  <div
+                    className="text-center py-8"
+                    style={{ color: text("#6b7280", "#9ca3af") }}
+                  >
                     <Person
                       sx={{ fontSize: 48 }}
-                      className="mx-auto text-gray-400 mb-3"
+                      className="mx-auto mb-3"
+                      style={{ color: text("#9ca3af", "#6b7280") }}
                     />
                     <p>Сотрудники не найдены</p>
                     <p className="text-sm mt-1">
@@ -607,7 +792,7 @@ const Index = () => {
                     </p>
                   </div>
                 ) : (
-                  <div className="divide-y divide-gray-100">
+                  <div style={{ borderColor: border("#f3f4f6", "#2a2a2a") }}>
                     {filteredEmployees.map((emp) => {
                       const isSelected = selectedEmployeesForJobTrip.has(
                         emp.id
@@ -617,10 +802,29 @@ const Index = () => {
                           key={emp.id}
                           onClick={() => handleToggleEmployee(emp.id)}
                           className={`p-3 cursor-pointer transition-all duration-200 group ${
-                            isSelected
-                              ? "bg-blue-50 border-l-4 border-l-blue-500"
-                              : "hover:bg-gray-50"
+                            isSelected ? "border-l-4 border-l-blue-500" : ""
                           }`}
+                          style={{
+                            backgroundColor: isSelected
+                              ? isDark
+                                ? "#1e3a8a20"
+                                : "#eff6ff"
+                              : "transparent",
+                          }}
+                          onMouseEnter={(e) => {
+                            if (!isSelected) {
+                              e.currentTarget.style.backgroundColor = bg(
+                                "#f9fafb",
+                                "#2a2a2a"
+                              );
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (!isSelected) {
+                              e.currentTarget.style.backgroundColor =
+                                "transparent";
+                            }
+                          }}
                         >
                           <div className="flex items-center space-x-3">
                             {/* Avatar */}
@@ -635,16 +839,26 @@ const Index = () => {
                             {/* Employee Info */}
                             <div className="flex-1 min-w-0">
                               <p
-                                className={`font-medium truncate text-sm ${
-                                  isSelected ? "text-blue-900" : "text-gray-900"
-                                }`}
+                                className={`font-medium truncate text-sm`}
+                                style={{
+                                  color: isSelected
+                                    ? isDark
+                                      ? "#93c5fd"
+                                      : "#1e3a8a"
+                                    : text("#111827", "#f3f4f6"),
+                                }}
                               >
                                 {emp.first_name} {emp.last_name}
                               </p>
                               <p
-                                className={`text-xs truncate ${
-                                  isSelected ? "text-blue-700" : "text-gray-500"
-                                }`}
+                                className="text-xs truncate"
+                                style={{
+                                  color: isSelected
+                                    ? isDark
+                                      ? "#60a5fa"
+                                      : "#1e40af"
+                                    : text("#6b7280", "#9ca3af"),
+                                }}
                               >
                                 {emp.workplace?.position?.name ||
                                   "Должность не указана"}
@@ -654,10 +868,15 @@ const Index = () => {
                             {/* Checkbox */}
                             <div
                               className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
-                                isSelected
-                                  ? "bg-blue-500 border-blue-500"
-                                  : "border-gray-300 group-hover:border-gray-400"
+                                isSelected ? "bg-blue-500 border-blue-500" : ""
                               }`}
+                              style={
+                                !isSelected
+                                  ? {
+                                      borderColor: border("#d1d5db", "#4b5563"),
+                                    }
+                                  : {}
+                              }
                             >
                               {isSelected && (
                                 <Check
@@ -677,11 +896,31 @@ const Index = () => {
           </div>
 
           {/* Action Buttons - Sticky at bottom */}
-          <div className="sticky bottom-0 bg-white pt-4 pb-2 border-t border-gray-200 -mx-6 px-6">
+          <div
+            className="sticky bottom-0 pt-4 pb-2 border-t -mx-6 px-6"
+            style={{
+              backgroundColor: bg("#ffffff", "#1e1e1e"),
+              borderColor: border("#e5e7eb", "#333333"),
+            }}
+          >
             <div className="flex items-center justify-between">
               <button
                 onClick={handleCloseCreateModal}
-                className="px-6 py-3 text-gray-700 font-medium rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors duration-200 flex items-center gap-2"
+                className="px-6 py-3 font-medium rounded-lg border transition-colors duration-200 flex items-center gap-2"
+                style={{
+                  color: text("#374151", "#d1d5db"),
+                  borderColor: border("#d1d5db", "#4b5563"),
+                  backgroundColor: "transparent",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = bg(
+                    "#f9fafb",
+                    "#2a2a2a"
+                  );
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "transparent";
+                }}
               >
                 <Clear fontSize="small" />
                 Отмена
