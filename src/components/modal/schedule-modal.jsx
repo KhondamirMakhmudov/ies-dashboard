@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import useAppTheme from "@/hooks/useAppTheme";
 
 const ScheduleModal = ({
   isOpen,
@@ -9,6 +10,7 @@ const ScheduleModal = ({
   mode = "create",
   defaultValues,
 }) => {
+  const { isDark, bg, text, border } = useAppTheme();
   const [scheduleName, setScheduleName] = useState("");
   const [shortName, setShortName] = useState("");
 
@@ -32,7 +34,6 @@ const ScheduleModal = ({
     Воскресенье: [],
   });
 
-  // 🆕 Edit rejimida ma'lumotlarni to‘ldirish
   useEffect(() => {
     if (mode === "edit" && defaultValues) {
       setScheduleName(defaultValues.name || "");
@@ -72,7 +73,6 @@ const ScheduleModal = ({
     }
   }, [mode, defaultValues]);
 
-  // --- Quyidagi kodlar o‘zgarmasdan qoldi ---
   const addTimeSlot = (day) => {
     setScheduleData((prev) => ({
       ...prev,
@@ -185,18 +185,34 @@ const ScheduleModal = ({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
-        {/* Заголовок */}
-        <div className=" px-6 py-4 border-b border-b-gray-300">
+      <div
+        className="rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden"
+        style={{ backgroundColor: bg("#ffffff", "#1e1e1e") }}
+      >
+        {/* Header */}
+        <div
+          className="px-6 py-4 border-b"
+          style={{ borderColor: border("#e5e7eb", "#333333") }}
+        >
           <div className="flex items-center justify-between">
-            <h2 className="text-[22px] font-semibold">
+            <h2
+              className="text-[22px] font-semibold"
+              style={{ color: text("#000000", "#f3f4f6") }}
+            >
               {mode === "edit"
                 ? "Редактировать расписание"
                 : "Создание расписания сотрудника"}
             </h2>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-300 transition-colors cursor-pointer"
+              className="transition-colors cursor-pointer"
+              style={{ color: text("#9ca3af", "#6b7280") }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = text("#6b7280", "#9ca3af");
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = text("#9ca3af", "#6b7280");
+              }}
             >
               <svg
                 className="w-6 h-6"
@@ -215,15 +231,16 @@ const ScheduleModal = ({
           </div>
         </div>
 
-        {/* --- Pastdagi barcha dizayn bir xil qoldi --- */}
-
-        {/* Содержимое */}
+        {/* Content */}
         <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
-          {/* Поля ввода названий */}
+          {/* Input Fields */}
           <div className="mb-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label
+                  className="block text-sm font-semibold mb-2"
+                  style={{ color: text("#374151", "#d1d5db") }}
+                >
                   Название расписания
                 </label>
                 <input
@@ -231,11 +248,19 @@ const ScheduleModal = ({
                   value={scheduleName}
                   onChange={(e) => setScheduleName(e.target.value)}
                   placeholder="например, Утренняя смена"
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors"
+                  className="w-full px-4 py-3 border-2 rounded-xl focus:border-blue-500 focus:outline-none transition-colors"
+                  style={{
+                    backgroundColor: bg("#ffffff", "#2a2a2a"),
+                    borderColor: border("#e5e7eb", "#4b5563"),
+                    color: text("#000000", "#f3f4f6"),
+                  }}
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label
+                  className="block text-sm font-semibold mb-2"
+                  style={{ color: text("#374151", "#d1d5db") }}
+                >
                   Короткое название
                 </label>
                 <input
@@ -243,52 +268,117 @@ const ScheduleModal = ({
                   value={shortName}
                   onChange={(e) => setShortName(e.target.value)}
                   placeholder="например, УС"
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors"
+                  className="w-full px-4 py-3 border-2 rounded-xl focus:border-blue-500 focus:outline-none transition-colors"
+                  style={{
+                    backgroundColor: bg("#ffffff", "#2a2a2a"),
+                    borderColor: border("#e5e7eb", "#4b5563"),
+                    color: text("#000000", "#f3f4f6"),
+                  }}
                 />
               </div>
             </div>
           </div>
 
-          {/* Быстрые действия */}
-          <div className="mb-6 p-4 bg-gray-50 rounded-xl">
-            <h4 className="text-sm font-semibold text-gray-700 mb-3">
+          {/* Quick Actions */}
+          <div
+            className="mb-6 p-4 rounded-xl"
+            style={{ backgroundColor: bg("#f9fafb", "#2a2a2a") }}
+          >
+            <h4
+              className="text-sm font-semibold mb-3"
+              style={{ color: text("#374151", "#d1d5db") }}
+            >
               Быстрые действия
             </h4>
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={applyToAllDays}
-                className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium"
+                className="px-4 py-2 rounded-lg transition-colors text-sm font-medium"
+                style={{
+                  backgroundColor: isDark ? "#1e3a8a" : "#dbeafe",
+                  color: isDark ? "#93c5fd" : "#1e40af",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = isDark
+                    ? "#1e40af"
+                    : "#bfdbfe";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = isDark
+                    ? "#1e3a8a"
+                    : "#dbeafe";
+                }}
               >
                 Применить понедельник ко всем дням
               </button>
               <button
                 onClick={clearAllSchedules}
-                className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm font-medium"
+                className="px-4 py-2 rounded-lg transition-colors text-sm font-medium"
+                style={{
+                  backgroundColor: isDark ? "#7f1d1d" : "#fee2e2",
+                  color: isDark ? "#fca5a5" : "#b91c1c",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = isDark
+                    ? "#991b1b"
+                    : "#fecaca";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = isDark
+                    ? "#7f1d1d"
+                    : "#fee2e2";
+                }}
               >
                 Очистить всё
               </button>
               <button
                 onClick={setStandardHours}
-                className="px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors text-sm font-medium"
+                className="px-4 py-2 rounded-lg transition-colors text-sm font-medium"
+                style={{
+                  backgroundColor: isDark ? "#14532d" : "#dcfce7",
+                  color: isDark ? "#86efac" : "#15803d",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = isDark
+                    ? "#166534"
+                    : "#bbf7d0";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = isDark
+                    ? "#14532d"
+                    : "#dcfce7";
+                }}
               >
                 Установить 9.00-18.00 стандарт
               </button>
             </div>
           </div>
 
-          {/* Недельное расписание */}
+          {/* Weekly Schedule */}
           <div className="mb-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">
+            <h3
+              className="text-lg font-semibold mb-4"
+              style={{ color: text("#1f2937", "#f3f4f6") }}
+            >
               Недельное расписание
             </h3>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {days.map((day) => (
                 <div
                   key={day}
-                  className="bg-white border-2 border-gray-100 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow"
+                  className="border-2 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow"
+                  style={{
+                    backgroundColor: bg("#ffffff", "#1e1e1e"),
+                    borderColor: border("#f3f4f6", "#333333"),
+                  }}
                 >
                   <div className="flex items-center justify-between mb-3">
-                    <h4 className="font-semibold text-gray-800">{day}</h4>
+                    <h4
+                      className="font-semibold"
+                      style={{ color: text("#1f2937", "#f3f4f6") }}
+                    >
+                      {day}
+                    </h4>
                     <label className="flex items-center">
                       <input
                         type="checkbox"
@@ -297,7 +387,12 @@ const ScheduleModal = ({
                         }
                         className="mr-2 rounded"
                       />
-                      <span className="text-sm text-gray-600">Активен</span>
+                      <span
+                        className="text-sm"
+                        style={{ color: text("#6b7280", "#9ca3af") }}
+                      >
+                        Активен
+                      </span>
                     </label>
                   </div>
 
@@ -305,7 +400,13 @@ const ScheduleModal = ({
                     {scheduleData[day].map((slot, index) => (
                       <div
                         key={index}
-                        className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-lg p-3"
+                        className="border-2 rounded-lg p-3"
+                        style={{
+                          background: isDark
+                            ? "linear-gradient(to right, #1e3a8a, #312e81)"
+                            : "linear-gradient(to right, #eff6ff, #e0e7ff)",
+                          borderColor: isDark ? "#3b82f6" : "#bfdbfe",
+                        }}
                       >
                         <div className="flex items-center space-x-2">
                           <input
@@ -319,16 +420,31 @@ const ScheduleModal = ({
                                 e.target.value
                               )
                             }
-                            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
+                            className="flex-1 px-3 py-2 border rounded-lg focus:border-blue-500 focus:outline-none"
+                            style={{
+                              backgroundColor: bg("#ffffff", "#2a2a2a"),
+                              borderColor: border("#d1d5db", "#4b5563"),
+                              color: text("#000000", "#f3f4f6"),
+                            }}
                           />
-                          <span className="text-gray-500 font-medium">до</span>
+                          <span
+                            className="font-medium"
+                            style={{ color: text("#6b7280", "#9ca3af") }}
+                          >
+                            до
+                          </span>
                           <input
                             type="time"
                             value={slot.end}
                             onChange={(e) =>
                               updateTimeSlot(day, index, "end", e.target.value)
                             }
-                            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
+                            className="flex-1 px-3 py-2 border rounded-lg focus:border-blue-500 focus:outline-none"
+                            style={{
+                              backgroundColor: bg("#ffffff", "#2a2a2a"),
+                              borderColor: border("#d1d5db", "#4b5563"),
+                              color: text("#000000", "#f3f4f6"),
+                            }}
                           />
                           <button
                             onClick={() => removeTimeSlot(day, index)}
@@ -355,7 +471,22 @@ const ScheduleModal = ({
 
                   <button
                     onClick={() => addTimeSlot(day)}
-                    className="w-full py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg text-sm font-medium hover:from-green-600 hover:to-emerald-600 transition-all"
+                    className="w-full py-2 text-white rounded-lg text-sm font-medium transition-all"
+                    style={{
+                      background: isDark
+                        ? "linear-gradient(to right, #047857, #059669)"
+                        : "linear-gradient(to right, #10b981, #14b8a6)",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = isDark
+                        ? "linear-gradient(to right, #059669, #10b981)"
+                        : "linear-gradient(to right, #059669, #0d9488)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = isDark
+                        ? "linear-gradient(to right, #047857, #059669)"
+                        : "linear-gradient(to right, #10b981, #14b8a6)";
+                    }}
                   >
                     + Добавить временной интервал
                   </button>
@@ -365,17 +496,35 @@ const ScheduleModal = ({
           </div>
         </div>
 
-        {/* Подвал с кнопками */}
-        <div className="bg-gray-50 px-6 py-4 flex justify-end space-x-3 border-t border-t-gray-300">
+        {/* Footer */}
+        <div
+          className="px-6 py-4 flex justify-end space-x-3 border-t"
+          style={{
+            backgroundColor: bg("#f9fafb", "#2a2a2a"),
+            borderColor: border("#e5e7eb", "#333333"),
+          }}
+        >
           <button
             onClick={onClose}
-            className="px-6 py-2 bg-gray-200 text-gray-600 hover:text-gray-800 transition-colors font-medium rounded-lg"
+            className="px-6 py-2 transition-colors font-medium rounded-lg"
+            style={{
+              backgroundColor: bg("#e5e7eb", "#4b5563"),
+              color: text("#6b7280", "#d1d5db"),
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = bg("#d1d5db", "#6b7280");
+              e.currentTarget.style.color = text("#1f2937", "#f3f4f6");
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = bg("#e5e7eb", "#4b5563");
+              e.currentTarget.style.color = text("#6b7280", "#d1d5db");
+            }}
           >
             Отмена
           </button>
           <button
             onClick={handleSave}
-            className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all font-medium shadow-lg"
+            className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all font-medium shadow-lg"
           >
             {mode === "edit" ? "Сохранить изменения" : "Сохранить расписание"}
           </button>

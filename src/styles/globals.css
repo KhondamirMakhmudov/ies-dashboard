@@ -1,11 +1,16 @@
 @import "tailwindcss";
 @import url("https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap");
-
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-  --background-login: #f4f7feff;
+  --color-bg-light: #ffffff;
+  --color-text-light: #000000;
+  --color-bg-dark: #121212;
+  --color-text-dark: #ffffff;
+}
+
+.dark {
+  --color-bg-light: var(--color-bg-dark);
+  --color-text-light: var(--color-text-dark);
 }
 
 @theme inline {

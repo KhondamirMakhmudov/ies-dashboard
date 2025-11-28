@@ -27,6 +27,7 @@ import AirlineStopsIcon from "@mui/icons-material/AirlineStops";
 import EventNoteIcon from "@mui/icons-material/EventNote";
 import ExitModal from "../modal/exit-modal";
 import { signOut } from "next-auth/react";
+import useAppTheme from "@/hooks/useAppTheme";
 
 const menuItems = [
   {
@@ -57,6 +58,11 @@ const menuItems = [
     icon: <SecurityIcon />,
     submenu: [
       {
+        text: "Контрольные точки",
+        icon: <SecurityIcon />,
+        path: "/dashboard/checkpoints",
+      },
+      {
         text: "Устройства (камеры)",
         icon: <CameraAltIcon />,
         path: "/dashboard/devices",
@@ -65,11 +71,6 @@ const menuItems = [
         text: "Точки доступа",
         icon: <WifiIcon />,
         path: "/dashboard/access-points",
-      },
-      {
-        text: "Контрольные точки",
-        icon: <SecurityIcon />,
-        path: "/dashboard/checkpoints",
       },
     ],
   },
@@ -109,6 +110,7 @@ function Sidebar({ isOpen = true }) {
   const [openExitModal, setOpenExitModal] = useState(false);
   const [openSubmenus, setOpenSubmenus] = useState({});
   const router = useRouter();
+  const { isDark, bg, text, border } = useAppTheme();
 
   // Open active submenu on first render
   useEffect(() => {
@@ -125,7 +127,7 @@ function Sidebar({ isOpen = true }) {
       }
     });
     setOpenSubmenus(newOpen);
-  }, []); // run once
+  }, []);
 
   const handleToggleSubmenu = (index) => {
     setOpenSubmenus((prev) => ({
@@ -144,7 +146,11 @@ function Sidebar({ isOpen = true }) {
     <aside
       className={`${
         isOpen ? "w-[330px]" : "w-[80px]"
-      } h-screen bg-white border-r border-gray-200 px-4 py-6 transition-all duration-300 overflow-y-auto flex flex-col justify-between`}
+      } h-screen border-r px-4 py-6 transition-all duration-300 overflow-y-auto flex flex-col justify-between`}
+      style={{
+        backgroundColor: bg("#ffffff", "#1e1e1e"),
+        borderColor: border("#e5e7eb", "#333333"),
+      }}
     >
       <div>
         {/* LOGO */}
@@ -170,16 +176,31 @@ function Sidebar({ isOpen = true }) {
               animate={{ opacity: 1, x: 0 }}
               className="flex flex-col"
             >
-              <p className="text-base font-semibold text-gray-800 leading-tight">
+              <p
+                className="text-base font-semibold leading-tight"
+                style={{ color: text("#1f2937", "#f3f4f6") }}
+              >
                 ISSIQLIK ELЕKTR
               </p>
-              <p className="text-sm text-gray-600">STANSIYALARI AJ</p>
+              <p
+                className="text-sm"
+                style={{ color: text("#6b7280", "#9ca3af") }}
+              >
+                STANSIYALARI AJ
+              </p>
             </motion.div>
           )}
         </div>
 
         {isOpen && (
-          <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mb-4"></div>
+          <div
+            className="h-px mb-4"
+            style={{
+              background: isDark
+                ? "linear-gradient(to right, transparent, #374151, transparent)"
+                : "linear-gradient(to right, transparent, #e5e7eb, transparent)",
+            }}
+          ></div>
         )}
 
         {/* MENU */}
@@ -212,18 +233,34 @@ function Sidebar({ isOpen = true }) {
                     borderRadius: "12px",
                     minHeight: "48px",
                     color:
-                      isActive || isAnySubmenuActive ? "#1F2937" : "#6B7280",
+                      isActive || isAnySubmenuActive
+                        ? isDark
+                          ? "#f3f4f6"
+                          : "#1F2937"
+                        : isDark
+                        ? "#9ca3af"
+                        : "#6B7280",
                     background:
                       isActive || isAnySubmenuActive
-                        ? "linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%)"
+                        ? isDark
+                          ? "linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%)"
+                          : "linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%)"
                         : "transparent",
                     border:
                       isActive || isAnySubmenuActive
-                        ? "1px solid #BFDBFE"
+                        ? isDark
+                          ? "1px solid #3b82f6"
+                          : "1px solid #BFDBFE"
                         : "1px solid transparent",
                     "&:hover": {
                       backgroundColor:
-                        isActive || isAnySubmenuActive ? "#DBEAFE" : "#F9FAFB",
+                        isActive || isAnySubmenuActive
+                          ? isDark
+                            ? "#1e40af"
+                            : "#DBEAFE"
+                          : isDark
+                          ? "#2a2a2a"
+                          : "#F9FAFB",
                       transform: "translateX(4px)",
                     },
                     transition: "all 0.2s ease",
@@ -251,7 +288,11 @@ function Sidebar({ isOpen = true }) {
                     sx={{
                       minWidth: isOpen ? "40px" : "auto",
                       color:
-                        isActive || isAnySubmenuActive ? "#3B82F6" : "#9CA3AF",
+                        isActive || isAnySubmenuActive
+                          ? "#3B82F6"
+                          : isDark
+                          ? "#9ca3af"
+                          : "#9CA3AF",
                       justifyContent: "center",
                     }}
                   >
@@ -286,7 +327,12 @@ function Sidebar({ isOpen = true }) {
                 {/* Submenu */}
                 {item.submenu && isOpen && (
                   <Collapse in={isOpenSubmenu} timeout="auto" unmountOnExit>
-                    <div className="ml-6 mt-1 space-y-1 border-l-2 border-gray-100 pl-4">
+                    <div
+                      className="ml-6 mt-1 space-y-1 border-l-2 pl-4"
+                      style={{
+                        borderColor: border("#f3f4f6", "#374151"),
+                      }}
+                    >
                       {item.submenu.map((sub, subIndex) => {
                         const isSubActive =
                           router.pathname === sub.path ||
@@ -299,13 +345,25 @@ function Sidebar({ isOpen = true }) {
                               sx={{
                                 borderRadius: "8px",
                                 minHeight: "40px",
-                                color: isSubActive ? "#1F2937" : "#6B7280",
+                                color: isSubActive
+                                  ? isDark
+                                    ? "#f3f4f6"
+                                    : "#1F2937"
+                                  : isDark
+                                  ? "#9ca3af"
+                                  : "#6B7280",
                                 backgroundColor: isSubActive
-                                  ? "#F3F4F6"
+                                  ? isDark
+                                    ? "#2a2a2a"
+                                    : "#F3F4F6"
                                   : "transparent",
                                 "&:hover": {
                                   backgroundColor: isSubActive
-                                    ? "#E5E7EB"
+                                    ? isDark
+                                      ? "#333333"
+                                      : "#E5E7EB"
+                                    : isDark
+                                    ? "#2a2a2a"
                                     : "#F9FAFB",
                                 },
                                 transition: "all 0.15s ease",
@@ -316,6 +374,8 @@ function Sidebar({ isOpen = true }) {
                                 className={`w-2 h-2 rounded-full mr-3 transition-all duration-200 ${
                                   isSubActive
                                     ? "bg-blue-500 scale-110"
+                                    : isDark
+                                    ? "bg-gray-600"
                                     : "bg-gray-300"
                                 }`}
                               ></div>
@@ -344,20 +404,27 @@ function Sidebar({ isOpen = true }) {
       {/* LOGOUT */}
       <div>
         {isOpen && (
-          <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mb-4"></div>
+          <div
+            className="h-px mb-4"
+            style={{
+              background: isDark
+                ? "linear-gradient(to right, transparent, #374151, transparent)"
+                : "linear-gradient(to right, transparent, #e5e7eb, transparent)",
+            }}
+          ></div>
         )}
         <ListItemButton
           onClick={() => setOpenExitModal(true)}
           sx={{
             borderRadius: "12px",
             minHeight: "48px",
-            backgroundColor: "#FEF2F2",
-            border: "1px solid #FECACA",
-            color: "#DC2626",
+            backgroundColor: isDark ? "#7f1d1d" : "#FEF2F2",
+            border: isDark ? "1px solid #991b1b" : "1px solid #FECACA",
+            color: isDark ? "#fca5a5" : "#DC2626",
             justifyContent: isOpen ? "flex-start" : "center",
             px: isOpen ? 2 : 1,
             "&:hover": {
-              backgroundColor: "#FEE2E2",
+              backgroundColor: isDark ? "#991b1b" : "#FEE2E2",
               transform: "translateX(4px)",
             },
             transition: "all 0.2s ease",
@@ -366,7 +433,7 @@ function Sidebar({ isOpen = true }) {
           <ListItemIcon
             sx={{
               minWidth: isOpen ? "40px" : "auto",
-              color: "#DC2626",
+              color: isDark ? "#fca5a5" : "#DC2626",
               justifyContent: "center",
             }}
           >

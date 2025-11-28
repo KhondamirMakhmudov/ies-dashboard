@@ -19,7 +19,9 @@ import DeleteModal from "@/components/modal/delete-modal";
 import NoData from "@/components/no-data";
 import PrimaryButton from "@/components/button/primary-button";
 import ActiveStatusRadio from "@/components/activeStatusRadio";
+import useAppTheme from "@/hooks/useAppTheme";
 const UnitType = () => {
+  const { isDark, bg, text, border } = useAppTheme();
   const queryClient = useQueryClient();
   const [currentPage, setCurrentPage] = useState(1);
   const limit = 150;
@@ -178,11 +180,15 @@ const UnitType = () => {
         const isActive = getValue();
         return (
           <span
-            className={
+            className={`font-medium p-1 rounded-md border ${
               isActive
-                ? "text-green-600 font-medium bg-[#E8F6F0] p-1 rounded-md border border-green-600"
-                : "text-red-600 font-medium bg-[#FAE7E7] p-1 rounded-md border border-red-600"
-            }
+                ? isDark
+                  ? "text-green-400 bg-green-900/30 border-green-600"
+                  : "text-green-600 bg-[#E8F6F0] border-green-600"
+                : isDark
+                ? "text-red-400 bg-red-900/30 border-red-600"
+                : "text-red-600 bg-[#FAE7E7] border-red-600"
+            }`}
           >
             {isActive ? "Активный" : "Неактивный"}
           </span>
@@ -243,17 +249,31 @@ const UnitType = () => {
       : offset + limit + 1;
   return (
     <>
-      <div className="flex justify-between items-center bg-white p-[12px] mt-[20px]  rounded-md">
+      <div
+        className="flex justify-between items-center bg-white p-[12px] mt-[20px]  rounded-t-md"
+        style={{
+          backgroundColor: bg("#ffffff", "#1e1e1e"),
+          borderColor: border("#e5e7eb", "#333333"),
+        }}
+      >
         <PrimaryButton onClick={() => setCreateModal(true)} variant="contained">
           <p>Создать</p>
         </PrimaryButton>
 
-        <div className="inline-flex items-center bg-gray-100 rounded-lg p-1 gap-1 cursor-auto">
+        <div
+          className={`inline-flex items-center ${
+            !isDark ? "bg-gray-100" : "bg-gray-500"
+          } rounded-lg p-1 gap-1 cursor-auto`}
+        >
           <button
             className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 cursor-pointer ${
               selectStatus === true
-                ? "bg-white text-green-600 shadow-sm"
-                : "text-gray-600 hover:text-gray-900"
+                ? isDark
+                  ? "bg-gray-700 text-green-400 shadow-sm"
+                  : "bg-white text-green-600 shadow-sm"
+                : isDark
+                ? "bg-gray-500 text-gray-300 hover:text-gray-100"
+                : "bg-gray-100 text-gray-600 hover:text-gray-900"
             }`}
             onClick={() => setSelectStatus(true)}
           >
@@ -262,8 +282,12 @@ const UnitType = () => {
           <button
             className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 cursor-pointer ${
               selectStatus === false
-                ? "bg-white text-red-600 shadow-sm"
-                : "text-gray-600 hover:text-gray-900"
+                ? isDark
+                  ? "bg-gray-700 text-red-400 shadow-sm"
+                  : "bg-white text-red-600 shadow-sm"
+                : isDark
+                ? "bg-gray-500 text-gray-300 hover:text-gray-100"
+                : "bg-gray-100 text-gray-600 hover:text-gray-900"
             }`}
             onClick={() => setSelectStatus(false)}
           >
@@ -277,7 +301,11 @@ const UnitType = () => {
         <motion.div
           initial={{ opacity: 0, translateY: "20px" }}
           animate={{ opacity: 1, translateY: "0" }}
-          className="bg-white p-[12px] mb-[50px] rounded-md "
+          className="bg-white p-[12px] mb-[50px]  rounded-b-md "
+          style={{
+            backgroundColor: bg("#ffffff", "#1e1e1e"),
+            borderColor: border("#e5e7eb", "#333333"),
+          }}
         >
           <div className="space-y-[15px]">
             {isLoading || isFetching ? (

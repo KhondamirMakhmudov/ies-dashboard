@@ -29,8 +29,20 @@ import { educationLevelOptions } from "@/constants/static-data";
 import { razryadOptions } from "@/constants/static-data";
 import ReportComponent from "@/components/report";
 import PrimaryButton from "@/components/button/primary-button";
+import LocationOnIcon from "@mui/icons-material/LocationOn";
+import BusinessIcon from "@mui/icons-material/Business";
+import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import InboxIcon from "@mui/icons-material/Inbox";
+import FlightTakeoffIcon from "@mui/icons-material/FlightTakeoff";
+import DescriptionIcon from "@mui/icons-material/Description";
+import DateRangeIcon from "@mui/icons-material/DateRange";
+import Link from "next/link";
+import useAppTheme from "@/hooks/useAppTheme";
 
 const Index = () => {
+  const { bg, text, isDark, border } = useAppTheme();
   const queryClient = useQueryClient();
   const router = useRouter();
   const { id: employee_id } = router.query;
@@ -339,7 +351,13 @@ const Index = () => {
 
   return (
     <DashboardLayout headerTitle={`Полная информация о сотруднике`}>
-      <div className="bg-white p-[15px] mt-[10px] rounded-md border border-[#E9E9E9]">
+      <div
+        className="bg-white p-[15px] mt-[10px] rounded-md border border-[#E9E9E9]"
+        style={{
+          backgroundColor: bg("#ffffff", "#1e1e1e"),
+          borderColor: border("#e5e7eb", "#333333"),
+        }}
+      >
         <Breadcrumb
           paths={[
             {
@@ -364,9 +382,16 @@ const Index = () => {
           initial={{ opacity: 0, scale: 0 }}
           animate={{ opacity: 1, scale: 1 }}
           className="bg-white mb-5 border border-[#E9E9E9] w-full grid grid-cols-1 lg:grid-cols-12 mt-[10px] rounded-md"
+          style={{
+            backgroundColor: bg("#ffffff", "#1e1e1e"),
+            borderColor: border("#e5e7eb", "#333333"),
+          }}
         >
           {/* Chap tomonda profil */}
-          <div className="lg:col-span-3 flex flex-col gap-2 items-center text-center border-b md:border-b-0 md:border-r border-[#E9E9E9] py-5 px-4">
+          <div
+            className="lg:col-span-3 flex flex-col gap-2 items-center text-center border-b md:border-b-0 md:border-r border-[#E9E9E9] py-5 px-4"
+            style={{ borderColor: border("#e5e7eb", "#333333") }}
+          >
             <div className="w-[150px] h-[150px] lg:w-[170px] lg:h-[170px] rounded-full overflow-hidden border border-[#C9C9C9]">
               <Image
                 src={
@@ -392,29 +417,55 @@ const Index = () => {
               />
             </div>
 
-            <div>
-              <div className="space-[10px] gap-x-2 flex flex-wrap justify-center items-center">
-                <Typography
-                  variant="h7"
-                  sx={{ fontSize: "20px", fontWeight: "600" }}
-                >
-                  {get(employeePhoto, "data.first_name")}
-                </Typography>
-
+            <div className="flex flex-col items-center space-y-3">
+              {/* Full Name */}
+              <div className="flex flex-wrap gap-x-2 justify-center items-center">
                 <Typography
                   variant="h7"
                   sx={{ fontSize: "20px", fontWeight: "600" }}
                 >
                   {get(employeePhoto, "data.last_name")}
                 </Typography>
+                <Typography
+                  variant="h7"
+                  sx={{ fontSize: "20px", fontWeight: "600" }}
+                >
+                  {get(employeePhoto, "data.first_name")}
+                </Typography>
+                <Typography
+                  variant="h7"
+                  sx={{ fontSize: "20px", fontWeight: "600" }}
+                >
+                  {get(employeePhoto, "data.middle_name")}
+                </Typography>
               </div>
-              <p className="text-gray-400 text-sm">
+
+              {/* Email */}
+              <p className="text-gray-500 text-sm">
                 {get(employeePhoto, "data.email")}
               </p>
 
-              <p className="text-[13px] py-1 rounded-xl inline-block px-3 bg-gray-200 font-medium mt-2">
-                {get(employeePhoto, "data.workplace.position.name", "")}
+              {/* Department */}
+              <p className="text-base font-medium text-gray-700 text-center max-w-xl px-4">
+                {get(
+                  employeePhoto,
+                  "data.workplace.organizational_unit.name"
+                ) || "Отдел не указан"}
               </p>
+
+              {/* Position Badge */}
+              <div
+                className={`inline-flex items-center px-4 py-1.5 rounded-full ${
+                  !isDark
+                    ? "bg-blue-50 border border-blue-200"
+                    : "border border-blue-700 bg-blue-900/30"
+                }`}
+              >
+                <p className="text-sm font-medium text-blue-700">
+                  {get(employeePhoto, "data.workplace.position.name") ||
+                    "Должность не указана"}
+                </p>
+              </div>
             </div>
           </div>
 
@@ -424,6 +475,10 @@ const Index = () => {
               initial={{ opacity: 0, scale: 0 }}
               animate={{ opacity: 1, scale: 1 }}
               className="bg-white p-0 border-b border-b-[#E9E9E9]"
+              style={{
+                backgroundColor: bg("#ffffff", "#1e1e1e"),
+                borderColor: border("#e5e7eb", "#333333"),
+              }}
             >
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                 <div className="flex gap-3 px-3 py-1">
@@ -461,8 +516,11 @@ const Index = () => {
                       width: "32px",
                       height: "32px",
                       minWidth: "32px",
-                      background: "#F0D8C8",
-                      color: "#FF6200",
+                      background: isDark ? "#7c2d12" : "#F0D8C8",
+                      color: isDark ? "#fb923c" : "#FF6200",
+                      "&:hover": {
+                        background: isDark ? "#9a3412" : "#F0B28B",
+                      },
                     }}
                   >
                     <EditIcon fontSize="small" />
@@ -473,8 +531,11 @@ const Index = () => {
                       width: "32px",
                       height: "32px",
                       minWidth: "32px",
-                      background: "#FCD8D3",
-                      color: "#FF1E00",
+                      background: isDark ? "#7f1d1d" : "#FCD8D3",
+                      color: isDark ? "#fca5a5" : "#FF1E00",
+                      "&:hover": {
+                        background: isDark ? "#991b1b" : "#FCA89D",
+                      },
                     }}
                   >
                     <DeleteIcon fontSize="small" />
@@ -482,12 +543,14 @@ const Index = () => {
                 </div>
               </div>
             </motion.div>
-
             {/* PERSONAL INFO */}
             {tab === "personal" && (
               <div className="p-2 sm:p-4">
                 {/* Личная информация */}
-                <div className="border border-gray-200 p-4 rounded-xl mb-5">
+                <div
+                  className="border border-gray-200 p-4 rounded-xl mb-5"
+                  style={{ borderColor: border("#e5e7eb", "#333333") }}
+                >
                   <Typography
                     variant="h7"
                     sx={{ fontSize: "18px", fontWeight: "600" }}
@@ -539,7 +602,10 @@ const Index = () => {
                 </div>
 
                 {/* Контактные данные */}
-                <div className="border border-gray-200 p-4 rounded-xl mb-5">
+                <div
+                  className="border border-gray-200 p-4 rounded-xl mb-5"
+                  style={{ borderColor: border("#e5e7eb", "#333333") }}
+                >
                   <Typography
                     variant="h7"
                     sx={{ fontSize: "18px", fontWeight: "600" }}
@@ -580,7 +646,10 @@ const Index = () => {
                 </div>
 
                 {/* Образование */}
-                <div className="border border-gray-200 p-4 rounded-xl">
+                <div
+                  className="border border-gray-200 p-4 rounded-xl"
+                  style={{ borderColor: border("#e5e7eb", "#333333") }}
+                >
                   <Typography
                     variant="h7"
                     sx={{ fontSize: "18px", fontWeight: "600" }}
@@ -611,11 +680,13 @@ const Index = () => {
                 </div>
               </div>
             )}
-
             {/* EMPLOYEE INFO */}
             {tab === "employee" && (
               <div className="p-2 sm:p-4">
-                <div className="border border-gray-200 p-4 rounded-xl">
+                <div
+                  className="border border-gray-200 p-4 rounded-xl"
+                  style={{ borderColor: border("#e5e7eb", "#333333") }}
+                >
                   <Typography
                     variant="h7"
                     sx={{ fontSize: "18px", fontWeight: "600" }}
@@ -679,7 +750,11 @@ const Index = () => {
                       <span
                         className={`px-3 py-1 text-xs font-medium rounded-full ${
                           get(employeePhoto, "data.is_active")
-                            ? "bg-green-100 text-green-800"
+                            ? isDark
+                              ? "bg-green-900/30 text-green-400"
+                              : "bg-green-100 text-green-800"
+                            : isDark
+                            ? "bg-red-900/30 text-red-400"
                             : "bg-red-100 text-red-800"
                         }`}
                       >
@@ -692,120 +767,645 @@ const Index = () => {
                 </div>
               </div>
             )}
-
             {/* Connected schedule and entrypoint to employee */}
             {tab === "schedule" && (
               <div className="space-y-[10px] p-2 sm:p-4">
                 <div className="flex justify-between items-start">
-                  <div>
-                    <Typography variant="h6">
-                      Точки доступа и расписания
-                    </Typography>
-                    <p className="text-gray-500">
-                      Точки входа, к которым у сотрудника есть доступ, и
-                      связанные с ними расписания.
-                    </p>
+                  <div className="flex items-center gap-2">
+                    <div className="bg-[#3B82F6] p-2 rounded-lg">
+                      <CalendarMonthIcon
+                        className="text-white"
+                        sx={{ fontSize: 20 }}
+                      />
+                    </div>
+                    <div>
+                      <Typography
+                        variant="h6"
+                        style={{ color: text("#000000", "#f3f4f6") }}
+                      >
+                        Точки доступа и расписания
+                      </Typography>
+                      <p style={{ color: text("#6b7280", "#9ca3af") }}>
+                        Точки входа, к которым у сотрудника есть доступ, и
+                        связанные с ними расписания.
+                      </p>
+                    </div>
                   </div>
-                  {/* <PrimaryButton onClick={() => setConnectScheduleModal(true)}>
-                    Подключить расписание
-                  </PrimaryButton> */}
                 </div>
 
-                <div className="space-y-[10px]">
+                {/* Regular Schedule Assignments Section */}
+                <div className="space-y-[16px]">
+                  <div className="flex items-center gap-2 mb-3"></div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    {get(
+                      ScheduleAndEntrypointOfEmployee,
+                      "data.scheduleAssignments",
+                      []
+                    ).length > 0 ? (
+                      get(
+                        ScheduleAndEntrypointOfEmployee,
+                        "data.scheduleAssignments",
+                        []
+                      ).map((item, index) => (
+                        <div
+                          key={index}
+                          className="col-span-1 border rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden"
+                          style={{
+                            background: isDark
+                              ? "linear-gradient(to bottom right, #1e1e1e, #2a2a2a)"
+                              : "linear-gradient(to bottom right, #ffffff, #f9fafb)",
+                            borderColor: border("#e5e7eb", "#333333"),
+                          }}
+                        >
+                          {/* Header Section */}
+                          <div
+                            className="px-5 py-4"
+                            style={{
+                              backgroundColor: isDark ? "#1e3a8a" : "#DFEDFE",
+                            }}
+                          >
+                            <div className="flex justify-between items-center">
+                              <div className="flex items-center gap-3">
+                                <div className="bg-[#3B82F6] backdrop-blur-sm p-2 rounded-lg">
+                                  <LocationOnIcon
+                                    className="text-white"
+                                    sx={{ fontSize: 20 }}
+                                  />
+                                </div>
+                                <Typography
+                                  variant="h6"
+                                  className="font-semibold tracking-wide"
+                                  style={{ color: text("#1f2937", "#f3f4f6") }}
+                                >
+                                  {get(item, "entryPointName") ||
+                                    "Название точки не указано"}
+                                </Typography>
+                              </div>
+
+                              <div className="flex gap-2 items-center">
+                                <Button
+                                  onClick={() => {
+                                    setConnectScheduleModal(true);
+                                    setSelectEntrypointId(
+                                      get(item, "entryPointId")
+                                    );
+                                  }}
+                                  sx={{
+                                    width: "40px",
+                                    height: "38px",
+                                    minWidth: "40px",
+                                    background: isDark ? "#7c2d12" : "#F0D8C8",
+                                    color: isDark ? "#fb923c" : "#FF6200",
+                                    borderRadius: "10px",
+                                    "&:hover": {
+                                      background: isDark
+                                        ? "#9a3412"
+                                        : "#F0B28B",
+                                      transform: "scale(1.05)",
+                                    },
+                                    transition: "all 0.2s",
+                                  }}
+                                >
+                                  <EditIcon fontSize="small" />
+                                </Button>
+                                <Link
+                                  href={`/dashboard/access-points/${
+                                    get(item, "entryPointId") || ""
+                                  }`}
+                                  className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-200 shadow-sm hover:shadow-md"
+                                  style={{
+                                    backgroundColor: isDark
+                                      ? "#1e3a8a"
+                                      : "#ffffff",
+                                    color: isDark ? "#93c5fd" : "#3B82F6",
+                                  }}
+                                  onMouseEnter={(e) => {
+                                    e.currentTarget.style.backgroundColor =
+                                      isDark ? "#1e40af" : "#b9d6fa";
+                                    e.currentTarget.style.color = "#ffffff";
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    e.currentTarget.style.backgroundColor =
+                                      isDark ? "#1e3a8a" : "#ffffff";
+                                    e.currentTarget.style.color = isDark
+                                      ? "#93c5fd"
+                                      : "#3B82F6";
+                                  }}
+                                >
+                                  Перейти к точке
+                                  <ArrowForwardIcon sx={{ fontSize: 16 }} />
+                                </Link>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Content Section */}
+                          <div className="p-5">
+                            <div
+                              className="border rounded-lg p-4 transition-colors duration-200"
+                              style={{
+                                borderColor: isDark
+                                  ? "rgba(59, 130, 246, 0.3)"
+                                  : "rgba(59, 130, 246, 0.2)",
+                                backgroundColor: "transparent",
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.backgroundColor = isDark
+                                  ? "rgba(59, 130, 246, 0.1)"
+                                  : "rgba(223, 237, 254, 0.8)";
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.backgroundColor =
+                                  "transparent";
+                              }}
+                            >
+                              <div className="space-y-4">
+                                {/* Unit Information */}
+                                <div className="flex items-start gap-3">
+                                  <div className="bg-[#3B82F6] p-2 rounded-lg mt-1">
+                                    <BusinessIcon
+                                      className="text-white"
+                                      sx={{ fontSize: 16 }}
+                                    />
+                                  </div>
+                                  <div className="flex-1">
+                                    <p
+                                      className="text-xs font-semibold uppercase tracking-wider mb-1"
+                                      style={{
+                                        color: isDark ? "#93c5fd" : "#3B82F6",
+                                      }}
+                                    >
+                                      Подразделение
+                                    </p>
+                                    <p
+                                      className="text-[15px] font-bold"
+                                      style={{
+                                        color: text("#1f2937", "#f3f4f6"),
+                                      }}
+                                    >
+                                      {get(item, "unitCodeName") ||
+                                        "Подразделение не указано"}
+                                    </p>
+                                  </div>
+                                </div>
+
+                                {/* Divider */}
+                                <div
+                                  className="border-t"
+                                  style={{
+                                    borderColor: isDark
+                                      ? "rgba(59, 130, 246, 0.3)"
+                                      : "rgba(59, 130, 246, 0.2)",
+                                  }}
+                                ></div>
+
+                                {/* Schedule Information */}
+                                <div className="flex justify-between items-start">
+                                  <div className="flex items-start gap-3 flex-1">
+                                    <div className="bg-[#3B82F6] p-2 rounded-lg mt-1">
+                                      <CalendarMonthIcon
+                                        className="text-white"
+                                        sx={{ fontSize: 16 }}
+                                      />
+                                    </div>
+                                    <div className="flex-1">
+                                      <p
+                                        className="text-xs font-semibold uppercase tracking-wider mb-1"
+                                        style={{
+                                          color: isDark ? "#93c5fd" : "#3B82F6",
+                                        }}
+                                      >
+                                        Расписание
+                                      </p>
+                                      <p
+                                        className="text-[15px] font-bold"
+                                        style={{
+                                          color: text("#1f2937", "#f3f4f6"),
+                                        }}
+                                      >
+                                        {get(item, "scheduleName") ||
+                                          "Расписание не указано"}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <Link
+                                    href={`/dashboard/schedule/${
+                                      get(item, "scheduleId") || ""
+                                    }`}
+                                    className="flex items-center gap-1 text-sm font-semibold px-3 py-2 rounded-lg transition-all duration-200 border ml-2 whitespace-nowrap"
+                                    style={{
+                                      color: isDark ? "#93c5fd" : "#3B82F6",
+                                      backgroundColor: isDark
+                                        ? "#1e1e1e"
+                                        : "#ffffff",
+                                      borderColor: isDark
+                                        ? "rgba(59, 130, 246, 0.5)"
+                                        : "rgba(59, 130, 246, 0.3)",
+                                    }}
+                                    onMouseEnter={(e) => {
+                                      e.currentTarget.style.backgroundColor =
+                                        isDark ? "#1e3a8a" : "#DFEDFE";
+                                      e.currentTarget.style.color = isDark
+                                        ? "#dbeafe"
+                                        : "#2563EB";
+                                    }}
+                                    onMouseLeave={(e) => {
+                                      e.currentTarget.style.backgroundColor =
+                                        isDark ? "#1e1e1e" : "#ffffff";
+                                      e.currentTarget.style.color = isDark
+                                        ? "#93c5fd"
+                                        : "#3B82F6";
+                                    }}
+                                  >
+                                    Подробнее
+                                    <ChevronRightIcon sx={{ fontSize: 16 }} />
+                                  </Link>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div
+                        className="flex flex-col items-center justify-center py-12 px-4 rounded-xl border-2 border-dashed"
+                        style={{
+                          background: isDark
+                            ? "linear-gradient(to bottom right, #1e1e1e, #2a2a2a)"
+                            : "linear-gradient(to bottom right, #f9fafb, #f3f4f6)",
+                          borderColor: isDark ? "#4b5563" : "#d1d5db",
+                        }}
+                      >
+                        <div
+                          className="p-4 rounded-full mb-4"
+                          style={{
+                            backgroundColor: isDark ? "#374151" : "#e5e7eb",
+                          }}
+                        >
+                          <InboxIcon
+                            style={{ color: isDark ? "#6b7280" : "#9ca3af" }}
+                            sx={{ fontSize: 48 }}
+                          />
+                        </div>
+                        <p
+                          className="font-semibold text-lg mb-1"
+                          style={{ color: text("#4b5563", "#9ca3af") }}
+                        >
+                          Нет данных
+                        </p>
+                        <p
+                          className="text-sm"
+                          style={{ color: text("#9ca3af", "#6b7280") }}
+                        >
+                          Обычные расписания не найдены
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Job Trip Schedules Section */}
+                <div className="space-y-[16px] mt-8">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="bg-[#10B981] p-2 rounded-lg">
+                        <FlightTakeoffIcon
+                          className="text-white"
+                          sx={{ fontSize: 20 }}
+                        />
+                      </div>
+                      <Typography
+                        variant="h6"
+                        className="font-semibold"
+                        style={{ color: text("#1f2937", "#f3f4f6") }}
+                      >
+                        Командировки
+                      </Typography>
+                    </div>
+                    <PrimaryButton backgroundColor="#10B981">
+                      Назначить командировку
+                    </PrimaryButton>
+                  </div>
+
                   {get(
                     ScheduleAndEntrypointOfEmployee,
-                    "data.entryPointSchedules",
+                    "data.jobTripSchedules",
                     []
                   ).length > 0 ? (
-                    get(
-                      ScheduleAndEntrypointOfEmployee,
-                      "data.entryPointSchedules",
-                      []
-                    ).map((item, index) => (
-                      <div
-                        key={index}
-                        className="border border-gray-200 p-3 rounded-md hover:shadow-md transition-all duration-200"
-                      >
-                        <div className="flex justify-between">
-                          <Typography variant="h6">
-                            {get(item, "entryPointName") ||
-                              "Название точки не указано"}
-                          </Typography>
+                    <div className="grid grid-cols-2 gap-4">
+                      {get(
+                        ScheduleAndEntrypointOfEmployee,
+                        "data.jobTripSchedules",
+                        []
+                      ).map((item, index) => (
+                        <div
+                          key={index}
+                          className="col-span-1 border rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden"
+                          style={{
+                            background: isDark
+                              ? "linear-gradient(to bottom right, #1e1e1e, #064e3b)"
+                              : "linear-gradient(to bottom right, #ffffff, #ecfdf5)",
+                            borderColor: isDark ? "#16a34a" : "#a7f3d0",
+                          }}
+                        >
+                          {/* Header Section */}
+                          <div
+                            className="px-5 py-4"
+                            style={{
+                              backgroundColor: isDark ? "#065f46" : "#D1FAE5",
+                            }}
+                          >
+                            <div className="flex justify-between items-center">
+                              <div className="flex items-center gap-3">
+                                <div className="bg-[#10B981] backdrop-blur-sm p-2 rounded-lg">
+                                  <LocationOnIcon
+                                    className="text-white"
+                                    sx={{ fontSize: 20 }}
+                                  />
+                                </div>
+                                <Typography
+                                  variant="h6"
+                                  className="font-semibold tracking-wide"
+                                  style={{ color: text("#1f2937", "#f3f4f6") }}
+                                >
+                                  {get(item, "entryPointName") ||
+                                    "Название точки не указано"}
+                                </Typography>
+                              </div>
 
-                          <div className="flex gap-2 items-center">
-                            <Button
-                              onClick={() => {
-                                setConnectScheduleModal(true);
-                                setSelectEntrypointId(
-                                  get(item, "entryPointId")
-                                );
-                              }}
-                              sx={{
-                                width: "32px",
-                                height: "32px",
-                                minWidth: "32px",
-                                background: "#F0D8C8",
-                                color: "#FF6200",
-                              }}
-                            >
-                              <EditIcon fontSize="small" />
-                            </Button>
-                            <Button
-                              onClick={() =>
-                                router.push(
-                                  `/dashboard/access-points/${
+                              <div className="flex gap-2 items-center">
+                                <Link
+                                  href={`/dashboard/access-points/${
                                     get(item, "entryPointId") || ""
-                                  }`
-                                )
-                              }
-                              sx={{
-                                textTransform: "initial",
-                                fontFamily: "DM Sans, sans-serif",
-                                backgroundColor: "#4182F9",
-                                boxShadow: "none",
-                                height: "32px",
-                                color: "white",
-                                display: "flex",
-                                gap: "4px",
-                                fontSize: "14px",
-                                borderRadius: "8px",
-                              }}
-                              variant="contained"
-                            >
-                              <p>Перейти к точке доступа</p>
-                            </Button>
+                                  }`}
+                                  className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-200 shadow-sm hover:shadow-md"
+                                  style={{
+                                    backgroundColor: isDark
+                                      ? "#065f46"
+                                      : "#ffffff",
+                                    color: isDark ? "#6ee7b7" : "#10B981",
+                                  }}
+                                  onMouseEnter={(e) => {
+                                    e.currentTarget.style.backgroundColor =
+                                      isDark ? "#047857" : "#A7F3D0";
+                                    e.currentTarget.style.color = "#ffffff";
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    e.currentTarget.style.backgroundColor =
+                                      isDark ? "#065f46" : "#ffffff";
+                                    e.currentTarget.style.color = isDark
+                                      ? "#6ee7b7"
+                                      : "#10B981";
+                                  }}
+                                >
+                                  Перейти к точке
+                                  <ArrowForwardIcon sx={{ fontSize: 16 }} />
+                                </Link>
+                              </div>
+                            </div>
                           </div>
-                        </div>
 
-                        <div className="mt-[10px] bg-gray-100 p-3 rounded-md">
-                          <p className="text-[17px] font-semibold">
-                            Расписание:
-                          </p>
-                          <div className="flex justify-between">
-                            <p className="text-[17px] font-medium">
-                              {get(item, "scheduleName") ||
-                                "Расписание не указано"}
-                            </p>
-                            <button
-                              onClick={() =>
-                                router.push(
-                                  `/dashboard/schedule/${
-                                    get(item, "scheduleId") || ""
-                                  }`
-                                )
-                              }
-                              className="text-blue-600 hover:text-blue-800 text-sm font-medium cursor-pointer"
+                          {/* Content Section */}
+                          <div className="p-5">
+                            <div
+                              className="border rounded-lg p-4 transition-colors duration-200"
+                              style={{
+                                borderColor: isDark
+                                  ? "rgba(16, 185, 129, 0.3)"
+                                  : "rgba(16, 185, 129, 0.2)",
+                                backgroundColor: "transparent",
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.backgroundColor = isDark
+                                  ? "rgba(16, 185, 129, 0.1)"
+                                  : "rgba(209, 250, 229, 0.8)";
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.backgroundColor =
+                                  "transparent";
+                              }}
                             >
-                              Подробнее →
-                            </button>
+                              <div className="space-y-4">
+                                <div className="flex justify-between items-center">
+                                  {/* Order Number */}
+                                  <div className="flex items-start gap-3">
+                                    <div className="bg-[#10B981] p-2 rounded-lg mt-1">
+                                      <DescriptionIcon
+                                        className="text-white"
+                                        sx={{ fontSize: 16 }}
+                                      />
+                                    </div>
+                                    <div className="flex-1">
+                                      <p
+                                        className="text-xs font-semibold uppercase tracking-wider mb-1"
+                                        style={{
+                                          color: isDark ? "#6ee7b7" : "#10B981",
+                                        }}
+                                      >
+                                        Номер приказа
+                                      </p>
+                                      <p
+                                        className="text-[15px] font-bold"
+                                        style={{
+                                          color: text("#1f2937", "#f3f4f6"),
+                                        }}
+                                      >
+                                        {get(item, "numOrder") ||
+                                          "Номер приказа не указан"}
+                                      </p>
+                                    </div>
+                                  </div>
+
+                                  {/* Date Range */}
+                                  <div className="flex items-start gap-3">
+                                    <div className="bg-[#10B981] p-2 rounded-lg mt-1">
+                                      <DateRangeIcon
+                                        className="text-white"
+                                        sx={{ fontSize: 16 }}
+                                      />
+                                    </div>
+                                    <div className="flex-1">
+                                      <p
+                                        className="text-xs font-semibold uppercase tracking-wider mb-1"
+                                        style={{
+                                          color: isDark ? "#6ee7b7" : "#10B981",
+                                        }}
+                                      >
+                                        Период командировки
+                                      </p>
+                                      <p
+                                        className="text-[15px] font-bold"
+                                        style={{
+                                          color: text("#1f2937", "#f3f4f6"),
+                                        }}
+                                      >
+                                        {get(item, "startDate") &&
+                                        get(item, "endDate")
+                                          ? `${new Date(
+                                              get(item, "startDate")
+                                            ).toLocaleDateString(
+                                              "ru-RU"
+                                            )} - ${new Date(
+                                              get(item, "endDate")
+                                            ).toLocaleDateString("ru-RU")}`
+                                          : "Период не указан"}
+                                      </p>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Divider */}
+                                <div
+                                  className="border-t"
+                                  style={{
+                                    borderColor: isDark
+                                      ? "rgba(16, 185, 129, 0.3)"
+                                      : "rgba(16, 185, 129, 0.2)",
+                                  }}
+                                ></div>
+
+                                {/* Unit Information */}
+                                <div className="flex items-start gap-3">
+                                  <div className="bg-[#10B981] p-2 rounded-lg mt-1">
+                                    <BusinessIcon
+                                      className="text-white"
+                                      sx={{ fontSize: 16 }}
+                                    />
+                                  </div>
+                                  <div className="flex-1">
+                                    <p
+                                      className="text-xs font-semibold uppercase tracking-wider mb-1"
+                                      style={{
+                                        color: isDark ? "#6ee7b7" : "#10B981",
+                                      }}
+                                    >
+                                      Подразделение
+                                    </p>
+                                    <p
+                                      className="text-[15px] font-bold"
+                                      style={{
+                                        color: text("#1f2937", "#f3f4f6"),
+                                      }}
+                                    >
+                                      {get(item, "unitCodeName") ||
+                                        "Подразделение не указано"}
+                                    </p>
+                                  </div>
+                                </div>
+
+                                {/* Divider */}
+                                <div
+                                  className="border-t"
+                                  style={{
+                                    borderColor: isDark
+                                      ? "rgba(16, 185, 129, 0.3)"
+                                      : "rgba(16, 185, 129, 0.2)",
+                                  }}
+                                ></div>
+
+                                {/* Schedule Information */}
+                                <div className="flex justify-between items-start">
+                                  <div className="flex items-start gap-3 flex-1">
+                                    <div className="bg-[#10B981] p-2 rounded-lg mt-1">
+                                      <CalendarMonthIcon
+                                        className="text-white"
+                                        sx={{ fontSize: 16 }}
+                                      />
+                                    </div>
+                                    <div className="flex-1">
+                                      <p
+                                        className="text-xs font-semibold uppercase tracking-wider mb-1"
+                                        style={{
+                                          color: isDark ? "#6ee7b7" : "#10B981",
+                                        }}
+                                      >
+                                        Расписание
+                                      </p>
+                                      <p
+                                        className="text-[15px] font-bold"
+                                        style={{
+                                          color: text("#1f2937", "#f3f4f6"),
+                                        }}
+                                      >
+                                        {get(item, "scheduleName") ||
+                                          "Расписание не указано"}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <Link
+                                    href={`/dashboard/schedule/${
+                                      get(item, "scheduleId") || ""
+                                    }`}
+                                    className="flex items-center gap-1 text-sm font-semibold px-3 py-2 rounded-lg transition-all duration-200 border ml-2 whitespace-nowrap"
+                                    style={{
+                                      color: isDark ? "#6ee7b7" : "#10B981",
+                                      backgroundColor: isDark
+                                        ? "#1e1e1e"
+                                        : "#ffffff",
+                                      borderColor: isDark
+                                        ? "rgba(16, 185, 129, 0.5)"
+                                        : "rgba(16, 185, 129, 0.3)",
+                                    }}
+                                    onMouseEnter={(e) => {
+                                      e.currentTarget.style.backgroundColor =
+                                        isDark ? "#065f46" : "#D1FAE5";
+                                      e.currentTarget.style.color = isDark
+                                        ? "#a7f3d0"
+                                        : "#059669";
+                                    }}
+                                    onMouseLeave={(e) => {
+                                      e.currentTarget.style.backgroundColor =
+                                        isDark ? "#1e1e1e" : "#ffffff";
+                                      e.currentTarget.style.color = isDark
+                                        ? "#6ee7b7"
+                                        : "#10B981";
+                                    }}
+                                  >
+                                    Подробнее
+                                    <ChevronRightIcon sx={{ fontSize: 16 }} />
+                                  </Link>
+                                </div>
+                              </div>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))
+                      ))}
+                    </div>
                   ) : (
-                    <p className="text-gray-500">
-                      Нет данных по точкам доступа и расписаниям
-                    </p>
+                    <div
+                      className="flex flex-col items-center justify-center py-12 px-4 rounded-xl border-2 border-dashed"
+                      style={{
+                        background: isDark
+                          ? "linear-gradient(to bottom right, #1e1e1e, #2a2a2a)"
+                          : "linear-gradient(to bottom right, #f9fafb, #f3f4f6)",
+                        borderColor: isDark ? "#4b5563" : "#d1d5db",
+                      }}
+                    >
+                      <div
+                        className="p-4 rounded-full mb-4"
+                        style={{
+                          backgroundColor: isDark ? "#374151" : "#e5e7eb",
+                        }}
+                      >
+                        <InboxIcon
+                          style={{ color: isDark ? "#6b7280" : "#9ca3af" }}
+                          sx={{ fontSize: 48 }}
+                        />
+                      </div>
+                      <p
+                        className="font-semibold text-lg mb-1"
+                        style={{ color: text("#4b5563", "#9ca3af") }}
+                      >
+                        Нет данных
+                      </p>
+                      <p
+                        className="text-sm"
+                        style={{ color: text("#9ca3af", "#6b7280") }}
+                      >
+                        Командировки не найдены
+                      </p>
+                    </div>
                   )}
                 </div>
               </div>
@@ -824,6 +1424,10 @@ const Index = () => {
           endDate={endDate}
           isLoadingReport={isLoadingReport}
           isFetchingReport={isFetchingReport}
+          fileNameEmployee={`${get(employeePhoto, "data.first_name")} ${get(
+            employeePhoto,
+            "data.last_name"
+          )}`}
         />
       </div>
 

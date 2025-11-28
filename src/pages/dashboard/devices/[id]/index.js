@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { motion } from "framer-motion";
 import { get } from "lodash";
+
 import ApartmentIcon from "@mui/icons-material/Apartment";
 import LanguageIcon from "@mui/icons-material/Language";
 import PersonIcon from "@mui/icons-material/Person";
@@ -13,10 +14,15 @@ import LockIcon from "@mui/icons-material/Lock";
 import MeetingRoomIcon from "@mui/icons-material/MeetingRoom";
 import BusinessIcon from "@mui/icons-material/Business";
 
+// 💡 CustomSelect bilan bir xil rang tizimi shu hookda
+import useAppTheme from "@/hooks/useAppTheme";
+
 const Index = () => {
   const router = useRouter();
   const { id } = router.query;
   const { data: session } = useSession();
+
+  const { isDark, bg, text, border } = useAppTheme();
 
   const {
     data: allCameras,
@@ -37,37 +43,31 @@ const Index = () => {
       icon: ApartmentIcon,
       label: "Здание",
       value: get(allCameras, "data.building"),
-      color: "bg-purple-50 text-purple-600",
     },
     {
       icon: LanguageIcon,
       label: "IP-адрес",
       value: get(allCameras, "data.ipAddress"),
-      color: "bg-green-50 text-green-600",
     },
     {
       icon: PersonIcon,
       label: "Логин",
       value: get(allCameras, "data.login"),
-      color: "bg-orange-50 text-orange-600",
     },
     {
       icon: LockIcon,
       label: "Пароль",
       value: get(allCameras, "data.password"),
-      color: "bg-red-50 text-red-600",
     },
     {
       icon: MeetingRoomIcon,
       label: "Тип двери",
       value: get(allCameras, "data.doorType"),
-      color: "bg-indigo-50 text-indigo-600",
     },
     {
       icon: BusinessIcon,
       label: "Название контрольной точки",
       value: get(allCameras, "data.checkPointName"),
-      color: "bg-teal-50 text-teal-600",
     },
   ];
 
@@ -86,32 +86,61 @@ const Index = () => {
       <motion.div
         initial={{ opacity: 0, scale: 0 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="grid grid-cols-12 p-[12px] bg-white border border-gray-200 my-[20px] rounded-md"
+        className="grid grid-cols-12 p-[12px] my-[20px] rounded-md"
+        style={{
+          backgroundColor: bg("#ffffff", "#1e1e1e"),
+          border: `1px solid ${border("#d1d5db", "#4b5563")}`,
+        }}
       >
-        <div className="col-span-12 w-full ">
+        <div className="col-span-12 w-full">
           <div className="mb-4 p-[12px]">
-            <h2 className="text-3xl font-bold text-gray-800">Детали камеры</h2>
+            <h2
+              className="text-3xl font-bold"
+              style={{ color: text("#1f2937", "#f3f4f6") }}
+            >
+              Детали камеры
+            </h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {details.map((detail, index) => {
               const Icon = detail.icon;
+
               return (
                 <div
                   key={index}
-                  className="bg-white rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-100"
+                  className="rounded-xl p-5 shadow-sm transition duration-300 border"
+                  style={{
+                    backgroundColor: bg("#ffffff", "#2a2a2a"),
+                    borderColor: border("#e5e7eb", "#4b5563"),
+                  }}
                 >
                   <div className="flex items-start space-x-4">
+                    {/* Ikonka fonini ham CustomSelect stiliga moslaymiz */}
                     <div
-                      className={`${detail.color} p-3 rounded-lg flex-shrink-0`}
+                      className="p-3 rounded-lg flex-shrink-0"
+                      style={{
+                        backgroundColor: bg("#f3f4f6", "#374151"),
+                        color: text("#111827", "#f3f4f6"),
+                      }}
                     >
                       <Icon sx={{ fontSize: 20 }} />
                     </div>
+
                     <div className="flex-grow min-w-0">
-                      <p className="text-sm font-medium text-gray-500 mb-1">
+                      <p
+                        className="text-sm font-medium mb-1"
+                        style={{ color: text("#6b7280", "#d1d5db") }}
+                      >
                         {detail.label}
                       </p>
-                      <p className="text-lg font-semibold text-gray-800 break-words">
+
+                      <p
+                        className="text-lg font-semibold break-words"
+                        style={{
+                          color: text("#1f2937", "#f9fafb"),
+                        }}
+                      >
                         {detail.value || "-"}
                       </p>
                     </div>

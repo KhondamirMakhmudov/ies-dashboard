@@ -31,10 +31,9 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DeleteModal from "@/components/modal/delete-modal";
 import { config } from "@/config";
-import { useRouter } from "next/router";
+import PrimaryButton from "@/components/button/primary-button";
 
 const WorkplaceEmployeeSection = ({ workplace = [], levelColor }) => {
-  const router = useRouter();
   const [showEmployees, setShowEmployees] = useState(false);
 
   if (!workplace || workplace.length === 0) {
@@ -381,29 +380,14 @@ const Index = () => {
         className="bg-white p-4 my-10 rounded-md space-y-2 shadow"
       >
         <div className="mb-[20px]">
-          <Button
+          <PrimaryButton
             onClick={() => {
               setCreateModal(true);
               setCreateModalParentId(null);
             }}
-            sx={{
-              textTransform: "initial",
-              fontFamily: "DM Sans, sans-serif",
-              backgroundColor: "#4182F9",
-              boxShadow: "none",
-              color: "white",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "4px",
-              fontSize: "14px",
-              minWidth: "100px",
-              borderRadius: "8px",
-            }}
-            variant="contained"
           >
             Создать
-          </Button>
+          </PrimaryButton>
         </div>
 
         {get(level1List, "data", []).map((level1) => {
@@ -1275,7 +1259,7 @@ const Index = () => {
                                                     })
                                                   ) : (
                                                     <div className="text-gray-400 italic text-base">
-                                                      Bo'limlar mavjud emas
+                                                      Разделы отсутствуют
                                                     </div>
                                                   )}
                                                 </motion.div>
@@ -1298,7 +1282,7 @@ const Index = () => {
                       })
                     ) : (
                       <div className="text-gray-400 italic text-base">
-                        Bo'limlar mavjud emas
+                        Разделы отсутствуют
                       </div>
                     )}
                   </motion.div>
@@ -1328,9 +1312,10 @@ const Index = () => {
             <div className="space-y-[15px] my-[30px]">
               <Input
                 type={"text"}
+                label={"Имя"}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder={"Имя"}
+                placeholder={"Введите название или имя"}
                 inputClass="!h-[45px] border !border-[#C9C9C9]"
                 required
               />
@@ -1338,17 +1323,21 @@ const Index = () => {
               {createModalParentId === null && (
                 <Input
                   type={"text"}
+                  label={"Код единицы"}
                   value={unitCode}
                   onChange={(e) => setUnitCode(e.target.value)}
                   required
                   inputClass="!h-[43px] border !border-[#C9C9C9]"
-                  placeholder={"Введите код единицы"}
+                  placeholder={
+                    "Укажите уникальный код для новой организационной единицы"
+                  }
                 />
               )}
 
               <CustomSelect
                 options={optionsUnitType}
-                value={unitTypeId} // faqat id (number/string)
+                value={unitTypeId}
+                label={"Тип единицы"} // faqat id (number/string)
                 onChange={(val) => setUnitTypeId(val)} // object emas
                 placeholder={"Выберите тип единицы"}
                 returnObject={false}

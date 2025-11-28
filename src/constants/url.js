@@ -12,6 +12,7 @@ export const URLS = {
   // EntryPoints
   entrypoints: "api/entry-points",
   newEntryPoints: "api/ep",
+  entrypointSchedules: "api/schedules/entry-point-schedules",
 
   // Employee connection to Schedule
 
@@ -38,7 +39,8 @@ export const URLS = {
 
   // jobtrips
 
-  jobTrips: "api/job-trips/create-job-trip",
+  jobTrips: "api/job-trips",
+  createJobTripsForEmployee: "api/job-trips/create-job-trip",
 
   // Python
   // structure unit type

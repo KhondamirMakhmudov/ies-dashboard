@@ -5,6 +5,7 @@ export const KEYS = {
   checkpoints: "checkpoints",
   entrypoints: "entrypoints",
   entrypoint: "entrypoint",
+  entrypointSchedules: "entrypointSchedules",
   logEntersOfEmployees: "logEntersOfEmployees",
   logEntersOfEmployeeById: "logEntersOfEmployeeById",
   logEntersOfEmployeesByStructure: "logEntersOfEmployeesByStructure",
@@ -28,4 +29,5 @@ export const KEYS = {
   workplace: "workplace",
   employeePhoto: "employeePhoto",
   organizationalUnitsChildren: "organizationalUnitsChildren",
+  organisation: "organisation",
 };

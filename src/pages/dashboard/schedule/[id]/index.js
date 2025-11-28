@@ -17,11 +17,9 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import DeleteModal from "@/components/modal/delete-modal";
 import ScheduleModal from "@/components/modal/schedule-modal";
 import { useQueryClient } from "@tanstack/react-query";
-import ShareIcon from "@mui/icons-material/Share";
-import usePostQuery from "@/hooks/java/usePostQuery";
-import MethodModal from "@/components/modal/method-modal";
-
+import useAppTheme from "@/hooks/useAppTheme";
 const Index = () => {
+  const { bg, text, border, isDark } = useAppTheme();
   const queryClient = useQueryClient();
   const { data: session } = useSession();
   const router = useRouter();
@@ -89,7 +87,11 @@ const Index = () => {
       <motion.div
         initial={{ opacity: 0, scale: 0 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-white py-[12px] px-[24px] my-[30px] rounded-md border border-gray-200"
+        className="bg-white py-[12px] px-[24px] my-[20px] rounded-md border border-gray-200"
+        style={{
+          background: bg("white", "#1E1E1E"),
+          borderColor: border("#d1d5db", "#4b5563"),
+        }}
       >
         <div className="flex justify-between">
           <Typography variant="h6">
@@ -136,7 +138,13 @@ const Index = () => {
           </div>
 
           {/* Folderning “ichidagi” kontent */}
-          <div className="border border-blue-500 border-t-0 rounded-b-md p-4 bg-white shadow-md">
+          <div
+            className="border border-blue-500 border-t-0 rounded-b-md p-4 bg-white shadow-md"
+            style={{
+              background: bg("white", "#1E1E1E"),
+              borderColor: border("#d1d5db", "#4b5563"),
+            }}
+          >
             <ScheduleFormat schedule={get(schedule, "data")} />
           </div>
         </div>
@@ -185,10 +193,18 @@ const Index = () => {
           deleting={() => onSubmitDeleteSchedule(id)}
         >
           <div className="">
-            <h2 className="text-lg font-semibold text-gray-800">
+            <h2
+              className={`text-lg font-semibold ${
+                isDark ? "text-white" : "text-gray-800"
+              } `}
+            >
               Удаление расписания
             </h2>
-            <p className="mt-3 text-sm text-gray-600">
+            <p
+              className={`mt-3 text-sm  ${
+                isDark ? "text-gray-300" : "text-gray-600"
+              }`}
+            >
               Вы собираетесь удалить расписание для выбранных дней и времени.
               После удаления восстановить его будет невозможно.
             </p>
