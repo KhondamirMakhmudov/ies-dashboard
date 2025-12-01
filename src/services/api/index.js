@@ -1,7 +1,5 @@
 import axios from "axios";
 import { config } from "@/config";
-import storage from "../storage";
-import { get } from "lodash";
 
 const request = axios.create({
   baseURL: config.JAVA_API_URL,
@@ -43,4 +41,24 @@ requestPython.interceptors.response.use(
   }
 );
 
-export { request, requestPython };
+const requestGeneralAuth = axios.create({
+  baseURL: config.GENERAL_AUTH_URL,
+  params: {},
+  headers: {
+    common: {
+      Accept: "application/json",
+      "Content-Type": "application/json; charset=utf-8",
+    },
+  },
+});
+
+requestGeneralAuth.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+export { request, requestPython, requestGeneralAuth };

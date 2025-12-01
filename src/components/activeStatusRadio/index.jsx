@@ -2,6 +2,9 @@
 import React from "react";
 
 const ActiveStatusRadio = ({ isActive, setIsActive }) => {
+  // Convert to boolean to ensure consistent comparison
+  const activeValue = Boolean(isActive);
+
   return (
     <div className="flex items-center gap-4">
       <label className="flex items-center gap-1 cursor-pointer">
@@ -9,9 +12,9 @@ const ActiveStatusRadio = ({ isActive, setIsActive }) => {
           type="radio"
           name="isActive"
           value="true"
-          checked={isActive === true}
+          checked={activeValue === true}
           onChange={() => setIsActive(true)}
-          className="accent-blue-500" // Tailwind bilan rang berish
+          className="accent-blue-500"
         />
         <span>Активный</span>
       </label>
@@ -20,7 +23,7 @@ const ActiveStatusRadio = ({ isActive, setIsActive }) => {
           type="radio"
           name="isActive"
           value="false"
-          checked={isActive === false}
+          checked={activeValue === false}
           onChange={() => setIsActive(false)}
           className="accent-blue-500"
         />

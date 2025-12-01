@@ -51,4 +51,9 @@ export const URLS = {
   workplace: "workplace/",
   employees: "employee/",
   employeePhoto: "employee/photo/",
+
+  // general auth
+  users: "auth/users",
+  register: "auth/signup",
+  roles: "auth/role",
 };
