@@ -3,7 +3,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Hydrate, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import ClientOnlyToaster from "@/components/toast";
-import { SessionProvider } from "next-auth/react";
+import { SessionProvider, useSession, signOut } from "next-auth/react";
 import reactQueryClient from "@/config/react-query";
 import {
   ThemeProvider as MuiThemeProvider,
@@ -13,6 +13,20 @@ import CssBaseline from "@mui/material/CssBaseline";
 import { ThemeProvider as NextThemeProvider, useTheme } from "next-themes";
 import "@/styles/globals.css";
 import "@/styles/loader.css";
+
+// Session error handler component
+function SessionErrorHandler() {
+  const { data: session } = useSession();
+
+  useEffect(() => {
+    if (session?.error === "RefreshAccessTokenError") {
+      // Token refresh failed, sign out user
+      signOut({ callbackUrl: "/" });
+    }
+  }, [session]);
+
+  return null;
+}
 
 // Component to sync next-themes with MUI
 function MuiThemeSync({ children }) {
@@ -87,6 +101,7 @@ export default function App({
             enableSystem={false}
           >
             <MuiThemeSync>
+              <SessionErrorHandler />
               <Component {...pageProps} />
             </MuiThemeSync>
           </NextThemeProvider>

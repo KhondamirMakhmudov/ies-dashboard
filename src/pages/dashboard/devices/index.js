@@ -18,13 +18,14 @@ import usePostQuery from "@/hooks/java/usePostQuery";
 import { config } from "@/config";
 import { useSession } from "next-auth/react";
 import CustomSelect from "@/components/select";
-import usePutQuery from "@/hooks/java/usePutQuery";
+// Remove usePutQuery import since we'll use fetch for PATCH
 import { useQueryClient } from "@tanstack/react-query";
 import ActiveStatusRadio from "@/components/activeStatusRadio";
 import NoData from "@/components/no-data";
 import PrimaryButton from "@/components/button/primary-button";
 import Link from "next/link";
 import useAppTheme from "@/hooks/useAppTheme";
+
 const ipRegex =
   /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
 
@@ -46,6 +47,7 @@ const Index = () => {
   const [selectedEntryPoint, setSelectedEntryPoint] = useState("");
   const [selectedCheckPoint, setSelectedCheckPoint] = useState(null);
   const [selectedCamera, setSelectedCamera] = useState(null);
+  const [editingCameraId, setEditingCameraId] = useState(null);
 
   // all cameras get
   const {
@@ -63,7 +65,6 @@ const Index = () => {
   });
 
   // entrypoint get
-
   const { data: entrypoints } = useGetQuery({
     key: [KEYS.entrypoints, createCameraModal || editCameraModal],
     url: URLS.entrypoints,
@@ -97,6 +98,7 @@ const Index = () => {
 
   const handleRemoveAll = () => {
     setCreateCameraModal(false);
+    setEditCameraModal(false);
     setIpAddress("");
     setBuilding("");
     setLogin("");
@@ -104,6 +106,8 @@ const Index = () => {
     setSelectedEntryPoint(null);
     setSelectedCheckPoint(null);
     setDoorType("");
+    setIsActive(true);
+    setEditingCameraId(null);
   };
 
   // create camera
@@ -114,7 +118,7 @@ const Index = () => {
   const onSubmitCreateCamera = (e) => {
     e.preventDefault();
 
-    // Ma'lumotlar to‘g‘ri bo‘lsa, serverga yuboriladi
+    // Ma'lumotlar to'g'ri bo'lsa, serverga yuboriladi
     createCamera(
       {
         url: URLS.createCamera,
@@ -154,49 +158,95 @@ const Index = () => {
     );
   };
 
-  // edit camera
+  // edit camera with PATCH (only changed fields)
+  // edit camera with PATCH (only changed fields)
+  const onSubmitEditCamera = async (id) => {
+    try {
+      // Get current camera data to compare
+      const currentCamera = get(allCameras, "data", []).find(
+        (cam) => cam.id === id
+      );
 
-  const { mutate: editCamera } = usePutQuery({
-    listKeyId: "edit-camera",
-  });
+      if (!currentCamera) {
+        toast.error("Камера не найдена");
+        return;
+      }
 
-  const onSubmitEditCamera = (id) => {
-    editCamera(
-      {
-        url: `${URLS.allCameras}/${id}`,
-        attributes: {
-          ipAddress: ipAddress,
-          building: building,
-          login: login,
-          password: password,
-          checkPointId: selectedCheckPoint,
-          doorTypeId: doorType === "in" ? 1 : 2,
-          isActive: isActive === true ? 1 : 0,
-        },
-        config: {
+      // Create object with only changed fields
+      const patchData = {};
+
+      // Compare each field and add to patchData only if changed
+      if (ipAddress !== currentCamera.ipAddress) {
+        patchData.ipAddress = ipAddress;
+      }
+
+      if (building !== currentCamera.building) {
+        patchData.building = building;
+      }
+
+      if (login !== currentCamera.login) {
+        patchData.login = login;
+      }
+
+      if (password !== currentCamera.password) {
+        patchData.password = password;
+      }
+
+      if (selectedCheckPoint !== currentCamera.checkPointId) {
+        patchData.checkPointId = selectedCheckPoint;
+      }
+
+      // Convert doorType to compare properly
+      const currentDoorTypeValue =
+        currentCamera.doorType === "Выход" ? "out" : "in";
+      if (doorType !== currentDoorTypeValue) {
+        patchData.doorTypeId = doorType === "in" ? 1 : 2;
+      }
+
+      if (isActive !== currentCamera.isActive) {
+        patchData.isActive = isActive === true ? 1 : 0;
+      }
+
+      // If nothing changed, show message and return
+      if (Object.keys(patchData).length === 0) {
+        toast.info("Нет изменений для сохранения");
+        return;
+      }
+
+      console.log("PATCH data to send:", patchData); // Debug log
+
+      const response = await fetch(
+        `${config.JAVA_API_URL}${URLS.allCameras}/${id}`,
+        {
+          method: "PATCH",
           headers: {
+            "Content-Type": "application/json",
             Authorization: `Bearer ${session?.accessToken}`,
           },
-        },
-      },
-      {
-        onSuccess: () => {
-          toast.success("Данные камеры успешно отредактированы.", {
-            position: "top-center",
-          });
-          setEditCameraModal(false);
-          handleRemoveAll();
-          queryClient.invalidateQueries(KEYS.allCameras);
-        },
-        onError: (error) => {
-          toast.error(`Error is ${error}`, { position: "top-right" });
-        },
+          body: JSON.stringify(patchData),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Ошибка при редактировании");
       }
-    );
+
+      toast.success("Данные камеры успешно отредактированы.", {
+        position: "top-center",
+      });
+      setEditCameraModal(false);
+      handleRemoveAll();
+      queryClient.invalidateQueries(KEYS.allCameras);
+    } catch (error) {
+      console.error(error);
+      toast.error(error.message || "Ошибка при редактировании", {
+        position: "top-right",
+      });
+    }
   };
 
-  // delete modal
-
+  // delete modal - using fetch (simplified)
   const onSubmitDeleteCamera = async (id) => {
     try {
       const response = await fetch(
@@ -207,7 +257,6 @@ const Index = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${session?.accessToken}`,
           },
-          // body yubormaymiz, chunki DELETE 204 qaytaradi
         }
       );
 
@@ -215,10 +264,10 @@ const Index = () => {
         throw new Error("Ошибка при удалении");
       }
 
-      // 204 No Content bo'lsa, .json() chaqirilmaydi
       toast.success("Успешно удалено");
-      queryClient.invalidateQueries(KEYS.checkpoints);
-      console.log("Deleted successfully"); // agar kerak bo'lsa
+      queryClient.invalidateQueries(KEYS.allCameras);
+      setDeleteCameraModal(false);
+      setSelectedCamera(null);
     } catch (error) {
       console.error(error);
       toast.error("Не удалось удалить");
@@ -278,18 +327,17 @@ const Index = () => {
         <div className="flex gap-2">
           <Button
             onClick={() => {
-              setSelectedCamera(row.original.id);
+              const camera = row.original;
+              setEditingCameraId(camera.id);
               setEditCameraModal(true);
-              setLogin(row.original.login);
-              setBuilding(row.original.building);
-              setPassword(row.original.password);
-              setIpAddress(row.original.ipAddress);
-
-              // ✅ CheckPoint obyektini set qilamiz
-              setSelectedCheckPoint(row.original.checkPointId);
-              setSelectedEntryPoint(row.original.entryPointId);
-
-              setDoorType(row.original.doorType === "Выход" ? "out" : "in");
+              setLogin(camera.login);
+              setBuilding(camera.building);
+              setPassword(camera.password);
+              setIpAddress(camera.ipAddress);
+              setSelectedCheckPoint(camera.checkPointId);
+              setSelectedEntryPoint(camera.entryPointId);
+              setDoorType(camera.doorType === "Выход" ? "out" : "in");
+              setIsActive(camera.isActive);
             }}
             sx={{
               width: "32px",
@@ -358,15 +406,10 @@ const Index = () => {
             </div>
             <CustomTable data={get(allCameras, "data", [])} columns={columns} />
           </div>
-          {/* delete camera */}
-          <DeleteModal
-            open={deleteCameraModal}
-            onClose={() => setDeleteCameraModal(false)}
-            title="Вы уверены, что хотите удалить эту камеру?"
-          />
         </motion.div>
       )}
-      {/* create camera */}
+
+      {/* create camera modal */}
       {createCameraModal && (
         <MethodModal
           open={createCameraModal}
@@ -471,7 +514,7 @@ const Index = () => {
 
               <div className="col-span-2 flex items-center">
                 <ActiveStatusRadio
-                  isActive={isActive}
+                  isActive={isActive == 1 ? true : false}
                   setIsActive={setIsActive}
                 />
               </div>
@@ -493,6 +536,7 @@ const Index = () => {
         </MethodModal>
       )}
 
+      {/* edit camera modal */}
       {editCameraModal && (
         <MethodModal
           open={editCameraModal}
@@ -503,7 +547,7 @@ const Index = () => {
           }}
         >
           <Typography variant="h6" className="mb-2">
-            Изменить
+            Изменить камеру
           </Typography>
 
           <div className="my-[15px]">
@@ -521,7 +565,6 @@ const Index = () => {
                 labelClass={"text-sm"}
                 onChange={(e) => setIpAddress(e.target.value)}
                 pattern={ipRegex.source}
-                required
               />
 
               <Input
@@ -548,7 +591,6 @@ const Index = () => {
                   "!h-[45px] rounded-[8px] !border-gray-300 text-[15px]"
                 }
                 labelClass={"text-sm"}
-                required
               />
 
               <Input
@@ -563,7 +605,6 @@ const Index = () => {
                 }
                 labelClass={"text-sm"}
                 classNames="col-span-2"
-                required
               />
 
               <CustomSelect
@@ -604,10 +645,9 @@ const Index = () => {
                   backgroundColor="#F07427"
                   color="white"
                   variant="contained"
-                  onClick={() => onSubmitEditCamera(selectedCamera)}
+                  onClick={() => onSubmitEditCamera(editingCameraId)}
                 >
-                  {" "}
-                  Изменить
+                  Сохранить изменения
                 </PrimaryButton>
               </div>
             </form>
@@ -615,6 +655,7 @@ const Index = () => {
         </MethodModal>
       )}
 
+      {/* delete camera modal */}
       {deleteCameraModal && (
         <DeleteModal
           open={deleteCameraModal}
@@ -623,9 +664,7 @@ const Index = () => {
             setSelectedCamera(null);
           }}
           deleting={() => {
-            onSubmitDeleteCamera(selectedCamera); // 👈 DELETE so‘rov
-            setDeleteCameraModal(false);
-            setSelectedCamera(null);
+            onSubmitDeleteCamera(selectedCamera);
           }}
           title="Вы уверены, что хотите удалить эту камеру?"
         />

@@ -28,11 +28,13 @@ import EventNoteIcon from "@mui/icons-material/EventNote";
 import ExitModal from "../modal/exit-modal";
 import { signOut } from "next-auth/react";
 import useAppTheme from "@/hooks/useAppTheme";
-
+import GroupIcon from "@mui/icons-material/Group";
+import ContactPageIcon from "@mui/icons-material/ContactPage";
+import GamesIcon from "@mui/icons-material/Games";
 const menuItems = [
   {
     text: "Сотрудники",
-    icon: <PeopleAltIcon />,
+    icon: <ContactPageIcon />,
     path: "/dashboard/employees",
   },
   {
@@ -98,6 +100,16 @@ const menuItems = [
     text: "Командировки",
     icon: <AirlineStopsIcon />,
     path: "/dashboard/business-trips",
+  },
+  {
+    text: "Пользователи",
+    icon: <GroupIcon />,
+    path: "/dashboard/users",
+  },
+  {
+    text: "Роли",
+    icon: <GamesIcon />,
+    path: "/dashboard/roles",
   },
   {
     text: "Настройки",

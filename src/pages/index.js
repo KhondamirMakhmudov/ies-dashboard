@@ -51,27 +51,33 @@ export default function Home() {
     setPassword(login.password);
   };
 
+  // In your login page component - update the onSubmit function
   const onSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     try {
+      console.log("Attempting sign in with:", { username });
+
       const response = await signIn("credentials", {
         username,
         password,
         redirect: false,
-        callbackUrl: "/",
       });
+
+      console.log("SignIn response:", response);
 
       if (response?.ok && !response?.error) {
         toast.success("Добро пожаловать");
         saveLogin(username, password);
         router.push("/dashboard/employees");
       } else {
+        console.error("SignIn error details:", response?.error);
         toast.error(
           "Login xato! " + (response?.error || "Ma'lumotlar noto‘g‘ri.")
         );
       }
     } catch (error) {
+      console.error("SignIn exception:", error);
       toast.error("Tizimga kirishda xatolik yuz berdi.");
     } finally {
       setIsLoading(false);

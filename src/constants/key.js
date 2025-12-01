@@ -28,6 +28,11 @@ export const KEYS = {
   positionTypes: "positionTypes",
   workplace: "workplace",
   employeePhoto: "employeePhoto",
+  employees: "employees",
   organizationalUnitsChildren: "organizationalUnitsChildren",
   organisation: "organisation",
+
+  // General Auth
+  users: "users",
+  roles: "roles",
 };
