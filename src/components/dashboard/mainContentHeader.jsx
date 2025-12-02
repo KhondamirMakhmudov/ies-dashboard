@@ -30,7 +30,7 @@ const MainContentHeader = ({ children, toggleSidebar }) => {
   const showBackButton = router.pathname !== "/dashboard";
 
   const handleLogout = () => {
-    signOut({ redirect: true, callbackUrl: "http://10.20.6.30:3000" });
+    signOut({ redirect: true, callbackUrl: "/" });
   };
 
   const handleOpenExitModal = () => setOpenExitModal(false);

@@ -6,7 +6,8 @@
     "dev": "next dev -H 0.0.0.0 -p 3001",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "clean": "rd /s /q .next 2>nul && rd /s /q node_modules\\.cache 2>nul || echo Cleaned"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
