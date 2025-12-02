@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -26,16 +26,18 @@ import {
 import AirlineStopsIcon from "@mui/icons-material/AirlineStops";
 import EventNoteIcon from "@mui/icons-material/EventNote";
 import ExitModal from "../modal/exit-modal";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import useAppTheme from "@/hooks/useAppTheme";
-import GroupIcon from "@mui/icons-material/Group";
 import ContactPageIcon from "@mui/icons-material/ContactPage";
-import GamesIcon from "@mui/icons-material/Games";
-const menuItems = [
+import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
+
+// Hammasi uchun menu items (role filter qilinadi)
+const allMenuItems = [
   {
     text: "Сотрудники",
     icon: <ContactPageIcon />,
     path: "/dashboard/employees",
+    roles: ["admin", "main-hr-tpp"], // Ikkala role uchun ham
   },
   {
     text: "Структура организации",
@@ -54,6 +56,7 @@ const menuItems = [
         path: "/dashboard/structure-organizations/workplace",
       },
     ],
+    roles: ["admin"], // Faqat admin uchun
   },
   {
     text: "Точки контроля",
@@ -75,6 +78,7 @@ const menuItems = [
         path: "/dashboard/access-points",
       },
     ],
+    roles: ["admin"], // Faqat admin uchun
   },
   {
     text: "Отчёты",
@@ -94,35 +98,69 @@ const menuItems = [
         path: "/dashboard/reports/all-employees",
       },
     ],
+    roles: ["admin", "main-hr-tpp"], // Ikkala role uchun ham
   },
-  { text: "Расписание", icon: <EventNoteIcon />, path: "/dashboard/schedule" },
+  {
+    text: "Расписание",
+    icon: <EventNoteIcon />,
+    path: "/dashboard/schedule",
+    roles: ["admin"], // Faqat admin uchun
+  },
   {
     text: "Командировки",
     icon: <AirlineStopsIcon />,
     path: "/dashboard/business-trips",
+    roles: ["admin"], // Faqat admin uchun
   },
   {
-    text: "Пользователи",
-    icon: <GroupIcon />,
-    path: "/dashboard/users",
-  },
-  {
-    text: "Роли",
-    icon: <GamesIcon />,
-    path: "/dashboard/roles",
+    text: "Управление профилями",
+    icon: <ManageAccountsIcon />,
+    submenu: [
+      {
+        text: "Пользователи",
+        icon: <SecurityIcon />,
+        path: "/dashboard/users",
+      },
+      {
+        text: "Роли",
+        icon: <CameraAltIcon />,
+        path: "/dashboard/roles",
+      },
+    ],
+    roles: ["admin"], // Faqat admin uchun
   },
   {
     text: "Настройки",
     icon: <SettingsRoundedIcon />,
     path: "/dashboard/settings",
+    roles: ["admin"], // Faqat admin uchun
   },
 ];
 
 function Sidebar({ isOpen = true }) {
+  const { data: session } = useSession();
   const [openExitModal, setOpenExitModal] = useState(false);
   const [openSubmenus, setOpenSubmenus] = useState({});
   const router = useRouter();
   const { isDark, bg, text, border } = useAppTheme();
+
+  // Role ga qarab menuItems filter qilish
+  const menuItems = useMemo(() => {
+    if (!session?.user?.role) {
+      return []; // Role yo'q bo'lsa, hech narsa ko'rsatma
+    }
+
+    const userRole = session.user.role.toLowerCase();
+
+    return allMenuItems.filter((item) => {
+      // Agar roles array mavjud bo'lsa va user role unda bo'lsa
+      if (item.roles && Array.isArray(item.roles)) {
+        return item.roles.includes(userRole);
+      }
+      // Agar roles yo'q bo'lsa, hamma uchun (fallback)
+      return true;
+    });
+  }, [session?.user?.role]);
 
   // Open active submenu on first render
   useEffect(() => {
@@ -139,7 +177,7 @@ function Sidebar({ isOpen = true }) {
       }
     });
     setOpenSubmenus(newOpen);
-  }, []);
+  }, [menuItems, router.pathname]);
 
   const handleToggleSubmenu = (index) => {
     setOpenSubmenus((prev) => ({
@@ -153,6 +191,30 @@ function Sidebar({ isOpen = true }) {
     localStorage.clear();
     sessionStorage.clear();
   };
+
+  // Agar user role noto'g'ri bo'lsa yoki yo'q bo'lsa
+  if (!session?.user?.role) {
+    return (
+      <aside
+        className={`${
+          isOpen ? "w-[330px]" : "w-[80px]"
+        } h-screen border-r px-4 py-6 transition-all duration-300 overflow-y-auto flex flex-col justify-between`}
+        style={{
+          backgroundColor: bg("#ffffff", "#1e1e1e"),
+          borderColor: border("#e5e7eb", "#333333"),
+        }}
+      >
+        <div className="flex items-center justify-center h-full">
+          <Typography
+            sx={{ color: text("#6b7280", "#9ca3af") }}
+            className="text-center"
+          >
+            No access
+          </Typography>
+        </div>
+      </aside>
+    );
+  }
 
   return (
     <aside
@@ -214,6 +276,24 @@ function Sidebar({ isOpen = true }) {
             }}
           ></div>
         )}
+
+        {/* User role info (debug uchun) */}
+        {/* {isOpen && session?.user?.role && (
+          <div className="mb-4 px-3 py-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/30">
+            <Typography
+              sx={{
+                fontSize: "12px",
+                color: text("#3b82f6", "#93c5fd"),
+                fontWeight: 500,
+                fontFamily: "DM Sans, sans-serif",
+              }}
+              className="flex items-center gap-2"
+            >
+              <span className="font-semibold">Role:</span>
+              <span className="capitalize">{session.user.role}</span>
+            </Typography>
+          </div>
+        )} */}
 
         {/* MENU */}
         <List sx={{ fontFamily: "DM Sans, sans-serif", padding: 0 }}>
