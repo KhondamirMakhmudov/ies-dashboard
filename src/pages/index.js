@@ -51,7 +51,6 @@ export default function Home() {
     setPassword(login.password);
   };
 
-  // In your login page component - update the onSubmit function
   const onSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -73,7 +72,7 @@ export default function Home() {
       } else {
         console.error("SignIn error details:", response?.error);
         toast.error(
-          "Login xato! " + (response?.error || "Ma'lumotlar noto‘g‘ri.")
+          "Login xato! " + (response?.error || "Ma'lumotlar noto'g'ri.")
         );
       }
     } catch (error) {
@@ -88,7 +87,7 @@ export default function Home() {
     <motion.div
       className={
         bg("bg-white", "bg-[#0D0D0D]") +
-        " login h-screen transition-colors duration-300"
+        " login min-h-screen transition-colors duration-300 overflow-hidden"
       }
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -105,30 +104,36 @@ export default function Home() {
         </div>
       )}
 
-      <div className="grid grid-cols-12 w-full gap-[30px] place-items-center h-full overflow-hidden">
-        {/* Left side image */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 w-full min-h-screen overflow-hidden">
+        {/* Left side image - Hidden on mobile, visible on large screens */}
         <motion.div
-          className="col-span-6 flex justify-center h-full"
+          className="hidden lg:flex lg:col-span-6 justify-center items-center h-full px-4 overflow-hidden"
           initial={{ x: -80, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.2 }}
         >
-          <Image src="/icons/login.svg" alt="login" width={600} height={300} />
+          <Image
+            src="/icons/login.svg"
+            alt="login"
+            width={600}
+            height={300}
+            className="max-w-full h-auto"
+          />
         </motion.div>
 
         {/* Right side form */}
         <motion.div
           className={
             bg("bg-white", "bg-[#1A1A1A]") +
-            " col-span-6 w-full flex flex-col items-center justify-center h-full rounded-md p-[24px] transition-colors duration-300 " +
-            border("border border-gray-200", "border border-gray-700")
+            " col-span-1 lg:col-span-6 w-full flex flex-col items-center justify-center min-h-screen p-4 sm:p-6 md:p-8 lg:p-[24px] transition-colors duration-300 overflow-hidden " +
+            border("lg:border-l border-gray-200", "lg:border-l border-gray-700")
           }
           initial={{ x: 80, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.3 }}
         >
           <motion.div
-            className="max-w-[600px] flex flex-col items-start justify-center"
+            className="w-full max-w-[600px] flex flex-col items-start justify-center"
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.5 }}
@@ -142,17 +147,22 @@ export default function Home() {
               }
             />
 
-            <div className="mb-[20px]">
+            <div className="mb-[20px] w-full">
               <h1
                 className={
                   text("text-black", "text-white") +
-                  " text-[36px] mb-[12px] font-semibold"
+                  " text-[24px] sm:text-[28px] md:text-[32px] lg:text-[36px] mb-[12px] font-semibold"
                 }
               >
                 Вход в систему
               </h1>
               {!session?.accessToken && (
-                <p className={text("text-gray-400", "text-gray-300")}>
+                <p
+                  className={
+                    text("text-gray-400", "text-gray-300") +
+                    " text-sm sm:text-base"
+                  }
+                >
                   Для входа в систему введите ваше имя пользователя и пароль!
                 </p>
               )}
@@ -171,7 +181,7 @@ export default function Home() {
             ) : (
               <motion.form
                 onSubmit={onSubmit}
-                className="py-[40px] space-y-[10px] w-full"
+                className="py-[20px] sm:py-[30px] md:py-[40px] space-y-[10px] w-full"
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.7 }}
@@ -181,7 +191,8 @@ export default function Home() {
                   <div className="mb-4">
                     <p
                       className={
-                        text("text-gray-600", "text-gray-300") + " text-sm mb-2"
+                        text("text-gray-600", "text-gray-300") +
+                        " text-xs sm:text-sm mb-2"
                       }
                     >
                       Сохраненные логины:
@@ -194,19 +205,22 @@ export default function Home() {
                           onClick={() => handleSelectLogin(login)}
                           className={
                             bg("bg-blue-50", "bg-blue-900/30") +
-                            " flex items-center gap-2 px-3 py-2 rounded-full text-blue-600 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-800/40 transition-all"
+                            " flex items-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-full text-blue-600 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-800/40 transition-all text-sm"
                           }
                         >
                           <span
                             className={
                               bg("bg-blue-500", "bg-blue-700") +
-                              " w-6 h-6 flex items-center justify-center rounded-full text-white text-xs"
+                              " w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full text-white text-xs"
                             }
                           >
                             {login.username.charAt(0).toUpperCase()}
                           </span>
                           <span
-                            className={text("text-blue-600", "text-blue-300")}
+                            className={
+                              text("text-blue-600", "text-blue-300") +
+                              " text-xs sm:text-sm truncate max-w-[100px] sm:max-w-none"
+                            }
                           >
                             {login.username}
                           </span>
@@ -217,7 +231,7 @@ export default function Home() {
                               e.stopPropagation();
                               removeLogin(login.username);
                             }}
-                            className="ml-1 text-red-400 hover:text-red-600"
+                            className="ml-1 text-red-400 hover:text-red-600 text-sm"
                           >
                             ✕
                           </button>
@@ -238,7 +252,7 @@ export default function Home() {
                     text("text-black", "text-white") +
                     " " +
                     border("!border-gray-300", "!border-gray-600") +
-                    " !h-[48px] rounded-[8px] text-[15px]"
+                    " !h-[44px] sm:!h-[48px] rounded-[8px] text-[14px] sm:text-[15px]"
                   }
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="Введите имя пользователя"
@@ -254,7 +268,7 @@ export default function Home() {
                     text("text-black", "text-white") +
                     " " +
                     border("!border-gray-300", "!border-gray-600") +
-                    " !h-[48px] rounded-[8px] text-[15px]"
+                    " !h-[44px] sm:!h-[48px] rounded-[8px] text-[14px] sm:text-[15px]"
                   }
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Введите пароль"
@@ -264,6 +278,7 @@ export default function Home() {
                 <motion.div
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.97 }}
+                  className="pt-2"
                 >
                   <Button>Вход</Button>
                 </motion.div>

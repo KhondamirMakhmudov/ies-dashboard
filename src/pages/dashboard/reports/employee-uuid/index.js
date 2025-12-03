@@ -18,8 +18,10 @@ import DateRangeIcon from "@mui/icons-material/DateRange";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import { config } from "@/config";
 import { exportToExcelStyled } from "@/utils/exportToExcelStyled";
+import useAppTheme from "@/hooks/useAppTheme";
 
 const Index = () => {
+  const { bg, isDark, text, border } = useAppTheme();
   const { data: session } = useSession();
   const [startDateTime, setStartDateTime] = useState("");
   const [endDateTime, setEndDateTime] = useState("");
@@ -174,6 +176,10 @@ const Index = () => {
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.3 }}
         className="bg-white p-6 rounded-md border border-gray-200 w-full my-[15px]"
+        style={{
+          backgroundColor: bg("#ffffff", "#1e1e1e"),
+          borderColor: border("#e5e7eb", "#333333"),
+        }}
       >
         {/* Position Filter */}
         <div className="mb-6">
@@ -366,78 +372,6 @@ const Index = () => {
           </button>
         </div>
       </motion.div>
-
-      {/* {selectedEmployees.length > 0 && (
-        <div className="space-y-4">
-          {selectedEmployees.map((employee) => {
-            const employeeData = employeeDataMap[employee.id];
-
-            return (
-              <motion.div
-                key={employee.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-                className="bg-white p-6 rounded-md border border-gray-200"
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h3 className="text-xl font-bold text-gray-900">
-                      {employee.last_name} {employee.first_name}{" "}
-                      {employee.middle_name}
-                    </h3>
-                    <p className="text-sm text-gray-600">
-                      {employee.workplace?.position?.name}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => handleRemove(employee.id)}
-                    className="text-red-500 hover:text-red-700 transition"
-                    title="Удалить"
-                  >
-                    <Delete />
-                  </button>
-                </div>
-
-                {!employeeData ? (
-                  <div className="flex justify-center items-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-                  </div>
-                ) : get(employeeData, "data", []).length > 0 ? (
-                  <div className="overflow-x-auto">
-                    <CustomTable
-                      data={get(employeeData, "data", [])}
-                      columns={[
-                        { title: "Дата", dataIndex: "date", key: "date" },
-                        {
-                          title: "Время входа",
-                          dataIndex: "enterTime",
-                          key: "enterTime",
-                        },
-                        {
-                          title: "Время выхода",
-                          dataIndex: "exitTime",
-                          key: "exitTime",
-                        },
-                        {
-                          title: "Всего часов",
-                          dataIndex: "totalHours",
-                          key: "totalHours",
-                        },
-                        { title: "Статус", dataIndex: "status", key: "status" },
-                      ]}
-                    />
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg">
-                    Нет данных за выбранный период
-                  </div>
-                )}
-              </motion.div>
-            );
-          })}
-        </div>
-      )} */}
     </DashboardLayout>
   );
 };

@@ -19,8 +19,10 @@ import { config } from "@/config";
 import CustomSelect from "@/components/select";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
+import useAppTheme from "@/hooks/useAppTheme";
 
 const Index = () => {
+  const { bg, isDark, text, border } = useAppTheme();
   const queryClient = useQueryClient();
   const [createModal, setCreateModal] = useState(false);
   const [deleteModal, setDeleteModal] = useState(false);
@@ -227,6 +229,10 @@ const Index = () => {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.4 }}
           className="bg-white p-4 my-10 rounded-md space-y-2 shadow"
+          style={{
+            backgroundColor: bg("#ffffff", "#1e1e1e"),
+            borderColor: border("#e5e7eb", "#333333"),
+          }}
         >
           {isLoading || isFetching ? (
             <ContentLoader />
@@ -236,7 +242,10 @@ const Index = () => {
                 <div
                   key={index}
                   onClick={() => setSelectUnitCode(get(item, "unit_code"))}
-                  className="col-span-6 relative min-h-[150px] border p-2 border-gray-200 rounded-md shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+                  className="col-span-6 relative min-h-[150px] border p-2  rounded-md shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+                  style={{
+                    borderColor: border("#e5e7eb", "#333333"),
+                  }}
                 >
                   <div className="absolute bottom-2 right-2">
                     <Image
@@ -276,6 +285,10 @@ const Index = () => {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.4 }}
           className="bg-white p-4 my-10 rounded-md space-y-2 shadow"
+          style={{
+            backgroundColor: bg("#ffffff", "#1e1e1e"),
+            borderColor: border("#e5e7eb", "#333333"),
+          }}
         >
           <div className="flex justify-between items-center mb-4">
             <button
@@ -304,7 +317,13 @@ const Index = () => {
           </div>
 
           {/* Search and Filter Section */}
-          <div className="bg-gray-50 p-4 rounded-lg space-y-3">
+          <div
+            className="bg-gray-50 p-4 rounded-lg space-y-3"
+            style={{
+              backgroundColor: bg("#ffffff", "#1e1e1e"),
+              borderColor: border("#e5e7eb", "#333333"),
+            }}
+          >
             <div className="grid grid-cols-12 gap-3">
               {/* Search Input */}
               <div className="col-span-12 md:col-span-6">
