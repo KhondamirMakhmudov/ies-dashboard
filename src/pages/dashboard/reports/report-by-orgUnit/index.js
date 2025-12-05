@@ -2,18 +2,18 @@ import DashboardLayout from "@/layouts/dashboard/DashboardLayout";
 import { KEYS } from "@/constants/key";
 import { URLS } from "@/constants/url";
 import useGetQuery from "@/hooks/java/useGetQuery";
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { get } from "lodash";
 import CustomSelect from "@/components/select";
 import Input from "@/components/input";
 import DateRangeIcon from "@mui/icons-material/DateRange";
-import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import useGetPythonQuery from "@/hooks/python/useGetQuery";
 import { getEmployeesLogsByRange } from "@/utils/getEmployeesLogsByRange";
 import { exportToExcelStyled } from "@/utils/exportToExcelStyled";
 import toast from "react-hot-toast";
+import Image from "next/image";
 import { config } from "@/config";
 
 const Index = () => {
@@ -34,21 +34,6 @@ const Index = () => {
   const optionsOrgUnits = get(orgUnits, "data", []).map((item) => ({
     value: item.unit_code,
     label: item.name,
-  }));
-
-  const { data: entrypoints } = useGetQuery({
-    key: KEYS.entrypoints,
-    url: URLS.newEntryPoints,
-    headers: {
-      Authorization: `Bearer ${session?.accessToken}`,
-      Accept: "application/json",
-    },
-    enabled: !!session?.accessToken,
-  });
-
-  const optionsEntryPoint = get(entrypoints, "data", []).map((item) => ({
-    value: item.id,
-    label: item.entryPointName,
   }));
 
   const isFormComplete = selectOrgUnitCode && startDateTime && endDateTime;
@@ -76,12 +61,12 @@ const Index = () => {
 
       const data = await getEmployeesLogsByRange({
         token: session?.accessToken,
-        employeeIds: [selectOrgUnitCode], // Using org unit code as ID
+        employeeIds: [selectOrgUnitCode],
         startDate: startDateTime,
         baseUrl: `${config.JAVA_API_URL}`,
         endDate: endDateTime,
-        endpoint: `${URLS.logsByOrgUnitCodeAndEntrypointId}`, // Your specific endpoint
-        pathSuffix: `/dates`, // Your specific path
+        endpoint: `${URLS.logsByOrgUnitCodeAndEntrypointId}`,
+        pathSuffix: `/dates`,
       });
 
       if (!data || data.length === 0) {
@@ -226,17 +211,12 @@ const Index = () => {
                 disabled={!isFormComplete}
                 className="flex items-center gap-2 bg-[#00733B] hover:bg-[#00632F] px-5 py-3 rounded-lg text-white font-medium disabled:bg-gray-400 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg"
               >
-                <svg
-                  className="w-5 h-5"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
-                    clipRule="evenodd"
-                  />
-                </svg>
+                <Image
+                  src={"/icons/excel.svg"}
+                  alt="excel"
+                  width={24}
+                  height={24}
+                />
                 Выгрузить в Excel
               </button>
             </div>

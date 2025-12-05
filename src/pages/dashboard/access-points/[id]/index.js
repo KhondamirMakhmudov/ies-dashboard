@@ -29,9 +29,11 @@ import EntryPointOrgUnitScheduleCard from "@/components/card/entrypointOrgUnitSc
 import SearchIcon from "@mui/icons-material/Search";
 import SearchInput from "@/components/search";
 import SelectedEmployeesBadge from "@/components/selected-employee";
+import useAppTheme from "@/hooks/useAppTheme";
 
 const Index = () => {
   const queryClient = useQueryClient();
+  const { bg, isDark, text, border } = useAppTheme();
   const { data: session } = useSession();
   const [selectScheduleId, setSelectScheduleId] = useState(null);
   const [entryPointScheduleId, setEntryPointScheduleId] = useState(null);
@@ -158,49 +160,6 @@ const Index = () => {
     label: entry.name,
   }));
 
-  // Привязывает существующее расписание к точке входа и синхронизирует с камерами
-
-  const { mutate: connectScheduleToEntryPoint } = usePostQuery({
-    listKeyId: "connectScheduleToEntryPoint",
-  });
-
-  const SubmitCreateConnnection = () => {
-    connectScheduleToEntryPoint(
-      {
-        url: `${
-          URLS.scheduleOfEntrypoints
-        }/${selectScheduleId}/bind-to-entry-point/${id}?priority=${
-          isPriority ? 1 : 0
-        }`,
-        attributes: {
-          scheduleId: +selectScheduleId,
-          entryPointId: +id,
-          priority: isPriority ? 1 : 0,
-        },
-
-        config: {
-          headers: {
-            Authorization: `Bearer ${session?.accessToken}`,
-          },
-        },
-      },
-      {
-        onSuccess: () => {
-          toast.success("Расписание успешно привязано", {
-            position: "top-center",
-          });
-          setCreateModal(false);
-          setIsPriority(false);
-          setSelectScheduleId(null);
-          queryClient.invalidateQueries(KEYS.entrypoint);
-        },
-        onError: (error) => {
-          toast.error(`Error is ${error}`, { position: "top-right" });
-        },
-      }
-    );
-  };
-
   // connect employees to schedule of the entrypoint
 
   const { mutate: connectEmployeesToSchedule } = usePostQuery({
@@ -270,11 +229,17 @@ const Index = () => {
       <motion.div
         initial={{ opacity: 0, scale: 0 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-white p-6 my-[20px] rounded-md border border-gray-200"
+        className={`${bg} p-6 my-[20px] rounded-md border ${border}`}
+        style={{
+          background: bg("white", "#1E1E1E"),
+          borderColor: border("#d1d5db", "#4b5563"),
+        }}
       >
-        <div className="bg-white rounded-xl   mx-auto ">
+        <div className={`${bg} rounded-xl mx-auto`}>
           <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
-            <h1 className="text-2xl font-bold text-gray-800  border-b border-b-gray-200 pb-3">
+            <h1
+              className={`text-2xl font-bold ${text} border-b ${border} pb-3`}
+            >
               Точка доступа №{id}
             </h1>
 
@@ -287,21 +252,39 @@ const Index = () => {
 
           <div className="space-y-4">
             <div>
-              <p className="text-sm text-gray-500">Полное название</p>
-              <p className="text-lg font-medium text-gray-900">
+              <p
+                className={`text-sm ${
+                  isDark ? "text-gray-400" : "text-gray-500"
+                }`}
+              >
+                Полное название
+              </p>
+              <p className={`text-lg font-medium ${text}`}>
                 {get(entrypoint, "data.entryPointName", [])}
               </p>
             </div>
 
             <div>
-              <p className="text-sm text-gray-500">Короткое название</p>
-              <p className="text-lg font-medium text-gray-900">
+              <p
+                className={`text-sm ${
+                  isDark ? "text-gray-400" : "text-gray-500"
+                }`}
+              >
+                Короткое название
+              </p>
+              <p className={`text-lg font-medium ${text}`}>
                 {get(entrypoint, "data.entryPointShortName", [])}
               </p>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Описание здания</p>
-              <p className="text-lg font-medium text-gray-900">
+              <p
+                className={`text-sm ${
+                  isDark ? "text-gray-400" : "text-gray-500"
+                }`}
+              >
+                Описание здания
+              </p>
+              <p className={`text-lg font-medium ${text}`}>
                 {get(entrypoint, "data.buildingDescription", [])}
               </p>
             </div>
@@ -319,27 +302,61 @@ const Index = () => {
         <motion.div
           initial={{ opacity: 0, scale: 0 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-white my-[20px] rounded-md border border-gray-200"
+          className="my-[20px] rounded-md border"
+          style={{
+            background: isDark ? "#1E1E1E" : "white",
+            borderColor: isDark ? "#4b5563" : "#d1d5db",
+          }}
         >
-          <div className=" rounded-md  grid grid-cols-12">
+          <div className="rounded-md grid grid-cols-12">
             {/* Sidebar (vertical tabs) */}
-            <div className="col-span-3 self-start flex flex-col border-r border-gray-200 bg-gray-50">
+            <div
+              className="col-span-3 self-start flex flex-col border-r"
+              style={{
+                borderColor: isDark ? "#4b5563" : "#d1d5db",
+                background: isDark ? "#1f2937" : "#f9fafb",
+              }}
+            >
               {tabs.map((t) => (
                 <button
                   key={t.key}
                   onClick={() => setTab(t.key)}
-                  className={`relative text-left px-4 py-3 text-[15px] font-medium transition-colors ${
-                    tab === t.key
-                      ? "text-blue-600 bg-blue-50 border-r-4 border-blue-600"
-                      : "text-gray-600 hover:bg-gray-100"
-                  }`}
+                  className="relative text-left px-4 py-3 text-[15px] font-medium transition-colors border-r-4"
+                  style={{
+                    color:
+                      tab === t.key
+                        ? "#2563eb"
+                        : isDark
+                        ? "#d1d5db"
+                        : "#4b5563",
+                    background:
+                      tab === t.key
+                        ? isDark
+                          ? "rgba(30, 58, 138, 0.3)"
+                          : "#eff6ff"
+                        : "transparent",
+                    borderRightColor: tab === t.key ? "#2563eb" : "transparent",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (tab !== t.key) {
+                      e.currentTarget.style.background = isDark
+                        ? "#374151"
+                        : "#f3f4f6";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (tab !== t.key) {
+                      e.currentTarget.style.background = "transparent";
+                    }
+                  }}
                 >
                   {t.label}
 
                   {tab === t.key && (
                     <motion.span
                       layoutId="underline"
-                      className="absolute right-0 top-0 h-full w-[4px] bg-blue-600 rounded-l-full"
+                      className="absolute right-0 top-0 h-full w-[4px] rounded-l-full"
+                      style={{ background: "#2563eb" }}
                       transition={{
                         type: "spring",
                         stiffness: 500,
@@ -356,12 +373,22 @@ const Index = () => {
               {tab === "org-units" && (
                 <div>
                   <div className="flex justify-between mb-[20px] items-center">
-                    <h2 className="text-xl font-semibold text-gray-800">
+                    <h2
+                      className="text-xl font-semibold"
+                      style={{ color: isDark ? "#f3f4f6" : "#1f2937" }}
+                    >
                       Подразделения точки доступа
                     </h2>
 
                     <Link
-                      className="bg-[#4182F9] px-4 py-2 rounded-md text-white text-sm"
+                      className="px-4 py-2 rounded-md text-white text-sm transition"
+                      style={{ background: "#4182F9" }}
+                      onMouseEnter={(e) =>
+                        (e.currentTarget.style.background = "#2563eb")
+                      }
+                      onMouseLeave={(e) =>
+                        (e.currentTarget.style.background = "#4182F9")
+                      }
                       href={
                         "/dashboard/structure-organizations/management-organizations"
                       }
@@ -371,7 +398,10 @@ const Index = () => {
                   </div>
 
                   {isEmpty(get(entrypoint, "data.unitCodes", [])) ? (
-                    <p className="text-gray-400 italic text-sm">
+                    <p
+                      className="italic text-sm"
+                      style={{ color: isDark ? "#6b7280" : "#9ca3af" }}
+                    >
                       Подразделения не привязаны
                     </p>
                   ) : (
@@ -380,7 +410,19 @@ const Index = () => {
                         (unitCode, index) => (
                           <li
                             key={index}
-                            className="border border-gray-200 bg-white rounded-xl shadow-sm hover:shadow-md transition p-4"
+                            className="border rounded-xl shadow-sm transition p-4"
+                            style={{
+                              borderColor: isDark ? "#374151" : "#e5e7eb",
+                              background: isDark ? "#1f2937" : "white",
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.boxShadow =
+                                "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)";
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.boxShadow =
+                                "0 1px 2px 0 rgba(0, 0, 0, 0.05)";
+                            }}
                           >
                             <EntryPointOrgUnitScheduleCard
                               unitCodeName={get(unitCode, "name", "")}
@@ -398,8 +440,14 @@ const Index = () => {
 
               {/* {tab === "schedule" && (
                 <div>
-                  <div className="flex border-b border-b-gray-200 p-3 justify-between items-center">
-                    <h2 className="text-xl font-semibold text-gray-800">
+                  <div 
+                    className="flex border-b p-3 justify-between items-center"
+                    style={{ borderColor: isDark ? "#4b5563" : "#e5e7eb" }}
+                  >
+                    <h2 
+                      className="text-xl font-semibold"
+                      style={{ color: isDark ? "#f3f4f6" : "#1f2937" }}
+                    >
                       Расписания точки доступа
                     </h2>
 
@@ -436,10 +484,14 @@ const Index = () => {
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="bg-white p-[10px]  rounded-md"
+                  className="p-[10px] rounded-md"
+                  style={{ background: isDark ? "#1E1E1E" : "white" }}
                 >
                   <div className="flex justify-between items-center">
-                    <Typography variant="h6">
+                    <Typography
+                      variant="h6"
+                      style={{ color: isDark ? "#f3f4f6" : "#1f2937" }}
+                    >
                       Сотрудники в точке доступа
                     </Typography>
                     <PrimaryButton onClick={() => setCreateConnectModal(true)}>
@@ -467,19 +519,41 @@ const Index = () => {
                           >
                             <div className="flex items-start gap-2">
                               <div
-                                className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg shadow-inner bg-blue-600 border-blue-600 text-white`}
+                                className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg shadow-inner text-white"
+                                style={{
+                                  background: "#2563eb",
+                                  borderColor: "#2563eb",
+                                }}
                               >
                                 {employee.firstName?.[0] || "?"}
                                 {employee.lastName?.[0] || "?"}
                               </div>
                               <div>
-                                <p>
+                                <p
+                                  style={{
+                                    color: isDark ? "#f3f4f6" : "#1f2937",
+                                  }}
+                                >
                                   {get(employee, "firstName", "")}{" "}
                                   {get(employee, "lastName", "")}
                                 </p>
-                                <p className="text-sm text-gray-400">
+                                <p
+                                  className="text-sm"
+                                  style={{ color: "#9ca3af" }}
+                                >
                                   привязан к расписанию:{" "}
-                                  <span className="text-blue-600 border border-blue-600 bg-blue-100 px-2 py-1 rounded-md text-xs">
+                                  <span
+                                    className="text-xs px-2 py-1 rounded-md border"
+                                    style={{
+                                      color: isDark ? "#93c5fd" : "#2563eb",
+                                      borderColor: isDark
+                                        ? "#3b82f6"
+                                        : "#2563eb",
+                                      background: isDark
+                                        ? "rgba(30, 58, 138, 0.4)"
+                                        : "#dbeafe",
+                                    }}
+                                  >
                                     {get(employee, "scheduleName", "")}
                                   </span>
                                 </p>
@@ -491,8 +565,21 @@ const Index = () => {
                                 "employeeUuid"
                               )}`}
                               target="_blank"
-                              className="bg-gray-300 px-4 py-2
-                          rounded-md"
+                              className="px-4 py-2 rounded-md transition"
+                              style={{
+                                background: isDark ? "#374151" : "#d1d5db",
+                                color: isDark ? "#e5e7eb" : "#1f2937",
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.background = isDark
+                                  ? "#4b5563"
+                                  : "#9ca3af";
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.background = isDark
+                                  ? "#374151"
+                                  : "#d1d5db";
+                              }}
                             >
                               {" "}
                               Страница сотрудника{" "}
@@ -501,7 +588,10 @@ const Index = () => {
                         )
                       )
                     ) : (
-                      <p className="text-gray-400 text-center py-4">
+                      <p
+                        className="text-center py-4"
+                        style={{ color: isDark ? "#6b7280" : "#9ca3af" }}
+                      >
                         Сотрудники не найдены
                       </p>
                     )}
