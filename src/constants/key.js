@@ -35,4 +35,5 @@ export const KEYS = {
   // General Auth
   users: "users",
   roles: "roles",
+  userProfile: "userProfile",
 };

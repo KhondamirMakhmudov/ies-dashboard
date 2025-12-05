@@ -40,7 +40,7 @@ const Index = () => {
   const [entryPointShortName, setEntryPointShortName] = useState("");
   const [buildingDescription, setBuildingDescription] = useState("");
   const [unitCodes, setUnitCodes] = useState([]);
-  const [originalData, setOriginalData] = useState(null); // ✅ Yangi: original ma'lumotni saqlash
+  const [originalData, setOriginalData] = useState(null); // Yangi: original ma'lumotni saqlash
 
   const [selectedEntryPointId, setSelectedEntryPointId] = useState(null);
   const [selectedEntryPoint, setselectedEntryPoint] = useState(null);
@@ -60,7 +60,7 @@ const Index = () => {
 
   // schedules
   const { data: allSchedules } = useGetQuery({
-    key: KEYS.allSchedules,
+    key: [KEYS.allSchedules, createAccessPoint],
     url: URLS.allSchedules,
     headers: {
       Authorization: `Bearer ${session?.accessToken}`,
@@ -100,7 +100,7 @@ const Index = () => {
     setBuildingDescription("");
     setUnitCodes([]);
     setselectedEntryPoint(null);
-    setOriginalData(null); // ✅ Yangi: original ma'lumotni tozalash
+    setOriginalData(null);
   };
 
   const submitCreateEntryPoint = () => {
@@ -142,7 +142,7 @@ const Index = () => {
       },
       {
         onSuccess: () => {
-          toast.success("Checkpoint muvaffaqiyatli joylandi", {
+          toast.success("Точка входа успешно размещена", {
             position: "top-center",
           });
           setCreateAccessPoint(false);
@@ -158,11 +158,10 @@ const Index = () => {
     );
   };
 
-  // ✅ Yangi: O'zgarishlarni tekshirish funksiyasi
+  //Yangi: O'zgarishlarni tekshirish funksiyasi
   const hasChanges = () => {
     if (!originalData) return false;
 
-    // Asosiy maydonlarni tekshirish
     if (
       entryPointName.trim() !== originalData.entryPointName?.trim() ||
       entryPointShortName.trim() !== originalData.entryPointShortName?.trim() ||
@@ -202,7 +201,7 @@ const Index = () => {
   const submitEditEntryPoint = async () => {
     if (!selectedEntryPoint || !originalData) return;
 
-    // ✅ Yangi: O'zgarishlarni tekshirish
+    // Yangi: O'zgarishlarni tekshirish
     if (!hasChanges()) {
       toast.error("Изменений нет", { position: "top-center" });
       return;
@@ -225,7 +224,7 @@ const Index = () => {
       updatedData.buildingDescription = buildingDescription.trim();
     }
 
-    // ✅ Yangi: UnitCodes har doim yuboriladi agar o'zgarish bo'lsa
+    // Yangi: UnitCodes har doim yuboriladi agar o'zgarish bo'lsa
     if (hasChanges()) {
       updatedData.unitCodes = unitCodes
         .filter((u) => u.code && u.code.trim() !== "")
@@ -343,11 +342,22 @@ const Index = () => {
         return (
           <div className="space-y-2">
             {units.map((unit, idx) => (
-              <div key={idx} className="border-l-2 border-blue-300 pl-2">
-                <div className="text-sm font-medium">
+              <div
+                key={idx}
+                className={`border-l-2 pl-2 ${
+                  isDark ? "border-blue-500" : "border-blue-300"
+                }`}
+              >
+                <div className={`text-sm font-medium ${text}`}>
                   {getUnitNameByCode(unit.code)}
                   {unit.isMain === 1 && (
-                    <span className="ml-2 px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded">
+                    <span
+                      className={`ml-2 px-2 py-0.5 text-xs rounded ${
+                        isDark
+                          ? "bg-blue-900/40 text-blue-300"
+                          : "bg-blue-100 text-blue-700"
+                      }`}
+                    >
                       Основной
                     </span>
                   )}
@@ -355,10 +365,21 @@ const Index = () => {
                 {unit.schedules && unit.schedules.length > 0 && (
                   <div className="ml-2 mt-1 space-y-1">
                     {unit.schedules.map((sch, schIdx) => (
-                      <div key={schIdx} className="text-xs text-gray-600">
+                      <div
+                        key={schIdx}
+                        className={`text-xs ${
+                          isDark ? "text-gray-400" : "text-gray-600"
+                        }`}
+                      >
                         • {getScheduleNameById(sch.scheduleId)}
                         {sch.isMain === 1 && (
-                          <span className="ml-1 px-1.5 py-0.5 bg-indigo-100 text-indigo-700 text-xs rounded">
+                          <span
+                            className={`ml-1 px-1.5 py-0.5 text-xs rounded ${
+                              isDark
+                                ? "bg-indigo-900/40 text-indigo-300"
+                                : "bg-indigo-100 text-indigo-700"
+                            }`}
+                          >
                             Осн.
                           </span>
                         )}
@@ -404,15 +425,18 @@ const Index = () => {
               setEntryPointShortName(original.entryPointShortName);
               setBuildingDescription(original.buildingDescription);
               setUnitCodes(original.unitCodes || []);
-              setOriginalData(original); // ✅ Yangi: original ma'lumotni saqlash
+              setOriginalData(original);
               setEditEntryPoint(true);
             }}
             sx={{
               width: "32px",
               height: "32px",
               minWidth: "32px",
-              background: "#F0D8C8",
-              color: "#FF6200",
+              background: isDark ? "#78350f" : "#F0D8C8",
+              color: isDark ? "#fdba74" : "#FF6200",
+              "&:hover": {
+                background: isDark ? "#92400e" : "#e8cbb8",
+              },
             }}
           >
             <EditIcon fontSize="small" />
@@ -426,8 +450,11 @@ const Index = () => {
               width: "32px",
               height: "32px",
               minWidth: "32px",
-              background: "#FCD8D3",
-              color: "#FF1E00",
+              background: isDark ? "#7f1d1d" : "#FCD8D3",
+              color: isDark ? "#fca5a5" : "#FF1E00",
+              "&:hover": {
+                background: isDark ? "#991b1b" : "#fac8c3",
+              },
             }}
           >
             <DeleteIcon fontSize="small" />
@@ -468,7 +495,7 @@ const Index = () => {
     setUnitCodes(updated);
   };
 
-  // ✅ TO'G'IRLANGAN: Schedule ni o'chirish funksiyasi
+  // remove schedule
   const removeScheduleFromUnit = (unitIndex, scheduleIndex) => {
     setUnitCodes((prev) => {
       const updated = [...prev];
@@ -531,8 +558,6 @@ const Index = () => {
           />
         </motion.div>
       )}
-
-      {/* CREATE MODAL - o'zgarmadi */}
       {/* CREATE MODAL */}
       {createAccessPoint && (
         <MethodModal
@@ -545,15 +570,19 @@ const Index = () => {
           }}
         >
           {/* Header Section */}
-          <div className="sticky top-0 bg-white z-10 pb-4 border-b border-gray-200">
+          <div className={`sticky top-0 ${bg} z-10 pb-4 border-b ${border}`}>
             <Typography
               variant="h5"
-              className="font-bold text-gray-800 flex items-center gap-2"
+              className={`font-bold ${text} flex items-center gap-2`}
             >
-              <AddIcon className="text-green-600" />
               Создать новую точку доступа
             </Typography>
-            <Typography variant="body2" className="text-gray-500 mt-1 ml-1">
+            <Typography
+              variant="body2"
+              className={`${
+                isDark ? "text-gray-400" : "text-gray-500"
+              } mt-1 ml-1`}
+            >
               Заполните информацию для новой точки доступа
             </Typography>
           </div>
@@ -565,13 +594,21 @@ const Index = () => {
                 <div className="w-1 h-6 bg-green-500 rounded-full"></div>
                 <Typography
                   variant="subtitle1"
-                  className="font-semibold text-gray-700"
+                  className={`font-semibold ${
+                    isDark ? "text-gray-300" : "text-gray-700"
+                  }`}
                 >
                   Основная информация
                 </Typography>
               </div>
 
-              <div className="bg-green-50/50 p-4 rounded-xl space-y-4 border border-green-100">
+              <div
+                className={`${
+                  isDark
+                    ? "bg-green-900/20 border-green-800/30"
+                    : "bg-green-50/50 border-green-100"
+                } p-4 rounded-xl space-y-4 border`}
+              >
                 {/* Entry Point Name */}
                 <div>
                   <Input
@@ -579,8 +616,14 @@ const Index = () => {
                     onChange={(e) => setEntryPointName(e.target.value)}
                     label={"Имя точки входа"}
                     placeholder="Например: Главный вход"
-                    inputClass="!h-[48px] rounded-[10px] !border-gray-300 text-[15px] bg-white focus:border-green-500"
-                    labelClass="text-sm font-medium text-gray-700 mb-1"
+                    inputClass={`!h-[48px] rounded-[10px] text-[15px] ${
+                      isDark
+                        ? "!border-gray-600 bg-gray-800 focus:border-green-400"
+                        : "!border-gray-300 bg-white focus:border-green-500"
+                    }`}
+                    labelClass={`text-sm font-medium ${
+                      isDark ? "text-gray-300" : "text-gray-700"
+                    } mb-1`}
                     required
                   />
                 </div>
@@ -592,8 +635,14 @@ const Index = () => {
                     onChange={(e) => setEntryPointShortName(e.target.value)}
                     label={"Краткое название"}
                     placeholder="Например: Вход 1"
-                    inputClass="!h-[48px] rounded-[10px] !border-gray-300 text-[15px] bg-white focus:border-green-500"
-                    labelClass="text-sm font-medium text-gray-700 mb-1"
+                    inputClass={`!h-[48px] rounded-[10px] text-[15px] ${
+                      isDark
+                        ? "!border-gray-600 bg-gray-800 focus:border-green-400"
+                        : "!border-gray-300 bg-white focus:border-green-500"
+                    }`}
+                    labelClass={`text-sm font-medium ${
+                      isDark ? "text-gray-300" : "text-gray-700"
+                    } mb-1`}
                     required
                   />
                 </div>
@@ -605,8 +654,14 @@ const Index = () => {
                     onChange={(e) => setBuildingDescription(e.target.value)}
                     label={"Описание"}
                     placeholder="Например: Главный вход в административное здание"
-                    inputClass="!h-[48px] rounded-[10px] !border-gray-300 text-[15px] bg-white focus:border-green-500"
-                    labelClass="text-sm font-medium text-gray-700 mb-1"
+                    inputClass={`!h-[48px] rounded-[10px] text-[15px] ${
+                      isDark
+                        ? "!border-gray-600 bg-gray-800 focus:border-green-400"
+                        : "!border-gray-300 bg-white focus:border-green-500"
+                    }`}
+                    labelClass={`text-sm font-medium ${
+                      isDark ? "text-gray-300" : "text-gray-700"
+                    } mb-1`}
                     required
                   />
                 </div>
@@ -620,30 +675,47 @@ const Index = () => {
                   <div className="w-1 h-6 bg-indigo-500 rounded-full"></div>
                   <Typography
                     variant="subtitle1"
-                    className="font-semibold text-gray-700"
+                    className={`font-semibold ${
+                      isDark ? "text-gray-300" : "text-gray-700"
+                    }`}
                   >
                     Привязка подразделений
                   </Typography>
                 </div>
                 {unitCodes.length > 0 && (
-                  <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full font-medium">
+                  <span
+                    className={`text-xs px-2 py-1 rounded-full font-medium ${
+                      isDark
+                        ? "bg-indigo-900/40 text-indigo-300"
+                        : "bg-indigo-100 text-indigo-700"
+                    }`}
+                  >
                     {unitCodes.length}{" "}
                     {unitCodes.length === 1 ? "подразделение" : "подразделений"}
                   </span>
                 )}
               </div>
 
-              <div className="bg-blue-50 border-l-4 border-blue-400 p-3 rounded-r-lg">
+              <div
+                className={`border-l-4 border-blue-400 p-3 rounded-r-lg ${
+                  isDark ? "bg-blue-900/20" : "bg-blue-50"
+                }`}
+              >
                 <div className="flex items-start gap-2">
                   <ReportIcon className="text-blue-500 mt-0.5" />
                   <div>
                     <Typography
                       variant="body2"
-                      className="text-gray-700 font-medium"
+                      className={`font-medium ${
+                        isDark ? "text-gray-300" : "text-gray-700"
+                      }`}
                     >
                       Привяжите точку доступа к подразделениям
                     </Typography>
-                    <Typography variant="caption" className="text-gray-600">
+                    <Typography
+                      variant="caption"
+                      className={isDark ? "text-gray-400" : "text-gray-600"}
+                    >
                       Каждое подразделение должно иметь хотя бы одно расписание
                     </Typography>
                   </div>
@@ -651,8 +723,17 @@ const Index = () => {
               </div>
 
               {unitCodes.length === 0 ? (
-                <div className="text-center py-8 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
-                  <div className="text-gray-400 mb-3">
+                <div
+                  className={`text-center py-8 rounded-xl border-2 border-dashed ${
+                    isDark
+                      ? "bg-gray-800/50 border-gray-700"
+                      : "bg-gray-50 border-gray-300"
+                  }`}
+                >
+                  <div
+                    className={isDark ? "text-gray-600" : "text-gray-400"}
+                    mb-3
+                  >
                     <svg
                       className="w-16 h-16 mx-auto"
                       fill="none"
@@ -667,10 +748,18 @@ const Index = () => {
                       />
                     </svg>
                   </div>
-                  <Typography variant="body2" className="text-gray-500 mb-1">
+                  <Typography
+                    variant="body2"
+                    className={
+                      isDark ? "text-gray-400 mb-1" : "text-gray-500 mb-1"
+                    }
+                  >
                     Подразделения не добавлены
                   </Typography>
-                  <Typography variant="caption" className="text-gray-400">
+                  <Typography
+                    variant="caption"
+                    className={isDark ? "text-gray-500" : "text-gray-400"}
+                  >
                     Нажмите кнопку ниже, чтобы добавить первое подразделение
                   </Typography>
                 </div>
@@ -683,10 +772,20 @@ const Index = () => {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: -20, scale: 0.95 }}
                       transition={{ duration: 0.2 }}
-                      className="bg-white border-2 border-gray-200 rounded-xl hover:border-indigo-300 transition-all shadow-sm"
+                      className={`border-2 rounded-xl transition-all shadow-sm ${
+                        isDark
+                          ? "bg-gray-800 border-gray-700 hover:border-indigo-500"
+                          : "bg-white border-gray-200 hover:border-indigo-300"
+                      }`}
                     >
                       {/* Unit Header */}
-                      <div className="bg-gradient-to-r from-indigo-50 to-blue-50 p-4 border-b border-gray-200 rounded-t-xl">
+                      <div
+                        className={`p-4 border-b rounded-t-xl ${
+                          isDark
+                            ? "bg-gradient-to-r from-indigo-900/40 to-blue-900/40 border-gray-700"
+                            : "bg-gradient-to-r from-indigo-50 to-blue-50 border-gray-200"
+                        }`}
+                      >
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 bg-indigo-500 rounded-lg flex items-center justify-center text-white font-bold shadow-md">
                             {unitIndex + 1}
@@ -703,7 +802,13 @@ const Index = () => {
                             />
                           </div>
                           <div className="flex items-center gap-2">
-                            <label className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg border border-gray-200 cursor-pointer hover:bg-green-50 transition shadow-sm">
+                            <label
+                              className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition shadow-sm ${
+                                isDark
+                                  ? "bg-gray-700 border-gray-600 hover:bg-gray-600"
+                                  : "bg-white border-gray-200 hover:bg-green-50"
+                              }`}
+                            >
                               <input
                                 type="checkbox"
                                 checked={unit.isMain === 1}
@@ -716,13 +821,21 @@ const Index = () => {
                                 }
                                 className="w-4 h-4 text-indigo-600 focus:ring-indigo-500"
                               />
-                              <span className="text-sm font-medium text-gray-700">
+                              <span
+                                className={`text-sm font-medium ${
+                                  isDark ? "text-gray-300" : "text-gray-700"
+                                }`}
+                              >
                                 Основной
                               </span>
                             </label>
                             <button
                               onClick={() => removeUnit(unitIndex)}
-                              className="w-9 h-9 flex items-center justify-center bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition shadow-sm"
+                              className={`w-9 h-9 flex items-center justify-center rounded-lg transition shadow-sm ${
+                                isDark
+                                  ? "bg-red-900/40 hover:bg-red-900/60 text-red-400"
+                                  : "bg-red-50 hover:bg-red-100 text-red-600"
+                              }`}
                               title="Удалить подразделение"
                             >
                               <ClearIcon fontSize="small" />
@@ -734,15 +847,27 @@ const Index = () => {
                       {/* Schedules Section */}
                       <div className="p-4">
                         <div className="flex items-center gap-2 mb-3">
-                          <AccessTimeIcon className="text-gray-600" />
+                          <AccessTimeIcon
+                            className={
+                              isDark ? "text-gray-400" : "text-gray-600"
+                            }
+                          />
                           <Typography
                             variant="body2"
-                            className="font-semibold text-gray-700"
+                            className={`font-semibold ${
+                              isDark ? "text-gray-300" : "text-gray-700"
+                            }`}
                           >
                             Расписания доступа
                           </Typography>
                           {unit.schedules && unit.schedules.length > 0 && (
-                            <span className="text-xs bg-indigo-100 text-indigo-600 px-2 py-0.5 rounded-full">
+                            <span
+                              className={`text-xs px-2 py-0.5 rounded-full ${
+                                isDark
+                                  ? "bg-indigo-900/40 text-indigo-300"
+                                  : "bg-indigo-100 text-indigo-600"
+                              }`}
+                            >
                               {unit.schedules.length}
                             </span>
                           )}
@@ -756,9 +881,19 @@ const Index = () => {
                                 initial={{ opacity: 0, x: -10 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: -10 }}
-                                className="flex items-center gap-2 bg-gray-50 p-3 rounded-lg border border-gray-200 hover:border-indigo-300 transition-all"
+                                className={`flex items-center gap-2 p-3 rounded-lg border transition-all ${
+                                  isDark
+                                    ? "bg-gray-700/50 border-gray-600 hover:border-indigo-500"
+                                    : "bg-gray-50 border-gray-200 hover:border-indigo-300"
+                                }`}
                               >
-                                <span className="w-6 h-6 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center text-xs font-bold shadow-sm">
+                                <span
+                                  className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shadow-sm ${
+                                    isDark
+                                      ? "bg-indigo-900/60 text-indigo-300"
+                                      : "bg-indigo-100 text-indigo-600"
+                                  }`}
+                                >
                                   {scheduleIndex + 1}
                                 </span>
                                 <CustomSelect
@@ -775,7 +910,13 @@ const Index = () => {
                                   }
                                   className="flex-1"
                                 />
-                                <label className="flex items-center gap-1.5 bg-white px-2.5 py-1.5 rounded-md border border-gray-200 cursor-pointer hover:bg-green-50 transition shadow-sm">
+                                <label
+                                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border cursor-pointer transition shadow-sm ${
+                                    isDark
+                                      ? "bg-gray-700 border-gray-600 hover:bg-gray-600"
+                                      : "bg-white border-gray-200 hover:bg-green-50"
+                                  }`}
+                                >
                                   <input
                                     type="checkbox"
                                     checked={sch.isMain === 1}
@@ -789,7 +930,11 @@ const Index = () => {
                                     }
                                     className="w-3.5 h-3.5 text-indigo-600"
                                   />
-                                  <span className="text-xs font-medium text-gray-700">
+                                  <span
+                                    className={`text-xs font-medium ${
+                                      isDark ? "text-gray-300" : "text-gray-700"
+                                    }`}
+                                  >
                                     Осн.
                                   </span>
                                 </label>
@@ -800,7 +945,11 @@ const Index = () => {
                                       scheduleIndex
                                     )
                                   }
-                                  className="w-8 h-8 flex items-center justify-center bg-red-50 hover:bg-red-100 text-red-600 rounded-md transition shadow-sm"
+                                  className={`w-8 h-8 flex items-center justify-center rounded-md transition shadow-sm ${
+                                    isDark
+                                      ? "bg-red-900/40 hover:bg-red-900/60 text-red-400"
+                                      : "bg-red-50 hover:bg-red-100 text-red-600"
+                                  }`}
                                   title="Удалить расписание"
                                 >
                                   <ClearIcon fontSize="small" />
@@ -809,11 +958,23 @@ const Index = () => {
                             ))}
                           </div>
                         ) : (
-                          <div className="text-center py-6 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-                            <AccessTimeIcon className="text-gray-400 text-3xl mb-2" />
+                          <div
+                            className={`text-center py-6 rounded-lg border-2 border-dashed ${
+                              isDark
+                                ? "bg-gray-800/50 border-gray-700"
+                                : "bg-gray-50 border-gray-300"
+                            }`}
+                          >
+                            <AccessTimeIcon
+                              className={`text-3xl mb-2 ${
+                                isDark ? "text-gray-600" : "text-gray-400"
+                              }`}
+                            />
                             <Typography
                               variant="caption"
-                              className="text-gray-500 block"
+                              className={`block ${
+                                isDark ? "text-gray-400" : "text-gray-500"
+                              }`}
                             >
                               Расписания не добавлены
                             </Typography>
@@ -822,7 +983,11 @@ const Index = () => {
 
                         <button
                           onClick={() => addScheduleToUnit(unitIndex)}
-                          className="w-full mt-3 px-4 py-2.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-sm font-medium transition-all flex items-center justify-center gap-2 border border-indigo-200 shadow-sm"
+                          className={`w-full mt-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all  flex items-center justify-center gap-2 border shadow-sm ${
+                            isDark
+                              ? "bg-indigo-900/40 hover:bg-indigo-900/60 text-indigo-300 border-indigo-800/40"
+                              : "bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-200"
+                          }`}
                         >
                           <AddIcon fontSize="small" />
                           Добавить расписание
@@ -844,9 +1009,7 @@ const Index = () => {
                     },
                   ])
                 }
-                className="w-full px-5 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                className="w-full px-5 py-3 rounded-xl cursor-pointer bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
               >
                 <AddIcon />
                 Добавить подразделение
@@ -855,15 +1018,17 @@ const Index = () => {
           </div>
 
           {/* Footer Actions */}
-          <div className="sticky top-0 bg-white border-t-2 border-gray-200 pt-4 mt-6 flex justify-end gap-3">
+          <div
+            className={`sticky top-0 ${bg} border-t-2 ${border} pt-4 mt-6 flex justify-end gap-3`}
+          >
             <PrimaryButton
-              backgroundColor="#f3f4f6"
-              color="#374151"
+              backgroundColor={isDark ? "#374151" : "#f3f4f6"}
+              color={isDark ? "#e5e7eb" : "#374151"}
               onClick={() => {
                 setCreateAccessPoint(false);
                 handleRemoveAll();
               }}
-              className="hover:bg-gray-200"
+              className={isDark ? "hover:bg-gray-600" : "hover:bg-gray-200"}
             >
               Отмена
             </PrimaryButton>

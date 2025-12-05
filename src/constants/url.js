@@ -56,4 +56,5 @@ export const URLS = {
   users: "auth/users",
   register: "auth/signup",
   roles: "auth/role",
+  me: "auth/me",
 };
