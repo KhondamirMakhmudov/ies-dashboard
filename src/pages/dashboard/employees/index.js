@@ -28,8 +28,8 @@ import PrimaryButton from "@/components/button/primary-button";
 import Link from "next/link";
 import { Search, FilterList, Close } from "@mui/icons-material";
 import useAppTheme from "@/hooks/useAppTheme";
-import { color } from "framer-motion";
-
+import { OpenInNew as OpenInNewIcon } from "@mui/icons-material";
+import PersonIcon from "@mui/icons-material/Person";
 const Index = () => {
   const { isDark, bg, text, border } = useAppTheme();
   const [currentPage, setCurrentPage] = useState(1);
@@ -274,11 +274,17 @@ const Index = () => {
       accessorKey: "last_name",
       header: "Имя сотрудника",
       cell: ({ row }) => {
-        const { first_name, last_name } = row.original;
+        const { first_name, last_name, middle_name } = row.original;
         return (
-          <span className="font-medium">
-            {last_name} {first_name}
-          </span>
+          <div className="font-medium flex items-center gap-2">
+            <div className=" border rounded-full  p-0.5 text-sm">
+              <PersonIcon />
+            </div>
+            <p>
+              {" "}
+              {last_name} {first_name} {middle_name}
+            </p>
+          </div>
         );
       },
     },
@@ -315,10 +321,13 @@ const Index = () => {
         <div className="my-2">
           <Link
             href={`employees/${row.original.id}`}
-            style={{ color: text("black", "black") }}
-            className="bg-[#EDEDF2] font-semibold px-4 py-2 rounded-md cursor-pointer hover:bg-gray-400  transition-all duration-200"
+            className={
+              bg("bg-blue-500", "bg-blue-600") +
+              " hover:bg-blue-600 dark:hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-all duration-200 flex items-center justify-center gap-2 shadow-sm hover:shadow-md px-4 py-2"
+            }
           >
-            Подробнее
+            <span>Подробнее</span>
+            <OpenInNewIcon sx={{ fontSize: 16 }} />
           </Link>
         </div>
       ),
