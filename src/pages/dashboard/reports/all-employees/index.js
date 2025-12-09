@@ -7,23 +7,23 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import CustomTable from "@/components/table";
 import { get } from "lodash";
-
 import EmojiEmotionsIcon from "@mui/icons-material/EmojiEmotions";
 import dayjs from "dayjs";
 import ContentLoader from "@/components/loader";
+import useAppTheme from "@/hooks/useAppTheme";
 
 const Index = () => {
+  const { bg, isDark, text, border } = useAppTheme();
   const { data: session } = useSession();
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [currentPage, setCurrentPage] = useState(2);
   const [pageSize] = useState(30);
-  // Format function: converts to 'YYYY-MM-DDTHH:mm'
+
   const formatDateTime = (date) => {
     return date.toISOString().slice(0, 16);
   };
 
-  // Set default date range on first render (last 7 days)
   useEffect(() => {
     const now = new Date();
     const weekAgo = new Date();
@@ -65,14 +65,24 @@ const Index = () => {
       accessorKey: "time",
       header: "Время действие",
       cell: ({ getValue }) => {
-        const datetime = getValue(); // masalan: "2025-07-22T11:14:56"
+        const datetime = getValue();
         const date = dayjs(datetime).format("DD.MM.YYYY");
         const time = dayjs(datetime).format("HH:mm:ss");
 
         return (
           <div className="flex flex-col">
-            <span className="font-medium">{date}</span>
-            <span className="text-gray-400 text-xs">{time}</span>
+            <span
+              className="font-medium"
+              style={{ color: text("#1f2937", "#f3f4f6") }}
+            >
+              {date}
+            </span>
+            <span
+              className="text-xs"
+              style={{ color: text("#9ca3af", "#6b7280") }}
+            >
+              {time}
+            </span>
           </div>
         );
       },
@@ -85,11 +95,33 @@ const Index = () => {
 
         return (
           <span
-            className={
-              errorCode === 0
-                ? "text-green-600 font-medium bg-[#E8F6F0] p-1 rounded-md border border-green-600"
-                : "text-red-600 font-medium bg-[#FAE7E7] p-1 rounded-md border border-red-600"
-            }
+            className="font-medium p-1 rounded-md border"
+            style={{
+              color:
+                errorCode === 0
+                  ? isDark
+                    ? "#4ade80"
+                    : "#16a34a"
+                  : isDark
+                  ? "#f87171"
+                  : "#dc2626",
+              backgroundColor:
+                errorCode === 0
+                  ? isDark
+                    ? "rgba(34, 197, 94, 0.15)"
+                    : "#E8F6F0"
+                  : isDark
+                  ? "rgba(239, 68, 68, 0.15)"
+                  : "#FAE7E7",
+              borderColor:
+                errorCode === 0
+                  ? isDark
+                    ? "rgba(34, 197, 94, 0.3)"
+                    : "#16a34a"
+                  : isDark
+                  ? "rgba(239, 68, 68, 0.3)"
+                  : "#dc2626",
+            }}
           >
             {errorCode === 0 ? "доступ разрешен" : "отказ в доступе"}
           </span>
@@ -101,15 +133,36 @@ const Index = () => {
       header: "Событие",
       cell: ({ getValue }) => {
         const event = getValue();
+        const isEnter = event === "enter";
+
         return (
           <span
-            className={
-              event
-                ? "text-green-600 font-medium bg-[#E8F6F0] p-1 px-3 rounded-md border border-green-600"
-                : "text-red-600 font-medium bg-[#FAE7E7] p-1 rounded-md border border-red-600"
-            }
+            className="font-medium p-1 px-3 rounded-md border"
+            style={{
+              color: isEnter
+                ? isDark
+                  ? "#4ade80"
+                  : "#16a34a"
+                : isDark
+                ? "#f87171"
+                : "#dc2626",
+              backgroundColor: isEnter
+                ? isDark
+                  ? "rgba(34, 197, 94, 0.15)"
+                  : "#E8F6F0"
+                : isDark
+                ? "rgba(239, 68, 68, 0.15)"
+                : "#FAE7E7",
+              borderColor: isEnter
+                ? isDark
+                  ? "rgba(34, 197, 94, 0.3)"
+                  : "#16a34a"
+                : isDark
+                ? "rgba(239, 68, 68, 0.3)"
+                : "#dc2626",
+            }}
           >
-            {event === "enter" ? "Вход" : "Выход"}
+            {isEnter ? "Вход" : "Выход"}
           </span>
         );
       },
@@ -121,21 +174,26 @@ const Index = () => {
         const eventType = getValue();
         return (
           <div
-            className={
-              "text-[#1E5EFF] font-medium bg-[#ECF2FF] p-1 px-3 rounded-md border border-[#1E5EFF]  items-center gap-1 inline-flex"
-            }
+            className="font-medium p-1 px-3 rounded-md border items-center gap-1 inline-flex"
+            style={{
+              color: isDark ? "#60a5fa" : "#1E5EFF",
+              backgroundColor: isDark ? "rgba(59, 130, 246, 0.15)" : "#ECF2FF",
+              borderColor: isDark ? "rgba(59, 130, 246, 0.3)" : "#1E5EFF",
+            }}
           >
             <EmojiEmotionsIcon
-              sx={{ width: "15px", height: "15px", color: "#1E5EFF" }}
+              sx={{
+                width: "15px",
+                height: "15px",
+                color: isDark ? "#60a5fa" : "#1E5EFF",
+              }}
             />
             <span>{eventType === 15 ? "FACE ID" : "Другое"}</span>
           </div>
         );
       },
     },
-
     { accessorKey: "entryPointName", header: "Точка входа" },
-    // { accessorKey: "structureName", header: "Отдел" },
   ];
 
   return (
@@ -144,32 +202,52 @@ const Index = () => {
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.3 }}
-        className="bg-white col-span-12 p-6 my-[20px] rounded-md border border-gray-200 w-full"
+        className="col-span-12 p-6 my-[20px] rounded-md border w-full"
+        style={{
+          backgroundColor: bg("#ffffff", "#1e1e1e"),
+          borderColor: border("#e5e7eb", "#333333"),
+        }}
       >
         <div className="flex gap-6 items-end flex-wrap">
           {/* Start date */}
           <div className="mb-4">
-            <label className="block text-sm font-medium mb-1">
+            <label
+              className="block text-sm font-medium mb-1"
+              style={{ color: text("#374151", "#d1d5db") }}
+            >
               Дата начала
             </label>
             <input
               type="datetime-local"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="!h-[44px] border !border-[#C9C9C9] px-2 rounded-md"
+              className="!h-[44px] border px-2 rounded-md"
+              style={{
+                backgroundColor: bg("#ffffff", "#2d2d2d"),
+                borderColor: border("#C9C9C9", "#555555"),
+                color: text("#1f2937", "#f3f4f6"),
+              }}
             />
           </div>
 
           {/* End date */}
           <div className="mb-4">
-            <label className="block text-sm font-medium mb-1">
+            <label
+              className="block text-sm font-medium mb-1"
+              style={{ color: text("#374151", "#d1d5db") }}
+            >
               Дата окончания
             </label>
             <input
               type="datetime-local"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="!h-[44px] border !border-[#C9C9C9] px-2 rounded-md"
+              className="!h-[44px] border px-2 rounded-md"
+              style={{
+                backgroundColor: bg("#ffffff", "#2d2d2d"),
+                borderColor: border("#C9C9C9", "#555555"),
+                color: text("#1f2937", "#f3f4f6"),
+              }}
             />
           </div>
 
@@ -178,12 +256,26 @@ const Index = () => {
               onClick={() => {
                 const now = new Date();
                 const start = new Date();
-                start.setHours(0, 0, 0, 0); // bugun 00:00
+                start.setHours(0, 0, 0, 0);
 
                 setStartDate(formatDateTime(start));
                 setEndDate(formatDateTime(now));
               }}
-              className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition"
+              className="px-4 py-2 rounded-md transition font-medium"
+              style={{
+                backgroundColor: isDark ? "#1e40af" : "#3b82f6",
+                color: "#ffffff",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = isDark
+                  ? "#1e3a8a"
+                  : "#2563eb";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = isDark
+                  ? "#1e40af"
+                  : "#3b82f6";
+              }}
             >
               Сегодня
             </button>
@@ -192,16 +284,30 @@ const Index = () => {
               onClick={() => {
                 const start = new Date();
                 start.setDate(start.getDate() - 1);
-                start.setHours(0, 0, 0, 0); // kecha 00:00
+                start.setHours(0, 0, 0, 0);
 
                 const end = new Date();
                 end.setDate(end.getDate() - 1);
-                end.setHours(23, 59, 59, 999); // kecha 23:59
+                end.setHours(23, 59, 59, 999);
 
                 setStartDate(formatDateTime(start));
                 setEndDate(formatDateTime(end));
               }}
-              className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition"
+              className="px-4 py-2 rounded-md transition font-medium"
+              style={{
+                backgroundColor: isDark ? "#1e40af" : "#3b82f6",
+                color: "#ffffff",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = isDark
+                  ? "#1e3a8a"
+                  : "#2563eb";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = isDark
+                  ? "#1e40af"
+                  : "#3b82f6";
+              }}
             >
               Вчера
             </button>
@@ -217,7 +323,11 @@ const Index = () => {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.3 }}
-          className="bg-white col-span-12 p-6 my-[20px] rounded-md border border-gray-200 w-full"
+          className="col-span-12 p-6 my-[20px] rounded-md border w-full"
+          style={{
+            backgroundColor: bg("#ffffff", "#1e1e1e"),
+            borderColor: border("#e5e7eb", "#333333"),
+          }}
         >
           <CustomTable
             data={get(reportOfEmployees, "data.content", []).flat()}

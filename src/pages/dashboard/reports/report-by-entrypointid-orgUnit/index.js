@@ -15,8 +15,10 @@ import { getEmployeesLogsByRange } from "@/utils/getEmployeesLogsByRange";
 import { exportToExcelStyled } from "@/utils/exportToExcelStyled";
 import toast from "react-hot-toast";
 import { config } from "@/config";
+import useAppTheme from "@/hooks/useAppTheme";
 
 const Index = () => {
+  const { bg, isDark, text, border } = useAppTheme();
   const { data: session } = useSession();
 
   const [selectOrgUnitCode, setSelectOrgUnitCode] = useState(null);
@@ -73,16 +75,14 @@ const Index = () => {
 
   const handleExport = async () => {
     try {
-      // toast.loading("Экспорт данных...", { id: "exporting" });
-
       const data = await getEmployeesLogsByRange({
         token: session?.accessToken,
-        employeeIds: [selectOrgUnitCode], // Using org unit code as ID
+        employeeIds: [selectOrgUnitCode],
         startDate: startDateTime,
         baseUrl: `${config.JAVA_API_URL}`,
         endDate: endDateTime,
-        endpoint: `${URLS.logsByOrgUnitCodeAndEntrypointId}`, // Your specific endpoint
-        pathSuffix: `/entry-point/${selectEntryPointId}/dates`, // Your specific path
+        endpoint: `${URLS.logsByOrgUnitCodeAndEntrypointId}`,
+        pathSuffix: `/entry-point/${selectEntryPointId}/dates`,
       });
 
       if (!data || data.length === 0) {
@@ -91,7 +91,6 @@ const Index = () => {
       }
 
       exportToExcelStyled(data);
-      // toast.success("Excel файл успешно загружен.", { id: "exporting" });
     } catch (error) {
       console.error("Export error:", error);
       toast.error("Ошибка при загрузке Excel файла.", { id: "exporting" });
@@ -109,13 +108,27 @@ const Index = () => {
         {/* Main Card */}
         <motion.div
           variants={itemVariants}
-          className="bg-white rounded-md border border-gray-200 my-[15px] overflow-hidden"
+          className="rounded-md border my-[15px] overflow-hidden"
+          style={{
+            backgroundColor: bg("#ffffff", "#1e1e1e"),
+            borderColor: border("#e5e7eb", "#333333"),
+          }}
         >
           {/* Card Header */}
-          <div className="bg-white px-6 sm:px-8 py-6 border-b border-gray-100">
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 flex items-center gap-2">
+          <div
+            className="px-6 sm:px-8 py-6 border-b"
+            style={{
+              backgroundColor: bg("#ffffff", "#1e1e1e"),
+              borderColor: border("#f3f4f6", "#374151"),
+            }}
+          >
+            <h2
+              className="text-lg sm:text-xl font-semibold flex items-center gap-2"
+              style={{ color: text("#1f2937", "#f3f4f6") }}
+            >
               <svg
-                className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600"
+                className="w-5 h-5 sm:w-6 sm:h-6"
+                style={{ color: isDark ? "#60a5fa" : "#2563eb" }}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -135,8 +148,17 @@ const Index = () => {
           <div className="p-6 sm:p-8 space-y-8">
             {/* Selection Section */}
             <motion.div variants={itemVariants}>
-              <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <span className="flex items-center justify-center w-7 h-7 rounded-full bg-blue-100 text-blue-700 text-sm font-bold">
+              <h3
+                className="text-base sm:text-lg font-semibold mb-4 flex items-center gap-2"
+                style={{ color: text("#1f2937", "#f3f4f6") }}
+              >
+                <span
+                  className="flex items-center justify-center w-7 h-7 rounded-full text-sm font-bold"
+                  style={{
+                    backgroundColor: isDark ? "#1e40af" : "#dbeafe",
+                    color: isDark ? "#93c5fd" : "#1e40af",
+                  }}
+                >
                   1
                 </span>
                 Выбор подразделения и точки доступа
@@ -165,39 +187,59 @@ const Index = () => {
             </motion.div>
 
             {/* Divider */}
-            <div className="border-t border-gray-200"></div>
+            <div
+              className="border-t"
+              style={{ borderColor: border("#e5e7eb", "#374151") }}
+            ></div>
 
             {/* Date Section */}
             <motion.div variants={itemVariants}>
-              <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <span className="flex items-center justify-center w-7 h-7 rounded-full bg-blue-100 text-blue-700 text-sm font-bold">
+              <h3
+                className="text-base sm:text-lg font-semibold mb-4 flex items-center gap-2"
+                style={{ color: text("#1f2937", "#f3f4f6") }}
+              >
+                <span
+                  className="flex items-center justify-center w-7 h-7 rounded-full text-sm font-bold"
+                  style={{
+                    backgroundColor: isDark ? "#1e40af" : "#dbeafe",
+                    color: isDark ? "#93c5fd" : "#1e40af",
+                  }}
+                >
                   2
                 </span>
                 Период отчёта
               </h3>
               <div className="grid sm:grid-cols-2 gap-4 sm:gap-6">
                 <div className="space-y-2">
-                  <label className=" text-sm font-semibold text-gray-700 mb-2 flex items-center  gap-2">
-                    <DateRangeIcon /> <p>Дата и время начала</p>
+                  <label
+                    className="text-sm font-semibold mb-2 flex items-center gap-2"
+                    style={{ color: text("#374151", "#d1d5db") }}
+                  >
+                    <DateRangeIcon />
+                    <p>Дата и время начала</p>
                   </label>
                   <Input
                     type="datetime-local"
                     value={startDateTime}
                     onChange={(e) => setStartDateTime(e.target.value)}
-                    inputClass="!h-[48px] !border-2 !border-gray-200 !rounded-lg hover:!border-blue-400 focus:!border-blue-500 transition-colors"
+                    inputClass="!h-[48px] !border-2 !rounded-lg transition-colors"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <label className=" text-sm font-semibold text-gray-700 mb-2 flex items-center  gap-2">
-                    <DateRangeIcon /> <p>Дата и время окончания</p>
+                  <label
+                    className="text-sm font-semibold mb-2 flex items-center gap-2"
+                    style={{ color: text("#374151", "#d1d5db") }}
+                  >
+                    <DateRangeIcon />
+                    <p>Дата и время окончания</p>
                   </label>
 
                   <Input
                     type="datetime-local"
                     value={endDateTime}
                     onChange={(e) => setEndDateTime(e.target.value)}
-                    inputClass="!h-[48px] !border-2 !border-gray-200 !rounded-lg hover:!border-blue-400 focus:!border-blue-500 transition-colors"
+                    inputClass="!h-[48px] !border-2 !rounded-lg transition-colors"
                   />
                 </div>
               </div>
@@ -210,10 +252,17 @@ const Index = () => {
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.95 }}
-                  className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-xl"
+                  className="flex items-center gap-3 p-4 border rounded-xl"
+                  style={{
+                    backgroundColor: isDark
+                      ? "rgba(34, 197, 94, 0.15)"
+                      : "#f0fdf4",
+                    borderColor: isDark ? "rgba(34, 197, 94, 0.3)" : "#bbf7d0",
+                  }}
                 >
                   <svg
-                    className="w-5 h-5 text-green-600 flex-shrink-0"
+                    className="w-5 h-5 flex-shrink-0"
+                    style={{ color: isDark ? "#4ade80" : "#16a34a" }}
                     fill="currentColor"
                     viewBox="0 0 20 20"
                   >
@@ -224,18 +273,43 @@ const Index = () => {
                     />
                   </svg>
                   <div>
-                    <p className="text-sm font-semibold text-green-800">
+                    <p
+                      className="text-sm font-semibold"
+                      style={{ color: isDark ? "#86efac" : "#166534" }}
+                    >
                       Все параметры заполнены
                     </p>
                   </div>
                 </motion.div>
               )}
             </AnimatePresence>
-            <div className="flex items-center gap-3 flex-wrap pt-4 border-t border-gray-200">
+            <div
+              className="flex items-center gap-3 flex-wrap pt-4 border-t"
+              style={{ borderColor: border("#e5e7eb", "#374151") }}
+            >
               <button
                 onClick={handleExport}
                 disabled={!isFormComplete}
-                className="flex items-center gap-2 bg-[#00733B] hover:bg-[#00632F] px-5 py-3 rounded-lg text-white font-medium disabled:bg-gray-400 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg"
+                className="flex items-center gap-2 px-5 py-3 rounded-lg font-medium disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg"
+                style={{
+                  backgroundColor: !isFormComplete
+                    ? isDark
+                      ? "#4b5563"
+                      : "#9ca3af"
+                    : "#00733B",
+                  color: "#ffffff",
+                  opacity: !isFormComplete ? 0.6 : 1,
+                }}
+                onMouseEnter={(e) => {
+                  if (isFormComplete) {
+                    e.currentTarget.style.backgroundColor = "#00632F";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (isFormComplete) {
+                    e.currentTarget.style.backgroundColor = "#00733B";
+                  }
+                }}
               >
                 <svg
                   className="w-5 h-5"
@@ -257,11 +331,18 @@ const Index = () => {
         {/* Info Card */}
         <motion.div
           variants={itemVariants}
-          className="mt-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 sm:p-6 border border-blue-100"
+          className="mt-6 rounded-xl p-4 sm:p-6 border"
+          style={{
+            background: isDark
+              ? "linear-gradient(to right, rgba(59, 130, 246, 0.1), rgba(99, 102, 241, 0.1))"
+              : "linear-gradient(to right, #eff6ff, #eef2ff)",
+            borderColor: isDark ? "rgba(59, 130, 246, 0.3)" : "#bfdbfe",
+          }}
         >
           <div className="flex items-start gap-3">
             <svg
-              className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 flex-shrink-0 mt-0.5"
+              className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0 mt-0.5"
+              style={{ color: isDark ? "#60a5fa" : "#2563eb" }}
               fill="currentColor"
               viewBox="0 0 20 20"
             >
@@ -272,10 +353,16 @@ const Index = () => {
               />
             </svg>
             <div>
-              <h4 className="text-sm sm:text-base font-semibold text-blue-900 mb-1">
+              <h4
+                className="text-sm sm:text-base font-semibold mb-1"
+                style={{ color: isDark ? "#93c5fd" : "#1e3a8a" }}
+              >
                 Информация
               </h4>
-              <p className="text-xs sm:text-sm text-blue-800">
+              <p
+                className="text-xs sm:text-sm"
+                style={{ color: isDark ? "#bfdbfe" : "#1e40af" }}
+              >
                 Заполните все поля для получения детальной аналитики по
                 выбранным параметрам. Данные обновляются в режиме реального
                 времени.

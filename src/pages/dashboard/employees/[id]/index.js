@@ -40,6 +40,7 @@ import DescriptionIcon from "@mui/icons-material/Description";
 import DateRangeIcon from "@mui/icons-material/DateRange";
 import Link from "next/link";
 import useAppTheme from "@/hooks/useAppTheme";
+import EmployeeBusinessTripSection from "@/components/business-trip-section";
 
 const Index = () => {
   const { bg, text, isDark, border } = useAppTheme();
@@ -59,6 +60,8 @@ const Index = () => {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const [tab, setTab] = useState("personal");
+  const [selectedJobTrip, setSelectedJobTrip] = useState(null);
+  const [deleteJobTripModal, setDeleteJobTripModal] = useState(false);
 
   // Connect schedule states
   const [selectedEntryPoint, setSelectedEntryPoint] = useState(null);
@@ -155,6 +158,20 @@ const Index = () => {
   const tableNumberPrefix = get(employeePhoto, "data.tabel_number")?.split(
     "-"
   )[0];
+
+  const {
+    data: entrypointSchedules,
+    isLoading: isLoadingEntrypointSchedules,
+    isFetching: isFetchingEntrypointSchedules,
+  } = useGetQuery({
+    key: KEYS.entrypointSchedules,
+    url: URLS.entrypointSchedules,
+    headers: {
+      Authorization: `Bearer ${session?.accessToken}`,
+      Accept: "application/json",
+    },
+    enabled: !!session?.accessToken,
+  });
 
   const scheduleOptions = get(schedulesOfEntrypoints, "data.schedules", [])
     // Filter schedules where unitCode matches table number prefix
@@ -284,6 +301,37 @@ const Index = () => {
       toast.success("Успешно удалено");
       router.push("/dashboard/employees");
       queryClient.invalidateQueries(KEYS.unitTypes);
+    } catch (error) {
+      console.error(error);
+      toast.error("Не удалось удалить");
+    }
+  };
+
+  // delete jobTrip from Employee
+
+  const submitDeleteJobTrip = async () => {
+    try {
+      const response = await fetch(
+        `${config.JAVA_API_URL}${URLS.jobTrips}/${selectedJobTrip}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session?.accessToken}`,
+          },
+          body: JSON.stringify({ jobTripId: selectedJobTrip }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Ошибка при удалении");
+      }
+
+      toast.success("Успешно удалено");
+      setSelectedJobTrip(null);
+      setDeleteJobTripModal(false);
+      queryClient.invalidateQueries(KEYS.jobTrips);
+      console.log("Deleted successfully");
     } catch (error) {
       console.error(error);
       toast.error("Не удалось удалить");
@@ -1083,9 +1131,12 @@ const Index = () => {
                         Командировки
                       </Typography>
                     </div>
-                    <PrimaryButton backgroundColor="#10B981">
-                      Назначить командировку
-                    </PrimaryButton>
+                    <EmployeeBusinessTripSection
+                      employeeUuid={employee_id} // Pass the current employee UUID
+                      isDark={isDark}
+                      text={text}
+                      schedules={get(entrypointSchedules, "data", [])} // Pass available schedules
+                    />
                   </div>
 
                   {get(
@@ -1135,6 +1186,26 @@ const Index = () => {
                               </div>
 
                               <div className="flex gap-2 items-center">
+                                <Button
+                                  onClick={() => {
+                                    setDeleteJobTripModal(true);
+                                    setSelectedJobTrip(get(item, "jobTripId"));
+                                  }}
+                                  sx={{
+                                    width: "32px",
+                                    height: "32px",
+                                    minWidth: "32px",
+                                    background: isDark ? "#7f1d1d" : "#FCD8D3",
+                                    color: isDark ? "#fca5a5" : "#FF1E00",
+                                    "&:hover": {
+                                      background: isDark
+                                        ? "#991b1b"
+                                        : "#FCA89D",
+                                    },
+                                  }}
+                                >
+                                  <DeleteIcon fontSize="small" />
+                                </Button>
                                 <Link
                                   href={`/dashboard/access-points/${
                                     get(item, "entryPointId") || ""
@@ -1875,6 +1946,17 @@ const Index = () => {
           </div>
         </DeleteModal>
       )}
+
+      <DeleteModal
+        open={deleteJobTripModal}
+        onClose={() => setDeleteJobTripModal(false)}
+        deleting={() => {
+          submitDeleteJobTrip();
+          setDeleteJobTripModal(false);
+          setSelectedJobTrip(null);
+        }}
+        title="Вы уверены, что хотите удалить эту назначенную командировку"
+      />
     </DashboardLayout>
   );
 };

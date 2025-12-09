@@ -497,9 +497,7 @@ const Index = () => {
                 renderValue={(selected) => {
                   if (!selected) {
                     return (
-                      <span className="text-gray-400">
-                        Выберите сотрудника (необязательно)
-                      </span>
+                      <span className="text-gray-400">Выберите сотрудника</span>
                     );
                   }
                   const option = employeeOptions.find(
@@ -567,7 +565,7 @@ const Index = () => {
               onChange={(e) => {
                 setFormData({ ...formData, unit_code: e.target.value });
               }}
-              placeholder="Введите код подразделения (необязательно)"
+              placeholder="Введите код подразделения"
               inputClass={
                 "!h-[45px] rounded-[8px] !border-gray-300 text-[15px]"
               }
