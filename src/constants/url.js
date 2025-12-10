@@ -57,4 +57,6 @@ export const URLS = {
   register: "auth/signup",
   roles: "auth/role",
   me: "auth/me",
+  permissions: "auth/permission",
+  typeOfPermissions: "auth/permission-type",
 };

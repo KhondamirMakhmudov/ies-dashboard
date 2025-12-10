@@ -25,11 +25,11 @@ const Index = () => {
   const { data: session } = useSession();
   const [startDateTime, setStartDateTime] = useState("");
   const [endDateTime, setEndDateTime] = useState("");
-  const [selectedEmployees, setSelectedEmployees] = useState([]); // Array of selected employees
+  const [selectedEmployees, setSelectedEmployees] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedPosition, setSelectedPosition] = useState("");
   const [isOpen, setIsOpen] = useState(false);
-  const [employeeDataMap, setEmployeeDataMap] = useState({}); // Store data for each employee
+  const [employeeDataMap, setEmployeeDataMap] = useState({});
   const wrapperRef = useRef();
 
   const {
@@ -47,14 +47,12 @@ const Index = () => {
 
   const employeeList = get(employees, "data.data", []);
 
-  // Get unique positions from employee list
   const uniquePositions = [
     ...new Set(
       employeeList.map((emp) => emp.workplace?.position?.name).filter(Boolean)
     ),
   ];
 
-  // Filter employees by position first, then by search term
   const filteredEmployees = employeeList.filter((emp) => {
     const matchesPosition = selectedPosition
       ? emp.workplace?.position?.name === selectedPosition
@@ -68,7 +66,6 @@ const Index = () => {
     return matchesPosition && matchesSearch && notSelected;
   });
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
@@ -88,7 +85,6 @@ const Index = () => {
 
   const handleRemove = (employeeId) => {
     setSelectedEmployees((prev) => prev.filter((emp) => emp.id !== employeeId));
-    // Remove data for this employee
     setEmployeeDataMap((prev) => {
       const newMap = { ...prev };
       delete newMap[employeeId];
@@ -101,7 +97,6 @@ const Index = () => {
     setEmployeeDataMap({});
   };
 
-  // Fetch data for each selected employee
   const fetchEmployeeData = async (employeeId) => {
     try {
       const response = await fetch(
@@ -121,7 +116,6 @@ const Index = () => {
     }
   };
 
-  // Fetch all employee data when button is clicked
   const handleFetchAllData = async () => {
     if (!startDateTime || !endDateTime || selectedEmployees.length === 0) {
       toast.error("Выберите сотрудников и даты");
@@ -146,12 +140,11 @@ const Index = () => {
     try {
       toast.loading("Экспорт данных...", { id: "exporting" });
 
-      // Extract employee IDs from selected employees
       const employeeIds = selectedEmployees.map((emp) => emp.id);
 
       const data = await getEmployeesLogsByRange({
         token,
-        employeeIds, // Pass array of IDs instead of rangeString
+        employeeIds,
         startDate: startDateTime,
         endDate: endDateTime,
       });
@@ -175,7 +168,7 @@ const Index = () => {
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.3 }}
-        className="bg-white p-6 rounded-md border border-gray-200 w-full my-[15px]"
+        className="p-6 rounded-md border w-full my-[15px]"
         style={{
           backgroundColor: bg("#ffffff", "#1e1e1e"),
           borderColor: border("#e5e7eb", "#333333"),
@@ -183,19 +176,36 @@ const Index = () => {
       >
         {/* Position Filter */}
         <div className="mb-6">
-          <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-            <span className="flex items-center justify-center w-7 h-7 rounded-full bg-blue-100 text-blue-700 text-sm font-bold">
+          <h3
+            className="text-base sm:text-lg font-semibold mb-4 flex items-center gap-2"
+            style={{ color: text("#1f2937", "#f3f4f6") }}
+          >
+            <span
+              className="flex items-center justify-center w-7 h-7 rounded-full text-sm font-bold"
+              style={{
+                backgroundColor: isDark ? "#1e40af" : "#dbeafe",
+                color: isDark ? "#93c5fd" : "#1e40af",
+              }}
+            >
               1
             </span>
             Фильтрация сотрудников
           </h3>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label
+            className="block text-sm font-semibold mb-2"
+            style={{ color: text("#374151", "#d1d5db") }}
+          >
             Должность:
           </label>
           <select
             value={selectedPosition}
             onChange={(e) => setSelectedPosition(e.target.value)}
-            className="w-full h-[48px] rounded-lg border-2 border-gray-200 bg-white px-4 text-[15px] text-gray-800 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500 hover:border-blue-400 appearance-none cursor-pointer"
+            className="w-full h-[48px] rounded-lg border-2 px-4 text-[15px] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-200 appearance-none cursor-pointer"
+            style={{
+              backgroundColor: bg("#ffffff", "#2d2d2d"),
+              borderColor: border("#e5e7eb", "#444444"),
+              color: text("#1f2937", "#f3f4f6"),
+            }}
           >
             <option value="">Все должности</option>
             {uniquePositions.map((position, index) => (
@@ -208,27 +218,46 @@ const Index = () => {
 
         {/* Employee Search */}
         <div className="mb-6">
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label
+            className="block text-sm font-semibold mb-2"
+            style={{ color: text("#374151", "#d1d5db") }}
+          >
             Сотрудники:
           </label>
           <div ref={wrapperRef} className="relative">
             <div className="relative">
-              <div className="flex items-center gap-2 bg-white border-2 border-gray-200 rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 min-h-[48px]">
-                <Search className="text-gray-400" fontSize="small" />
+              <div
+                className="flex items-center gap-2 border-2 rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 min-h-[48px]"
+                style={{
+                  backgroundColor: bg("#ffffff", "#2d2d2d"),
+                  borderColor: border("#e5e7eb", "#444444"),
+                }}
+              >
+                <Search
+                  className="transition-colors"
+                  fontSize="small"
+                  style={{ color: isDark ? "#9ca3af" : "#6b7280" }}
+                />
 
                 {/* Selected Employees Tags */}
                 <div className="flex flex-wrap gap-2 flex-1">
                   {selectedEmployees.map((employee) => (
                     <div
                       key={employee.id}
-                      className="flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-1 rounded-md text-sm font-medium"
+                      className="flex items-center gap-2 px-3 py-1 rounded-md text-sm font-medium"
+                      style={{
+                        backgroundColor: isDark
+                          ? "rgba(59, 130, 246, 0.2)"
+                          : "#dbeafe",
+                        color: isDark ? "#93c5fd" : "#1e40af",
+                      }}
                     >
                       <span>
                         {employee.last_name} {employee.first_name}
                       </span>
                       <button
                         onClick={() => handleRemove(employee.id)}
-                        className="hover:bg-blue-200 rounded-full p-0.5 transition"
+                        className="rounded-full p-0.5 transition hover:opacity-70"
                       >
                         <Close style={{ fontSize: 14 }} />
                       </button>
@@ -249,50 +278,82 @@ const Index = () => {
                         ? "Поиск сотрудников..."
                         : "Добавить еще..."
                     }
-                    className="flex-1 outline-none text-gray-700 min-w-[150px]"
+                    className="flex-1 outline-none min-w-[150px]"
+                    style={{
+                      backgroundColor: "transparent",
+                      color: text("#1f2937", "#f3f4f6"),
+                    }}
                   />
                 </div>
 
                 {selectedEmployees.length > 0 && (
                   <button
                     onClick={handleRemoveAll}
-                    className="text-gray-400 hover:text-red-500 transition"
+                    className="transition hover:opacity-70"
                     title="Очистить все"
+                    style={{ color: isDark ? "#f87171" : "#dc2626" }}
                   >
                     <Delete fontSize="small" />
                   </button>
                 )}
 
                 <KeyboardArrowDownIcon
-                  className={`text-gray-400 transition-transform ${
+                  className={`transition-transform ${
                     isOpen ? "rotate-180" : ""
                   }`}
                   fontSize="small"
+                  style={{ color: isDark ? "#9ca3af" : "#6b7280" }}
                 />
               </div>
             </div>
 
             {/* Dropdown Options */}
             {isOpen && (
-              <div className="absolute z-10 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-xl max-h-64 overflow-y-auto">
+              <div
+                className="absolute z-10 w-full mt-2 border rounded-lg shadow-xl max-h-64 overflow-y-auto"
+                style={{
+                  backgroundColor: bg("#ffffff", "#2d2d2d"),
+                  borderColor: border("#e5e7eb", "#444444"),
+                }}
+              >
                 {filteredEmployees.length > 0 ? (
                   filteredEmployees.map((employee) => (
                     <div
                       key={employee.id}
                       onClick={() => handleSelect(employee)}
-                      className="px-4 py-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition"
+                      className="px-4 py-3 cursor-pointer border-b last:border-b-0 transition"
+                      style={{
+                        borderColor: border("#f3f4f6", "#374151"),
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = isDark
+                          ? "#374151"
+                          : "#eff6ff";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = "transparent";
+                      }}
                     >
-                      <div className="font-medium text-gray-800">
+                      <div
+                        className="font-medium"
+                        style={{ color: text("#1f2937", "#f3f4f6") }}
+                      >
                         {employee.last_name} {employee.first_name}{" "}
                         {employee.middle_name}
                       </div>
-                      <div className="text-sm text-gray-500">
+                      <div
+                        className="text-sm"
+                        style={{ color: text("#6b7280", "#9ca3af") }}
+                      >
                         {employee.workplace?.position?.name}
                       </div>
                     </div>
                   ))
                 ) : (
-                  <div className="px-4 py-3 text-gray-500 text-center">
+                  <div
+                    className="px-4 py-3 text-center"
+                    style={{ color: text("#6b7280", "#9ca3af") }}
+                  >
                     {selectedEmployees.length === employeeList.length
                       ? "Все сотрудники выбраны"
                       : "Сотрудники не найдены"}
@@ -304,7 +365,10 @@ const Index = () => {
 
           {/* Selected count */}
           {selectedEmployees.length > 0 && (
-            <p className="text-sm text-gray-600 mt-2">
+            <p
+              className="text-sm mt-2"
+              style={{ color: text("#6b7280", "#9ca3af") }}
+            >
               Выбрано сотрудников:{" "}
               <span className="font-semibold">{selectedEmployees.length}</span>
             </p>
@@ -312,46 +376,69 @@ const Index = () => {
         </div>
 
         {/* Divider */}
-        <div className="border-t border-gray-200 my-6"></div>
+        <div
+          className="border-t my-6"
+          style={{ borderColor: border("#e5e7eb", "#374151") }}
+        ></div>
 
         {/* Date Range */}
         <div className="mb-6">
-          <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-            <span className="flex items-center justify-center w-7 h-7 rounded-full bg-blue-100 text-blue-700 text-sm font-bold">
+          <h3
+            className="text-base sm:text-lg font-semibold mb-4 flex items-center gap-2"
+            style={{ color: text("#1f2937", "#f3f4f6") }}
+          >
+            <span
+              className="flex items-center justify-center w-7 h-7 rounded-full text-sm font-bold"
+              style={{
+                backgroundColor: isDark ? "#1e40af" : "#dbeafe",
+                color: isDark ? "#93c5fd" : "#1e40af",
+              }}
+            >
               2
             </span>
             Период отчёта
           </h3>
           <div className="grid sm:grid-cols-2 gap-4 sm:gap-6">
             <div className="space-y-2">
-              <label className=" text-sm font-semibold text-gray-700 mb-2 flex items-center  gap-2">
-                <DateRangeIcon /> <p>Дата и время начала</p>
+              <label
+                className="text-sm font-semibold mb-2 flex items-center gap-2"
+                style={{ color: text("#374151", "#d1d5db") }}
+              >
+                <DateRangeIcon />
+                <p>Дата и время начала</p>
               </label>
               <Input
                 type="datetime-local"
                 value={startDateTime}
                 onChange={(e) => setStartDateTime(e.target.value)}
-                inputClass="!h-[48px] !border-2 !border-gray-200 !rounded-lg hover:!border-blue-400 focus:!border-blue-500 transition-colors"
+                inputClass="!h-[48px] !border-2 !rounded-lg transition-colors"
               />
             </div>
 
             <div className="space-y-2">
-              <label className=" text-sm font-semibold text-gray-700 mb-2 flex items-center  gap-2">
-                <DateRangeIcon /> <p>Дата и время окончания</p>
+              <label
+                className="text-sm font-semibold mb-2 flex items-center gap-2"
+                style={{ color: text("#374151", "#d1d5db") }}
+              >
+                <DateRangeIcon />
+                <p>Дата и время окончания</p>
               </label>
 
               <Input
                 type="datetime-local"
                 value={endDateTime}
                 onChange={(e) => setEndDateTime(e.target.value)}
-                inputClass="!h-[48px] !border-2 !border-gray-200 !rounded-lg hover:!border-blue-400 focus:!border-blue-500 transition-colors"
+                inputClass="!h-[48px] !border-2 !rounded-lg transition-colors"
               />
             </div>
           </div>
         </div>
 
         {/* Divider */}
-        <div className="border-t border-gray-200 mb-6"></div>
+        <div
+          className="border-t mb-6"
+          style={{ borderColor: border("#e5e7eb", "#374151") }}
+        ></div>
 
         {/* Action Buttons */}
         <div className="flex items-center gap-3 flex-wrap">
@@ -360,7 +447,38 @@ const Index = () => {
               selectedEmployees.length === 0 || !startDateTime || !endDateTime
             }
             onClick={handleExport}
-            className="flex items-center gap-2 bg-[#00733B] hover:bg-[#00632F] px-5 py-3 rounded-lg text-white font-medium disabled:bg-gray-400 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg"
+            className="flex items-center gap-2 px-5 py-3 rounded-lg font-medium disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg"
+            style={{
+              backgroundColor:
+                selectedEmployees.length === 0 || !startDateTime || !endDateTime
+                  ? isDark
+                    ? "#4b5563"
+                    : "#9ca3af"
+                  : "#00733B",
+              color: "#ffffff",
+              opacity:
+                selectedEmployees.length === 0 || !startDateTime || !endDateTime
+                  ? 0.6
+                  : 1,
+            }}
+            onMouseEnter={(e) => {
+              if (
+                selectedEmployees.length > 0 &&
+                startDateTime &&
+                endDateTime
+              ) {
+                e.currentTarget.style.backgroundColor = "#00632F";
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (
+                selectedEmployees.length > 0 &&
+                startDateTime &&
+                endDateTime
+              ) {
+                e.currentTarget.style.backgroundColor = "#00733B";
+              }
+            }}
           >
             <Image
               src={"/icons/excel.svg"}

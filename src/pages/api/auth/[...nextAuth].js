@@ -21,6 +21,49 @@ function decodeJWT(token) {
   }
 }
 
+// Helper function to extract role names from the new roles array format
+function extractRoles(rolesArray) {
+  if (!Array.isArray(rolesArray)) {
+    return [];
+  }
+  return rolesArray.map((role) => role.name);
+}
+
+// Helper function to extract all permissions from roles
+function extractPermissions(rolesArray) {
+  if (!Array.isArray(rolesArray)) {
+    return [];
+  }
+
+  const allPermissions = [];
+  rolesArray.forEach((role) => {
+    if (Array.isArray(role.permissions)) {
+      role.permissions.forEach((permission) => {
+        allPermissions.push({
+          name: permission.name,
+          types: permission.types || [],
+          role: role.name, // Keep track of which role granted this permission
+        });
+      });
+    }
+  });
+
+  return allPermissions;
+}
+
+// Helper function to check if user has admin privileges
+function isAdmin(rolesArray) {
+  if (!Array.isArray(rolesArray)) {
+    return false;
+  }
+
+  return rolesArray.some(
+    (role) =>
+      role.name === "admin" ||
+      role.permissions?.some((p) => p.name === "*" && p.types?.includes("*"))
+  );
+}
+
 // Track ongoing refresh operations to prevent race conditions
 const refreshPromises = new Map();
 
@@ -41,14 +84,12 @@ async function refreshAccessToken(token) {
         throw new Error("No refresh token available");
       }
 
-      // TO'G'RILASH: Authorization headerida refresh token jo'natiladi
       const response = await fetch(`${config.GENERAL_AUTH_URL}/auth/refresh`, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${token.refreshToken}`, // ← Refresh token shu yerda
+          Authorization: `Bearer ${token.refreshToken}`,
           "Content-Type": "application/json",
         },
-        // Body bo'sh bo'lishi mumkin yoki boshqa ma'lumotlar
       });
 
       console.log("Refresh response status:", response.status);
@@ -57,7 +98,6 @@ async function refreshAccessToken(token) {
         const errorText = await response.text();
         console.error("Refresh token failed:", response.status, errorText);
 
-        // If 401, the refresh token is invalid/expired
         if (response.status === 401) {
           throw new Error("RefreshTokenExpired");
         }
@@ -90,13 +130,12 @@ async function refreshAccessToken(token) {
         tokenType: refreshedTokens.token_type || token.tokenType || "Bearer",
         accessTokenExpires: accessTokenExpires,
         userData: newDecoded,
-        error: undefined, // Clear any previous errors
+        error: undefined,
       };
     } catch (error) {
       console.error("=== TOKEN REFRESH FAILED ===");
       console.error("Error:", error.message);
 
-      // Return token with error flag
       return {
         ...token,
         error:
@@ -105,7 +144,6 @@ async function refreshAccessToken(token) {
             : "RefreshAccessTokenError",
       };
     } finally {
-      // Clean up the promise tracking
       refreshPromises.delete(refreshKey);
     }
   })();
@@ -164,14 +202,13 @@ export const authOptions = {
           }
 
           console.log("Login successful for user:", decoded.username);
+          console.log("User roles:", decoded.roles);
 
           const accessTokenExpires = decoded.exp * 1000;
 
           return {
             id: decoded.sub || username,
             name: decoded.username || username,
-            email:
-              decoded.email || `${decoded.username || username}@company.com`,
             accessToken: data.access_token,
             refreshToken: data.refresh_token,
             tokenType: data.token_type || "Bearer",
@@ -231,7 +268,6 @@ export const authOptions = {
       );
 
       // Refresh if token expires in less than 5 minutes (300 seconds)
-      // This gives plenty of time for the refresh to complete
       const shouldRefresh = secondsUntilExpiry < 300;
 
       if (!shouldRefresh) {
@@ -276,14 +312,23 @@ export const authOptions = {
       session.tokenType = token.tokenType;
       session.accessTokenExpires = token.accessTokenExpires;
 
+      // Extract roles and permissions from the new format
+      const roles = token.userData?.roles || [];
+      const roleNames = extractRoles(roles);
+      const permissions = extractPermissions(roles);
+      const hasAdminAccess = isAdmin(roles);
+
       session.user = {
         id: token.id,
         name: token.name,
-        email: token.email,
         username: token.userData?.username,
-        role: token.userData?.role,
         employee_id: token.userData?.employee_id,
         unit_code: token.userData?.unit_code,
+        // New role structure
+        roles: roleNames, // Array of role names: ["admin"]
+        rolesDetail: roles, // Full roles array with permissions
+        permissions: permissions, // Flattened permissions array
+        isAdmin: hasAdminAccess, // Boolean flag for easy access checking
       };
 
       return session;

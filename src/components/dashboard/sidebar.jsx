@@ -30,6 +30,7 @@ import { signOut, useSession } from "next-auth/react";
 import useAppTheme from "@/hooks/useAppTheme";
 import ContactPageIcon from "@mui/icons-material/ContactPage";
 import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
+import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutline";
 
 // Hammasi uchun menu items (role filter qilinadi)
 const allMenuItems = [
@@ -118,13 +119,16 @@ const allMenuItems = [
     submenu: [
       {
         text: "Пользователи",
-        icon: <SecurityIcon />,
         path: "/dashboard/users",
       },
       {
         text: "Роли",
-        icon: <CameraAltIcon />,
         path: "/dashboard/roles",
+      },
+
+      {
+        text: "Доступ и права",
+        path: "/dashboard/permission-of-roles",
       },
     ],
     roles: ["admin"], // Faqat admin uchun
@@ -144,23 +148,39 @@ function Sidebar({ isOpen = true }) {
   const router = useRouter();
   const { isDark, bg, text, border } = useAppTheme();
 
-  // Role ga qarab menuItems filter qilish
+  // Role ga qarab menuItems filter qilish - YANGILANDI
   const menuItems = useMemo(() => {
-    if (!session?.user?.role) {
-      return []; // Role yo'q bo'lsa, hech narsa ko'rsatma
+    // Agar roles array mavjud bo'lsa (yangi format)
+    if (session?.user?.roles && Array.isArray(session.user.roles)) {
+      const userRoles = session.user.roles.map((r) => r.toLowerCase());
+
+      return allMenuItems.filter((item) => {
+        if (item.roles && Array.isArray(item.roles)) {
+          // Userning birorta ham rolesi item.roles ichida bo'lsa, ko'rsat
+          return item.roles.some((role) =>
+            userRoles.includes(role.toLowerCase())
+          );
+        }
+        // Agar roles yo'q bo'lsa, hamma uchun
+        return true;
+      });
     }
 
-    const userRole = session.user.role.toLowerCase();
+    // Eski format bilan backward compatibility (role string)
+    if (session?.user?.role) {
+      const userRole = session.user.role.toLowerCase();
 
-    return allMenuItems.filter((item) => {
-      // Agar roles array mavjud bo'lsa va user role unda bo'lsa
-      if (item.roles && Array.isArray(item.roles)) {
-        return item.roles.includes(userRole);
-      }
-      // Agar roles yo'q bo'lsa, hamma uchun (fallback)
-      return true;
-    });
-  }, [session?.user?.role]);
+      return allMenuItems.filter((item) => {
+        if (item.roles && Array.isArray(item.roles)) {
+          return item.roles.includes(userRole);
+        }
+        return true;
+      });
+    }
+
+    // Role yo'q bo'lsa, hech narsa ko'rsatma
+    return [];
+  }, [session?.user?.roles, session?.user?.role]);
 
   // Open active submenu on first render
   useEffect(() => {
@@ -193,7 +213,7 @@ function Sidebar({ isOpen = true }) {
   };
 
   // Agar user role noto'g'ri bo'lsa yoki yo'q bo'lsa
-  if (!session?.user?.role) {
+  if (!session?.user?.roles && !session?.user?.role) {
     return (
       <aside
         className={`${
@@ -276,24 +296,6 @@ function Sidebar({ isOpen = true }) {
             }}
           ></div>
         )}
-
-        {/* User role info (debug uchun) */}
-        {/* {isOpen && session?.user?.role && (
-          <div className="mb-4 px-3 py-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/30">
-            <Typography
-              sx={{
-                fontSize: "12px",
-                color: text("#3b82f6", "#93c5fd"),
-                fontWeight: 500,
-                fontFamily: "DM Sans, sans-serif",
-              }}
-              className="flex items-center gap-2"
-            >
-              <span className="font-semibold">Role:</span>
-              <span className="capitalize">{session.user.role}</span>
-            </Typography>
-          </div>
-        )} */}
 
         {/* MENU */}
         <List sx={{ fontFamily: "DM Sans, sans-serif", padding: 0 }}>

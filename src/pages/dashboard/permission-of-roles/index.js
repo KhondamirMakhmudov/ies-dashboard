@@ -23,7 +23,7 @@ import {
   Box,
   Divider,
 } from "@mui/material";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import usePostGeneralAuthQuery from "@/hooks/general-auth/usePostQuery";
 import toast from "react-hot-toast";
 import MethodModal from "@/components/modal/method-modal";
@@ -45,28 +45,37 @@ const Index = () => {
   const [editModal, setEditModal] = useState(false);
   const [deleteModal, setDeleteModal] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
-  const [addPermissionModal, setAddPermissionModal] = useState(false);
-  const [removePermissionModal, setRemovePermissionModal] = useState(false);
-  const [addUserModal, setAddUserModal] = useState(false);
-  const [removeUserModal, setRemoveUserModal] = useState(false);
-  const [selectedPermissionId, setSelectedPermissionId] = useState("");
-  const [selectedPermissionToRemove, setSelectedPermissionToRemove] =
-    useState(null);
-  const [selectedUserId, setSelectedUserId] = useState("");
-  const [selectedUserToRemove, setSelectedUserToRemove] = useState(null);
+  const [addPermissionTypeModal, setAddPermissionTypeModal] = useState(false);
+  const [removePermissionTypeModal, setRemovePermissionTypeModal] =
+    useState(false);
+  const [selectedPermissionTypeId, setSelectedPermissionTypeId] = useState("");
+  const [selectedTypeToRemove, setSelectedTypeToRemove] = useState(null);
   const [name, setName] = useState("");
-  const [employeeDataMap, setEmployeeDataMap] = useState({});
 
   const { data: session } = useSession();
 
-  // Get roles
+  // Get permissions
   const {
-    data: roles,
+    data: permissions,
     isLoading,
     isFetching,
   } = useGetGeneralAuthQuery({
-    key: KEYS.roles,
-    url: URLS.roles,
+    key: KEYS.permissions,
+    url: URLS.permissions,
+    headers: {
+      Authorization: `Bearer ${session?.accessToken}`,
+      Accept: "application/json",
+    },
+    enabled: !!session?.accessToken,
+  });
+  // get type permissions
+  const {
+    data: typeOfPermissions,
+    isLoading: isLoadingTypeOfPermission,
+    isFetching: isFetchingTypeOfPermission,
+  } = useGetGeneralAuthQuery({
+    key: KEYS.typeOfPermissions,
+    url: URLS.typeOfPermissions,
     headers: {
       Authorization: `Bearer ${session?.accessToken}`,
       Accept: "application/json",
@@ -74,81 +83,26 @@ const Index = () => {
     enabled: !!session?.accessToken,
   });
 
-  // Get permissions for add/remove
-  const { data: permissions, isLoading: isLoadingPermissions } =
-    useGetGeneralAuthQuery({
-      key: KEYS.permissions,
-      url: URLS.permissions,
-      headers: {
-        Authorization: `Bearer ${session?.accessToken}`,
-        Accept: "application/json",
-      },
-      enabled: !!session?.accessToken,
-    });
+  const optionsTypeOfPermissions = get(typeOfPermissions, "data.data", []).map(
+    (entry) => ({
+      value: entry.id,
+      label: entry.name,
+    })
+  );
 
-  // Get users for add/remove
-  const { data: users, isLoading: isLoadingUsers } = useGetGeneralAuthQuery({
-    key: KEYS.users,
-    url: URLS.users,
-    headers: {
-      Authorization: `Bearer ${session?.accessToken}`,
-      Accept: "application/json",
-    },
-    enabled: !!session?.accessToken,
+  // Create permission
+  const { mutate: createPermission } = usePostGeneralAuthQuery({
+    listKeyId: "create-permission",
   });
 
-  // Get employee data for users
-  useEffect(() => {
-    if (roles?.data?.data) {
-      const employeeIds = [];
-      roles.data.data.forEach((role) => {
-        role.users?.forEach((user) => {
-          if (user.employee_id && !employeeIds.includes(user.employee_id)) {
-            employeeIds.push(user.employee_id);
-          }
-        });
-      });
-
-      // Bu yerda employee ma'lumotlarini olish uchun API chaqirish kerak
-      // Hozircha demo ma'lumotlar bilan ishlaymiz
-      if (employeeIds.length > 0) {
-        const mockEmployeeData = {};
-        employeeIds.forEach((id) => {
-          mockEmployeeData[id] = {
-            first_name: "Ism",
-            last_name: "Familiya",
-            middle_name: "Sharif",
-            position: "Lavozim",
-          };
-        });
-        setEmployeeDataMap(mockEmployeeData);
-      }
-    }
-  }, [roles]);
-
-  const optionsPermissions = get(permissions, "data.data", []).map((entry) => ({
-    value: entry.id,
-    label: entry.name,
-  }));
-
-  const optionsUsers = get(users, "data.data", []).map((entry) => ({
-    value: entry.id,
-    label: entry.username,
-  }));
-
-  // Create role
-  const { mutate: createRole } = usePostGeneralAuthQuery({
-    listKeyId: "create-role",
-  });
-
-  const submitCreateRole = () => {
+  const submitCreatePermission = () => {
     if (!name.trim()) {
       toast.error("Пожалуйста, введите имя", { position: "top-center" });
       return;
     }
-    createRole(
+    createPermission(
       {
-        url: URLS.roles,
+        url: URLS.permissions,
         attributes: { name: name },
         config: {
           headers: { Authorization: `Bearer ${session?.accessToken}` },
@@ -156,10 +110,10 @@ const Index = () => {
       },
       {
         onSuccess: () => {
-          toast.success("Роль успешно создана", { position: "top-center" });
+          toast.success("Права успешно созданы", { position: "top-center" });
           setCreateModal(false);
           setName("");
-          queryClient.invalidateQueries(KEYS.roles);
+          queryClient.invalidateQueries(KEYS.permissions);
         },
         onError: (error) => {
           toast.error(`Ошибка: ${error?.message || error}`, {
@@ -170,8 +124,8 @@ const Index = () => {
     );
   };
 
-  // Edit role
-  const submitEditRole = async () => {
+  // Edit permission
+  const submitEditPermission = async () => {
     if (!name.trim()) {
       toast.error("Пожалуйста, введите имя", { position: "top-center" });
       return;
@@ -179,7 +133,7 @@ const Index = () => {
 
     try {
       const response = await fetch(
-        `${config.GENERAL_AUTH_URL}/${URLS.roles}/${selectedId}`,
+        `${config.GENERAL_AUTH_URL}/${URLS.permissions}/${selectedId}`,
         {
           method: "PATCH",
           headers: {
@@ -192,11 +146,11 @@ const Index = () => {
 
       if (!response.ok) throw new Error("Ошибка при обновлении");
 
-      toast.success("Роль успешно обновлена", { position: "top-center" });
+      toast.success("Права успешно обновлены", { position: "top-center" });
       setEditModal(false);
       setSelectedId(null);
       setName("");
-      queryClient.invalidateQueries(KEYS.roles);
+      queryClient.invalidateQueries(KEYS.permissions);
     } catch (error) {
       toast.error(`Ошибка: ${error?.message || error}`, {
         position: "top-right",
@@ -204,11 +158,11 @@ const Index = () => {
     }
   };
 
-  // Delete role
-  const submitDeleteRole = async () => {
+  // Delete permission
+  const submitDeletePermission = async () => {
     try {
       const response = await fetch(
-        `${config.GENERAL_AUTH_URL}/${URLS.roles}/${selectedId}`,
+        `${config.GENERAL_AUTH_URL}/${URLS.permissions}/${selectedId}`,
         {
           method: "DELETE",
           headers: {
@@ -220,10 +174,10 @@ const Index = () => {
 
       if (!response.ok) throw new Error("Ошибка при удалении");
 
-      toast.success("Роль успешно удалена", { position: "top-center" });
+      toast.success("Права успешно удалены", { position: "top-center" });
       setDeleteModal(false);
       setSelectedId(null);
-      queryClient.invalidateQueries(KEYS.roles);
+      queryClient.invalidateQueries(KEYS.permissions);
     } catch (error) {
       toast.error(`Ошибка: ${error?.message || error}`, {
         position: "top-right",
@@ -231,33 +185,33 @@ const Index = () => {
     }
   };
 
-  // Add permission to role
-  const { mutate: addPermission } = usePostGeneralAuthQuery({
-    listKeyId: "add-permission-to-role",
+  // Add permission type
+  const { mutate: addPermissionType } = usePostGeneralAuthQuery({
+    listKeyId: "add-permission-type",
   });
 
-  const submitAddPermission = () => {
-    if (!selectedPermissionId) {
-      toast.error("Выберите разрешение", { position: "top-center" });
+  const submitAddPermissionType = () => {
+    if (!selectedPermissionTypeId) {
+      toast.error("Выберите тип разрешения", { position: "top-center" });
       return;
     }
 
-    addPermission(
+    addPermissionType(
       {
-        url: `${URLS.roles}/add_permission?role_id=${selectedId}&permission_id=${selectedPermissionId}`,
+        url: `${URLS.permissions}/add_permission_type?permission_id=${selectedId}&permission_type_id=${selectedPermissionTypeId}`,
         config: {
           headers: { Authorization: `Bearer ${session?.accessToken}` },
         },
       },
       {
         onSuccess: () => {
-          toast.success("Разрешение успешно добавлено", {
+          toast.success("Тип разрешения успешно добавлен", {
             position: "top-center",
           });
-          setAddPermissionModal(false);
+          setAddPermissionTypeModal(false);
           setSelectedId(null);
-          setSelectedPermissionId("");
-          queryClient.invalidateQueries(KEYS.roles);
+          setSelectedPermissionTypeId("");
+          queryClient.invalidateQueries(KEYS.permissions);
         },
         onError: (error) => {
           toast.error(`Ошибка: ${error?.message || error}`, {
@@ -268,28 +222,28 @@ const Index = () => {
     );
   };
 
-  // Remove permission from role
-  const { mutate: removePermission } = usePostGeneralAuthQuery({
-    listKeyId: "remove-permission-from-role",
+  // Remove permission type
+  const { mutate: removePermissionType } = usePostGeneralAuthQuery({
+    listKeyId: "remove-permission-type",
   });
 
-  const submitRemovePermission = () => {
-    removePermission(
+  const submitRemovePermissionType = () => {
+    removePermissionType(
       {
-        url: `${URLS.roles}/remove_permission?role_id=${selectedId}&permission_id=${selectedPermissionToRemove}`,
+        url: `${URLS.permissions}/remove_permission_type?permission_id=${selectedId}&permission_type_id=${selectedTypeToRemove}`,
         config: {
           headers: { Authorization: `Bearer ${session?.accessToken}` },
         },
       },
       {
         onSuccess: () => {
-          toast.success("Разрешение успешно удалено", {
+          toast.success("Тип разрешения успешно удален", {
             position: "top-center",
           });
-          setRemovePermissionModal(false);
+          setRemovePermissionTypeModal(false);
           setSelectedId(null);
-          setSelectedPermissionToRemove(null);
-          queryClient.invalidateQueries(KEYS.roles);
+          setSelectedTypeToRemove(null);
+          queryClient.invalidateQueries(KEYS.permissions);
         },
         onError: (error) => {
           toast.error(`Ошибка: ${error?.message || error}`, {
@@ -300,77 +254,8 @@ const Index = () => {
     );
   };
 
-  // Add user to role
-  const { mutate: addUser } = usePostGeneralAuthQuery({
-    listKeyId: "add-user-to-role",
-  });
-
-  const submitAddUser = () => {
-    if (!selectedUserId) {
-      toast.error("Выберите пользователя", { position: "top-center" });
-      return;
-    }
-
-    addUser(
-      {
-        url: `${URLS.roles}/add_user?role_id=${selectedId}&user_id=${selectedUserId}`,
-        config: {
-          headers: { Authorization: `Bearer ${session?.accessToken}` },
-        },
-      },
-      {
-        onSuccess: () => {
-          toast.success("Пользователь успешно добавлен", {
-            position: "top-center",
-          });
-          setAddUserModal(false);
-          setSelectedId(null);
-          setSelectedUserId("");
-          queryClient.invalidateQueries(KEYS.roles);
-        },
-        onError: (error) => {
-          toast.error(`Ошибка: ${error?.message || error}`, {
-            position: "top-right",
-          });
-        },
-      }
-    );
-  };
-
-  // Remove user from role
-  const { mutate: removeUser } = usePostGeneralAuthQuery({
-    listKeyId: "remove-user-from-role",
-  });
-
-  const submitRemoveUser = () => {
-    removeUser(
-      {
-        url: `${URLS.roles}/remove_user?role_id=${selectedId}&user_id=${selectedUserToRemove}`,
-        config: {
-          headers: { Authorization: `Bearer ${session?.accessToken}` },
-        },
-      },
-      {
-        onSuccess: () => {
-          toast.success("Пользователь успешно удален", {
-            position: "top-center",
-          });
-          setRemoveUserModal(false);
-          setSelectedId(null);
-          setSelectedUserToRemove(null);
-          queryClient.invalidateQueries(KEYS.roles);
-        },
-        onError: (error) => {
-          toast.error(`Ошибка: ${error?.message || error}`, {
-            position: "top-right",
-          });
-        },
-      }
-    );
-  };
-
-  // Helper function for permission colors
-  const getPermissionColor = (permissionName) => {
+  // Helper function for type colors
+  const getTypeColor = (typeName) => {
     const colors = {
       "*": {
         bg: isDark ? "#7c2d12" : "#fed7aa",
@@ -393,33 +278,27 @@ const Index = () => {
         text: isDark ? "#fca5a5" : "#dc2626",
       },
     };
-
-    const lowerName = permissionName?.toLowerCase();
-    for (const [key, value] of Object.entries(colors)) {
-      if (lowerName.includes(key)) {
-        return value;
+    return (
+      colors[typeName?.toLowerCase()] || {
+        bg: isDark ? "#374151" : "#f3f4f6",
+        text: isDark ? "#9ca3af" : "#6b7280",
       }
-    }
-
-    return {
-      bg: isDark ? "#374151" : "#f3f4f6",
-      text: isDark ? "#9ca3af" : "#6b7280",
-    };
+    );
   };
 
   if (isLoading || isFetching) {
     return (
-      <DashboardLayout headerTitle={"Роли и доступы"}>
+      <DashboardLayout headerTitle={"Доступ и права"}>
         <ContentLoader />
       </DashboardLayout>
     );
   }
 
-  const rolesData = get(roles, "data.data", []);
+  const permissionsData = get(permissions, "data.data", []);
 
   return (
-    <DashboardLayout headerTitle={"Роли и доступы"}>
-      {isEmpty(rolesData) ? (
+    <DashboardLayout headerTitle={"Доступ и права"}>
+      {isEmpty(permissionsData) ? (
         <NoData onCreate={() => setCreateModal(true)} />
       ) : (
         <motion.div
@@ -439,14 +318,14 @@ const Index = () => {
               onClick={() => setCreateModal(true)}
               variant="contained"
             >
-              Создать роль
+              Создать разрешение
             </PrimaryButton>
 
             <Link
-              href="/dashboard/permissions"
+              href="/dashboard/permission-of-roles/types"
               className="bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-all duration-200 flex items-center justify-center gap-2 shadow-sm hover:shadow-md px-4 py-2"
             >
-              <span>Все разрешения</span>
+              <span>Все типы разрешений</span>
               <OpenInNewIcon sx={{ fontSize: 16 }} />
             </Link>
           </div>
@@ -464,14 +343,14 @@ const Index = () => {
                 variant="body2"
                 style={{ color: text("#6b7280", "#9ca3af") }}
               >
-                Всего ролей
+                Всего разрешений
               </Typography>
               <Typography
                 variant="h4"
                 style={{ color: text("#111827", "#f9fafb") }}
                 className="font-bold"
               >
-                {rolesData.length}
+                {permissionsData.length}
               </Typography>
             </div>
             <div
@@ -485,14 +364,14 @@ const Index = () => {
                 variant="body2"
                 style={{ color: text("#6b7280", "#9ca3af") }}
               >
-                С разрешениями
+                С типами
               </Typography>
               <Typography
                 variant="h4"
                 style={{ color: text("#111827", "#f9fafb") }}
                 className="font-bold"
               >
-                {rolesData.filter((r) => r.permissions?.length > 0).length}
+                {permissionsData.filter((p) => p.types?.length > 0).length}
               </Typography>
             </div>
             <div
@@ -506,14 +385,14 @@ const Index = () => {
                 variant="body2"
                 style={{ color: text("#6b7280", "#9ca3af") }}
               >
-                С пользователями
+                С ролями
               </Typography>
               <Typography
                 variant="h4"
                 style={{ color: text("#111827", "#f9fafb") }}
                 className="font-bold"
               >
-                {rolesData.filter((r) => r.users?.length > 0).length}
+                {permissionsData.filter((p) => p.roles?.length > 0).length}
               </Typography>
             </div>
             <div
@@ -527,28 +406,25 @@ const Index = () => {
                 variant="body2"
                 style={{ color: text("#6b7280", "#9ca3af") }}
               >
-                Всего пользователей
+                Доступных типов
               </Typography>
               <Typography
                 variant="h4"
                 style={{ color: text("#111827", "#f9fafb") }}
                 className="font-bold"
               >
-                {rolesData.reduce(
-                  (sum, role) => sum + (role.users?.length || 0),
-                  0
-                )}
+                {get(typeOfPermissions, "data.data", []).length}
               </Typography>
             </div>
           </div>
 
-          {/* Roles Cards Grid */}
+          {/* Permissions Cards Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {rolesData.map((role, index) => {
-              const isAdmin = role.name.toLowerCase() === "admin";
+            {permissionsData.map((permission, index) => {
+              const isWildcard = permission.name === "*";
               return (
                 <motion.div
-                  key={role.id}
+                  key={permission.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
@@ -579,11 +455,11 @@ const Index = () => {
                               fontWeight: 600,
                             }}
                           >
-                            {role.name}
+                            {permission.name}
                           </Typography>
-                          {isAdmin && (
+                          {isWildcard && (
                             <Chip
-                              label="Администратор"
+                              label="Все права"
                               size="small"
                               sx={{
                                 backgroundColor: isDark ? "#1e3a8a" : "#dbeafe",
@@ -599,10 +475,10 @@ const Index = () => {
                             size="small"
                             onClick={() => {
                               setEditModal(true);
-                              setName(role.name);
-                              setSelectedId(role.id);
+                              setName(permission.name);
+                              setSelectedId(permission.id);
                             }}
-                            disabled={isAdmin}
+                            disabled={isWildcard}
                             sx={{
                               width: "32px",
                               height: "32px",
@@ -621,9 +497,9 @@ const Index = () => {
                             size="small"
                             onClick={() => {
                               setDeleteModal(true);
-                              setSelectedId(role.id);
+                              setSelectedId(permission.id);
                             }}
-                            disabled={isAdmin}
+                            disabled={isWildcard}
                             sx={{
                               width: "32px",
                               height: "32px",
@@ -643,22 +519,19 @@ const Index = () => {
 
                       <Divider sx={{ my: 2 }} />
 
-                      {/* Users Section */}
+                      {/* Roles Section */}
                       <Box className="mb-3">
-                        <div className="flex items-center justify-between mb-2">
-                          <Typography
-                            variant="caption"
-                            style={{
-                              color: text("#6b7280", "#9ca3af"),
-                              fontWeight: 600,
-                              textTransform: "uppercase",
-                              fontSize: "11px",
-                            }}
-                          >
-                            Пользователи
-                          </Typography>
-                        </div>
-
+                        <Typography
+                          variant="caption"
+                          style={{
+                            color: text("#6b7280", "#9ca3af"),
+                            fontWeight: 600,
+                            textTransform: "uppercase",
+                            fontSize: "11px",
+                          }}
+                        >
+                          Роли
+                        </Typography>
                         <Stack
                           direction="row"
                           spacing={1}
@@ -666,59 +539,33 @@ const Index = () => {
                           useFlexGap
                           className="mt-2"
                         >
-                          {role.users?.length > 0 ? (
-                            <>
-                              <Stack
-                                direction="column"
-                                spacing={1}
-                                className="mt-2"
-                              >
-                                {role.users.map((user) => {
-                                  const employeeData = user.employee_id
-                                    ? employeeDataMap[user.employee_id]
-                                    : null;
-                                  let displayName = user.username;
-
-                                  if (employeeData) {
-                                    const parts = [
-                                      employeeData.last_name,
-                                      employeeData.first_name,
-                                      employeeData.middle_name,
-                                    ].filter(Boolean);
-                                    if (parts.length > 0) {
-                                      displayName = parts.join(" ");
-                                    }
-                                  }
-
-                                  return (
-                                    <Chip
-                                      key={user.id}
-                                      label={displayName}
-                                      size="small"
-                                      sx={{
-                                        backgroundColor: isDark
-                                          ? "#374151"
-                                          : "#f3f4f6",
-                                        color: text("#111827", "#f9fafb"),
-                                        fontWeight: 500,
-                                      }}
-                                    />
-                                  );
-                                })}
-                              </Stack>
-                            </>
+                          {permission.roles?.length > 0 ? (
+                            permission.roles.map((role) => (
+                              <Chip
+                                key={role.id}
+                                label={role.name}
+                                size="small"
+                                sx={{
+                                  backgroundColor: isDark
+                                    ? "#065f46"
+                                    : "#d1fae5",
+                                  color: isDark ? "#6ee7b7" : "#047857",
+                                  fontWeight: 500,
+                                }}
+                              />
+                            ))
                           ) : (
                             <Typography
                               variant="body2"
                               style={{ color: text("#9ca3af", "#6b7280") }}
                             >
-                              Нет пользователей
+                              Нет ролей
                             </Typography>
                           )}
                         </Stack>
                       </Box>
 
-                      {/* Permissions Section */}
+                      {/* Types Section with Actions */}
                       <Box>
                         <div className="flex items-center justify-between mb-2">
                           <Typography
@@ -730,14 +577,15 @@ const Index = () => {
                               fontSize: "11px",
                             }}
                           >
-                            Разрешения
+                            Типы разрешений
                           </Typography>
                           <div className="flex gap-1">
+                            {/* ADD BUTTON (Green-ish but fits your orange/red theme) */}
                             <IconButton
                               size="small"
                               onClick={() => {
-                                setAddPermissionModal(true);
-                                setSelectedId(role.id);
+                                setAddPermissionTypeModal(true);
+                                setSelectedId(permission.id);
                               }}
                               sx={{
                                 width: "32px",
@@ -752,12 +600,13 @@ const Index = () => {
                               <AddIcon fontSize="small" />
                             </IconButton>
 
-                            {role.permissions?.length > 0 && (
+                            {/* REMOVE BUTTON */}
+                            {permission.types?.length > 0 && (
                               <IconButton
                                 size="small"
                                 onClick={() => {
-                                  setRemovePermissionModal(true);
-                                  setSelectedId(role.id);
+                                  setRemovePermissionTypeModal(true);
+                                  setSelectedId(permission.id);
                                 }}
                                 sx={{
                                   width: "32px",
@@ -780,15 +629,13 @@ const Index = () => {
                           flexWrap="wrap"
                           useFlexGap
                         >
-                          {role.permissions?.length > 0 ? (
-                            role.permissions.map((permission) => {
-                              const colors = getPermissionColor(
-                                permission.name
-                              );
+                          {permission.types?.length > 0 ? (
+                            permission.types.map((type) => {
+                              const colors = getTypeColor(type.name);
                               return (
                                 <Chip
-                                  key={permission.id}
-                                  label={permission.name}
+                                  key={type.id}
+                                  label={type.name}
                                   size="small"
                                   sx={{
                                     backgroundColor: colors.bg,
@@ -805,7 +652,7 @@ const Index = () => {
                               variant="body2"
                               style={{ color: text("#9ca3af", "#6b7280") }}
                             >
-                              Нет разрешений
+                              Нет типов
                             </Typography>
                           )}
                         </Stack>
@@ -819,7 +666,7 @@ const Index = () => {
         </motion.div>
       )}
 
-      {/* Create Role Modal */}
+      {/* Create Modal */}
       {createModal && (
         <MethodModal
           open={createModal}
@@ -828,11 +675,11 @@ const Index = () => {
             setCreateModal(false);
             setName("");
           }}
-          title="Создать роль"
+          title="Создать разрешение"
         >
           <div className="my-[15px] space-y-[10px]">
             <Input
-              label="Имя роли"
+              label="Имя разрешения"
               type="text"
               value={name}
               inputClass={
@@ -844,14 +691,16 @@ const Index = () => {
                 " !h-[48px] rounded-[8px] text-[15px]"
               }
               onChange={(e) => setName(e.target.value)}
-              placeholder="Введите имя роли"
+              placeholder="Введите имя разрешения"
             />
-            <PrimaryButton onClick={submitCreateRole}>Создать</PrimaryButton>
+            <PrimaryButton onClick={submitCreatePermission}>
+              Создать
+            </PrimaryButton>
           </div>
         </MethodModal>
       )}
 
-      {/* Edit Role Modal */}
+      {/* Edit Modal */}
       {editModal && (
         <MethodModal
           open={editModal}
@@ -861,11 +710,11 @@ const Index = () => {
             setName("");
             setSelectedId(null);
           }}
-          title="Изменить роль"
+          title="Изменить разрешение"
         >
           <div className="my-[15px] space-y-[10px]">
             <Input
-              label="Имя роли"
+              label="Имя разрешения"
               type="text"
               value={name}
               inputClass={
@@ -877,73 +726,76 @@ const Index = () => {
                 " !h-[48px] rounded-[8px] text-[15px]"
               }
               onChange={(e) => setName(e.target.value)}
-              placeholder="Введите имя роли"
+              placeholder="Введите имя разрешения"
             />
-            <PrimaryButton backgroundColor="#fb923c" onClick={submitEditRole}>
+            <PrimaryButton
+              backgroundColor="#fb923c"
+              onClick={submitEditPermission}
+            >
               Изменить
             </PrimaryButton>
           </div>
         </MethodModal>
       )}
 
-      {/* Add Permission Modal */}
-      {addPermissionModal && (
+      {/* Add Permission Type Modal */}
+      {addPermissionTypeModal && (
         <MethodModal
-          open={addPermissionModal}
+          open={addPermissionTypeModal}
           showCloseIcon={true}
           closeClick={() => {
-            setAddPermissionModal(false);
+            setAddPermissionTypeModal(false);
             setSelectedId(null);
-            setSelectedPermissionId("");
+            setSelectedPermissionTypeId("");
           }}
-          title="Добавить разрешение"
+          title="Добавить тип разрешения"
         >
           <div className="my-[15px] space-y-[10px]">
             <CustomSelect
-              label={"Разрешение"}
-              options={optionsPermissions}
-              value={selectedPermissionId}
-              onChange={(val) => setSelectedPermissionId(val)}
-              placeholder="Выберите разрешение"
+              label={"Тип разрешения"}
+              options={optionsTypeOfPermissions}
+              value={selectedPermissionTypeId}
+              onChange={(val) => setSelectedPermissionTypeId(val)}
+              placeholder="Выберите тип разрешения"
               returnObject={false}
             />
-            <PrimaryButton onClick={submitAddPermission}>
+            <PrimaryButton onClick={submitAddPermissionType}>
               Добавить
             </PrimaryButton>
           </div>
         </MethodModal>
       )}
 
-      {/* Remove Permission Modal */}
-      {removePermissionModal && (
+      {/* Remove Permission Type Modal */}
+      {removePermissionTypeModal && (
         <MethodModal
-          open={removePermissionModal}
+          open={removePermissionTypeModal}
           showCloseIcon={true}
           closeClick={() => {
-            setRemovePermissionModal(false);
+            setRemovePermissionTypeModal(false);
             setSelectedId(null);
-            setSelectedPermissionToRemove(null);
+            setSelectedTypeToRemove(null);
           }}
-          title="Удалить разрешение"
+          title="Удалить тип разрешения"
         >
           <div className="my-[15px] space-y-[10px]">
             <CustomSelect
-              label="Выберите разрешение для удаления"
-              value={selectedPermissionToRemove}
-              onChange={(value) => setSelectedPermissionToRemove(value)}
+              label="Выберите тип для удаления"
+              value={selectedTypeToRemove}
+              onChange={(value) => setSelectedTypeToRemove(value)}
               options={
-                rolesData
-                  .find((r) => r.id === selectedId)
-                  ?.permissions?.map((permission) => ({
-                    value: permission.id,
-                    label: permission.name,
+                permissionsData
+                  .find((p) => p.id === selectedId)
+                  ?.types?.map((type) => ({
+                    value: type.id,
+                    label: type.name,
                   })) || []
               }
-              placeholder="Выберите разрешение"
+              placeholder="Выберите тип"
             />
             <PrimaryButton
               backgroundColor="#dc2626"
-              onClick={submitRemovePermission}
+              onClick={submitRemovePermissionType}
             >
               Удалить
             </PrimaryButton>
@@ -951,75 +803,15 @@ const Index = () => {
         </MethodModal>
       )}
 
-      {/* Add User Modal */}
-      {addUserModal && (
-        <MethodModal
-          open={addUserModal}
-          showCloseIcon={true}
-          closeClick={() => {
-            setAddUserModal(false);
-            setSelectedId(null);
-            setSelectedUserId("");
-          }}
-          title="Добавить пользователя"
-        >
-          <div className="my-[15px] space-y-[10px]">
-            <CustomSelect
-              label={"Пользователь"}
-              options={optionsUsers}
-              value={selectedUserId}
-              onChange={(val) => setSelectedUserId(val)}
-              placeholder="Выберите пользователя"
-              returnObject={false}
-            />
-            <PrimaryButton onClick={submitAddUser}>Добавить</PrimaryButton>
-          </div>
-        </MethodModal>
-      )}
-
-      {/* Remove User Modal */}
-      {removeUserModal && (
-        <MethodModal
-          open={removeUserModal}
-          showCloseIcon={true}
-          closeClick={() => {
-            setRemoveUserModal(false);
-            setSelectedId(null);
-            setSelectedUserToRemove(null);
-          }}
-          title="Удалить пользователя"
-        >
-          <div className="my-[15px] space-y-[10px]">
-            <CustomSelect
-              label="Выберите пользователя для удаления"
-              value={selectedUserToRemove}
-              onChange={(value) => setSelectedUserToRemove(value)}
-              options={
-                rolesData
-                  .find((r) => r.id === selectedId)
-                  ?.users?.map((user) => ({
-                    value: user.id,
-                    label: user.username,
-                  })) || []
-              }
-              placeholder="Выберите пользователя"
-            />
-            <PrimaryButton backgroundColor="#dc2626" onClick={submitRemoveUser}>
-              Удалить
-            </PrimaryButton>
-          </div>
-        </MethodModal>
-      )}
-
-      {/* Delete Role Modal */}
+      {/* Delete Modal */}
       <DeleteModal
         open={deleteModal}
         onClose={() => {
           setDeleteModal(false);
           setSelectedId(null);
         }}
-        deleting={submitDeleteRole}
-        title="Вы уверены, что хотите удалить эту роль?"
+        deleting={submitDeletePermission}
+        title="Вы уверены, что хотите удалить это разрешение?"
       />
     </DashboardLayout>
   );

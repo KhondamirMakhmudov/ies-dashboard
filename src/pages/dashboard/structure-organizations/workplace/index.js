@@ -264,11 +264,23 @@ const Index = () => {
                     </div>
                     <div>
                       <span
-                        className={`px-3 py-1 text-xs font-medium rounded-full ${
-                          get(item, "is_active")
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
+                        className="px-3 py-1 text-xs font-medium rounded-full"
+                        style={{
+                          backgroundColor: get(item, "is_active")
+                            ? isDark
+                              ? "rgba(16, 185, 129, 0.2)"
+                              : "#D1FAE5"
+                            : isDark
+                            ? "rgba(239, 68, 68, 0.2)"
+                            : "#FEE2E2",
+                          color: get(item, "is_active")
+                            ? isDark
+                              ? "#6EE7B7"
+                              : "#065F46"
+                            : isDark
+                            ? "#FCA5A5"
+                            : "#991B1B",
+                        }}
                       >
                         {get(item, "is_active") ? "Активный" : "Неактивный"}
                       </span>
@@ -293,7 +305,11 @@ const Index = () => {
           <div className="flex justify-between items-center mb-4">
             <button
               onClick={() => setSelectUnitCode(null)}
-              className="bg-gray-200 px-4 py-2 rounded-md hover:bg-gray-300 transition-all duration-200 cursor-pointer"
+              className={`${
+                isDark
+                  ? "bg-gray-600 hover:bg-gray-700"
+                  : "bg-gray-200 hover:bg-gray-300"
+              } px-4 py-2 rounded-md  transition-all duration-200 cursor-pointer`}
             >
               Назад
             </button>
@@ -336,13 +352,18 @@ const Index = () => {
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
-                        <SearchIcon sx={{ color: "#9CA3AF" }} />
+                        <SearchIcon
+                          sx={{ color: isDark ? "#9CA3AF" : "#6B7280" }}
+                        />
                       </InputAdornment>
                     ),
                     endAdornment: search && (
                       <InputAdornment position="end">
                         <ClearIcon
-                          sx={{ color: "#9CA3AF", cursor: "pointer" }}
+                          sx={{
+                            color: isDark ? "#9CA3AF" : "#6B7280",
+                            cursor: "pointer",
+                          }}
                           onClick={() => setSearch("")}
                         />
                       </InputAdornment>
@@ -350,8 +371,22 @@ const Index = () => {
                   }}
                   sx={{
                     "& .MuiOutlinedInput-root": {
-                      backgroundColor: "white",
+                      backgroundColor: bg("#ffffff", "#2d2d2d"),
                       borderRadius: "8px",
+                      color: text("#1f2937", "#f3f4f6"),
+                      "& fieldset": {
+                        borderColor: border("#e5e7eb", "#444444"),
+                      },
+                      "&:hover fieldset": {
+                        borderColor: border("#d1d5db", "#555555"),
+                      },
+                      "&.Mui-focused fieldset": {
+                        borderColor: "#4182F9",
+                      },
+                    },
+                    "& .MuiInputBase-input::placeholder": {
+                      color: isDark ? "#9CA3AF" : "#6B7280",
+                      opacity: 1,
                     },
                   }}
                 />
