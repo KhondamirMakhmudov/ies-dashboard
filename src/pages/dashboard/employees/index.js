@@ -156,14 +156,6 @@ const Index = () => {
     }
   };
 
-  const handleFilterChange = (name, value) => {
-    setFilters((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-    setCurrentPage(1);
-  };
-
   const clearAllFilters = () => {
     setFilters({
       gender: "",

@@ -41,6 +41,7 @@ import DateRangeIcon from "@mui/icons-material/DateRange";
 import Link from "next/link";
 import useAppTheme from "@/hooks/useAppTheme";
 import EmployeeBusinessTripSection from "@/components/business-trip-section";
+import DocsOfEmployee from "@/components/docs-employee";
 
 const Index = () => {
   const { bg, text, isDark, border } = useAppTheme();
@@ -813,6 +814,8 @@ const Index = () => {
                     </li>
                   </ul>
                 </div>
+
+                {/* <DocsOfEmployee employeeId={employee_id} /> */}
               </div>
             )}
             {/* Connected schedule and entrypoint to employee */}
