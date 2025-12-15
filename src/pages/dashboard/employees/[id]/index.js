@@ -815,7 +815,9 @@ const Index = () => {
                   </ul>
                 </div>
 
-                {/* <DocsOfEmployee employeeId={employee_id} /> */}
+                <div className="my-4">
+                  <DocsOfEmployee employeeId={employee_id} />
+                </div>
               </div>
             )}
             {/* Connected schedule and entrypoint to employee */}

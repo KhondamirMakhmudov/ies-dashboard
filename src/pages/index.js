@@ -4,13 +4,16 @@ import Input from "@/components/input";
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { signIn, useSession } from "next-auth/react";
+import { signIn, signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import toast from "react-hot-toast";
 import { motion } from "framer-motion";
 import ContentLoader from "@/components/loader";
 import Link from "next/link";
 import useAppTheme from "@/hooks/useAppTheme";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import LogoutIcon from "@mui/icons-material/Logout";
 
 export default function Home() {
   const { bg, text, border, isDark } = useAppTheme();
@@ -49,6 +52,19 @@ export default function Home() {
   const handleSelectLogin = (login) => {
     setUsername(login.username);
     setPassword(login.password);
+  };
+
+  const handleEnter = () => {
+    router.push("/dashboard/employees");
+  };
+
+  const handleExit = async () => {
+    try {
+      await signOut({ redirect: false });
+      toast.success("Вы успешно вышли из системы");
+    } catch (error) {
+      toast.error("Ошибка при выходе");
+    }
   };
 
   const onSubmit = async (e) => {
@@ -170,13 +186,86 @@ export default function Home() {
 
             {session?.accessToken ? (
               <motion.div
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                className="w-full"
+                className="w-full py-8"
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.7 }}
               >
-                <Link href={"/dashboard/employees"}>
-                  <Button sx={{ width: "100%" }}>Вход</Button>
-                </Link>
+                {/* Simple centered icon */}
+                <motion.div
+                  className="flex justify-center mb-8"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ duration: 0.5, delay: 0.8, type: "spring" }}
+                >
+                  <div
+                    className={
+                      bg("bg-green-100", "bg-green-900/20") +
+                      " w-24 h-24 rounded-full flex items-center justify-center"
+                    }
+                  >
+                    <CheckCircleIcon
+                      className={text("text-green-600", "text-green-400")}
+                      sx={{ fontSize: 64 }}
+                    />
+                  </div>
+                </motion.div>
+
+                {/* Simple text */}
+                <div className="text-center mb-10">
+                  <h2
+                    className={
+                      text("text-gray-900", "text-white") +
+                      " text-2xl font-semibold mb-2"
+                    }
+                  >
+                    Вы уже авторизованы
+                  </h2>
+                  <p
+                    className={
+                      text("text-gray-500", "text-gray-400") + " text-sm"
+                    }
+                  >
+                    Выберите действие
+                  </p>
+                </div>
+
+                {/* Clean buttons */}
+                <div className="grid grid-cols-2 gap-4">
+                  <motion.button
+                    onClick={handleEnter}
+                    whileHover={{ y: -4 }}
+                    whileTap={{ scale: 0.98 }}
+                    className={
+                      bg(
+                        "bg-blue-600 hover:bg-blue-700",
+                        "bg-blue-600 hover:bg-blue-700"
+                      ) +
+                      " text-white h-14 rounded-xl font-medium text-base transition-all shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2"
+                    }
+                  >
+                    <ArrowForwardIcon sx={{ fontSize: 20 }} />
+                    Войти
+                  </motion.button>
+
+                  <motion.button
+                    onClick={handleExit}
+                    whileHover={{ y: -4 }}
+                    whileTap={{ scale: 0.98 }}
+                    className={
+                      bg(
+                        "bg-gray-200 hover:bg-gray-300",
+                        "bg-gray-800 hover:bg-gray-700"
+                      ) +
+                      " " +
+                      text("text-gray-700", "text-gray-200") +
+                      " h-14 rounded-xl font-medium text-base transition-all flex items-center justify-center gap-2"
+                    }
+                  >
+                    <LogoutIcon sx={{ fontSize: 20 }} />
+                    Выйти
+                  </motion.button>
+                </div>
               </motion.div>
             ) : (
               <motion.form
