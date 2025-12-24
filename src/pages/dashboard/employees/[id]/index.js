@@ -1564,7 +1564,11 @@ const Index = () => {
       {/* edit modal */}
       {editModal && (
         <MethodModal open={editModal} width={1000} padding={0}>
-          <div className="bg-[#E57F3A] p-[16px] text-white rounded-t-[8px] flex justify-between items-center">
+          <div
+            className={`${
+              isDark ? "bg-orange-700" : "bg-[#E57F3A]"
+            } p-[16px] text-white rounded-t-[8px] flex justify-between items-center`}
+          >
             <div>
               <Typography variant="h6">Редактировать сотрудника</Typography>
               <p>Обновить информацию о сотруднике</p>
@@ -1590,10 +1594,16 @@ const Index = () => {
             </button>
           </div>
 
-          <div className="max-h-[500px] overflow-y-scroll">
+          <div className={`max-h-[500px] overflow-y-scroll ${bg}`}>
             <div className="text-center my-[30px]">
               <div className="inline-block">
-                <div className="w-32 h-32 mx-auto bg-gray-100 rounded-full border-4 border-dashed border-gray-300 flex items-center justify-center overflow-hidden">
+                <div
+                  className={`w-32 h-32 mx-auto ${
+                    isDark ? "bg-gray-700" : "bg-gray-100"
+                  } rounded-full border-4 border-dashed ${
+                    isDark ? "border-gray-600" : "border-gray-300"
+                  } flex items-center justify-center overflow-hidden`}
+                >
                   {photoPreview ? (
                     <img
                       src={photoPreview}
@@ -1601,7 +1611,13 @@ const Index = () => {
                       className="w-full h-full object-cover rounded-full"
                     />
                   ) : (
-                    <span className="text-gray-400 text-sm">No Photo</span>
+                    <span
+                      className={`${
+                        isDark ? "text-gray-400" : "text-gray-400"
+                      } text-sm`}
+                    >
+                      No Photo
+                    </span>
                   )}
                 </div>
 
@@ -1642,7 +1658,7 @@ const Index = () => {
                 {/* Kamera modal */}
                 {isCameraOpen && (
                   <div className="fixed inset-0 bg-transparent bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white p-4 rounded-lg shadow-lg">
+                    <div className={`${bg} p-4 rounded-lg shadow-lg`}>
                       <video
                         ref={videoRef}
                         autoPlay
@@ -1670,10 +1686,19 @@ const Index = () => {
               </div>
             </div>
 
-            <div className="bg-gray-50 rounded-xl p-6 m-[20px]">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+            {/* Personal Information */}
+            <div
+              className={`${
+                isDark ? "bg-gray-800/50" : "bg-gray-50"
+              } rounded-xl p-6 m-[20px]`}
+            >
+              <h3
+                className={`text-lg font-semibold ${text} mb-4 flex items-center`}
+              >
                 <svg
-                  className="w-5 h-5 mr-2 text-amber-600"
+                  className={`w-5 h-5 mr-2 ${
+                    isDark ? "text-amber-400" : "text-amber-600"
+                  }`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -1695,7 +1720,7 @@ const Index = () => {
                   value={formData.first_name || ""}
                   onChange={handleChange}
                   placeholder="Имя"
-                  inputClass="!h-[45px] border !border-gray-200"
+                  inputClass={`!h-[45px] border ${border}`}
                   required
                 />
 
@@ -1705,7 +1730,7 @@ const Index = () => {
                   value={formData.last_name || ""}
                   onChange={handleChange}
                   placeholder="Фамилия"
-                  inputClass="!h-[45px] border !border-gray-200"
+                  inputClass={`!h-[45px] border ${border}`}
                   required={true}
                 />
                 <Input
@@ -1714,13 +1739,13 @@ const Index = () => {
                   value={formData.middle_name || ""}
                   onChange={handleChange}
                   placeholder="Отчество"
-                  inputClass="!h-[45px] border !border-gray-200"
+                  inputClass={`!h-[45px] border ${border}`}
                 />
 
                 <BirthDateInput
                   value={formData.date_of_birth || ""}
                   onChange={handleChange}
-                  inputClass="!h-[45px] border !border-gray-200"
+                  inputClass={`!h-[45px] border ${border}`}
                   required
                 />
 
@@ -1746,7 +1771,7 @@ const Index = () => {
                   value={formData.tabel_number}
                   onChange={handleChange}
                   placeholder="Введите"
-                  inputClass="!h-[45px] border !border-gray-200"
+                  inputClass={`!h-[45px] border ${border}`}
                   required
                 />
               </div>
@@ -1758,17 +1783,25 @@ const Index = () => {
                   label={"Адрес проживания"}
                   onChange={handleChange}
                   placeholder="Введите"
-                  inputClass="!h-[45px] border !border-gray-200"
+                  inputClass={`!h-[45px] border ${border}`}
                   required={true}
                 />
               </div>
             </div>
 
             {/* Contact Information */}
-            <div className="bg-green-50 rounded-xl p-6 m-[20px]">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+            <div
+              className={`${
+                isDark ? "bg-green-900/30" : "bg-green-50"
+              } rounded-xl p-6 m-[20px]`}
+            >
+              <h3
+                className={`text-lg font-semibold ${text} mb-4 flex items-center`}
+              >
                 <svg
-                  className="w-5 h-5 mr-2 text-green-600"
+                  className={`w-5 h-5 mr-2 ${
+                    isDark ? "text-green-400" : "text-green-600"
+                  }`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -1790,7 +1823,7 @@ const Index = () => {
                   value={formData.email || ""}
                   onChange={handleChange}
                   placeholder="Электронная почта"
-                  inputClass="!h-[45px] border !border-gray-200"
+                  inputClass={`!h-[45px] border ${border}`}
                   classNames="col-span-2 md:col-span-1"
                 />
 
@@ -1800,17 +1833,25 @@ const Index = () => {
                   value={formData.phone_number || ""}
                   onChange={handleChange}
                   placeholder="Телефонный номер"
-                  inputClass="!h-[45px] border !border-gray-200"
+                  inputClass={`!h-[45px] border ${border}`}
                   classNames="col-span-2 md:col-span-1"
                 />
               </div>
             </div>
 
             {/* Education Information */}
-            <div className="bg-purple-50 rounded-xl p-6 m-[20px]">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+            <div
+              className={`${
+                isDark ? "bg-purple-900/30" : "bg-purple-50"
+              } rounded-xl p-6 m-[20px]`}
+            >
+              <h3
+                className={`text-lg font-semibold ${text} mb-4 flex items-center`}
+              >
                 <svg
-                  className="w-5 h-5 mr-2 text-purple-600"
+                  className={`w-5 h-5 mr-2 ${
+                    isDark ? "text-purple-400" : "text-purple-600"
+                  }`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -1847,17 +1888,25 @@ const Index = () => {
                   onChange={handleChange}
                   placeholder={"Введите"}
                   label="Место получения образования"
-                  inputClass="!h-[45px] border !border-gray-200"
+                  inputClass={`!h-[45px] border ${border}`}
                   required={true}
                 />
               </div>
             </div>
 
             {/* Employment Information */}
-            <div className="bg-orange-50 rounded-xl p-6 m-[20px]">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+            <div
+              className={`${
+                isDark ? "bg-orange-900/30" : "bg-orange-50"
+              } rounded-xl p-6 m-[20px]`}
+            >
+              <h3
+                className={`text-lg font-semibold ${text} mb-4 flex items-center`}
+              >
                 <svg
-                  className="w-5 h-5 mr-2 text-orange-600"
+                  className={`w-5 h-5 mr-2 ${
+                    isDark ? "text-orange-400" : "text-orange-600"
+                  }`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -1893,17 +1942,23 @@ const Index = () => {
                   label={"Дата приема на работу"}
                   value={formData.hire_date || ""}
                   onChange={handleChange}
-                  inputClass="!h-[45px] border !border-gray-200"
+                  inputClass={`!h-[45px] border ${border}`}
                   required
                 />
               </div>
             </div>
           </div>
 
-          <div className="sticky bg-white border-t border-t-gray-200 p-4 flex justify-end gap-3">
+          <div
+            className={`sticky ${bg} border-t ${border} p-4 flex justify-end gap-3`}
+          >
             <button
               onClick={() => setEditModal(false)}
-              className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-sm font-medium"
+              className={`px-4 py-2 ${
+                isDark
+                  ? "bg-gray-700 hover:bg-gray-600"
+                  : "bg-gray-200 hover:bg-gray-300"
+              } rounded-lg text-sm font-medium ${text}`}
             >
               Отмена
             </button>
