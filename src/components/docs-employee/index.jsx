@@ -4,6 +4,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { Button } from "@mui/material";
 import useAppTheme from "@/hooks/useAppTheme";
 import toast from "react-hot-toast";
+
 const DocsOfEmployee = ({ employeeId }) => {
   const { isDark, text, border, bg } = useAppTheme();
   const [searchTerm, setSearchTerm] = useState("");
@@ -32,13 +33,10 @@ const DocsOfEmployee = ({ employeeId }) => {
   async function fetchData() {
     try {
       setLoading(true);
-
       const query = new URLSearchParams(params).toString();
-
       const response = await fetch(
         `http://10.20.6.60:8088/file-service/?${query}`
       );
-
       const json = await response.json();
       setData(Array.isArray(json) ? json : []);
     } catch (error) {
@@ -53,14 +51,10 @@ const DocsOfEmployee = ({ employeeId }) => {
     try {
       setLoadingFile(true);
       setSelectedFile({ file_name: fileName, file_type: fileType });
-
       const response = await fetch(
         `http://10.20.6.60:8088/file-service/${fileId}`,
-        {
-          method: "POST",
-        }
+        { method: "POST" }
       );
-
       const json = await response.json();
       setFileUrl(json.file_url);
     } catch (error) {
@@ -80,7 +74,6 @@ const DocsOfEmployee = ({ employeeId }) => {
     const file = e.target.files[0];
     if (file) {
       if (file.size > 500 * 1024 * 1024) {
-        // 500 MB limit
         alert("Размер файла не должен превышать 500 МБ");
         return;
       }
@@ -96,7 +89,6 @@ const DocsOfEmployee = ({ employeeId }) => {
 
     try {
       setUploading(true);
-
       const formData = new FormData();
       formData.append("owner_service", "staffio");
       formData.append("owner_id", employeeId);
@@ -112,7 +104,7 @@ const DocsOfEmployee = ({ employeeId }) => {
         toast.success("Файл успешно загружен!");
         setShowUploadModal(false);
         setUploadData({ description: "", file: null });
-        fetchData(); // Refresh the list
+        fetchData();
       } else {
         toast.error("Ошибка при загрузке файла");
       }
@@ -132,14 +124,12 @@ const DocsOfEmployee = ({ employeeId }) => {
     try {
       const response = await fetch(
         `http://10.20.6.60:8088/file-service/${fileId}`,
-        {
-          method: "DELETE",
-        }
+        { method: "DELETE" }
       );
 
       if (response.ok) {
         toast.success("Файл успешно удалён");
-        fetchData(); // Refresh the list
+        fetchData();
       } else {
         toast.error("Ошибка при удалении файла");
       }
@@ -156,12 +146,25 @@ const DocsOfEmployee = ({ employeeId }) => {
 
   const getCategoryColor = (category) => {
     const colors = {
-      Resume: "bg-purple-100 text-purple-700",
-      Сертификат: "bg-green-100 text-green-700",
-      Личное: "bg-gray-100 text-gray-700",
-      "main photo": "bg-blue-100 text-blue-700",
+      Resume: isDark
+        ? "bg-purple-900/30 text-purple-400 border border-purple-700"
+        : "bg-purple-100 text-purple-700",
+      Сертификат: isDark
+        ? "bg-green-900/30 text-green-400 border border-green-700"
+        : "bg-green-100 text-green-700",
+      Личное: isDark
+        ? "bg-gray-700 text-gray-300 border border-gray-600"
+        : "bg-gray-100 text-gray-700",
+      "main photo": isDark
+        ? "bg-blue-900/30 text-blue-400 border border-blue-700"
+        : "bg-blue-100 text-blue-700",
     };
-    return colors[category] || "bg-gray-100 text-gray-700";
+    return (
+      colors[category] ||
+      (isDark
+        ? "bg-gray-700 text-gray-300 border border-gray-600"
+        : "bg-gray-100 text-gray-700")
+    );
   };
 
   const formatFileSize = (bytes) => {
@@ -192,9 +195,13 @@ const DocsOfEmployee = ({ employeeId }) => {
   const getFileIcon = (fileType) => {
     if (fileType && fileType.startsWith("image/")) {
       return (
-        <div className="w-10 h-10 bg-blue-100 rounded flex items-center justify-center">
+        <div
+          className={`w-10 h-10 rounded flex items-center justify-center ${
+            isDark ? "bg-blue-900/30" : "bg-blue-100"
+          }`}
+        >
           <svg
-            className="w-5 h-5 text-blue-600"
+            className={`w-5 h-5 ${isDark ? "text-blue-400" : "text-blue-600"}`}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -222,9 +229,13 @@ const DocsOfEmployee = ({ employeeId }) => {
       );
     }
     return (
-      <div className="w-10 h-10 bg-red-100 rounded flex items-center justify-center">
+      <div
+        className={`w-10 h-10 rounded flex items-center justify-center ${
+          isDark ? "bg-red-900/30" : "bg-red-100"
+        }`}
+      >
         <svg
-          className="w-5 h-5 text-red-600"
+          className={`w-5 h-5 ${isDark ? "text-red-400" : "text-red-600"}`}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -257,11 +268,25 @@ const DocsOfEmployee = ({ employeeId }) => {
 
   return (
     <>
-      <div className="w-full bg-white rounded-lg shadow-sm border border-gray-200">
+      <div
+        className="w-full rounded-lg shadow-sm border"
+        style={{
+          backgroundColor: bg("#ffffff", "#1e1e1e"),
+          borderColor: border("#e5e7eb", "#333333"),
+        }}
+      >
         {/* Header */}
-        <div className="p-4 border-b border-gray-200">
+        <div
+          className="p-4 border-b"
+          style={{ borderColor: border("#e5e7eb", "#333333") }}
+        >
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900">
+            <h2
+              className={`text-lg font-semibold ${text(
+                "text-gray-900",
+                "text-gray-100"
+              )}`}
+            >
               Загруженные документы
             </h2>
             <div className="flex items-center gap-2">
@@ -273,7 +298,10 @@ const DocsOfEmployee = ({ employeeId }) => {
               </button>
               <div className="relative">
                 <svg
-                  className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400"
+                  className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 ${text(
+                    "text-gray-400",
+                    "text-gray-500"
+                  )}`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -290,7 +318,11 @@ const DocsOfEmployee = ({ employeeId }) => {
                   placeholder="Поиск файлов..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className={`pl-10 pr-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    isDark
+                      ? "bg-gray-800 border-gray-600 text-gray-100 placeholder-gray-500"
+                      : "bg-white border-gray-300 text-gray-900 placeholder-gray-400"
+                  }`}
                 />
               </div>
             </div>
@@ -301,47 +333,97 @@ const DocsOfEmployee = ({ employeeId }) => {
         <div className="overflow-x-auto">
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="text-gray-500">Загрузка...</div>
+              <div className={text("text-gray-500", "text-gray-400")}>
+                Загрузка...
+              </div>
             </div>
           ) : currentDocuments.length === 0 ? (
             <div className="flex items-center justify-center py-12">
-              <div className="text-gray-500">Нет документов</div>
+              <div className={text("text-gray-500", "text-gray-400")}>
+                Нет документов
+              </div>
             </div>
           ) : (
             <table className="w-full">
               <thead>
-                <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <tr
+                  className="border-b"
+                  style={{
+                    backgroundColor: bg("#f9fafb", "#2a2a2a"),
+                    borderColor: border("#e5e7eb", "#333333"),
+                  }}
+                >
+                  <th
+                    className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${text(
+                      "text-gray-500",
+                      "text-gray-400"
+                    )}`}
+                  >
                     Имя файла
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th
+                    className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${text(
+                      "text-gray-500",
+                      "text-gray-400"
+                    )}`}
+                  >
                     Категория
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th
+                    className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${text(
+                      "text-gray-500",
+                      "text-gray-400"
+                    )}`}
+                  >
                     Дата загрузки
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th
+                    className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${text(
+                      "text-gray-500",
+                      "text-gray-400"
+                    )}`}
+                  >
                     Размер
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th
+                    className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${text(
+                      "text-gray-500",
+                      "text-gray-400"
+                    )}`}
+                  >
                     Действие
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody
+                className="divide-y"
+                style={{ borderColor: border("#e5e7eb", "#333333") }}
+              >
                 {currentDocuments.map((doc) => (
                   <tr
                     key={doc.id}
-                    className="hover:bg-gray-50 transition-colors"
+                    className={`transition-colors ${
+                      isDark ? "hover:bg-gray-800/50" : "hover:bg-gray-50"
+                    }`}
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-3">
                         {getFileIcon(doc.file_type)}
                         <div>
-                          <div className="text-sm font-medium text-gray-900">
+                          <div
+                            className={`text-sm font-medium ${text(
+                              "text-gray-900",
+                              "text-gray-100"
+                            )}`}
+                          >
                             {doc.file_name}
                           </div>
-                          <div className="text-xs text-gray-500">
+                          <div
+                            className={`text-xs ${text(
+                              "text-gray-500",
+                              "text-gray-400"
+                            )}`}
+                          >
                             Added by {doc.owner_service}
                           </div>
                         </div>
@@ -356,10 +438,20 @@ const DocsOfEmployee = ({ employeeId }) => {
                         {doc.description}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                    <td
+                      className={`px-6 py-4 whitespace-nowrap text-sm ${text(
+                        "text-gray-700",
+                        "text-gray-300"
+                      )}`}
+                    >
                       {formatDate(doc.created_at)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                    <td
+                      className={`px-6 py-4 whitespace-nowrap text-sm ${text(
+                        "text-gray-700",
+                        "text-gray-300"
+                      )}`}
+                    >
                       {formatFileSize(doc.size)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
@@ -370,9 +462,9 @@ const DocsOfEmployee = ({ employeeId }) => {
                           }
                           className={`${
                             isDark
-                              ? "bg-blue-900/30 text-blue-600 border border-blue-600"
+                              ? "bg-blue-900/30 text-blue-400 border border-blue-600"
                               : "bg-[#bfd2f5] text-[#4182F9]"
-                          } h-[32px] px-2 flex justify-center items-center rounded-md cursor-pointer`}
+                          } h-[32px] px-2 flex justify-center items-center rounded-md cursor-pointer hover:opacity-80 transition-opacity`}
                         >
                           <VisibilityIcon fontSize="small" />
                         </button>
@@ -402,8 +494,13 @@ const DocsOfEmployee = ({ employeeId }) => {
 
         {/* Footer */}
         {!loading && currentDocuments.length > 0 && (
-          <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
-            <div className="text-sm text-gray-600">
+          <div
+            className="px-6 py-4 border-t flex items-center justify-between"
+            style={{ borderColor: border("#e5e7eb", "#333333") }}
+          >
+            <div
+              className={`text-sm ${text("text-gray-600", "text-gray-400")}`}
+            >
               Показано {startIndex + 1} -{" "}
               {Math.min(endIndex, filteredDocuments.length)} из{" "}
               {filteredDocuments.length} результатов
@@ -412,7 +509,11 @@ const DocsOfEmployee = ({ employeeId }) => {
               <button
                 onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
                 disabled={currentPage === 1}
-                className="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className={`p-2 rounded-lg border transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                  isDark
+                    ? "border-gray-600 hover:bg-gray-800 text-gray-300"
+                    : "border-gray-300 hover:bg-gray-50 text-gray-700"
+                }`}
               >
                 <svg
                   className="w-4 h-4"
@@ -433,7 +534,11 @@ const DocsOfEmployee = ({ employeeId }) => {
                   setCurrentPage((prev) => Math.min(totalPages, prev + 1))
                 }
                 disabled={currentPage === totalPages}
-                className="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className={`p-2 rounded-lg border transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                  isDark
+                    ? "border-gray-600 hover:bg-gray-800 text-gray-300"
+                    : "border-gray-300 hover:bg-gray-50 text-gray-700"
+                }`}
               >
                 <svg
                   className="w-4 h-4"
@@ -456,19 +561,34 @@ const DocsOfEmployee = ({ employeeId }) => {
 
       {/* Modal */}
       {selectedFile && (
-        <div className="fixed inset-0 bg-black/70 bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div
+            className="rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden"
+            style={{ backgroundColor: bg("#ffffff", "#1e1e1e") }}
+          >
+            <div
+              className="flex items-center justify-between p-4 border-b"
+              style={{ borderColor: border("#e5e7eb", "#333333") }}
+            >
+              <h3
+                className={`text-lg font-semibold ${text(
+                  "text-gray-900",
+                  "text-gray-100"
+                )}`}
+              >
                 {selectedFile.file_name}
               </h3>
               <button
                 onClick={closeModal}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className={`p-2 rounded-lg transition-colors ${
+                  isDark ? "hover:bg-gray-800" : "hover:bg-gray-100"
+                }`}
               >
                 <svg
-                  className="w-5 h-5 text-gray-600"
+                  className={`w-5 h-5 ${text(
+                    "text-gray-600",
+                    "text-gray-400"
+                  )}`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -483,11 +603,12 @@ const DocsOfEmployee = ({ employeeId }) => {
               </button>
             </div>
 
-            {/* Modal Content */}
             <div className="p-6 overflow-auto max-h-[calc(90vh-120px)]">
               {loadingFile ? (
                 <div className="flex items-center justify-center py-12">
-                  <div className="text-gray-500">Загрузка файла...</div>
+                  <div className={text("text-gray-500", "text-gray-400")}>
+                    Загрузка файла...
+                  </div>
                 </div>
               ) : fileUrl ? (
                 <div className="flex flex-col items-center">
@@ -502,7 +623,9 @@ const DocsOfEmployee = ({ employeeId }) => {
                     <div className="w-full">
                       <iframe
                         src={fileUrl}
-                        className="w-full h-[600px] border border-gray-300 rounded-lg"
+                        className={`w-full h-[600px] border rounded-lg ${
+                          isDark ? "border-gray-700" : "border-gray-300"
+                        }`}
                         title={selectedFile.file_name}
                       />
                       <div className="mt-4 flex gap-2">
@@ -537,11 +660,21 @@ const DocsOfEmployee = ({ employeeId }) => {
 
       {/* Upload Modal */}
       {showUploadModal && (
-        <div className="fixed inset-0 bg-black/70 bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div
+            className="rounded-lg shadow-xl max-w-md w-full"
+            style={{ backgroundColor: bg("#ffffff", "#1e1e1e") }}
+          >
+            <div
+              className="flex items-center justify-between p-4 border-b"
+              style={{ borderColor: border("#e5e7eb", "#333333") }}
+            >
+              <h3
+                className={`text-lg font-semibold ${text(
+                  "text-gray-900",
+                  "text-gray-100"
+                )}`}
+              >
                 Загрузить файл
               </h3>
               <button
@@ -549,10 +682,15 @@ const DocsOfEmployee = ({ employeeId }) => {
                   setShowUploadModal(false);
                   setUploadData({ description: "", file: null });
                 }}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className={`p-2 rounded-lg transition-colors ${
+                  isDark ? "hover:bg-gray-800" : "hover:bg-gray-100"
+                }`}
               >
                 <svg
-                  className="w-5 h-5 text-gray-600"
+                  className={`w-5 h-5 ${text(
+                    "text-gray-600",
+                    "text-gray-400"
+                  )}`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -567,11 +705,15 @@ const DocsOfEmployee = ({ employeeId }) => {
               </button>
             </div>
 
-            {/* Modal Content */}
             <div className="p-6">
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    className={`block text-sm font-medium mb-2 ${text(
+                      "text-gray-700",
+                      "text-gray-300"
+                    )}`}
+                  >
                     Описание <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -584,15 +726,28 @@ const DocsOfEmployee = ({ employeeId }) => {
                       }))
                     }
                     placeholder="Введите описание файла"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                      isDark
+                        ? "bg-gray-800 border-gray-600 text-gray-100 placeholder-gray-500"
+                        : "bg-white border-gray-300 text-gray-900 placeholder-gray-400"
+                    }`}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    className={`block text-sm font-medium mb-2 ${text(
+                      "text-gray-700",
+                      "text-gray-300"
+                    )}`}
+                  >
                     Файл <span className="text-red-500">*</span>
                   </label>
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-500 transition-colors">
+                  <div
+                    className={`border-2 border-dashed rounded-lg p-6 text-center hover:border-blue-500 transition-colors ${
+                      isDark ? "border-gray-600" : "border-gray-300"
+                    }`}
+                  >
                     <input
                       type="file"
                       id="file-upload"
@@ -601,7 +756,10 @@ const DocsOfEmployee = ({ employeeId }) => {
                     />
                     <label htmlFor="file-upload" className="cursor-pointer">
                       <svg
-                        className="mx-auto h-12 w-12 text-gray-400"
+                        className={`mx-auto h-12 w-12 ${text(
+                          "text-gray-400",
+                          "text-gray-500"
+                        )}`}
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -613,12 +771,22 @@ const DocsOfEmployee = ({ employeeId }) => {
                           strokeLinejoin="round"
                         />
                       </svg>
-                      <p className="mt-2 text-sm text-gray-600">
+                      <p
+                        className={`mt-2 text-sm ${text(
+                          "text-gray-600",
+                          "text-gray-400"
+                        )}`}
+                      >
                         {uploadData.file
                           ? uploadData.file.name
                           : "Нажмите для выбора файла"}
                       </p>
-                      <p className="mt-1 text-xs text-gray-500">
+                      <p
+                        className={`mt-1 text-xs ${text(
+                          "text-gray-500",
+                          "text-gray-500"
+                        )}`}
+                      >
                         Максимальный размер: 500 МБ
                       </p>
                     </label>
@@ -641,7 +809,11 @@ const DocsOfEmployee = ({ employeeId }) => {
                     setShowUploadModal(false);
                     setUploadData({ description: "", file: null });
                   }}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  className={`px-4 py-2 border rounded-lg transition-colors ${
+                    isDark
+                      ? "border-gray-600 text-gray-300 hover:bg-gray-800"
+                      : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                  }`}
                 >
                   Отмена
                 </button>

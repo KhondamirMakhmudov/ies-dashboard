@@ -335,6 +335,21 @@ export const authOptions = {
     },
   },
 
+  cookies: {
+    sessionToken: {
+      name:
+        process.env.NODE_ENV === "production"
+          ? "__Secure-next-auth.session-token.project2" // Change to project2 in other file
+          : "next-auth.session-token.project2", // Change to project2 in other file
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+      },
+    },
+  },
+
   events: {
     async signOut({ token }) {
       console.log("User signed out");

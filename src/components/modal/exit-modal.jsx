@@ -1,6 +1,9 @@
 import { Modal, Box, Button, Typography } from "@mui/material";
+import useAppTheme from "@/hooks/useAppTheme";
 
 const ExitModal = ({ open, onClose, handleLogout }) => {
+  const { bg, isDark, text } = useAppTheme();
+
   return (
     <Modal open={open} onClose={onClose}>
       <Box
@@ -10,26 +13,33 @@ const ExitModal = ({ open, onClose, handleLogout }) => {
           left: "50%",
           transform: "translate(-50%, -50%)",
           width: 400,
-          bgcolor: "white",
+          bgcolor: bg("#ffffff", "#1e1e1e"),
           boxShadow: 24,
           p: 4,
           borderRadius: "8px",
         }}
       >
-        <Typography>Вы уверены, что хотите покинуть страницу?</Typography>
+        <Typography
+          sx={{
+            color: isDark ? "#e5e7eb" : "#1a1a1a",
+            fontSize: "16px",
+            fontWeight: 500,
+          }}
+        >
+          Вы уверены, что хотите покинуть страницу?
+        </Typography>
 
-        <div className="flex  gap-1 mt-4">
+        <div className="flex gap-1 mt-4">
           <Button
             sx={{
               boxShadow: "none",
-              backgroundColor: "#4182F9",
               width: "50%",
-              backgroundColor: "#C9C9C9",
-              boxShadow: "none",
-              "&hover": {
-                boxShadow: 14,
+              backgroundColor: isDark ? "#374151" : "#C9C9C9",
+              color: isDark ? "#e5e7eb" : "#000000",
+              "&:hover": {
+                backgroundColor: isDark ? "#4b5563" : "#b0b0b0",
+                boxShadow: "none",
               },
-              color: "black",
             }}
             onClick={onClose}
             variant="contained"
@@ -39,11 +49,12 @@ const ExitModal = ({ open, onClose, handleLogout }) => {
           <Button
             sx={{
               fontFamily: "DM Sans, sans-serif",
-              color: "#991300",
-              backgroundColor: "#FCD8D3",
+              color: isDark ? "#fca5a5" : "#991300",
+              backgroundColor: isDark ? "#7f1d1d" : "#FCD8D3",
               boxShadow: "none",
-              "&hover": {
-                boxShadow: 14,
+              "&:hover": {
+                backgroundColor: isDark ? "#991b1b" : "#FCA89D",
+                boxShadow: "none",
               },
               width: "50%",
             }}
