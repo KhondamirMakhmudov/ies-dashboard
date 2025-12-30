@@ -514,7 +514,7 @@ const Index = () => {
     });
   };
 
-  // ✅ Yangi: Unit ni o'chirish funksiyasi
+  //Unit ni o'chirish funksiyasi
   const removeUnit = (unitIndex) => {
     setUnitCodes((prev) => {
       const updated = prev.filter((_, idx) => idx !== unitIndex);
@@ -568,15 +568,12 @@ const Index = () => {
             setCreateAccessPoint(false);
             handleRemoveAll();
           }}
+          title={"Создать новую точку доступа"}
         >
           {/* Header Section */}
-          <div className={`sticky top-0 ${bg} z-10 pb-4 border-b ${border}`}>
-            <Typography
-              variant="h5"
-              className={`font-bold ${text} flex items-center gap-2`}
-            >
-              Создать новую точку доступа
-            </Typography>
+          <div
+            className={`sticky top-0 ${bg} z-10 pb-4 border-b border-b-gray-300 ${border}`}
+          >
             <Typography
               variant="body2"
               className={`${
@@ -1019,7 +1016,7 @@ const Index = () => {
 
           {/* Footer Actions */}
           <div
-            className={`sticky top-0 ${bg} border-t-2 ${border} pt-4 mt-6 flex justify-end gap-3`}
+            className={`sticky top-0 ${bg} border-t-2 border-t-gray-300 ${border} pt-4 mt-6 flex justify-end gap-3`}
           >
             <PrimaryButton
               backgroundColor={isDark ? "#374151" : "#f3f4f6"}
