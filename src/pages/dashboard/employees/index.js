@@ -1,5 +1,5 @@
 import DashboardLayout from "@/layouts/dashboard/DashboardLayout";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Input from "@/components/input";
 import { Typography } from "@mui/material";
 import ImageUploader from "@/components/image-uploader";
@@ -82,19 +82,14 @@ const Index = () => {
     return () => clearTimeout(timeout);
   }, [searchTerm]);
 
-  // Build query params based on filters and search
+  // Build query params - NO SEARCH HERE, only filters
   const buildQueryParams = () => {
     const params = {
-      limit: pageSize,
-      offset: (currentPage - 1) * pageSize,
+      limit: 10000,
+      offset: 0,
     };
 
-    // Add search term to BOTH first_name and last_name
-    if (debouncedSearch) {
-      params.first_name = debouncedSearch;
-    }
-
-    // Add other filters
+    // Add filters only
     if (filters.gender) params.gender = filters.gender;
     if (filters.level) params.level = filters.level;
     if (filters.education_degree)
@@ -105,19 +100,44 @@ const Index = () => {
     return params;
   };
 
-  // Employee data query with optimized loading states
+  // Employee data query
   const {
     data: employee,
     isLoading,
     isFetching,
   } = useGetPythonQuery({
-    key: [KEYS.employees, currentPage, debouncedSearch, filters],
+    key: [KEYS.employees, filters],
     url: URLS.employees,
     enabled: true,
     keepPreviousData: true,
     staleTime: 30000,
     params: buildQueryParams(),
   });
+
+  // Client-side filtering with search
+  const filteredEmployees = useMemo(() => {
+    let data = get(employee, "data.data", []);
+
+    // Client-side search across all name fields
+    if (debouncedSearch) {
+      const searchLower = debouncedSearch.toLowerCase();
+      data = data.filter((emp) => {
+        const fullName = `${emp.first_name || ""} ${emp.last_name || ""} ${
+          emp.middle_name || ""
+        }`.toLowerCase();
+        return fullName.includes(searchLower);
+      });
+    }
+
+    return data;
+  }, [employee, debouncedSearch]);
+
+  // Client-side pagination
+  const paginatedEmployees = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    return filteredEmployees.slice(startIndex, endIndex);
+  }, [filteredEmployees, currentPage, pageSize]);
 
   // Organization units
   const { data: level1List, isLoading: isLoadingLevel1 } = useGetPythonQuery({
@@ -456,7 +476,6 @@ const Index = () => {
                       gender: val,
                     }))
                   }
-                  // required
                   returnObject={false}
                 />
               </div>
@@ -489,7 +508,6 @@ const Index = () => {
                     education_degree: val,
                   }))
                 }
-                // required
                 returnObject={false}
               />
             </div>
@@ -587,7 +605,7 @@ const Index = () => {
         <div className="bg-white p-4 mt-3 rounded-md border border-gray-200">
           <ContentLoader />
         </div>
-      ) : isEmpty(get(employee, "data.data", [])) ? (
+      ) : isEmpty(paginatedEmployees) ? (
         <NoData onCreate={() => setOpen(true)} />
       ) : (
         <div
@@ -600,12 +618,12 @@ const Index = () => {
           <div className="grid grid-cols-12 gap-[12px] p-2">
             <div className="col-span-12">
               <CustomTable
-                data={get(employee, "data.data", [])}
+                data={paginatedEmployees}
                 columns={columns}
                 pagination={{
                   currentPage,
                   pageSize,
-                  total: get(employee, "data.count", 0),
+                  total: filteredEmployees.length,
                   onPaginationChange: ({ page }) => setCurrentPage(page),
                 }}
               />
@@ -622,7 +640,6 @@ const Index = () => {
           </div>
         </div>
       )}
-
       <MethodModal
         open={open}
         closeClick={() => {
