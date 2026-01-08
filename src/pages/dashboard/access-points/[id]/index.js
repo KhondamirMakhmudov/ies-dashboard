@@ -598,85 +598,178 @@ const Index = () => {
                         (employee, index) => (
                           <div
                             key={index}
-                            className="flex justify-between text-sm items-center"
+                            className="flex justify-between items-center gap-4 p-4 rounded-lg transition-all duration-200"
+                            style={{
+                              background: isDark ? "#1f2937" : "#ffffff",
+                              border: `1px solid ${
+                                isDark ? "#374151" : "#e5e7eb"
+                              }`,
+                            }}
                           >
-                            <div className="flex items-start gap-2">
+                            <div className="flex items-center gap-3 flex-1 min-w-0">
+                              {/* Index Badge */}
                               <div
-                                className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg shadow-inner text-white"
+                                className="w-8 h-8 flex-shrink-0 flex justify-center items-center rounded-full text-xs font-medium"
                                 style={{
-                                  background: "#2563eb",
-                                  borderColor: "#2563eb",
+                                  background: isDark ? "#374151" : "#f3f4f6",
+                                  color: isDark ? "#9ca3af" : "#6b7280",
+                                }}
+                              >
+                                {index + 1}
+                              </div>
+
+                              {/* Avatar */}
+                              <div
+                                className="w-12 h-12 flex-shrink-0 rounded-full flex items-center justify-center font-bold text-base shadow-sm"
+                                style={{
+                                  background:
+                                    "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)",
+                                  color: "#ffffff",
                                 }}
                               >
                                 {employee.firstName?.[0] || "?"}
                                 {employee.lastName?.[0] || "?"}
                               </div>
-                              <div>
+
+                              {/* Employee Info */}
+                              <div className="flex-1 min-w-0">
+                                {/* Name */}
                                 <p
+                                  className="font-medium text-base truncate"
                                   style={{
-                                    color: isDark ? "#f3f4f6" : "#1f2937",
+                                    color: isDark ? "#f9fafb" : "#111827",
                                   }}
                                 >
                                   {get(employee, "lastName", "")}{" "}
                                   {get(employee, "firstName", "")}{" "}
                                   {get(employee, "fatherName", "")}
                                 </p>
-                                <p
-                                  className="text-sm mt-[5px]"
-                                  style={{ color: "#9ca3af" }}
-                                >
-                                  привязан к расписанию:{" "}
+
+                                {/* Unit Code Name */}
+                                {get(employee, "empoloyeeUnitCodeName", "") && (
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <svg
+                                      className="w-3.5 h-3.5 flex-shrink-0"
+                                      fill="none"
+                                      viewBox="0 0 24 24"
+                                      stroke="currentColor"
+                                      style={{
+                                        color: isDark ? "#6b7280" : "#9ca3af",
+                                      }}
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                                      />
+                                    </svg>
+                                    <p
+                                      className="text-xs truncate"
+                                      style={{
+                                        color: isDark ? "#9ca3af" : "#6b7280",
+                                      }}
+                                    >
+                                      {get(
+                                        employee,
+                                        "empoloyeeUnitCodeName",
+                                        ""
+                                      )}
+                                    </p>
+                                  </div>
+                                )}
+
+                                {/* Schedule Tag */}
+                                <div className="flex items-center gap-2 mt-2">
                                   <span
-                                    className="text-xs px-2 py-1 rounded-md border"
+                                    className="text-xs"
+                                    style={{
+                                      color: isDark ? "#9ca3af" : "#6b7280",
+                                    }}
+                                  >
+                                    Расписание:
+                                  </span>
+                                  <span
+                                    className="text-xs px-2.5 py-1 rounded-md border font-medium inline-flex items-center"
                                     style={{
                                       color: isDark ? "#93c5fd" : "#2563eb",
                                       borderColor: isDark
                                         ? "#3b82f6"
-                                        : "#2563eb",
+                                        : "#93c5fd",
                                       background: isDark
-                                        ? "rgba(30, 58, 138, 0.4)"
-                                        : "#dbeafe",
+                                        ? "rgba(37, 99, 235, 0.1)"
+                                        : "#eff6ff",
                                     }}
                                   >
                                     {get(employee, "scheduleName", "")}
                                   </span>
-                                </p>
+                                </div>
                               </div>
                             </div>
+
+                            {/* Action Button */}
                             <a
                               href={`/dashboard/employees/${get(
                                 employee,
                                 "employeeUuid"
                               )}`}
                               target="_blank"
-                              className="px-4 py-2 rounded-md transition"
+                              className="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex-shrink-0"
                               style={{
-                                background: isDark ? "#374151" : "#d1d5db",
-                                color: isDark ? "#e5e7eb" : "#1f2937",
+                                background: isDark ? "#374151" : "#f3f4f6",
+                                color: isDark ? "#e5e7eb" : "#374151",
                               }}
                               onMouseEnter={(e) => {
                                 e.currentTarget.style.background = isDark
                                   ? "#4b5563"
-                                  : "#9ca3af";
+                                  : "#e5e7eb";
+                                e.currentTarget.style.transform =
+                                  "translateY(-1px)";
                               }}
                               onMouseLeave={(e) => {
                                 e.currentTarget.style.background = isDark
                                   ? "#374151"
-                                  : "#d1d5db";
+                                  : "#f3f4f6";
+                                e.currentTarget.style.transform =
+                                  "translateY(0)";
                               }}
                             >
-                              Страница сотрудника
+                              Открыть профиль
                             </a>
                           </div>
                         )
                       )
                     ) : (
-                      <p
-                        className="text-center py-4"
-                        style={{ color: isDark ? "#6b7280" : "#9ca3af" }}
+                      <div
+                        className="text-center py-12 rounded-lg"
+                        style={{
+                          background: isDark ? "#1f2937" : "#f9fafb",
+                          border: `1px dashed ${
+                            isDark ? "#374151" : "#d1d5db"
+                          }`,
+                        }}
                       >
-                        Сотрудники не найдены
-                      </p>
+                        <svg
+                          className="w-12 h-12 mx-auto mb-3"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          style={{ color: isDark ? "#4b5563" : "#d1d5db" }}
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={1.5}
+                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                          />
+                        </svg>
+                        <p
+                          className="text-sm font-medium"
+                          style={{ color: isDark ? "#6b7280" : "#9ca3af" }}
+                        >
+                          Сотрудники не найдены
+                        </p>
+                      </div>
                     )}
                   </div>
                 </motion.div>
