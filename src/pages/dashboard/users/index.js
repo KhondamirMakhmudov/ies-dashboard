@@ -578,8 +578,7 @@ const Index = () => {
                         "linear-gradient(to bottom, #ffffff, #fafbfc)",
                         "linear-gradient(to bottom, #1e1e1e, #1a1a1a)",
                       ),
-                      borderColor: border("#e5e7eb", "#374151"),
-                      border: "1px solid",
+
                       borderRadius: "16px",
                       transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                       overflow: "hidden",
@@ -811,23 +810,6 @@ const Index = () => {
                           }}
                         >
                           <div className="flex justify-between items-center">
-                            <div className="flex items-center gap-1.5">
-                              <BadgeOutlinedIcon
-                                sx={{
-                                  fontSize: 14,
-                                  color: text("#6b7280", "#9ca3af"),
-                                }}
-                              />
-                              <Typography
-                                variant="body2"
-                                style={{
-                                  color: text("#6b7280", "#9ca3af"),
-                                  fontWeight: 500,
-                                }}
-                              >
-                                ID сотрудника:
-                              </Typography>
-                            </div>
                             <Chip
                               label={user.employee_id || "Не указан"}
                               size="small"
@@ -927,7 +909,7 @@ const Index = () => {
                               letterSpacing: "1px",
                             }}
                           >
-                            🎭 Роли ({user.roles?.length || 0})
+                            Роли ({user.roles?.length || 0})
                           </Typography>
                           <div className="flex gap-1.5">
                             <Tooltip title="Добавить роль" placement="top">
