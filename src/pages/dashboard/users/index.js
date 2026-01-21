@@ -8,7 +8,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
-import BadgeIcon from "@mui/icons-material/Badge";
+
 import { isEmpty, get } from "lodash";
 import NoData from "@/components/no-data";
 import { motion } from "framer-motion";
@@ -30,6 +30,7 @@ import {
   TextField,
   InputAdornment,
   Select,
+  Tooltip,
 } from "@mui/material";
 import { useState, useMemo } from "react";
 import usePostGeneralAuthQuery from "@/hooks/general-auth/usePostQuery";
@@ -43,6 +44,19 @@ import axios from "axios";
 import { config } from "@/config";
 import DeleteModal from "@/components/modal/delete-modal";
 import ContentLoader from "@/components/loader";
+import StatCard from "@/components/card/statisticCard";
+import PeopleIcon from "@mui/icons-material/People";
+import BadgeIcon from "@mui/icons-material/Badge";
+import LinkIcon from "@mui/icons-material/Link";
+import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
+import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
+import BadgeOutlinedIcon from "@mui/icons-material/BadgeOutlined";
+import BusinessOutlinedIcon from "@mui/icons-material/BusinessOutlined";
+import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined";
+import TheaterComedyOutlinedIcon from "@mui/icons-material/TheaterComedyOutlined";
+import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
+import StarIcon from "@mui/icons-material/Star";
+import SecurityIcon from "@mui/icons-material/Security";
 
 const Index = () => {
   const queryClient = useQueryClient();
@@ -148,7 +162,7 @@ const Index = () => {
       (option) =>
         option.label.toLowerCase().includes(searchTerm) ||
         option.employeeData?.id?.toString().includes(searchTerm) ||
-        option.employeeData?.employee_id?.toLowerCase().includes(searchTerm)
+        option.employeeData?.employee_id?.toLowerCase().includes(searchTerm),
     );
   }, [employeeOptions, employeeSearch]);
 
@@ -161,7 +175,7 @@ const Index = () => {
       (option) =>
         option.label.toLowerCase().includes(searchTerm) ||
         option.employeeData?.id?.toString().includes(searchTerm) ||
-        option.employeeData?.employee_id?.toLowerCase().includes(searchTerm)
+        option.employeeData?.employee_id?.toLowerCase().includes(searchTerm),
     );
   }, [employeeOptions, editEmployeeSearch]);
 
@@ -169,7 +183,7 @@ const Index = () => {
   const { mutate: createUser, isLoading: isCreating } = usePostGeneralAuthQuery(
     {
       listKeyId: "create-user",
-    }
+    },
   );
 
   const submitCreateUser = () => {
@@ -218,7 +232,7 @@ const Index = () => {
             position: "top-right",
           });
         },
-      }
+      },
     );
   };
 
@@ -267,7 +281,7 @@ const Index = () => {
             Authorization: `Bearer ${session?.accessToken}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       toast.success("Пользователь успешно обновлен", {
@@ -289,7 +303,7 @@ const Index = () => {
         `Ошибка: ${
           error.response?.data?.message || error.message || "Неизвестная ошибка"
         }`,
-        { position: "top-right" }
+        { position: "top-right" },
       );
     } finally {
       setIsUpdating(false);
@@ -305,7 +319,7 @@ const Index = () => {
           headers: {
             Authorization: `Bearer ${session?.accessToken}`,
           },
-        }
+        },
       );
 
       toast.success("Пользователь успешно удален", {
@@ -319,7 +333,7 @@ const Index = () => {
         `Ошибка: ${
           error.response?.data?.message || error.message || "Неизвестная ошибка"
         }`,
-        { position: "top-right" }
+        { position: "top-right" },
       );
     }
   };
@@ -357,7 +371,7 @@ const Index = () => {
             position: "top-right",
           });
         },
-      }
+      },
     );
   };
 
@@ -400,7 +414,7 @@ const Index = () => {
             position: "top-right",
           });
         },
-      }
+      },
     );
   };
 
@@ -511,111 +525,44 @@ const Index = () => {
             >
               Создать пользователя
             </PrimaryButton>
-
-            <div
-              className="text-sm"
-              style={{ color: text("#6b7280", "#9ca3af") }}
-            >
-              Всего пользователей: <strong>{usersData.length}</strong>
-            </div>
           </div>
 
           {/* Statistics */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div
-              className="p-4 rounded-lg border"
-              style={{
-                background: bg("white", "#1E1E1E"),
-                borderColor: border("#d1d5db", "#4b5563"),
-              }}
-            >
-              <Typography
-                variant="body2"
-                style={{ color: text("#6b7280", "#9ca3af") }}
-              >
-                Всего пользователей
-              </Typography>
-              <Typography
-                variant="h4"
-                style={{ color: text("#111827", "#f9fafb") }}
-                className="font-bold"
-              >
-                {usersData.length}
-              </Typography>
-            </div>
-            <div
-              className="p-4 rounded-lg border"
-              style={{
-                background: bg("white", "#1E1E1E"),
-                borderColor: border("#d1d5db", "#4b5563"),
-              }}
-            >
-              <Typography
-                variant="body2"
-                style={{ color: text("#6b7280", "#9ca3af") }}
-              >
-                С ролями
-              </Typography>
-              <Typography
-                variant="h4"
-                style={{ color: text("#111827", "#f9fafb") }}
-                className="font-bold"
-              >
-                {usersData.filter((u) => u.roles?.length > 0).length}
-              </Typography>
-            </div>
-            <div
-              className="p-4 rounded-lg border"
-              style={{
-                background: bg("white", "#1E1E1E"),
-                borderColor: border("#d1d5db", "#4b5563"),
-              }}
-            >
-              <Typography
-                variant="body2"
-                style={{ color: text("#6b7280", "#9ca3af") }}
-              >
-                С привязанным сотрудником
-              </Typography>
-              <Typography
-                variant="h4"
-                style={{ color: text("#111827", "#f9fafb") }}
-                className="font-bold"
-              >
-                {usersData.filter((u) => u.employee_id).length}
-              </Typography>
-            </div>
-            <div
-              className="p-4 rounded-lg border"
-              style={{
-                background: bg("white", "#1E1E1E"),
-                borderColor: border("#d1d5db", "#4b5563"),
-              }}
-            >
-              <Typography
-                variant="body2"
-                style={{ color: text("#6b7280", "#9ca3af") }}
-              >
-                Администраторы
-              </Typography>
-              <Typography
-                variant="h4"
-                style={{ color: text("#111827", "#f9fafb") }}
-                className="font-bold"
-              >
-                {usersData.filter((u) => hasAdminRole(u)).length}
-              </Typography>
-            </div>
+            <StatCard
+              value={usersData.length}
+              title={"Всего пользователей"}
+              icon={PeopleIcon}
+              iconColor={"black"}
+            />
+            <StatCard
+              value={usersData.filter((u) => u.roles?.length > 0).length}
+              title={"С ролями"}
+              icon={BadgeIcon}
+              iconColor={"black"}
+            />
+            <StatCard
+              value={usersData.filter((u) => u.employee_id).length}
+              title={"С привязанным сотрудником"}
+              icon={LinkIcon}
+              iconColor={"black"}
+            />
+            <StatCard
+              value={usersData.filter((u) => hasAdminRole(u)).length}
+              title={"Администраторы"}
+              icon={AdminPanelSettingsIcon}
+              iconColor={"black"}
+            />
           </div>
 
           {/* Users Cards Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {usersData.map((user, index) => {
               const isSuperAdmin = user.username === "admin";
               const adminUser = hasAdminRole(user);
               const userPermissions = getUserPermissions(user);
               const hasAllPermissions = userPermissions.some(
-                (p) => p.name === "*"
+                (p) => p.name === "*",
               );
 
               return (
@@ -627,77 +574,119 @@ const Index = () => {
                 >
                   <Card
                     sx={{
-                      background: bg("#ffffff", "#1e1e1e"),
+                      background: bg(
+                        "linear-gradient(to bottom, #ffffff, #fafbfc)",
+                        "linear-gradient(to bottom, #1e1e1e, #1a1a1a)",
+                      ),
                       borderColor: border("#e5e7eb", "#374151"),
-                      border: "1px solid #C9C9C9",
-                      borderRadius: "12px",
-                      transition: "all 0.2s",
+                      border: "1px solid",
+                      borderRadius: "16px",
+                      transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                      overflow: "hidden",
                       "&:hover": {
                         boxShadow: isDark
-                          ? "0 4px 12px rgba(0,0,0,0.3)"
-                          : "0 4px 12px rgba(0,0,0,0.1)",
-                        transform: "translateY(-2px)",
+                          ? "0 8px 24px rgba(0,0,0,0.4)"
+                          : "0 8px 24px rgba(0,0,0,0.12)",
+                        transform: "translateY(-4px)",
+                        borderColor: isDark ? "#4b5563" : "#d1d5db",
                       },
                     }}
                   >
-                    <CardContent>
-                      {/* Header */}
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center gap-3 flex-1">
-                          <Badge
-                            color={adminUser ? "warning" : "success"}
-                            badgeContent={adminUser ? "A" : ""}
-                            overlap="circular"
-                            anchorOrigin={{
-                              vertical: "bottom",
-                              horizontal: "right",
-                            }}
-                          >
-                            <Avatar
+                    <CardContent sx={{ padding: "24px !important" }}>
+                      {/* Header Section with Enhanced Avatar */}
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-center gap-4 flex-1">
+                          <div className="relative">
+                            <Badge
+                              color={adminUser ? "warning" : "success"}
+                              badgeContent={
+                                adminUser ? (
+                                  <StarIcon sx={{ fontSize: 12 }} />
+                                ) : (
+                                  ""
+                                )
+                              }
+                              overlap="circular"
+                              anchorOrigin={{
+                                vertical: "bottom",
+                                horizontal: "right",
+                              }}
                               sx={{
-                                bgcolor: adminUser
-                                  ? isDark
-                                    ? "#f59e0b"
-                                    : "#fbbf24"
-                                  : isDark
-                                  ? "#4b5563"
-                                  : "#e5e7eb",
-                                color: adminUser
-                                  ? isDark
-                                    ? "#1f2937"
-                                    : "#374151"
-                                  : text("#111827", "#f9fafb"),
-                                width: 48,
-                                height: 48,
+                                "& .MuiBadge-badge": {
+                                  width: 24,
+                                  height: 24,
+                                  borderRadius: "50%",
+                                  border: `2px solid ${bg("#ffffff", "#1e1e1e")}`,
+                                },
                               }}
                             >
-                              {user.name?.charAt(0).toUpperCase() ||
-                                user.username?.charAt(0).toUpperCase() ||
-                                "U"}
-                            </Avatar>
-                          </Badge>
+                              <Avatar
+                                sx={{
+                                  bgcolor: adminUser
+                                    ? "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)"
+                                    : "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
+                                  width: 56,
+                                  height: 56,
+                                  fontSize: 20,
+                                  fontWeight: 700,
+                                  boxShadow: isDark
+                                    ? "0 4px 12px rgba(0,0,0,0.3)"
+                                    : "0 4px 12px rgba(0,0,0,0.15)",
+                                }}
+                              >
+                                {user.name?.charAt(0).toUpperCase() ||
+                                  user.username?.charAt(0).toUpperCase() ||
+                                  "U"}
+                              </Avatar>
+                            </Badge>
+                            {/* Online Status Indicator */}
+                            <div
+                              style={{
+                                position: "absolute",
+                                bottom: 2,
+                                right: 2,
+                                width: 14,
+                                height: 14,
+                                borderRadius: "50%",
+                                background: "#10b981",
+                                border: `3px solid ${bg("#ffffff", "#1e1e1e")}`,
+                                boxShadow: "0 0 0 2px rgba(16, 185, 129, 0.2)",
+                              }}
+                            />
+                          </div>
+
                           <div className="flex-1">
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 mb-1">
                               <Typography
                                 variant="h6"
                                 style={{
                                   color: text("#111827", "#f9fafb"),
-                                  fontWeight: 600,
+                                  fontWeight: 700,
+                                  fontSize: "18px",
+                                  lineHeight: 1.2,
                                 }}
                               >
                                 {user.name || user.username}
                               </Typography>
                               {isSuperAdmin && (
                                 <Chip
-                                  label="Супер-админ"
+                                  icon={
+                                    <AdminPanelSettingsIcon
+                                      sx={{ fontSize: 14 }}
+                                    />
+                                  }
+                                  label="SUPER ADMIN"
                                   size="small"
                                   sx={{
-                                    backgroundColor: isDark
-                                      ? "#7c2d12"
-                                      : "#fed7aa",
-                                    color: isDark ? "#fb923c" : "#c2410c",
-                                    fontWeight: 600,
+                                    background:
+                                      "linear-gradient(135deg, #dc2626 0%, #991b1b 100%)",
+                                    color: "#ffffff",
+                                    fontWeight: 700,
                                     fontSize: "10px",
+                                    height: 22,
+                                    letterSpacing: "0.5px",
+                                    boxShadow:
+                                      "0 2px 8px rgba(220, 38, 38, 0.3)",
                                   }}
                                 />
                               )}
@@ -706,170 +695,295 @@ const Index = () => {
                               variant="body2"
                               style={{
                                 color: text("#6b7280", "#9ca3af"),
-                                fontSize: "13px",
+                                fontSize: "14px",
+                                fontWeight: 500,
                               }}
                             >
                               @{user.username}
                             </Typography>
                           </div>
                         </div>
-                        <div className="flex gap-1">
-                          <Button
-                            size="small"
-                            onClick={() => handleEditClick(user)}
-                            disabled={isSuperAdmin}
-                            sx={{
-                              width: "32px",
-                              height: "32px",
-                              minWidth: "32px",
-                              background: isDark ? "#7c2d12" : "#F0D8C8",
-                              color: isDark ? "#fb923c" : "#FF6200",
-                              "&:hover": {
-                                background: isDark ? "#9a3412" : "#F0B28B",
-                              },
-                              "&:disabled": { color: "#9ca3af" },
-                            }}
-                          >
-                            <EditIcon fontSize="small" />
-                          </Button>
-                          <Button
-                            size="small"
-                            onClick={() => {
-                              setDeleteModal(true);
-                              setSelectedId(user.id);
-                            }}
-                            disabled={isSuperAdmin}
-                            sx={{
-                              width: "32px",
-                              height: "32px",
-                              minWidth: "32px",
-                              background: isDark ? "#7f1d1d" : "#FCD8D3",
-                              color: isDark ? "#fca5a5" : "#FF1E00",
-                              "&:hover": {
-                                background: isDark ? "#991b1b" : "#FCA89D",
-                              },
-                              "&:disabled": { color: "#9ca3af" },
-                            }}
-                          >
-                            <DeleteIcon fontSize="small" />
-                          </Button>
+
+                        {/* Action Buttons with Better Styling */}
+                        <div className="flex gap-2">
+                          <Tooltip title="Редактировать" placement="top">
+                            <span>
+                              <IconButton
+                                size="small"
+                                onClick={() => handleEditClick(user)}
+                                disabled={isSuperAdmin}
+                                sx={{
+                                  width: 36,
+                                  height: 36,
+                                  background: isDark
+                                    ? "linear-gradient(135deg, #7c2d12 0%, #92400e 100%)"
+                                    : "linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)",
+                                  color: isDark ? "#fbbf24" : "#d97706",
+                                  transition: "all 0.2s",
+                                  "&:hover": {
+                                    background: isDark
+                                      ? "linear-gradient(135deg, #92400e 0%, #78350f 100%)"
+                                      : "linear-gradient(135deg, #fde68a 0%, #fcd34d 100%)",
+                                    transform: "scale(1.1)",
+                                  },
+                                  "&:disabled": {
+                                    background: isDark ? "#374151" : "#f3f4f6",
+                                    color: "#9ca3af",
+                                  },
+                                }}
+                              >
+                                <EditIcon fontSize="small" />
+                              </IconButton>
+                            </span>
+                          </Tooltip>
+
+                          <Tooltip title="Удалить" placement="top">
+                            <span>
+                              <IconButton
+                                size="small"
+                                onClick={() => {
+                                  setDeleteModal(true);
+                                  setSelectedId(user.id);
+                                }}
+                                disabled={isSuperAdmin}
+                                sx={{
+                                  width: 36,
+                                  height: 36,
+                                  background: isDark
+                                    ? "linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%)"
+                                    : "linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)",
+                                  color: isDark ? "#fca5a5" : "#dc2626",
+                                  transition: "all 0.2s",
+                                  "&:hover": {
+                                    background: isDark
+                                      ? "linear-gradient(135deg, #991b1b 0%, #7f1d1d 100%)"
+                                      : "linear-gradient(135deg, #fecaca 0%, #fca5a5 100%)",
+                                    transform: "scale(1.1)",
+                                  },
+                                  "&:disabled": {
+                                    background: isDark ? "#374151" : "#f3f4f6",
+                                    color: "#9ca3af",
+                                  },
+                                }}
+                              >
+                                <DeleteIcon fontSize="small" />
+                              </IconButton>
+                            </span>
+                          </Tooltip>
                         </div>
                       </div>
 
-                      <Divider sx={{ my: 2 }} />
+                      <Divider sx={{ my: 2.5, opacity: 0.6 }} />
 
-                      {/* Basic Info */}
-                      <Box className="mb-3">
-                        <Typography
-                          variant="caption"
-                          style={{
-                            color: text("#6b7280", "#9ca3af"),
-                            fontWeight: 600,
-                            textTransform: "uppercase",
-                            fontSize: "11px",
+                      {/* Info Grid with Better Layout */}
+                      <Box className="mb-4">
+                        <div className="flex items-center gap-1.5 mb-2">
+                          <DescriptionOutlinedIcon
+                            sx={{
+                              fontSize: 16,
+                              color: text("#6b7280", "#9ca3af"),
+                            }}
+                          />
+                          <Typography
+                            variant="caption"
+                            style={{
+                              color: text("#6b7280", "#9ca3af"),
+                              fontWeight: 700,
+                              textTransform: "uppercase",
+                              fontSize: "11px",
+                              letterSpacing: "1px",
+                            }}
+                          >
+                            Основная информация
+                          </Typography>
+                        </div>
+                        <Box
+                          className="mt-2"
+                          sx={{
+                            display: "grid",
+                            gap: 1.5,
+                            padding: 2,
+                            borderRadius: 2,
+                            background: bg(
+                              "rgba(243, 244, 246, 0.5)",
+                              "rgba(55, 65, 81, 0.2)",
+                            ),
                           }}
                         >
-                          Основная информация
-                        </Typography>
-                        <Stack spacing={1} className="mt-2">
-                          <div className="flex justify-between">
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center gap-1.5">
+                              <BadgeOutlinedIcon
+                                sx={{
+                                  fontSize: 14,
+                                  color: text("#6b7280", "#9ca3af"),
+                                }}
+                              />
+                              <Typography
+                                variant="body2"
+                                style={{
+                                  color: text("#6b7280", "#9ca3af"),
+                                  fontWeight: 500,
+                                }}
+                              >
+                                ID сотрудника:
+                              </Typography>
+                            </div>
+                            <Chip
+                              label={user.employee_id || "Не указан"}
+                              size="small"
+                              sx={{
+                                backgroundColor: user.employee_id
+                                  ? bg("#dbeafe", "#1e3a8a")
+                                  : bg("#f3f4f6", "#374151"),
+                                color: user.employee_id
+                                  ? text("#1e40af", "#93c5fd")
+                                  : text("#6b7280", "#9ca3af"),
+                                fontWeight: 600,
+                                fontSize: "12px",
+                              }}
+                            />
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center gap-1.5">
+                              <BusinessOutlinedIcon
+                                sx={{
+                                  fontSize: 14,
+                                  color: text("#6b7280", "#9ca3af"),
+                                }}
+                              />
+                              <Typography
+                                variant="body2"
+                                style={{
+                                  color: text("#6b7280", "#9ca3af"),
+                                  fontWeight: 500,
+                                }}
+                              >
+                                Код подразделения:
+                              </Typography>
+                            </div>
+                            <Chip
+                              label={user.unit_code || "Не указан"}
+                              size="small"
+                              sx={{
+                                backgroundColor: user.unit_code
+                                  ? bg("#dcfce7", "#14532d")
+                                  : bg("#f3f4f6", "#374151"),
+                                color: user.unit_code
+                                  ? text("#15803d", "#86efac")
+                                  : text("#6b7280", "#9ca3af"),
+                                fontWeight: 600,
+                                fontSize: "12px",
+                              }}
+                            />
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center gap-1.5">
+                              <CalendarTodayOutlinedIcon
+                                sx={{
+                                  fontSize: 14,
+                                  color: text("#6b7280", "#9ca3af"),
+                                }}
+                              />
+                              <Typography
+                                variant="body2"
+                                style={{
+                                  color: text("#6b7280", "#9ca3af"),
+                                  fontWeight: 500,
+                                }}
+                              >
+                                Дата создания:
+                              </Typography>
+                            </div>
                             <Typography
                               variant="body2"
-                              style={{ color: text("#6b7280", "#9ca3af") }}
+                              style={{
+                                color: text("#111827", "#f9fafb"),
+                                fontWeight: 600,
+                              }}
                             >
-                              ID сотрудника:
-                            </Typography>
-                            <Typography
-                              variant="body2"
-                              style={{ color: text("#111827", "#f9fafb") }}
-                            >
-                              {user.employee_id || "Не указан"}
+                              {new Date(user.created_at).toLocaleDateString(
+                                "ru-RU",
+                                {
+                                  day: "2-digit",
+                                  month: "short",
+                                  year: "numeric",
+                                },
+                              )}
                             </Typography>
                           </div>
-                          <div className="flex justify-between">
-                            <Typography
-                              variant="body2"
-                              style={{ color: text("#6b7280", "#9ca3af") }}
-                            >
-                              Код подразделения:
-                            </Typography>
-                            <Typography
-                              variant="body2"
-                              style={{ color: text("#111827", "#f9fafb") }}
-                            >
-                              {user.unit_code || "Не указан"}
-                            </Typography>
-                          </div>
-                          <div className="flex justify-between">
-                            <Typography
-                              variant="body2"
-                              style={{ color: text("#6b7280", "#9ca3af") }}
-                            >
-                              Дата создания:
-                            </Typography>
-                            <Typography
-                              variant="body2"
-                              style={{ color: text("#111827", "#f9fafb") }}
-                            >
-                              {new Date(user.created_at).toLocaleDateString()}
-                            </Typography>
-                          </div>
-                        </Stack>
+                        </Box>
                       </Box>
 
-                      {/* Roles Section */}
-                      <Box className="mb-3">
+                      {/* Roles Section with Enhanced Design */}
+                      <Box className="mb-4">
                         <div className="flex items-center justify-between mb-2">
                           <Typography
                             variant="caption"
                             style={{
                               color: text("#6b7280", "#9ca3af"),
-                              fontWeight: 600,
+                              fontWeight: 700,
                               textTransform: "uppercase",
                               fontSize: "11px",
+                              letterSpacing: "1px",
                             }}
                           >
-                            Роли пользователя ({user.roles?.length || 0})
+                            🎭 Роли ({user.roles?.length || 0})
                           </Typography>
-                          <div className="flex gap-1">
-                            <IconButton
-                              size="small"
-                              onClick={() => {
-                                setAddRoleModal(true);
-                                setSelectedId(user.id);
-                              }}
-                              sx={{
-                                width: "32px",
-                                height: "32px",
-                                background: isDark ? "#064e3b" : "#D0F3E0",
-                                color: isDark ? "#6ee7b7" : "#047857",
-                                "&:hover": {
-                                  background: isDark ? "#065f46" : "#B8EBD1",
-                                },
-                              }}
-                            >
-                              <AddIcon fontSize="small" />
-                            </IconButton>
-
-                            {user.roles?.length > 0 && (
+                          <div className="flex gap-1.5">
+                            <Tooltip title="Добавить роль" placement="top">
                               <IconButton
                                 size="small"
                                 onClick={() => {
-                                  setRemoveRoleModal(true);
+                                  setAddRoleModal(true);
                                   setSelectedId(user.id);
                                 }}
                                 sx={{
-                                  width: "32px",
-                                  height: "32px",
-                                  background: isDark ? "#7f1d1d" : "#FCD8D3",
-                                  color: isDark ? "#fca5a5" : "#FF1E00",
+                                  width: 32,
+                                  height: 32,
+                                  background: isDark
+                                    ? "linear-gradient(135deg, #064e3b 0%, #065f46 100%)"
+                                    : "linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)",
+                                  color: isDark ? "#6ee7b7" : "#047857",
+                                  transition: "all 0.2s",
                                   "&:hover": {
-                                    background: isDark ? "#991b1b" : "#FCA89D",
+                                    background: isDark
+                                      ? "linear-gradient(135deg, #065f46 0%, #047857 100%)"
+                                      : "linear-gradient(135deg, #a7f3d0 0%, #6ee7b7 100%)",
+                                    transform: "scale(1.1)",
                                   },
                                 }}
                               >
-                                <RemoveIcon fontSize="small" />
+                                <AddIcon fontSize="small" />
                               </IconButton>
+                            </Tooltip>
+
+                            {user.roles?.length > 0 && (
+                              <Tooltip title="Удалить роль" placement="top">
+                                <IconButton
+                                  size="small"
+                                  onClick={() => {
+                                    setRemoveRoleModal(true);
+                                    setSelectedId(user.id);
+                                  }}
+                                  sx={{
+                                    width: 32,
+                                    height: 32,
+                                    background: isDark
+                                      ? "linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%)"
+                                      : "linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)",
+                                    color: isDark ? "#fca5a5" : "#dc2626",
+                                    transition: "all 0.2s",
+                                    "&:hover": {
+                                      background: isDark
+                                        ? "linear-gradient(135deg, #991b1b 0%, #b91c1c 100%)"
+                                        : "linear-gradient(135deg, #fecaca 0%, #fca5a5 100%)",
+                                      transform: "scale(1.1)",
+                                    },
+                                  }}
+                                >
+                                  <RemoveIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
                             )}
                           </div>
                         </div>
@@ -886,77 +1000,38 @@ const Index = () => {
                                 label={role.name}
                                 size="small"
                                 sx={{
-                                  backgroundColor: getRoleColor(role.name).bg,
+                                  background: `linear-gradient(135deg, ${getRoleColor(role.name).bg} 0%, ${getRoleColor(role.name).bg}dd 100%)`,
                                   color: getRoleColor(role.name).text,
-                                  fontWeight: 500,
+                                  fontWeight: 600,
                                   textTransform: "uppercase",
-                                  letterSpacing: "0.5px",
+                                  letterSpacing: "0.8px",
+                                  fontSize: "11px",
+                                  height: 26,
+                                  boxShadow: `0 2px 8px ${getRoleColor(role.name).bg}40`,
+                                  transition: "all 0.2s",
+                                  "&:hover": {
+                                    transform: "translateY(-2px)",
+                                    boxShadow: `0 4px 12px ${getRoleColor(role.name).bg}60`,
+                                  },
                                 }}
                               />
                             ))
                           ) : (
                             <Typography
                               variant="body2"
-                              style={{ color: text("#9ca3af", "#6b7280") }}
+                              style={{
+                                color: text("#9ca3af", "#6b7280"),
+                                fontStyle: "italic",
+                                padding: "8px 0",
+                              }}
                             >
-                              Нет ролей
+                              Нет назначенных ролей
                             </Typography>
                           )}
                         </Stack>
                       </Box>
 
                       {/* Permissions Section */}
-                      {userPermissions.length > 0 && (
-                        <Box>
-                          <Typography
-                            variant="caption"
-                            style={{
-                              color: text("#6b7280", "#9ca3af"),
-                              fontWeight: 600,
-                              textTransform: "uppercase",
-                              fontSize: "11px",
-                            }}
-                          >
-                            Разрешения
-                          </Typography>
-                          <Stack
-                            direction="row"
-                            spacing={1}
-                            flexWrap="wrap"
-                            useFlexGap
-                            className="mt-2"
-                          >
-                            {hasAllPermissions ? (
-                              <Chip
-                                label="Все права (*)"
-                                size="small"
-                                sx={{
-                                  backgroundColor: isDark
-                                    ? "#7c2d12"
-                                    : "#fed7aa",
-                                  color: isDark ? "#fb923c" : "#c2410c",
-                                  fontWeight: 500,
-                                }}
-                              />
-                            ) : (
-                              userPermissions.map((permission, idx) => (
-                                <Chip
-                                  key={idx}
-                                  label={permission.name}
-                                  size="small"
-                                  sx={{
-                                    backgroundColor: isDark
-                                      ? "#374151"
-                                      : "#f3f4f6",
-                                    color: text("#111827", "#f9fafb"),
-                                    fontWeight: 500,
-                                  }}
-                                />
-                              ))
-                            )}
-                          </Stack>
-                        </Box>
-                      )}
                     </CardContent>
                   </Card>
                 </motion.div>
@@ -1088,7 +1163,7 @@ const Index = () => {
                     );
                   }
                   const option = employeeOptions.find(
-                    (opt) => opt.value === selected
+                    (opt) => opt.value === selected,
                   );
                   return option?.label || selected;
                 }}
@@ -1322,7 +1397,7 @@ const Index = () => {
                     );
                   }
                   const option = employeeOptions.find(
-                    (opt) => opt.value === selected
+                    (opt) => opt.value === selected,
                   );
                   return option?.label || selected;
                 }}

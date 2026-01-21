@@ -166,7 +166,7 @@ const Index = () => {
             position: "top-right",
           });
         },
-      }
+      },
     );
   };
 
@@ -187,7 +187,7 @@ const Index = () => {
             Authorization: `Bearer ${session?.accessToken}`,
           },
           body: JSON.stringify({ name: name }),
-        }
+        },
       );
 
       if (!response.ok) throw new Error("Ошибка при обновлении");
@@ -215,7 +215,7 @@ const Index = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${session?.accessToken}`,
           },
-        }
+        },
       );
 
       if (!response.ok) throw new Error("Ошибка при удалении");
@@ -264,7 +264,7 @@ const Index = () => {
             position: "top-right",
           });
         },
-      }
+      },
     );
   };
 
@@ -296,7 +296,7 @@ const Index = () => {
             position: "top-right",
           });
         },
-      }
+      },
     );
   };
 
@@ -333,7 +333,7 @@ const Index = () => {
             position: "top-right",
           });
         },
-      }
+      },
     );
   };
 
@@ -365,47 +365,47 @@ const Index = () => {
             position: "top-right",
           });
         },
-      }
+      },
     );
   };
 
   // Helper function for permission colors
-  const getPermissionColor = (permissionName) => {
-    const colors = {
-      "*": {
-        bg: isDark ? "#7c2d12" : "#fed7aa",
-        text: isDark ? "#fb923c" : "#c2410c",
-      },
-      create: {
-        bg: isDark ? "#065f46" : "#d1fae5",
-        text: isDark ? "#6ee7b7" : "#047857",
-      },
-      read: {
-        bg: isDark ? "#1e3a8a" : "#dbeafe",
-        text: isDark ? "#93c5fd" : "#1e40af",
-      },
-      update: {
-        bg: isDark ? "#7c2d12" : "#fed7aa",
-        text: isDark ? "#fb923c" : "#c2410c",
-      },
-      delete: {
-        bg: isDark ? "#7f1d1d" : "#fecaca",
-        text: isDark ? "#fca5a5" : "#dc2626",
-      },
-    };
+  // const getPermissionColor = (permissionName) => {
+  //   const colors = {
+  //     "*": {
+  //       bg: isDark ? "#7c2d12" : "#fed7aa",
+  //       text: isDark ? "#fb923c" : "#c2410c",
+  //     },
+  //     create: {
+  //       bg: isDark ? "#065f46" : "#d1fae5",
+  //       text: isDark ? "#6ee7b7" : "#047857",
+  //     },
+  //     read: {
+  //       bg: isDark ? "#1e3a8a" : "#dbeafe",
+  //       text: isDark ? "#93c5fd" : "#1e40af",
+  //     },
+  //     update: {
+  //       bg: isDark ? "#7c2d12" : "#fed7aa",
+  //       text: isDark ? "#fb923c" : "#c2410c",
+  //     },
+  //     delete: {
+  //       bg: isDark ? "#7f1d1d" : "#fecaca",
+  //       text: isDark ? "#fca5a5" : "#dc2626",
+  //     },
+  //   };
 
-    const lowerName = permissionName?.toLowerCase();
-    for (const [key, value] of Object.entries(colors)) {
-      if (lowerName.includes(key)) {
-        return value;
-      }
-    }
+  //   const lowerName = permissionName?.toLowerCase();
+  //   for (const [key, value] of Object.entries(colors)) {
+  //     if (lowerName.includes(key)) {
+  //       return value;
+  //     }
+  //   }
 
-    return {
-      bg: isDark ? "#374151" : "#f3f4f6",
-      text: isDark ? "#9ca3af" : "#6b7280",
-    };
-  };
+  //   return {
+  //     bg: isDark ? "#374151" : "#f3f4f6",
+  //     text: isDark ? "#9ca3af" : "#6b7280",
+  //   };
+  // };
 
   if (isLoading || isFetching) {
     return (
@@ -536,7 +536,7 @@ const Index = () => {
               >
                 {rolesData.reduce(
                   (sum, role) => sum + (role.users?.length || 0),
-                  0
+                  0,
                 )}
               </Typography>
             </div>
@@ -783,7 +783,7 @@ const Index = () => {
                           {role.permissions?.length > 0 ? (
                             role.permissions.map((permission) => {
                               const colors = getPermissionColor(
-                                permission.name
+                                permission.name,
                               );
                               return (
                                 <Chip
