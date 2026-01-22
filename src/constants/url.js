@@ -59,4 +59,6 @@ export const URLS = {
   me: "auth/me",
   permissions: "auth/permission",
   typeOfPermissions: "auth/permission-type",
+  resources: "auth/resource",
+  actions: "auth/action",
 };

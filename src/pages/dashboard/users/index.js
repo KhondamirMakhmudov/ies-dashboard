@@ -57,6 +57,7 @@ import TheaterComedyOutlinedIcon from "@mui/icons-material/TheaterComedyOutlined
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import StarIcon from "@mui/icons-material/Star";
 import SecurityIcon from "@mui/icons-material/Security";
+import Link from "next/link";
 
 const Index = () => {
   const queryClient = useQueryClient();
@@ -776,25 +777,56 @@ const Index = () => {
 
                       {/* Info Grid with Better Layout */}
                       <Box className="mb-4">
-                        <div className="flex items-center gap-1.5 mb-2">
-                          <DescriptionOutlinedIcon
-                            sx={{
-                              fontSize: 16,
-                              color: text("#6b7280", "#9ca3af"),
-                            }}
-                          />
-                          <Typography
-                            variant="caption"
-                            style={{
-                              color: text("#6b7280", "#9ca3af"),
-                              fontWeight: 700,
-                              textTransform: "uppercase",
-                              fontSize: "11px",
-                              letterSpacing: "1px",
-                            }}
-                          >
-                            Основная информация
-                          </Typography>
+                        <div className="flex items-center justify-between gap-1.5 mb-2">
+                          <div>
+                            <DescriptionOutlinedIcon
+                              sx={{
+                                fontSize: 16,
+                                color: text("#6b7280", "#9ca3af"),
+                              }}
+                            />
+                            <Typography
+                              variant="caption"
+                              style={{
+                                color: text("#6b7280", "#9ca3af"),
+                                fontWeight: 700,
+                                textTransform: "uppercase",
+                                fontSize: "11px",
+                                letterSpacing: "1px",
+                              }}
+                            >
+                              Основная информация
+                            </Typography>
+                          </div>
+
+                          <div className="flex justify-between items-center">
+                            <Link
+                              href={
+                                user.employee_id
+                                  ? `/dashboard/employees/${user.employee_id}`
+                                  : "#"
+                              }
+                            >
+                              <Chip
+                                label={
+                                  user.employee_id
+                                    ? "Страница сотрудника"
+                                    : "Не указан"
+                                }
+                                size="small"
+                                sx={{
+                                  backgroundColor: user.employee_id
+                                    ? bg("#dbeafe", "#1e3a8a")
+                                    : bg("#f3f4f6", "#374151"),
+                                  color: user.employee_id
+                                    ? text("#1e40af", "#93c5fd")
+                                    : text("#6b7280", "#9ca3af"),
+                                  fontWeight: 600,
+                                  fontSize: "12px",
+                                }}
+                              />
+                            </Link>
+                          </div>
                         </div>
                         <Box
                           className="mt-2"
@@ -809,22 +841,6 @@ const Index = () => {
                             ),
                           }}
                         >
-                          <div className="flex justify-between items-center">
-                            <Chip
-                              label={user.employee_id || "Не указан"}
-                              size="small"
-                              sx={{
-                                backgroundColor: user.employee_id
-                                  ? bg("#dbeafe", "#1e3a8a")
-                                  : bg("#f3f4f6", "#374151"),
-                                color: user.employee_id
-                                  ? text("#1e40af", "#93c5fd")
-                                  : text("#6b7280", "#9ca3af"),
-                                fontWeight: 600,
-                                fontSize: "12px",
-                              }}
-                            />
-                          </div>
                           <div className="flex justify-between items-center">
                             <div className="flex items-center gap-1.5">
                               <BusinessOutlinedIcon
