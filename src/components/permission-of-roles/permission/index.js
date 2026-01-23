@@ -3,8 +3,6 @@ import { URLS } from "@/constants/url";
 import { KEYS } from "@/constants/key";
 import useGetGeneralAuthQuery from "@/hooks/general-auth/useGetGeneralAuthQuery";
 import usePostGeneralAuthQuery from "@/hooks/general-auth/usePostQuery";
-// import usePutGeneralAuthQuery from "@/hooks/general-auth/usePutQuery";
-// import useDeleteGeneralAuthQuery from "@/hooks/general-auth/useDeleteQuery";
 import toast from "react-hot-toast";
 import { motion } from "framer-motion";
 import { useSession } from "next-auth/react";
@@ -17,6 +15,10 @@ import NoData from "@/components/no-data";
 import MethodModal from "@/components/modal/method-modal";
 import { useQueryClient } from "@tanstack/react-query";
 import ContentLoader from "@/components/loader";
+import CustomSelect from "@/components/select";
+import DeleteModal from "@/components/modal/delete-modal";
+import { config } from "@/config";
+import dayjs from "dayjs";
 
 const PermissionSection = () => {
   const { data: session } = useSession();
@@ -72,21 +74,19 @@ const PermissionSection = () => {
       listKeyId: KEYS.permissions,
     });
 
-  // // Update permission
-  // const { mutate: updatePermission, isLoading: updateLoading } =
-  //   usePutGeneralAuthQuery({
-  //     listKeyId: KEYS.permissions,
-  //   });
-
-  // // Delete permission
-  // const { mutate: deletePermission, isLoading: deleteLoading } =
-  //   useDeleteGeneralAuthQuery({
-  //     listKeyId: KEYS.permissions,
-  //   });
-
   const permissionsData = get(permissions, "data.data", []);
   const resourcesData = get(resources, "data.data", []);
   const actionsData = get(actions, "data.data", []);
+
+  const optionsResources = get(resources, "data.data", []).map((entry) => ({
+    value: entry.id,
+    label: entry.name,
+  }));
+
+  const optionsActions = get(actions, "data.data", []).map((entry) => ({
+    value: entry.id,
+    label: entry.name,
+  }));
 
   const submitCreatePermission = () => {
     if (!selectedResourceId || !selectedActionId) {
@@ -323,10 +323,8 @@ const PermissionSection = () => {
                     className="text-xs"
                     style={{ color: text("#9ca3af", "#6b7280") }}
                   >
-                    Создано:{" "}
-                    {new Date(permission.created_at).toLocaleDateString(
-                      "ru-RU",
-                    )}
+                    Создано: {dayjs(permission.created_at).format("DD.MM.YYYY")}{" "}
+                    <span>{dayjs(permission.created_at).format("HH:mm")}</span>
                   </p>
                 </div>
               </div>
@@ -350,60 +348,26 @@ const PermissionSection = () => {
           <div className="my-4 space-y-4">
             {/* Resource Select */}
             <div>
-              <label
-                className="block text-sm font-medium mb-2"
-                style={{ color: text("#374151", "#d1d5db") }}
-              >
-                Ресурс
-              </label>
-              <select
+              <CustomSelect
+                options={optionsResources}
+                label={"Ресурс"}
                 value={selectedResourceId}
-                onChange={(e) => setSelectedResourceId(e.target.value)}
-                className={`w-full h-12 px-4 rounded-lg border transition-colors ${bg(
-                  "bg-white",
-                  "bg-[#262626]",
-                )} ${text("text-black", "text-white")} ${border(
-                  "border-gray-300",
-                  "border-gray-600",
-                )}`}
-                disabled={resourcesLoading}
-              >
-                <option value="">Выберите ресурс</option>
-                {resourcesData.map((resource) => (
-                  <option key={resource.id} value={resource.id}>
-                    {resource.name}
-                  </option>
-                ))}
-              </select>
+                onChange={(val) => setSelectedResourceId(val)}
+                returnObject={false}
+                placeholder="Выберите ресурс"
+              />
             </div>
 
             {/* Action Select */}
             <div>
-              <label
-                className="block text-sm font-medium mb-2"
-                style={{ color: text("#374151", "#d1d5db") }}
-              >
-                Действие
-              </label>
-              <select
+              <CustomSelect
+                options={optionsActions}
+                label={"Действие"}
                 value={selectedActionId}
-                onChange={(e) => setSelectedActionId(e.target.value)}
-                className={`w-full h-12 px-4 rounded-lg border transition-colors ${bg(
-                  "bg-white",
-                  "bg-[#262626]",
-                )} ${text("text-black", "text-white")} ${border(
-                  "border-gray-300",
-                  "border-gray-600",
-                )}`}
-                disabled={actionsLoading}
-              >
-                <option value="">Выберите действие</option>
-                {actionsData.map((action) => (
-                  <option key={action.id} value={action.id}>
-                    {action.name}
-                  </option>
-                ))}
-              </select>
+                onChange={(val) => setSelectedActionId(val)}
+                returnObject={false}
+                placeholder="Выберите действие"
+              />
             </div>
 
             <PrimaryButton
@@ -433,60 +397,26 @@ const PermissionSection = () => {
           <div className="my-4 space-y-4">
             {/* Resource Select */}
             <div>
-              <label
-                className="block text-sm font-medium mb-2"
-                style={{ color: text("#374151", "#d1d5db") }}
-              >
-                Ресурс
-              </label>
-              <select
+              <CustomSelect
+                options={optionsResources}
+                label={"Ресурс"}
                 value={selectedResourceId}
-                onChange={(e) => setSelectedResourceId(e.target.value)}
-                className={`w-full h-12 px-4 rounded-lg border transition-colors ${bg(
-                  "bg-white",
-                  "bg-[#262626]",
-                )} ${text("text-black", "text-white")} ${border(
-                  "border-gray-300",
-                  "border-gray-600",
-                )}`}
-                disabled={resourcesLoading}
-              >
-                <option value="">Выберите ресурс</option>
-                {resourcesData.map((resource) => (
-                  <option key={resource.id} value={resource.id}>
-                    {resource.name}
-                  </option>
-                ))}
-              </select>
+                onChange={(val) => setSelectedResourceId(val)}
+                returnObject={false}
+                placeholder="Выберите ресурс"
+              />
             </div>
 
             {/* Action Select */}
             <div>
-              <label
-                className="block text-sm font-medium mb-2"
-                style={{ color: text("#374151", "#d1d5db") }}
-              >
-                Действие
-              </label>
-              <select
+              <CustomSelect
+                options={optionsActions}
+                label={"Действие"}
                 value={selectedActionId}
-                onChange={(e) => setSelectedActionId(e.target.value)}
-                className={`w-full h-12 px-4 rounded-lg border transition-colors ${bg(
-                  "bg-white",
-                  "bg-[#262626]",
-                )} ${text("text-black", "text-white")} ${border(
-                  "border-gray-300",
-                  "border-gray-600",
-                )}`}
-                disabled={actionsLoading}
-              >
-                <option value="">Выберите действие</option>
-                {actionsData.map((action) => (
-                  <option key={action.id} value={action.id}>
-                    {action.name}
-                  </option>
-                ))}
-              </select>
+                onChange={(val) => setSelectedActionId(val)}
+                returnObject={false}
+                placeholder="Выберите действие"
+              />
             </div>
 
             <PrimaryButton
@@ -498,483 +428,17 @@ const PermissionSection = () => {
       )}
 
       {/* Delete Modal */}
-      {deleteModal && (
-        <MethodModal
-          open={deleteModal}
-          showCloseIcon={true}
-          closeClick={() => {
-            setDeleteModal(false);
-            setSelectedId(null);
-          }}
-          title="Удалить разрешение"
-        >
-          <div className="my-4">
-            <p
-              className="text-center mb-6"
-              style={{ color: text("#374151", "#d1d5db") }}
-            >
-              Вы уверены, что хотите удалить это разрешение?
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => {
-                  setDeleteModal(false);
-                  setSelectedId(null);
-                }}
-                className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
-                  isDark
-                    ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                }`}
-              >
-                Отмена
-              </button>
-              <button
-                onClick={submitDeletePermission}
-                disabled={deleteLoading}
-                className="flex-1 px-4 py-2 rounded-lg font-medium bg-red-600 text-white hover:bg-red-700 transition-colors disabled:opacity-50"
-              >
-                {deleteLoading ? "Удаление..." : "Удалить"}
-              </button>
-            </div>
-          </div>
-        </MethodModal>
-      )}
+      <DeleteModal
+        open={deleteModal}
+        onClose={() => {
+          setDeleteModal(false);
+          setSelectedId(null);
+        }}
+        deleting={submitDeletePermission}
+        title="Вы уверены, что хотите удалить данные права?"
+      />
     </div>
   );
 };
 
 export default PermissionSection;
-
-// import DashboardLayout from "@/layouts/dashboard/DashboardLayout";
-// import { URLS } from "@/constants/url";
-// import { KEYS } from "@/constants/key";
-// import useGetGeneralAuthQuery from "@/hooks/general-auth/useGetGeneralAuthQuery";
-// import { useSession } from "next-auth/react";
-// import EditIcon from "@mui/icons-material/Edit";
-// import DeleteIcon from "@mui/icons-material/Delete";
-// import AddIcon from "@mui/icons-material/Add";
-// import RemoveIcon from "@mui/icons-material/Remove";
-// import { isEmpty, get } from "lodash";
-// import NoData from "@/components/no-data";
-// import { motion } from "framer-motion";
-// import useAppTheme from "@/hooks/useAppTheme";
-// import PrimaryButton from "@/components/button/primary-button";
-// import {
-//   Button,
-//   Chip,
-//   Stack,
-//   IconButton,
-//   Card,
-//   CardContent,
-//   Typography,
-//   Box,
-//   Divider,
-// } from "@mui/material";
-// import { useState } from "react";
-// import usePostGeneralAuthQuery from "@/hooks/general-auth/usePostQuery";
-// import toast from "react-hot-toast";
-// import MethodModal from "@/components/modal/method-modal";
-// import Input from "@/components/input";
-// import { useQueryClient } from "@tanstack/react-query";
-// import { config } from "@/config";
-// import DeleteModal from "@/components/modal/delete-modal";
-// import Link from "next/link";
-// import { OpenInNew as OpenInNewIcon } from "@mui/icons-material";
-// import ContentLoader from "@/components/loader";
-// import CustomSelect from "@/components/select";
-
-// const Index = () => {
-//   const queryClient = useQueryClient();
-//   const { bg, text, border, isDark } = useAppTheme();
-
-//   // State for modals
-//   const [createModal, setCreateModal] = useState(false);
-//   const [editModal, setEditModal] = useState(false);
-//   const [deleteModal, setDeleteModal] = useState(false);
-//   const [selectedId, setSelectedId] = useState(null);
-//   const [addPermissionTypeModal, setAddPermissionTypeModal] = useState(false);
-//   const [removePermissionTypeModal, setRemovePermissionTypeModal] =
-//     useState(false);
-//   const [selectedPermissionTypeId, setSelectedPermissionTypeId] = useState("");
-//   const [selectedTypeToRemove, setSelectedTypeToRemove] = useState(null);
-//   const [name, setName] = useState("");
-
-//   const { data: session } = useSession();
-
-//   // Get permissions
-//   const {
-//     data: permissions,
-//     isLoading,
-//     isFetching,
-//   } = useGetGeneralAuthQuery({
-//     key: KEYS.permissions,
-//     url: URLS.permissions,
-//     headers: {
-//       Authorization: `Bearer ${session?.accessToken}`,
-//       Accept: "application/json",
-//     },
-//     enabled: !!session?.accessToken,
-//   });
-//   // get type permissions
-//   const {
-//     data: typeOfPermissions,
-//     isLoading: isLoadingTypeOfPermission,
-//     isFetching: isFetchingTypeOfPermission,
-//   } = useGetGeneralAuthQuery({
-//     key: KEYS.typeOfPermissions,
-//     url: URLS.typeOfPermissions,
-//     headers: {
-//       Authorization: `Bearer ${session?.accessToken}`,
-//       Accept: "application/json",
-//     },
-//     enabled: !!session?.accessToken,
-//   });
-
-//   const optionsTypeOfPermissions = get(typeOfPermissions, "data.data", []).map(
-//     (entry) => ({
-//       value: entry.id,
-//       label: entry.name,
-//     }),
-//   );
-
-//   // Create permission
-//   const { mutate: createPermission } = usePostGeneralAuthQuery({
-//     listKeyId: "create-permission",
-//   });
-
-//   const submitCreatePermission = () => {
-//     if (!name.trim()) {
-//       toast.error("Пожалуйста, введите имя", { position: "top-center" });
-//       return;
-//     }
-//     createPermission(
-//       {
-//         url: URLS.permissions,
-//         attributes: { name: name },
-//         config: {
-//           headers: { Authorization: `Bearer ${session?.accessToken}` },
-//         },
-//       },
-//       {
-//         onSuccess: () => {
-//           toast.success("Права успешно созданы", { position: "top-center" });
-//           setCreateModal(false);
-//           setName("");
-//           queryClient.invalidateQueries(KEYS.permissions);
-//         },
-//         onError: (error) => {
-//           toast.error(`Ошибка: ${error?.message || error}`, {
-//             position: "top-right",
-//           });
-//         },
-//       },
-//     );
-//   };
-
-//   // Edit permission
-//   const submitEditPermission = async () => {
-//     if (!name.trim()) {
-//       toast.error("Пожалуйста, введите имя", { position: "top-center" });
-//       return;
-//     }
-
-//     try {
-//       const response = await fetch(
-//         `${config.GENERAL_AUTH_URL}/${URLS.permissions}/${selectedId}`,
-//         {
-//           method: "PATCH",
-//           headers: {
-//             "Content-Type": "application/json",
-//             Authorization: `Bearer ${session?.accessToken}`,
-//           },
-//           body: JSON.stringify({ name: name }),
-//         },
-//       );
-
-//       if (!response.ok) throw new Error("Ошибка при обновлении");
-
-//       toast.success("Права успешно обновлены", { position: "top-center" });
-//       setEditModal(false);
-//       setSelectedId(null);
-//       setName("");
-//       queryClient.invalidateQueries(KEYS.permissions);
-//     } catch (error) {
-//       toast.error(`Ошибка: ${error?.message || error}`, {
-//         position: "top-right",
-//       });
-//     }
-//   };
-
-//   // Delete permission
-//   const submitDeletePermission = async () => {
-//     try {
-//       const response = await fetch(
-//         `${config.GENERAL_AUTH_URL}/${URLS.permissions}/${selectedId}`,
-//         {
-//           method: "DELETE",
-//           headers: {
-//             "Content-Type": "application/json",
-//             Authorization: `Bearer ${session?.accessToken}`,
-//           },
-//         },
-//       );
-
-//       if (!response.ok) throw new Error("Ошибка при удалении");
-
-//       toast.success("Права успешно удалены", { position: "top-center" });
-//       setDeleteModal(false);
-//       setSelectedId(null);
-//       queryClient.invalidateQueries(KEYS.permissions);
-//     } catch (error) {
-//       toast.error(`Ошибка: ${error?.message || error}`, {
-//         position: "top-right",
-//       });
-//     }
-//   };
-
-//   // Add permission type
-//   const { mutate: addPermissionType } = usePostGeneralAuthQuery({
-//     listKeyId: "add-permission-type",
-//   });
-
-//   const submitAddPermissionType = () => {
-//     if (!selectedPermissionTypeId) {
-//       toast.error("Выберите тип разрешения", { position: "top-center" });
-//       return;
-//     }
-
-//     addPermissionType(
-//       {
-//         url: `${URLS.permissions}/add_permission_type?permission_id=${selectedId}&permission_type_id=${selectedPermissionTypeId}`,
-//         config: {
-//           headers: { Authorization: `Bearer ${session?.accessToken}` },
-//         },
-//       },
-//       {
-//         onSuccess: () => {
-//           toast.success("Тип разрешения успешно добавлен", {
-//             position: "top-center",
-//           });
-//           setAddPermissionTypeModal(false);
-//           setSelectedId(null);
-//           setSelectedPermissionTypeId("");
-//           queryClient.invalidateQueries(KEYS.permissions);
-//         },
-//         onError: (error) => {
-//           toast.error(`Ошибка: ${error?.message || error}`, {
-//             position: "top-right",
-//           });
-//         },
-//       },
-//     );
-//   };
-
-//   // Remove permission type
-//   const { mutate: removePermissionType } = usePostGeneralAuthQuery({
-//     listKeyId: "remove-permission-type",
-//   });
-
-//   const submitRemovePermissionType = () => {
-//     removePermissionType(
-//       {
-//         url: `${URLS.permissions}/remove_permission_type?permission_id=${selectedId}&permission_type_id=${selectedTypeToRemove}`,
-//         config: {
-//           headers: { Authorization: `Bearer ${session?.accessToken}` },
-//         },
-//       },
-//       {
-//         onSuccess: () => {
-//           toast.success("Тип разрешения успешно удален", {
-//             position: "top-center",
-//           });
-//           setRemovePermissionTypeModal(false);
-//           setSelectedId(null);
-//           setSelectedTypeToRemove(null);
-//           queryClient.invalidateQueries(KEYS.permissions);
-//         },
-//         onError: (error) => {
-//           toast.error(`Ошибка: ${error?.message || error}`, {
-//             position: "top-right",
-//           });
-//         },
-//       },
-//     );
-//   };
-
-//   if (isLoading || isFetching) {
-//     return (
-//       <DashboardLayout headerTitle={"Доступ и права"}>
-//         <ContentLoader />
-//       </DashboardLayout>
-//     );
-//   }
-
-//   const permissionsData = get(permissions, "data.data", []);
-
-//   return (
-//     <DashboardLayout headerTitle={"Доступ и права"}>
-//       {isEmpty(permissionsData) ? (
-//         <NoData onCreate={() => setCreateModal(true)} />
-//       ) : (
-//         <motion.div
-//           initial={{ opacity: 0, y: 20 }}
-//           animate={{ opacity: 1, y: 0 }}
-//           className="space-y-4 my-5"
-//         >
-
-//         </motion.div>
-//       )}
-
-//       {/* Create Modal */}
-//       {createModal && (
-//         <MethodModal
-//           open={createModal}
-//           showCloseIcon={true}
-//           closeClick={() => {
-//             setCreateModal(false);
-//             setName("");
-//           }}
-//           title="Создать разрешение"
-//         >
-//           <div className="my-[15px] space-y-[10px]">
-//             <Input
-//               label="Имя разрешения"
-//               type="text"
-//               value={name}
-//               inputClass={
-//                 bg("bg-white", "bg-[#262626]") +
-//                 " " +
-//                 text("text-black", "text-white") +
-//                 " " +
-//                 border("!border-gray-300", "!border-gray-600") +
-//                 " !h-[48px] rounded-[8px] text-[15px]"
-//               }
-//               onChange={(e) => setName(e.target.value)}
-//               placeholder="Введите имя разрешения"
-//             />
-//             <PrimaryButton onClick={submitCreatePermission}>
-//               Создать
-//             </PrimaryButton>
-//           </div>
-//         </MethodModal>
-//       )}
-
-//       {/* Edit Modal */}
-//       {editModal && (
-//         <MethodModal
-//           open={editModal}
-//           showCloseIcon={true}
-//           closeClick={() => {
-//             setEditModal(false);
-//             setName("");
-//             setSelectedId(null);
-//           }}
-//           title="Изменить разрешение"
-//         >
-//           <div className="my-[15px] space-y-[10px]">
-//             <Input
-//               label="Имя разрешения"
-//               type="text"
-//               value={name}
-//               inputClass={
-//                 bg("bg-white", "bg-[#262626]") +
-//                 " " +
-//                 text("text-black", "text-white") +
-//                 " " +
-//                 border("!border-gray-300", "!border-gray-600") +
-//                 " !h-[48px] rounded-[8px] text-[15px]"
-//               }
-//               onChange={(e) => setName(e.target.value)}
-//               placeholder="Введите имя разрешения"
-//             />
-//             <PrimaryButton
-//               backgroundColor="#fb923c"
-//               onClick={submitEditPermission}
-//             >
-//               Изменить
-//             </PrimaryButton>
-//           </div>
-//         </MethodModal>
-//       )}
-
-//       {/* Add Permission Type Modal */}
-//       {addPermissionTypeModal && (
-//         <MethodModal
-//           open={addPermissionTypeModal}
-//           showCloseIcon={true}
-//           closeClick={() => {
-//             setAddPermissionTypeModal(false);
-//             setSelectedId(null);
-//             setSelectedPermissionTypeId("");
-//           }}
-//           title="Добавить тип разрешения"
-//         >
-//           <div className="my-[15px] space-y-[10px]">
-//             <CustomSelect
-//               label={"Тип разрешения"}
-//               options={optionsTypeOfPermissions}
-//               value={selectedPermissionTypeId}
-//               onChange={(val) => setSelectedPermissionTypeId(val)}
-//               placeholder="Выберите тип разрешения"
-//               returnObject={false}
-//             />
-//             <PrimaryButton onClick={submitAddPermissionType}>
-//               Добавить
-//             </PrimaryButton>
-//           </div>
-//         </MethodModal>
-//       )}
-
-//       {/* Remove Permission Type Modal */}
-//       {removePermissionTypeModal && (
-//         <MethodModal
-//           open={removePermissionTypeModal}
-//           showCloseIcon={true}
-//           closeClick={() => {
-//             setRemovePermissionTypeModal(false);
-//             setSelectedId(null);
-//             setSelectedTypeToRemove(null);
-//           }}
-//           title="Удалить тип разрешения"
-//         >
-//           <div className="my-[15px] space-y-[10px]">
-//             <CustomSelect
-//               label="Выберите тип для удаления"
-//               value={selectedTypeToRemove}
-//               onChange={(value) => setSelectedTypeToRemove(value)}
-//               options={
-//                 permissionsData
-//                   .find((p) => p.id === selectedId)
-//                   ?.types?.map((type) => ({
-//                     value: type.id,
-//                     label: type.name,
-//                   })) || []
-//               }
-//               placeholder="Выберите тип"
-//             />
-//             <PrimaryButton
-//               backgroundColor="#dc2626"
-//               onClick={submitRemovePermissionType}
-//             >
-//               Удалить
-//             </PrimaryButton>
-//           </div>
-//         </MethodModal>
-//       )}
-
-//       {/* Delete Modal */}
-//       <DeleteModal
-//         open={deleteModal}
-//         onClose={() => {
-//           setDeleteModal(false);
-//           setSelectedId(null);
-//         }}
-//         deleting={submitDeletePermission}
-//         title="Вы уверены, что хотите удалить это разрешение?"
-//       />
-//     </DashboardLayout>
-//   );
-// };
-
-// export default Index;

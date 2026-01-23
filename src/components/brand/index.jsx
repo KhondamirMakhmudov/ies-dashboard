@@ -1,6 +1,8 @@
 import Image from "next/image";
 
-const Brand = () => {
+const Brand = ({
+  title = "“ISSIQLIK ELЕKTR STANSIYALARI” AKSIYADORLIK JAMIYATI",
+}) => {
   return (
     <div className="flex justify-center items-center">
       <Image
@@ -11,9 +13,7 @@ const Brand = () => {
         priority
         className="w-[43px] h-auto"
       />
-      <p className="text-[20px] font-bold ml-2">
-        “ISSIQLIK ELЕKTR STANSIYALARI” AKSIYADORLIK JAMIYATI
-      </p>
+      <p className="text-[20px] font-bold ml-2">{title}</p>
     </div>
   );
 };

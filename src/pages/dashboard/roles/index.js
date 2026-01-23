@@ -132,7 +132,7 @@ const Index = () => {
 
   const optionsPermissions = get(permissions, "data.data", []).map((entry) => ({
     value: entry.id,
-    label: entry.name,
+    label: `Ресурс(${entry.resource?.name}) - Действие(${entry.action?.name})`,
   }));
 
   const optionsUsers = get(users, "data.data", []).map((entry) => ({
@@ -395,7 +395,7 @@ const Index = () => {
         >
           {/* Header Actions */}
           <div
-            className="flex justify-between items-center p-4 rounded-lg border"
+            className="flex justify-between items-center p-4 rounded-lg border border-gray-200"
             style={{
               background: bg("white", "#1E1E1E"),
               borderColor: border("#d1d5db", "#4b5563"),
@@ -407,14 +407,6 @@ const Index = () => {
             >
               Создать роль
             </PrimaryButton>
-
-            <Link
-              href="/dashboard/permissions"
-              className="bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-all duration-200 flex items-center justify-center gap-2 shadow-sm hover:shadow-md px-4 py-2"
-            >
-              <span>Все разрешения</span>
-              <OpenInNewIcon sx={{ fontSize: 16 }} />
-            </Link>
           </div>
 
           {/* Statistics */}

@@ -148,27 +148,22 @@ function Sidebar({ isOpen = true }) {
   const router = useRouter();
   const { isDark, bg, text, border } = useAppTheme();
 
-  console.log(session, "<== session");
-
   // Role ga qarab menuItems filter qilish - YANGILANDI
   const menuItems = useMemo(() => {
-    // Agar roles array mavjud bo'lsa (yangi format)
     if (session?.user?.roles && Array.isArray(session.user.roles)) {
       const userRoles = session.user.roles.map((r) => r.toLowerCase());
 
       return allMenuItems.filter((item) => {
         if (item.roles && Array.isArray(item.roles)) {
-          // Userning birorta ham rolesi item.roles ichida bo'lsa, ko'rsat
           return item.roles.some((role) =>
             userRoles.includes(role.toLowerCase()),
           );
         }
-        // Agar roles yo'q bo'lsa, hamma uchun
+
         return true;
       });
     }
 
-    // Eski format bilan backward compatibility (role string)
     if (session?.user?.role) {
       const userRole = session.user.role.toLowerCase();
 
@@ -180,11 +175,9 @@ function Sidebar({ isOpen = true }) {
       });
     }
 
-    // Role yo'q bo'lsa, hech narsa ko'rsatma
     return [];
   }, [session?.user?.roles, session?.user?.role]);
 
-  // Open active submenu on first render
   useEffect(() => {
     const newOpen = {};
     menuItems.forEach((item, index) => {

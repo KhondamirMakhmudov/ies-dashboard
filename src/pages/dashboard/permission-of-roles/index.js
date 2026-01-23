@@ -1,18 +1,19 @@
 import DashboardLayout from "@/layouts/dashboard/DashboardLayout";
 import { useRouter } from "next/router";
-import { motion, AnimatePresence } from "framer-motion";
-import UnitType from "@/components/reference/unit-type";
-import PositionType from "@/components/reference/position-type";
-import Position from "@/components/reference/position";
+import { motion } from "framer-motion";
 import useAppTheme from "@/hooks/useAppTheme";
 import PermissionSection from "@/components/permission-of-roles/permission";
 import ActionSection from "@/components/permission-of-roles/action";
+import ResourceSection from "@/components/permission-of-roles/resource";
+import LockOpenIcon from "@mui/icons-material/LockOpen";
+import FolderIcon from "@mui/icons-material/Folder";
+import PlayCircleOutlineIcon from "@mui/icons-material/PlayCircleOutline";
 
 const Index = () => {
   const router = useRouter();
   const { query } = router;
   const { isDark, bg, text, border } = useAppTheme();
-  const tab = query.tab || "unit-type";
+  const tab = query.tab || "permission";
 
   const handleTab = (tabValue) => {
     router.push({
@@ -22,87 +23,102 @@ const Index = () => {
   };
 
   const tabs = [
-    { value: "permission", label: "Разрешения" },
-    { value: "action", label: "Действия" },
-    { value: "resource", label: "Ресурсы" },
+    {
+      value: "permission",
+      label: "Разрешения",
+      icon: <LockOpenIcon fontSize="small" />,
+    },
+    {
+      value: "resource",
+      label: "Ресурсы",
+      icon: <FolderIcon fontSize="small" />,
+    },
+    {
+      value: "action",
+      label: "Действия",
+      icon: <PlayCircleOutlineIcon fontSize="small" />,
+    },
   ];
 
   return (
     <DashboardLayout headerTitle={"Доступ и права"}>
+      {/* Modern Tab Navigation */}
       <div
-        className="p-2 mt-[20px] border rounded-md"
+        className="mt-[20px] border-b"
         style={{
-          backgroundColor: bg("#ffffff", "#1e1e1e"),
           borderColor: border("#e5e7eb", "#333333"),
         }}
       >
-        <div className="flex text-base items-center gap-[20px]">
-          {tabs.map((tabItem, index) => (
-            <div key={tabItem.value} className="flex items-center gap-[20px]">
-              {/* Tab Button */}
+        <div className="flex gap-[8px] px-[20px]">
+          {tabs.map((tabItem) => {
+            const isActive = tab === tabItem.value;
+
+            return (
               <button
+                key={tabItem.value}
                 onClick={() => handleTab(tabItem.value)}
-                className="py-[11px] px-[15px] rounded-md flex flex-col items-center cursor-pointer transition-all duration-200"
+                className="relative px-[20px] py-[14px] font-medium text-[15px] transition-all duration-200 flex items-center gap-[8px] group"
                 style={{
-                  backgroundColor:
-                    tab === tabItem.value
-                      ? isDark
-                        ? "#2a2a2a"
-                        : "#f5f5f5"
-                      : "transparent",
-                  color:
-                    tab === tabItem.value
-                      ? text("#000000", "#f3f4f6")
-                      : text("#828282", "#9ca3af"),
-                }}
-                onMouseEnter={(e) => {
-                  if (tab !== tabItem.value) {
-                    e.currentTarget.style.backgroundColor = isDark
-                      ? "#2a2a2a50"
-                      : "#f5f5f550";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (tab !== tabItem.value) {
-                    e.currentTarget.style.backgroundColor = "transparent";
-                  }
+                  color: isActive
+                    ? text("#2563eb", "#60a5fa")
+                    : text("#6b7280", "#9ca3af"),
                 }}
               >
-                <p>{tabItem.label}</p>
-                <AnimatePresence>
-                  {tab === tabItem.value && (
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.5 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.5 }}
-                      transition={{ duration: 0.2 }}
-                      className="w-[8px] h-[8px] rounded-full mt-[2px]"
-                      style={{
-                        backgroundColor: isDark ? "#3b82f6" : "#000000",
-                      }}
-                    />
-                  )}
-                </AnimatePresence>
-              </button>
-
-              {/* Divider (not after last tab) */}
-              {index < tabs.length - 1 && (
-                <div
-                  className="w-[1px] h-[15px]"
+                {/* Icon */}
+                <span
+                  className="transition-transform duration-200"
                   style={{
-                    backgroundColor: border("#e9e9e9", "#4b5563"),
+                    transform: isActive ? "scale(1.1)" : "scale(1)",
                   }}
-                />
-              )}
-            </div>
-          ))}
+                >
+                  {tabItem.icon}
+                </span>
+
+                {/* Label */}
+                <span>{tabItem.label}</span>
+
+                {/* Active Indicator - Bottom Border */}
+                {isActive && (
+                  <motion.div
+                    layoutId="activeTab"
+                    className="absolute bottom-0 left-0 right-0 h-[3px] rounded-t-full"
+                    style={{
+                      backgroundColor: bg("#2563eb", "#60a5fa"),
+                    }}
+                    transition={{
+                      type: "spring",
+                      stiffness: 500,
+                      damping: 30,
+                    }}
+                  />
+                )}
+
+                {/* Hover Background */}
+                {!isActive && (
+                  <div
+                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-t-md"
+                    style={{
+                      backgroundColor: bg("#f3f4f6", "#262626"),
+                    }}
+                  />
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* Content rendering */}
-      {tab === "permission" && <PermissionSection />}
-      {tab === "action" && <ActionSection />}
-      {tab === "resource" && <Position />}
+      {/* Tab Content with Fade Animation */}
+      <motion.div
+        key={tab}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2 }}
+      >
+        {tab === "permission" && <PermissionSection />}
+        {tab === "resource" && <ResourceSection />}
+        {tab === "action" && <ActionSection />}
+      </motion.div>
     </DashboardLayout>
   );
 };
