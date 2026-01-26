@@ -157,7 +157,7 @@ const Index = () => {
   });
 
   const tableNumberPrefix = get(employeePhoto, "data.tabel_number")?.split(
-    "-"
+    "-",
   )[0];
 
   const {
@@ -219,7 +219,7 @@ const Index = () => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify([employee_id]),
-        }
+        },
       );
 
       if (!response.ok) {
@@ -266,7 +266,7 @@ const Index = () => {
         {
           method: "PATCH",
           body: formDataToSend,
-        }
+        },
       );
 
       if (!res.ok) {
@@ -292,7 +292,7 @@ const Index = () => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ employee_id: employee_id }),
-        }
+        },
       );
 
       if (!response.ok) {
@@ -321,7 +321,7 @@ const Index = () => {
             Authorization: `Bearer ${session?.accessToken}`,
           },
           body: JSON.stringify({ jobTripId: selectedJobTrip }),
-        }
+        },
       );
 
       if (!response.ok) {
@@ -417,7 +417,7 @@ const Index = () => {
             {
               label: `${get(employeePhoto, "data.first_name")} ${get(
                 employeePhoto,
-                "data.last_name"
+                "data.last_name",
               )}`,
               href: "/dashboard/employees",
               isCurrent: true,
@@ -448,14 +448,14 @@ const Index = () => {
                     get(
                       employeePhoto,
                       "data.file_url",
-                      "/images/profile-default.jpg"
-                    )
+                      "/images/profile-default.jpg",
+                    ),
                   )
                     ? "/images/profile-default.jpg"
                     : get(
                         employeePhoto,
                         "data.file_url",
-                        "/images/profile-default.jpg"
+                        "/images/profile-default.jpg",
                       )
                 }
                 alt="user photo"
@@ -498,7 +498,7 @@ const Index = () => {
               <p className="text-base font-medium text-gray-700 text-center max-w-xl px-4">
                 {get(
                   employeePhoto,
-                  "data.workplace.organizational_unit.name"
+                  "data.workplace.organizational_unit.name",
                 ) || "Отдел не указан"}
               </p>
 
@@ -642,7 +642,7 @@ const Index = () => {
                       <p className="text-base font-medium">
                         {get(employeePhoto, "data.date_of_birth")
                           ? dayjs(
-                              get(employeePhoto, "data.date_of_birth")
+                              get(employeePhoto, "data.date_of_birth"),
                             ).format("DD.MM.YYYY")
                           : "Дата рождения не указана"}
                       </p>
@@ -758,7 +758,7 @@ const Index = () => {
                       <p className="text-base font-medium">
                         {get(
                           employeePhoto,
-                          "data.workplace.organizational_unit.name"
+                          "data.workplace.organizational_unit.name",
                         ) || "Отдел не указан"}
                       </p>
                     </li>
@@ -777,7 +777,7 @@ const Index = () => {
                       <p className="text-base font-medium">
                         {get(employeePhoto, "data.hire_date")
                           ? dayjs(get(employeePhoto, "data.hire_date")).format(
-                              "DD.MM.YYYY"
+                              "DD.MM.YYYY",
                             )
                           : "Дата приема не указана"}
                       </p>
@@ -803,8 +803,8 @@ const Index = () => {
                               ? "bg-green-900/30 text-green-400"
                               : "bg-green-100 text-green-800"
                             : isDark
-                            ? "bg-red-900/30 text-red-400"
-                            : "bg-red-100 text-red-800"
+                              ? "bg-red-900/30 text-red-400"
+                              : "bg-red-100 text-red-800"
                         }`}
                       >
                         {get(employeePhoto, "data.is_active")
@@ -854,12 +854,12 @@ const Index = () => {
                     {get(
                       ScheduleAndEntrypointOfEmployee,
                       "data.scheduleAssignments",
-                      []
+                      [],
                     ).length > 0 ? (
                       get(
                         ScheduleAndEntrypointOfEmployee,
                         "data.scheduleAssignments",
-                        []
+                        [],
                       ).map((item, index) => (
                         <div
                           key={index}
@@ -901,7 +901,7 @@ const Index = () => {
                                   onClick={() => {
                                     setConnectScheduleModal(true);
                                     setSelectEntrypointId(
-                                      get(item, "entryPointId")
+                                      get(item, "entryPointId"),
                                     );
                                   }}
                                   sx={{
@@ -1147,13 +1147,13 @@ const Index = () => {
                   {get(
                     ScheduleAndEntrypointOfEmployee,
                     "data.jobTripSchedules",
-                    []
+                    [],
                   ).length > 0 ? (
                     <div className="grid grid-cols-2 gap-4">
                       {get(
                         ScheduleAndEntrypointOfEmployee,
                         "data.jobTripSchedules",
-                        []
+                        [],
                       ).map((item, index) => (
                         <div
                           key={index}
@@ -1319,11 +1319,11 @@ const Index = () => {
                                         {get(item, "startDate") &&
                                         get(item, "endDate")
                                           ? `${new Date(
-                                              get(item, "startDate")
+                                              get(item, "startDate"),
                                             ).toLocaleDateString(
-                                              "ru-RU"
+                                              "ru-RU",
                                             )} - ${new Date(
-                                              get(item, "endDate")
+                                              get(item, "endDate"),
                                             ).toLocaleDateString("ru-RU")}`
                                           : "Период не указан"}
                                       </p>
@@ -1502,7 +1502,7 @@ const Index = () => {
           isFetchingReport={isFetchingReport}
           fileNameEmployee={`${get(employeePhoto, "data.first_name")} ${get(
             employeePhoto,
-            "data.last_name"
+            "data.last_name",
           )}`}
         />
       </div>
@@ -1720,7 +1720,7 @@ const Index = () => {
                   value={formData.first_name || ""}
                   onChange={handleChange}
                   placeholder="Имя"
-                  inputClass={`!h-[45px] border ${border}`}
+                  inputClass={`!h-[45px] `}
                   required
                 />
 
@@ -1730,7 +1730,7 @@ const Index = () => {
                   value={formData.last_name || ""}
                   onChange={handleChange}
                   placeholder="Фамилия"
-                  inputClass={`!h-[45px] border ${border}`}
+                  inputClass={`!h-[45px]`}
                   required={true}
                 />
                 <Input
@@ -1739,13 +1739,13 @@ const Index = () => {
                   value={formData.middle_name || ""}
                   onChange={handleChange}
                   placeholder="Отчество"
-                  inputClass={`!h-[45px] border ${border}`}
+                  inputClass={`!h-[45px]`}
                 />
 
                 <BirthDateInput
                   value={formData.date_of_birth || ""}
                   onChange={handleChange}
-                  inputClass={`!h-[45px] border ${border}`}
+                  inputClass={`!h-[45px]`}
                   required
                 />
 
@@ -1771,7 +1771,7 @@ const Index = () => {
                   value={formData.tabel_number}
                   onChange={handleChange}
                   placeholder="Введите"
-                  inputClass={`!h-[45px] border ${border}`}
+                  inputClass={`!h-[45px]`}
                   required
                 />
               </div>
@@ -1783,7 +1783,7 @@ const Index = () => {
                   label={"Адрес проживания"}
                   onChange={handleChange}
                   placeholder="Введите"
-                  inputClass={`!h-[45px] border ${border}`}
+                  inputClass={`!h-[45px]`}
                   required={true}
                 />
               </div>
@@ -1823,7 +1823,7 @@ const Index = () => {
                   value={formData.email || ""}
                   onChange={handleChange}
                   placeholder="Электронная почта"
-                  inputClass={`!h-[45px] border ${border}`}
+                  inputClass={`!h-[45px]`}
                   classNames="col-span-2 md:col-span-1"
                 />
 
@@ -1833,7 +1833,7 @@ const Index = () => {
                   value={formData.phone_number || ""}
                   onChange={handleChange}
                   placeholder="Телефонный номер"
-                  inputClass={`!h-[45px] border ${border}`}
+                  inputClass={`!h-[45px]`}
                   classNames="col-span-2 md:col-span-1"
                 />
               </div>
@@ -1888,7 +1888,7 @@ const Index = () => {
                   onChange={handleChange}
                   placeholder={"Введите"}
                   label="Место получения образования"
-                  inputClass={`!h-[45px] border ${border}`}
+                  inputClass={`!h-[45px]`}
                   required={true}
                 />
               </div>
@@ -1942,7 +1942,7 @@ const Index = () => {
                   label={"Дата приема на работу"}
                   value={formData.hire_date || ""}
                   onChange={handleChange}
-                  inputClass={`!h-[45px] border ${border}`}
+                  inputClass={`!h-[45px]`}
                   required
                 />
               </div>

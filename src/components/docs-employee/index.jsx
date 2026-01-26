@@ -4,6 +4,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { Button } from "@mui/material";
 import useAppTheme from "@/hooks/useAppTheme";
 import toast from "react-hot-toast";
+import ContentLoader from "../loader";
 
 const DocsOfEmployee = ({ employeeId }) => {
   const { isDark, text, border, bg } = useAppTheme();
@@ -35,10 +36,12 @@ const DocsOfEmployee = ({ employeeId }) => {
       setLoading(true);
       const query = new URLSearchParams(params).toString();
       const response = await fetch(
-        `http://10.20.6.60:8088/file-service/?${query}`
+        `http://10.20.6.60:8088/file-service/?${query}`,
       );
       const json = await response.json();
-      setData(Array.isArray(json) ? json : []);
+      console.log(json, "json");
+
+      setData(Array.isArray(json.data) ? json.data : []);
     } catch (error) {
       console.error("Error:", error);
       setData([]);
@@ -53,7 +56,7 @@ const DocsOfEmployee = ({ employeeId }) => {
       setSelectedFile({ file_name: fileName, file_type: fileType });
       const response = await fetch(
         `http://10.20.6.60:8088/file-service/${fileId}`,
-        { method: "POST" }
+        { method: "POST" },
       );
       const json = await response.json();
       setFileUrl(json.file_url);
@@ -124,7 +127,7 @@ const DocsOfEmployee = ({ employeeId }) => {
     try {
       const response = await fetch(
         `http://10.20.6.60:8088/file-service/${fileId}`,
-        { method: "DELETE" }
+        { method: "DELETE" },
       );
 
       if (response.ok) {
@@ -258,7 +261,7 @@ const DocsOfEmployee = ({ employeeId }) => {
   };
 
   const filteredDocuments = data.filter((doc) =>
-    doc.file_name.toLowerCase().includes(searchTerm.toLowerCase())
+    doc.file_name.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   const totalPages = Math.ceil(filteredDocuments.length / itemsPerPage);
@@ -284,7 +287,7 @@ const DocsOfEmployee = ({ employeeId }) => {
             <h2
               className={`text-lg font-semibold ${text(
                 "text-gray-900",
-                "text-gray-100"
+                "text-gray-100",
               )}`}
             >
               Загруженные документы
@@ -300,7 +303,7 @@ const DocsOfEmployee = ({ employeeId }) => {
                 <svg
                   className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 ${text(
                     "text-gray-400",
-                    "text-gray-500"
+                    "text-gray-500",
                   )}`}
                   fill="none"
                   stroke="currentColor"
@@ -332,11 +335,7 @@ const DocsOfEmployee = ({ employeeId }) => {
         {/* Table */}
         <div className="overflow-x-auto">
           {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className={text("text-gray-500", "text-gray-400")}>
-                Загрузка...
-              </div>
-            </div>
+            <ContentLoader />
           ) : currentDocuments.length === 0 ? (
             <div className="flex items-center justify-center py-12">
               <div className={text("text-gray-500", "text-gray-400")}>
@@ -356,7 +355,7 @@ const DocsOfEmployee = ({ employeeId }) => {
                   <th
                     className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${text(
                       "text-gray-500",
-                      "text-gray-400"
+                      "text-gray-400",
                     )}`}
                   >
                     Имя файла
@@ -364,7 +363,7 @@ const DocsOfEmployee = ({ employeeId }) => {
                   <th
                     className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${text(
                       "text-gray-500",
-                      "text-gray-400"
+                      "text-gray-400",
                     )}`}
                   >
                     Категория
@@ -372,7 +371,7 @@ const DocsOfEmployee = ({ employeeId }) => {
                   <th
                     className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${text(
                       "text-gray-500",
-                      "text-gray-400"
+                      "text-gray-400",
                     )}`}
                   >
                     Дата загрузки
@@ -380,7 +379,7 @@ const DocsOfEmployee = ({ employeeId }) => {
                   <th
                     className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${text(
                       "text-gray-500",
-                      "text-gray-400"
+                      "text-gray-400",
                     )}`}
                   >
                     Размер
@@ -388,7 +387,7 @@ const DocsOfEmployee = ({ employeeId }) => {
                   <th
                     className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${text(
                       "text-gray-500",
-                      "text-gray-400"
+                      "text-gray-400",
                     )}`}
                   >
                     Действие
@@ -413,7 +412,7 @@ const DocsOfEmployee = ({ employeeId }) => {
                           <div
                             className={`text-sm font-medium ${text(
                               "text-gray-900",
-                              "text-gray-100"
+                              "text-gray-100",
                             )}`}
                           >
                             {doc.file_name}
@@ -421,7 +420,7 @@ const DocsOfEmployee = ({ employeeId }) => {
                           <div
                             className={`text-xs ${text(
                               "text-gray-500",
-                              "text-gray-400"
+                              "text-gray-400",
                             )}`}
                           >
                             Added by {doc.owner_service}
@@ -432,7 +431,7 @@ const DocsOfEmployee = ({ employeeId }) => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
                         className={`inline-flex px-3 py-1 text-xs font-medium rounded-full ${getCategoryColor(
-                          doc.description
+                          doc.description,
                         )}`}
                       >
                         {doc.description}
@@ -441,7 +440,7 @@ const DocsOfEmployee = ({ employeeId }) => {
                     <td
                       className={`px-6 py-4 whitespace-nowrap text-sm ${text(
                         "text-gray-700",
-                        "text-gray-300"
+                        "text-gray-300",
                       )}`}
                     >
                       {formatDate(doc.created_at)}
@@ -449,7 +448,7 @@ const DocsOfEmployee = ({ employeeId }) => {
                     <td
                       className={`px-6 py-4 whitespace-nowrap text-sm ${text(
                         "text-gray-700",
-                        "text-gray-300"
+                        "text-gray-300",
                       )}`}
                     >
                       {formatFileSize(doc.size)}
@@ -573,7 +572,7 @@ const DocsOfEmployee = ({ employeeId }) => {
               <h3
                 className={`text-lg font-semibold ${text(
                   "text-gray-900",
-                  "text-gray-100"
+                  "text-gray-100",
                 )}`}
               >
                 {selectedFile.file_name}
@@ -587,7 +586,7 @@ const DocsOfEmployee = ({ employeeId }) => {
                 <svg
                   className={`w-5 h-5 ${text(
                     "text-gray-600",
-                    "text-gray-400"
+                    "text-gray-400",
                   )}`}
                   fill="none"
                   stroke="currentColor"
@@ -672,7 +671,7 @@ const DocsOfEmployee = ({ employeeId }) => {
               <h3
                 className={`text-lg font-semibold ${text(
                   "text-gray-900",
-                  "text-gray-100"
+                  "text-gray-100",
                 )}`}
               >
                 Загрузить файл
@@ -689,7 +688,7 @@ const DocsOfEmployee = ({ employeeId }) => {
                 <svg
                   className={`w-5 h-5 ${text(
                     "text-gray-600",
-                    "text-gray-400"
+                    "text-gray-400",
                   )}`}
                   fill="none"
                   stroke="currentColor"
@@ -711,7 +710,7 @@ const DocsOfEmployee = ({ employeeId }) => {
                   <label
                     className={`block text-sm font-medium mb-2 ${text(
                       "text-gray-700",
-                      "text-gray-300"
+                      "text-gray-300",
                     )}`}
                   >
                     Описание <span className="text-red-500">*</span>
@@ -738,7 +737,7 @@ const DocsOfEmployee = ({ employeeId }) => {
                   <label
                     className={`block text-sm font-medium mb-2 ${text(
                       "text-gray-700",
-                      "text-gray-300"
+                      "text-gray-300",
                     )}`}
                   >
                     Файл <span className="text-red-500">*</span>
@@ -758,7 +757,7 @@ const DocsOfEmployee = ({ employeeId }) => {
                       <svg
                         className={`mx-auto h-12 w-12 ${text(
                           "text-gray-400",
-                          "text-gray-500"
+                          "text-gray-500",
                         )}`}
                         fill="none"
                         stroke="currentColor"
@@ -774,7 +773,7 @@ const DocsOfEmployee = ({ employeeId }) => {
                       <p
                         className={`mt-2 text-sm ${text(
                           "text-gray-600",
-                          "text-gray-400"
+                          "text-gray-400",
                         )}`}
                       >
                         {uploadData.file
@@ -784,7 +783,7 @@ const DocsOfEmployee = ({ employeeId }) => {
                       <p
                         className={`mt-1 text-xs ${text(
                           "text-gray-500",
-                          "text-gray-500"
+                          "text-gray-500",
                         )}`}
                       >
                         Максимальный размер: 500 МБ

@@ -395,7 +395,7 @@ const Index = () => {
         >
           {/* Header Actions */}
           <div
-            className="flex justify-between items-center p-4 rounded-lg border border-gray-200"
+            className={`flex justify-between items-center p-4 rounded-lg border ${!isDark ? "border-gray-200" : "border-gray-400"}`}
             style={{
               background: bg("white", "#1E1E1E"),
               borderColor: border("#d1d5db", "#4b5563"),

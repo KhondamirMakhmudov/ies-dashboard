@@ -2,14 +2,13 @@ import Image from "next/image";
 import { useState, useRef } from "react";
 import AvatarEditor from "react-avatar-editor";
 import toast from "react-hot-toast";
-import useAppTheme from "@/hooks/useAppTheme"; // Update the import path
+import useAppTheme from "@/hooks/useAppTheme";
 
 export default function ImageUploader({ image, onFileChange }) {
   const [scale, setScale] = useState(1.0);
   const editorRef = useRef(null);
   const { isDark, bg, text, border } = useAppTheme();
 
-  // Fayl yuklash
   const handleImageUpload = (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -19,7 +18,7 @@ export default function ImageUploader({ image, onFileChange }) {
       return;
     }
 
-    onFileChange(file); // ✅ parentga yuboramiz
+    onFileChange(file);
   };
 
   const handleDrop = (event) => {
@@ -32,7 +31,7 @@ export default function ImageUploader({ image, onFileChange }) {
       return;
     }
 
-    onFileChange(file); // ✅ parentga yuboramiz
+    onFileChange(file);
   };
 
   const handleSave = () => {
@@ -42,7 +41,7 @@ export default function ImageUploader({ image, onFileChange }) {
           const croppedFile = new File([blob], image.name, {
             type: image.type,
           });
-          onFileChange(croppedFile); // ✅ parent state update
+          onFileChange(croppedFile);
         }
       }, image.type);
     }

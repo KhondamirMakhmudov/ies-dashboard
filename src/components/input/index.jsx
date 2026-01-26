@@ -43,12 +43,12 @@ const Input = ({
         placeholder={placeholder}
         value={value}
         onChange={onChange}
-        className={`w-full h-[55px] border rounded-[5px] p-2 pr-10 focus:outline-none focus:ring-2 ${
+        className={`w-full h-[55px] border ${!isDark ? "border-gray-200" : "border-gray-400"} rounded-[5px] p-2 pr-10 focus:outline-none focus:ring-2 ${
           error ? "focus:ring-red-500" : "focus:ring-blue-500"
         } ${inputClass}`}
         style={{
           backgroundColor: bg("#ffffff", "#2a2a2a"),
-          borderColor: error ? "#ef4444" : border("#9ca3af", "#4b5563"),
+
           color: text("#000000", "#f3f4f6"),
         }}
       />
