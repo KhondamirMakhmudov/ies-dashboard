@@ -3,7 +3,7 @@ import { config } from "@/config";
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 
-// Helper function to decode JWT token
+// decode JWT token
 function decodeJWT(token) {
   try {
     const base64Url = token.split(".")[1];
@@ -12,7 +12,7 @@ function decodeJWT(token) {
       atob(base64)
         .split("")
         .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-        .join("")
+        .join(""),
     );
     return JSON.parse(jsonPayload);
   } catch (error) {
@@ -21,7 +21,46 @@ function decodeJWT(token) {
   }
 }
 
-// Helper function to extract role names from the new roles array format
+// Helper function to fetch user details including roles
+async function fetchUserDetails(userId, accessToken) {
+  try {
+    console.log(`=== FETCHING USER DETAILS FOR USER ID: ${userId} ===`);
+
+    const response = await fetch(
+      `${config.GENERAL_AUTH_URL}/auth/user/${userId}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      },
+    );
+
+    console.log("User details response status:", response.status);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(
+        "Failed to fetch user details:",
+        response.status,
+        errorText,
+      );
+      return null;
+    }
+
+    const userDetails = await response.json();
+    console.log("User details fetched successfully");
+    console.log("User roles:", userDetails.roles);
+
+    return userDetails;
+  } catch (error) {
+    console.error("Error fetching user details:", error);
+    return null;
+  }
+}
+
+// Helper function to extract role names from the roles array format
 function extractRoles(rolesArray) {
   if (!Array.isArray(rolesArray)) {
     return [];
@@ -60,7 +99,7 @@ function isAdmin(rolesArray) {
   return rolesArray.some(
     (role) =>
       role.name === "admin" ||
-      role.permissions?.some((p) => p.name === "*" && p.types?.includes("*"))
+      role.permissions?.some((p) => p.name === "*" && p.types?.includes("*")),
   );
 }
 
@@ -123,6 +162,13 @@ async function refreshAccessToken(token) {
       const expiresIn = Math.floor((accessTokenExpires - Date.now()) / 1000);
       console.log(`New token expires in ${expiresIn} seconds`);
 
+      // Fetch updated user details with new token
+      console.log("Fetching updated user details after token refresh...");
+      const userDetails = await fetchUserDetails(
+        newDecoded.sub,
+        refreshedTokens.access_token,
+      );
+
       return {
         ...token,
         accessToken: refreshedTokens.access_token,
@@ -130,6 +176,7 @@ async function refreshAccessToken(token) {
         tokenType: refreshedTokens.token_type || token.tokenType || "Bearer",
         accessTokenExpires: accessTokenExpires,
         userData: newDecoded,
+        userDetails: userDetails, // Store updated user details
         error: undefined,
       };
     } catch (error) {
@@ -164,6 +211,7 @@ export const authOptions = {
       async authorize(credentials) {
         try {
           const { username, password } = credentials;
+          console.log("=== STARTING LOGIN PROCESS ===");
           console.log("Attempting login for user:", username);
 
           const params = new URLSearchParams();
@@ -193,6 +241,8 @@ export const authOptions = {
             return null;
           }
 
+          console.log("=== STEP 1: LOGIN SUCCESSFUL ===");
+
           // Decode token to get user data and expiration
           const decoded = decodeJWT(data.access_token);
 
@@ -201,19 +251,38 @@ export const authOptions = {
             return null;
           }
 
-          console.log("Login successful for user:", decoded.username);
-          console.log("User roles:", decoded.roles);
+          console.log("=== STEP 2: TOKEN DECODED ===");
+          console.log("User ID (sub):", decoded.sub);
+          console.log("Username:", decoded.username);
+          console.log("Employee ID:", decoded.employee_id);
+          console.log("Unit Code:", decoded.unit_code);
 
           const accessTokenExpires = decoded.exp * 1000;
 
+          // Fetch user details including roles
+          console.log("=== STEP 3: FETCHING USER DETAILS ===");
+          const userDetails = await fetchUserDetails(
+            decoded.sub,
+            data.access_token,
+          );
+
+          if (!userDetails) {
+            console.error("Failed to fetch user details");
+            return null;
+          }
+
+          console.log("=== STEP 4: USER DETAILS FETCHED ===");
+          console.log("Full user details retrieved with roles");
+
           return {
-            id: decoded.sub || username,
+            id: decoded.sub,
             name: decoded.username || username,
             accessToken: data.access_token,
             refreshToken: data.refresh_token,
             tokenType: data.token_type || "Bearer",
             accessTokenExpires: accessTokenExpires,
-            userData: decoded,
+            userData: decoded, // Token payload
+            userDetails: userDetails, // Full user details from API
           };
         } catch (error) {
           console.error("Authorize error:", error);
@@ -229,9 +298,10 @@ export const authOptions = {
       if (user) {
         console.log("=== INITIAL JWT CREATION ===");
         console.log("User:", user.name);
+        console.log("User ID:", user.id);
         console.log(
           "Token expires:",
-          new Date(user.accessTokenExpires).toLocaleString()
+          new Date(user.accessTokenExpires).toLocaleString(),
         );
 
         return {
@@ -252,7 +322,7 @@ export const authOptions = {
       // If there's already an error, keep it
       if (token.error === "RefreshTokenExpired") {
         console.log(
-          "JWT callback: Refresh token expired, user needs to re-login"
+          "JWT callback: Refresh token expired, user needs to re-login",
         );
         return token;
       }
@@ -264,7 +334,7 @@ export const authOptions = {
       const secondsUntilExpiry = Math.floor(timeUntilExpiry / 1000);
 
       console.log(
-        `JWT callback: Token expires in ${secondsUntilExpiry} seconds`
+        `JWT callback: Token expires in ${secondsUntilExpiry} seconds`,
       );
 
       // Refresh if token expires in less than 5 minutes (300 seconds)
@@ -281,7 +351,7 @@ export const authOptions = {
       if (refreshedToken.error) {
         console.error(
           "JWT callback: Refresh failed with error:",
-          refreshedToken.error
+          refreshedToken.error,
         );
       } else {
         console.log("JWT callback: Token refreshed successfully");
@@ -291,6 +361,8 @@ export const authOptions = {
     },
 
     async session({ session, token }) {
+      console.log("=== BUILDING SESSION ===");
+
       // If refresh token expired, clear session
       if (token.error === "RefreshTokenExpired") {
         console.log("Session callback: Refresh token expired");
@@ -312,11 +384,15 @@ export const authOptions = {
       session.tokenType = token.tokenType;
       session.accessTokenExpires = token.accessTokenExpires;
 
-      // Extract roles and permissions from the new format
-      const roles = token.userData?.roles || [];
+      // Extract roles and permissions from userDetails (from API)
+      const roles = token.userDetails?.roles || [];
       const roleNames = extractRoles(roles);
       const permissions = extractPermissions(roles);
       const hasAdminAccess = isAdmin(roles);
+
+      console.log("Session roles extracted:", roleNames);
+      console.log("Session permissions count:", permissions.length);
+      console.log("Session has admin access:", hasAdminAccess);
 
       session.user = {
         id: token.id,
@@ -324,20 +400,37 @@ export const authOptions = {
         username: token.userData?.username,
         employee_id: token.userData?.employee_id,
         unit_code: token.userData?.unit_code,
-        // New role structure
+        // Role structure from API
         roles: roleNames, // Array of role names: ["admin"]
         rolesDetail: roles, // Full roles array with permissions
         permissions: permissions, // Flattened permissions array
         isAdmin: hasAdminAccess, // Boolean flag for easy access checking
       };
 
+      console.log("=== SESSION BUILT SUCCESSFULLY ===");
+
       return session;
+    },
+  },
+
+  cookies: {
+    sessionToken: {
+      name:
+        process.env.NODE_ENV === "production"
+          ? "__Secure-next-auth.session-token.project2"
+          : "next-auth.session-token.project2",
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+      },
     },
   },
 
   events: {
     async signOut({ token }) {
-      console.log("User signed out");
+      console.log("=== USER SIGNED OUT ===");
       // Optionally call logout endpoint to invalidate tokens on server
       try {
         await fetch(`${config.GENERAL_AUTH_URL}/auth/logout`, {
@@ -348,6 +441,7 @@ export const authOptions = {
             }`,
           },
         });
+        console.log("Logout API called successfully");
       } catch (error) {
         console.error("Logout error:", error);
       }
@@ -370,5 +464,7 @@ export const authOptions = {
 
 export default NextAuth(authOptions);
 
+console.log("=== NEXTAUTH CONFIGURATION LOADED ===");
 console.log("NEXTAUTH_SECRET loaded:", !!process.env.NEXTAUTH_SECRET);
 console.log("Secret length:", process.env.NEXTAUTH_SECRET?.length);
+console.log("Auth API URL:", config.GENERAL_AUTH_URL);

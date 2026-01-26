@@ -292,11 +292,8 @@ const Index = () => {
             setCreateCheckpoints(false);
             handleRemoveAll();
           }}
+          title={"Добавить контрольно-пропускной пункт"}
         >
-          <Typography variant="h6" className="mb-2">
-            Добавить контрольно-пропускной пункт
-          </Typography>
-
           <div className="my-[30px] space-y-[20px]">
             <Input
               label="Имя чекпоинта"
@@ -343,11 +340,8 @@ const Index = () => {
             setEditCheckpoints(false);
             handleRemoveAll();
           }}
+          title={"Изменить контрольно-пропускной пункт"}
         >
-          <Typography variant="h6" className="mb-2">
-            Изменить контрольно-пропускной пункт
-          </Typography>
-
           <div className="my-[30px] space-y-[15px]">
             <Input
               name="login"

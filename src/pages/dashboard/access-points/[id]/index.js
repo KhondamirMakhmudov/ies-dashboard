@@ -6,13 +6,13 @@ import { motion } from "framer-motion";
 import { get, isEmpty } from "lodash";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
-import StarIcon from "@mui/icons-material/Star";
-import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
+import * as XLSX from "xlsx";
+import ExcelButton from "@/components/button/excel-button";
 import Link from "next/link";
 import ContentLoader from "@/components/loader";
 import NoData from "@/components/no-data";
 import usePostQuery from "@/hooks/java/usePostQuery";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import MethodModal from "@/components/modal/method-modal";
 import { Typography, Button, Switch } from "@mui/material";
 import CustomSelect from "@/components/select";
@@ -46,6 +46,7 @@ const Index = () => {
   const [tab, setTab] = useState("org-units");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedPosition, setSelectedPosition] = useState("");
+  const [selectedScheduleTab, setSelectedScheduleTab] = useState("all");
   const [selectedSchedule, setSelectedSchedule] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
@@ -139,26 +140,85 @@ const Index = () => {
     enabled: !!id && !!session?.accessToken,
   });
 
-  // Filter employees based on search query
-  const filteredEmployeesConnectedToSchedule = get(
-    connectedEmployeesToSchedule,
-    "data.employees",
-    []
-  ).filter((employee) => {
-    if (!searchQuery.trim()) return true;
+  const scheduleNames = useMemo(() => {
+    const employees = get(connectedEmployeesToSchedule, "data.employees", []);
+    const uniqueSchedules = [
+      ...new Set(employees.map((emp) => emp.scheduleName)),
+    ];
+    return uniqueSchedules.filter(Boolean);
+  }, [connectedEmployeesToSchedule]);
 
-    const fullName = `${get(employee, "firstName", "")} ${get(
-      employee,
-      "lastName",
-      ""
-    )}`.toLowerCase();
-    return fullName.includes(searchQuery.toLowerCase());
-  });
+  // 3. REPLACE your filteredEmployeesConnectedToSchedule with this:
+  const filteredEmployeesConnectedToSchedule = useMemo(() => {
+    const employees = get(connectedEmployeesToSchedule, "data.employees", []);
 
-  const options = get(allSchedules, "data", []).map((entry) => ({
-    value: entry.id,
-    label: entry.name,
-  }));
+    return employees.filter((employee) => {
+      // Filter by schedule
+      if (
+        selectedScheduleTab !== "all" &&
+        employee.scheduleName !== selectedScheduleTab
+      ) {
+        return false;
+      }
+
+      // Filter by search query
+      if (searchQuery.trim()) {
+        const fullName = `${get(employee, "firstName", "")} ${get(
+          employee,
+          "lastName",
+          ""
+        )}`.toLowerCase();
+        return fullName.includes(searchQuery.toLowerCase());
+      }
+
+      return true;
+    });
+  }, [connectedEmployeesToSchedule, selectedScheduleTab, searchQuery]);
+  const handleExportToExcel = () => {
+    // Get filtered employees
+    const employees = filteredEmployeesConnectedToSchedule;
+
+    if (employees.length === 0) {
+      toast.error("Нет данных для экспорта");
+      return;
+    }
+
+    // Prepare data for Excel
+    const excelData = employees.map((employee, index) => ({
+      "№": index + 1,
+      Фамилия: get(employee, "lastName", ""),
+      Имя: get(employee, "firstName", ""),
+      Отчество: get(employee, "fatherName", ""),
+      // "UUID сотрудника": get(employee, "employeeUuid", ""),
+      Расписание: get(employee, "scheduleName", ""),
+      // "ID расписания": get(employee, "scheduleId", ""),
+    }));
+
+    // Create workbook and worksheet
+    const ws = XLSX.utils.json_to_sheet(excelData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Сотрудники");
+
+    // Set column widths
+    ws["!cols"] = [
+      { wch: 5 }, // №
+      { wch: 20 }, // Фамилия
+      { wch: 20 }, // Имя
+      { wch: 20 }, // Отчество
+      { wch: 40 }, // UUID
+      { wch: 25 }, // Расписание
+      { wch: 15 }, // ID расписания
+    ];
+
+    // Generate file name with current date
+    const date = new Date().toLocaleDateString("ru-RU").replace(/\./g, "-");
+    const fileName = `Сотрудники_точки_доступа_${id}_${date}.xlsx`;
+
+    // Download file
+    XLSX.writeFile(wb, fileName);
+
+    toast.success(`Экспортировано ${employees.length} сотрудников`);
+  };
 
   // connect employees to schedule of the entrypoint
 
@@ -438,48 +498,6 @@ const Index = () => {
                 </div>
               )}
 
-              {/* {tab === "schedule" && (
-                <div>
-                  <div 
-                    className="flex border-b p-3 justify-between items-center"
-                    style={{ borderColor: isDark ? "#4b5563" : "#e5e7eb" }}
-                  >
-                    <h2 
-                      className="text-xl font-semibold"
-                      style={{ color: isDark ? "#f3f4f6" : "#1f2937" }}
-                    >
-                      Расписания точки доступа
-                    </h2>
-
-                    <div className="flex items-center gap-2">
-                      <Button
-                        onClick={() => setCreateModal(true)}
-                        sx={{
-                          textTransform: "initial",
-                          fontFamily: "DM Sans, sans-serif",
-                          backgroundColor: "#4182F9",
-                          boxShadow: "none",
-                          color: "white",
-                          display: "flex",
-                          gap: "4px",
-                          fontSize: "14px",
-                          borderRadius: "8px",
-                        }}
-                        variant="contained"
-                      >
-                        <ShareIcon sx={{ width: "20px", height: "20px" }} />
-                        <p>Привязать</p>
-                      </Button>
-                    </div>
-                  </div>
-
-                  <CustomTable
-                    data={get(schedulesOfEntrypoints, "data.schedules", [])}
-                    columns={columns}
-                  />
-                </div>
-              )} */}
-
               {tab === "employees" && (
                 <motion.div
                   initial={{ opacity: 0 }}
@@ -494,14 +512,79 @@ const Index = () => {
                     >
                       Сотрудники в точке доступа
                     </Typography>
-                    <PrimaryButton onClick={() => setCreateConnectModal(true)}>
-                      {" "}
-                      <ShareIcon sx={{ width: "20px", height: "20px" }} />
-                      <p>Привязать</p>
-                    </PrimaryButton>
+
+                    <div className="flex items-center gap-2">
+                      {/* Excel Download Button */}
+                      <ExcelButton onClick={handleExportToExcel} />
+
+                      {/* Existing Connect Button */}
+                      <PrimaryButton
+                        onClick={() => setCreateConnectModal(true)}
+                      >
+                        <ShareIcon sx={{ width: "20px", height: "20px" }} />
+                        <p>Привязать</p>
+                      </PrimaryButton>
+                    </div>
                   </div>
 
-                  <div className="space-y-[10px] my-[10px]">
+                  {/* Schedule Filter Tabs */}
+                  <div className="flex gap-2 my-4 flex-wrap text-sm">
+                    <button
+                      onClick={() => setSelectedScheduleTab("all")}
+                      className="px-4 py-2 rounded-md whitespace-nowrap  transition-all"
+                      style={{
+                        background:
+                          selectedScheduleTab === "all"
+                            ? isDark
+                              ? "#2563eb"
+                              : "#3b82f6"
+                            : isDark
+                            ? "#374151"
+                            : "#e5e7eb",
+                        color:
+                          selectedScheduleTab === "all"
+                            ? "white"
+                            : isDark
+                            ? "#d1d5db"
+                            : "#4b5563",
+                        fontWeight:
+                          selectedScheduleTab === "all" ? "600" : "400",
+                      }}
+                    >
+                      Все расписания
+                    </button>
+                    {scheduleNames.map((scheduleName) => (
+                      <button
+                        key={scheduleName}
+                        onClick={() => setSelectedScheduleTab(scheduleName)}
+                        className="px-4 py-2 rounded-md whitespace-nowrap transition-all"
+                        style={{
+                          background:
+                            selectedScheduleTab === scheduleName
+                              ? isDark
+                                ? "#2563eb"
+                                : "#3b82f6"
+                              : isDark
+                              ? "#374151"
+                              : "#e5e7eb",
+                          color:
+                            selectedScheduleTab === scheduleName
+                              ? "white"
+                              : isDark
+                              ? "#d1d5db"
+                              : "#4b5563",
+                          fontWeight:
+                            selectedScheduleTab === scheduleName
+                              ? "600"
+                              : "400",
+                        }}
+                      >
+                        {scheduleName}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="space-y-[10px]">
                     {/* Search Input */}
                     <SearchInput
                       value={searchQuery}
@@ -518,6 +601,9 @@ const Index = () => {
                             className="flex justify-between text-sm items-center"
                           >
                             <div className="flex items-start gap-2">
+                              <div className="w-8 h-8 bg-gray-300 flex justify-center items-center text-gray-500 rounded-full text-sm">
+                                {index + 1}
+                              </div>
                               <div
                                 className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg shadow-inner text-white"
                                 style={{
@@ -534,11 +620,23 @@ const Index = () => {
                                     color: isDark ? "#f3f4f6" : "#1f2937",
                                   }}
                                 >
+                                  {get(employee, "lastName", "")}{" "}
                                   {get(employee, "firstName", "")}{" "}
-                                  {get(employee, "lastName", "")}
+                                  {get(employee, "fatherName", "")}
                                 </p>
+
+                                {/* Employee Unit Code Name */}
+                                {get(employee, "empoloyeeUnitCodeName", "") && (
+                                  <p
+                                    className="text-sm mt-[5px]"
+                                    style={{ color: "#9ca3af" }}
+                                  >
+                                    {get(employee, "empoloyeeUnitCodeName", "")}
+                                  </p>
+                                )}
+
                                 <p
-                                  className="text-sm"
+                                  className="text-sm mt-[5px]"
                                   style={{ color: "#9ca3af" }}
                                 >
                                   привязан к расписанию:{" "}
@@ -581,8 +679,7 @@ const Index = () => {
                                   : "#d1d5db";
                               }}
                             >
-                              {" "}
-                              Страница сотрудника{" "}
+                              Страница сотрудника
                             </a>
                           </div>
                         )

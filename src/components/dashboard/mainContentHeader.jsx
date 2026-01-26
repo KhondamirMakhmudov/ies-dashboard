@@ -117,11 +117,6 @@ const MainContentHeader = ({ children, toggleSidebar }) => {
     };
   }
 
-  const handleClickNotification = () => {
-    setOpenNotification(!openNotification);
-    setOpenProfile(false);
-  };
-
   return (
     <div
       className={`p-4 h-[72px] sticky top-0 z-30 rounded-md border flex justify-between items-center gap-4 transition-all duration-300`}
@@ -233,7 +228,7 @@ const MainContentHeader = ({ children, toggleSidebar }) => {
                 <div className="flex items-center gap-3">
                   <Avatar
                     {...stringAvatar(
-                      `${session?.user?.name} ${session?.user?.name}`
+                      `${session?.user?.name} ${session?.user?.name}`,
                     )}
                   />
                   <div>

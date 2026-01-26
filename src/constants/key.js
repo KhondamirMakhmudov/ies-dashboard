@@ -38,4 +38,6 @@ export const KEYS = {
   userProfile: "userProfile",
   permissions: "permissions",
   typeOfPermissions: "typeOfPermissions",
+  resources: "resources",
+  actions: "actions",
 };

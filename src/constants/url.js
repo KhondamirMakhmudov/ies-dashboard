@@ -53,10 +53,12 @@ export const URLS = {
   employeePhoto: "employee/photo/",
 
   // general auth
-  users: "auth/users",
+  users: "auth/user",
   register: "auth/signup",
   roles: "auth/role",
   me: "auth/me",
   permissions: "auth/permission",
   typeOfPermissions: "auth/permission-type",
+  resources: "auth/resource",
+  actions: "auth/action",
 };

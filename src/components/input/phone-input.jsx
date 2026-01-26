@@ -1,5 +1,5 @@
 import React from "react";
-
+import useAppTheme from "@/hooks/useAppTheme";
 export default function PhoneInputUz({
   label = "Telefon raqami",
   name,
@@ -11,6 +11,7 @@ export default function PhoneInputUz({
   labelClass = "",
   className = "",
 }) {
+  const { isDark, bg, text, border } = useAppTheme();
   const formatForDisplay = (val) => {
     const digits = val.replace(/\D/g, "").slice(0, 9);
     if (digits.length < 3) return `(${digits}`;
@@ -40,7 +41,9 @@ export default function PhoneInputUz({
       {label && (
         <label
           htmlFor={name}
-          className={`text-sm block mb-1 text-gray-700 ${labelClass}`}
+          className={`text-sm block mb-1  ${labelClass} ${
+            isDark ? "text-gray-300" : "text-gray-700"
+          }`}
         >
           {label}
         </label>
@@ -54,7 +57,11 @@ export default function PhoneInputUz({
         }`}
       >
         {/* +998 Prefix */}
-        <div className="px-3 text-sm text-gray-600 border-r border-gray-300 bg-gray-100 rounded-l-md h-full flex items-center">
+        <div
+          className={`px-3 text-sm  border-r  border-gray-300 ${
+            isDark ? "bg-[#2A2A2A] text-gray-100" : "bg-gray-100 text-gray-600"
+          } rounded-l-md h-full flex items-center justify-center`}
+        >
           +998
         </div>
 

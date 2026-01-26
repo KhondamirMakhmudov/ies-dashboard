@@ -41,6 +41,7 @@ import DateRangeIcon from "@mui/icons-material/DateRange";
 import Link from "next/link";
 import useAppTheme from "@/hooks/useAppTheme";
 import EmployeeBusinessTripSection from "@/components/business-trip-section";
+import DocsOfEmployee from "@/components/docs-employee";
 
 const Index = () => {
   const { bg, text, isDark, border } = useAppTheme();
@@ -156,7 +157,7 @@ const Index = () => {
   });
 
   const tableNumberPrefix = get(employeePhoto, "data.tabel_number")?.split(
-    "-"
+    "-",
   )[0];
 
   const {
@@ -218,7 +219,7 @@ const Index = () => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify([employee_id]),
-        }
+        },
       );
 
       if (!response.ok) {
@@ -265,7 +266,7 @@ const Index = () => {
         {
           method: "PATCH",
           body: formDataToSend,
-        }
+        },
       );
 
       if (!res.ok) {
@@ -291,7 +292,7 @@ const Index = () => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ employee_id: employee_id }),
-        }
+        },
       );
 
       if (!response.ok) {
@@ -320,7 +321,7 @@ const Index = () => {
             Authorization: `Bearer ${session?.accessToken}`,
           },
           body: JSON.stringify({ jobTripId: selectedJobTrip }),
-        }
+        },
       );
 
       if (!response.ok) {
@@ -416,7 +417,7 @@ const Index = () => {
             {
               label: `${get(employeePhoto, "data.first_name")} ${get(
                 employeePhoto,
-                "data.last_name"
+                "data.last_name",
               )}`,
               href: "/dashboard/employees",
               isCurrent: true,
@@ -447,14 +448,14 @@ const Index = () => {
                     get(
                       employeePhoto,
                       "data.file_url",
-                      "/images/profile-default.jpg"
-                    )
+                      "/images/profile-default.jpg",
+                    ),
                   )
                     ? "/images/profile-default.jpg"
                     : get(
                         employeePhoto,
                         "data.file_url",
-                        "/images/profile-default.jpg"
+                        "/images/profile-default.jpg",
                       )
                 }
                 alt="user photo"
@@ -497,7 +498,7 @@ const Index = () => {
               <p className="text-base font-medium text-gray-700 text-center max-w-xl px-4">
                 {get(
                   employeePhoto,
-                  "data.workplace.organizational_unit.name"
+                  "data.workplace.organizational_unit.name",
                 ) || "Отдел не указан"}
               </p>
 
@@ -641,7 +642,7 @@ const Index = () => {
                       <p className="text-base font-medium">
                         {get(employeePhoto, "data.date_of_birth")
                           ? dayjs(
-                              get(employeePhoto, "data.date_of_birth")
+                              get(employeePhoto, "data.date_of_birth"),
                             ).format("DD.MM.YYYY")
                           : "Дата рождения не указана"}
                       </p>
@@ -757,7 +758,7 @@ const Index = () => {
                       <p className="text-base font-medium">
                         {get(
                           employeePhoto,
-                          "data.workplace.organizational_unit.name"
+                          "data.workplace.organizational_unit.name",
                         ) || "Отдел не указан"}
                       </p>
                     </li>
@@ -776,7 +777,7 @@ const Index = () => {
                       <p className="text-base font-medium">
                         {get(employeePhoto, "data.hire_date")
                           ? dayjs(get(employeePhoto, "data.hire_date")).format(
-                              "DD.MM.YYYY"
+                              "DD.MM.YYYY",
                             )
                           : "Дата приема не указана"}
                       </p>
@@ -802,8 +803,8 @@ const Index = () => {
                               ? "bg-green-900/30 text-green-400"
                               : "bg-green-100 text-green-800"
                             : isDark
-                            ? "bg-red-900/30 text-red-400"
-                            : "bg-red-100 text-red-800"
+                              ? "bg-red-900/30 text-red-400"
+                              : "bg-red-100 text-red-800"
                         }`}
                       >
                         {get(employeePhoto, "data.is_active")
@@ -812,6 +813,10 @@ const Index = () => {
                       </span>
                     </li>
                   </ul>
+                </div>
+
+                <div className="my-4">
+                  <DocsOfEmployee employeeId={employee_id} />
                 </div>
               </div>
             )}
@@ -849,12 +854,12 @@ const Index = () => {
                     {get(
                       ScheduleAndEntrypointOfEmployee,
                       "data.scheduleAssignments",
-                      []
+                      [],
                     ).length > 0 ? (
                       get(
                         ScheduleAndEntrypointOfEmployee,
                         "data.scheduleAssignments",
-                        []
+                        [],
                       ).map((item, index) => (
                         <div
                           key={index}
@@ -896,7 +901,7 @@ const Index = () => {
                                   onClick={() => {
                                     setConnectScheduleModal(true);
                                     setSelectEntrypointId(
-                                      get(item, "entryPointId")
+                                      get(item, "entryPointId"),
                                     );
                                   }}
                                   sx={{
@@ -1142,13 +1147,13 @@ const Index = () => {
                   {get(
                     ScheduleAndEntrypointOfEmployee,
                     "data.jobTripSchedules",
-                    []
+                    [],
                   ).length > 0 ? (
                     <div className="grid grid-cols-2 gap-4">
                       {get(
                         ScheduleAndEntrypointOfEmployee,
                         "data.jobTripSchedules",
-                        []
+                        [],
                       ).map((item, index) => (
                         <div
                           key={index}
@@ -1314,11 +1319,11 @@ const Index = () => {
                                         {get(item, "startDate") &&
                                         get(item, "endDate")
                                           ? `${new Date(
-                                              get(item, "startDate")
+                                              get(item, "startDate"),
                                             ).toLocaleDateString(
-                                              "ru-RU"
+                                              "ru-RU",
                                             )} - ${new Date(
-                                              get(item, "endDate")
+                                              get(item, "endDate"),
                                             ).toLocaleDateString("ru-RU")}`
                                           : "Период не указан"}
                                       </p>
@@ -1497,7 +1502,7 @@ const Index = () => {
           isFetchingReport={isFetchingReport}
           fileNameEmployee={`${get(employeePhoto, "data.first_name")} ${get(
             employeePhoto,
-            "data.last_name"
+            "data.last_name",
           )}`}
         />
       </div>
@@ -1559,7 +1564,11 @@ const Index = () => {
       {/* edit modal */}
       {editModal && (
         <MethodModal open={editModal} width={1000} padding={0}>
-          <div className="bg-[#E57F3A] p-[16px] text-white rounded-t-[8px] flex justify-between items-center">
+          <div
+            className={`${
+              isDark ? "bg-orange-700" : "bg-[#E57F3A]"
+            } p-[16px] text-white rounded-t-[8px] flex justify-between items-center`}
+          >
             <div>
               <Typography variant="h6">Редактировать сотрудника</Typography>
               <p>Обновить информацию о сотруднике</p>
@@ -1585,10 +1594,16 @@ const Index = () => {
             </button>
           </div>
 
-          <div className="max-h-[500px] overflow-y-scroll">
+          <div className={`max-h-[500px] overflow-y-scroll ${bg}`}>
             <div className="text-center my-[30px]">
               <div className="inline-block">
-                <div className="w-32 h-32 mx-auto bg-gray-100 rounded-full border-4 border-dashed border-gray-300 flex items-center justify-center overflow-hidden">
+                <div
+                  className={`w-32 h-32 mx-auto ${
+                    isDark ? "bg-gray-700" : "bg-gray-100"
+                  } rounded-full border-4 border-dashed ${
+                    isDark ? "border-gray-600" : "border-gray-300"
+                  } flex items-center justify-center overflow-hidden`}
+                >
                   {photoPreview ? (
                     <img
                       src={photoPreview}
@@ -1596,7 +1611,13 @@ const Index = () => {
                       className="w-full h-full object-cover rounded-full"
                     />
                   ) : (
-                    <span className="text-gray-400 text-sm">No Photo</span>
+                    <span
+                      className={`${
+                        isDark ? "text-gray-400" : "text-gray-400"
+                      } text-sm`}
+                    >
+                      No Photo
+                    </span>
                   )}
                 </div>
 
@@ -1637,7 +1658,7 @@ const Index = () => {
                 {/* Kamera modal */}
                 {isCameraOpen && (
                   <div className="fixed inset-0 bg-transparent bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white p-4 rounded-lg shadow-lg">
+                    <div className={`${bg} p-4 rounded-lg shadow-lg`}>
                       <video
                         ref={videoRef}
                         autoPlay
@@ -1665,10 +1686,19 @@ const Index = () => {
               </div>
             </div>
 
-            <div className="bg-gray-50 rounded-xl p-6 m-[20px]">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+            {/* Personal Information */}
+            <div
+              className={`${
+                isDark ? "bg-gray-800/50" : "bg-gray-50"
+              } rounded-xl p-6 m-[20px]`}
+            >
+              <h3
+                className={`text-lg font-semibold ${text} mb-4 flex items-center`}
+              >
                 <svg
-                  className="w-5 h-5 mr-2 text-amber-600"
+                  className={`w-5 h-5 mr-2 ${
+                    isDark ? "text-amber-400" : "text-amber-600"
+                  }`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -1690,7 +1720,7 @@ const Index = () => {
                   value={formData.first_name || ""}
                   onChange={handleChange}
                   placeholder="Имя"
-                  inputClass="!h-[45px] border !border-gray-200"
+                  inputClass={`!h-[45px] `}
                   required
                 />
 
@@ -1700,7 +1730,7 @@ const Index = () => {
                   value={formData.last_name || ""}
                   onChange={handleChange}
                   placeholder="Фамилия"
-                  inputClass="!h-[45px] border !border-gray-200"
+                  inputClass={`!h-[45px]`}
                   required={true}
                 />
                 <Input
@@ -1709,13 +1739,13 @@ const Index = () => {
                   value={formData.middle_name || ""}
                   onChange={handleChange}
                   placeholder="Отчество"
-                  inputClass="!h-[45px] border !border-gray-200"
+                  inputClass={`!h-[45px]`}
                 />
 
                 <BirthDateInput
                   value={formData.date_of_birth || ""}
                   onChange={handleChange}
-                  inputClass="!h-[45px] border !border-gray-200"
+                  inputClass={`!h-[45px]`}
                   required
                 />
 
@@ -1741,7 +1771,7 @@ const Index = () => {
                   value={formData.tabel_number}
                   onChange={handleChange}
                   placeholder="Введите"
-                  inputClass="!h-[45px] border !border-gray-200"
+                  inputClass={`!h-[45px]`}
                   required
                 />
               </div>
@@ -1753,17 +1783,25 @@ const Index = () => {
                   label={"Адрес проживания"}
                   onChange={handleChange}
                   placeholder="Введите"
-                  inputClass="!h-[45px] border !border-gray-200"
+                  inputClass={`!h-[45px]`}
                   required={true}
                 />
               </div>
             </div>
 
             {/* Contact Information */}
-            <div className="bg-green-50 rounded-xl p-6 m-[20px]">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+            <div
+              className={`${
+                isDark ? "bg-green-900/30" : "bg-green-50"
+              } rounded-xl p-6 m-[20px]`}
+            >
+              <h3
+                className={`text-lg font-semibold ${text} mb-4 flex items-center`}
+              >
                 <svg
-                  className="w-5 h-5 mr-2 text-green-600"
+                  className={`w-5 h-5 mr-2 ${
+                    isDark ? "text-green-400" : "text-green-600"
+                  }`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -1785,7 +1823,7 @@ const Index = () => {
                   value={formData.email || ""}
                   onChange={handleChange}
                   placeholder="Электронная почта"
-                  inputClass="!h-[45px] border !border-gray-200"
+                  inputClass={`!h-[45px]`}
                   classNames="col-span-2 md:col-span-1"
                 />
 
@@ -1795,17 +1833,25 @@ const Index = () => {
                   value={formData.phone_number || ""}
                   onChange={handleChange}
                   placeholder="Телефонный номер"
-                  inputClass="!h-[45px] border !border-gray-200"
+                  inputClass={`!h-[45px]`}
                   classNames="col-span-2 md:col-span-1"
                 />
               </div>
             </div>
 
             {/* Education Information */}
-            <div className="bg-purple-50 rounded-xl p-6 m-[20px]">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+            <div
+              className={`${
+                isDark ? "bg-purple-900/30" : "bg-purple-50"
+              } rounded-xl p-6 m-[20px]`}
+            >
+              <h3
+                className={`text-lg font-semibold ${text} mb-4 flex items-center`}
+              >
                 <svg
-                  className="w-5 h-5 mr-2 text-purple-600"
+                  className={`w-5 h-5 mr-2 ${
+                    isDark ? "text-purple-400" : "text-purple-600"
+                  }`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -1842,17 +1888,25 @@ const Index = () => {
                   onChange={handleChange}
                   placeholder={"Введите"}
                   label="Место получения образования"
-                  inputClass="!h-[45px] border !border-gray-200"
+                  inputClass={`!h-[45px]`}
                   required={true}
                 />
               </div>
             </div>
 
             {/* Employment Information */}
-            <div className="bg-orange-50 rounded-xl p-6 m-[20px]">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+            <div
+              className={`${
+                isDark ? "bg-orange-900/30" : "bg-orange-50"
+              } rounded-xl p-6 m-[20px]`}
+            >
+              <h3
+                className={`text-lg font-semibold ${text} mb-4 flex items-center`}
+              >
                 <svg
-                  className="w-5 h-5 mr-2 text-orange-600"
+                  className={`w-5 h-5 mr-2 ${
+                    isDark ? "text-orange-400" : "text-orange-600"
+                  }`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -1888,17 +1942,23 @@ const Index = () => {
                   label={"Дата приема на работу"}
                   value={formData.hire_date || ""}
                   onChange={handleChange}
-                  inputClass="!h-[45px] border !border-gray-200"
+                  inputClass={`!h-[45px]`}
                   required
                 />
               </div>
             </div>
           </div>
 
-          <div className="sticky bg-white border-t border-t-gray-200 p-4 flex justify-end gap-3">
+          <div
+            className={`sticky ${bg} border-t ${border} p-4 flex justify-end gap-3`}
+          >
             <button
               onClick={() => setEditModal(false)}
-              className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-sm font-medium"
+              className={`px-4 py-2 ${
+                isDark
+                  ? "bg-gray-700 hover:bg-gray-600"
+                  : "bg-gray-200 hover:bg-gray-300"
+              } rounded-lg text-sm font-medium ${text}`}
             >
               Отмена
             </button>

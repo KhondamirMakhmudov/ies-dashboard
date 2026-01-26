@@ -1,5 +1,5 @@
 import DashboardLayout from "@/layouts/dashboard/DashboardLayout";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Input from "@/components/input";
 import { Typography } from "@mui/material";
 import ImageUploader from "@/components/image-uploader";
@@ -82,19 +82,14 @@ const Index = () => {
     return () => clearTimeout(timeout);
   }, [searchTerm]);
 
-  // Build query params based on filters and search
+  // Build query params - NO SEARCH HERE, only filters
   const buildQueryParams = () => {
     const params = {
-      limit: pageSize,
-      offset: (currentPage - 1) * pageSize,
+      limit: 10000,
+      offset: 0,
     };
 
-    // Add search term to BOTH first_name and last_name
-    if (debouncedSearch) {
-      params.first_name = debouncedSearch;
-    }
-
-    // Add other filters
+    // Add filters only
     if (filters.gender) params.gender = filters.gender;
     if (filters.level) params.level = filters.level;
     if (filters.education_degree)
@@ -105,19 +100,44 @@ const Index = () => {
     return params;
   };
 
-  // Employee data query with optimized loading states
+  // Employee data query
   const {
     data: employee,
     isLoading,
     isFetching,
   } = useGetPythonQuery({
-    key: [KEYS.employees, currentPage, debouncedSearch, filters],
+    key: [KEYS.employees, filters],
     url: URLS.employees,
     enabled: true,
     keepPreviousData: true,
     staleTime: 30000,
     params: buildQueryParams(),
   });
+
+  // Client-side filtering with search
+  const filteredEmployees = useMemo(() => {
+    let data = get(employee, "data.data", []);
+
+    // Client-side search across all name fields
+    if (debouncedSearch) {
+      const searchLower = debouncedSearch.toLowerCase();
+      data = data.filter((emp) => {
+        const fullName = `${emp.first_name || ""} ${emp.last_name || ""} ${
+          emp.middle_name || ""
+        }`.toLowerCase();
+        return fullName.includes(searchLower);
+      });
+    }
+
+    return data;
+  }, [employee, debouncedSearch]);
+
+  // Client-side pagination
+  const paginatedEmployees = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    return filteredEmployees.slice(startIndex, endIndex);
+  }, [filteredEmployees, currentPage, pageSize]);
 
   // Organization units
   const { data: level1List, isLoading: isLoadingLevel1 } = useGetPythonQuery({
@@ -154,14 +174,6 @@ const Index = () => {
     if (value.trim()) {
       setIsSearching(true);
     }
-  };
-
-  const handleFilterChange = (name, value) => {
-    setFilters((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-    setCurrentPage(1);
   };
 
   const clearAllFilters = () => {
@@ -414,7 +426,11 @@ const Index = () => {
               placeholder="Поиск по имени"
               value={searchTerm}
               onChange={handleSearchChange}
-              className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all placeholder:text-gray-400 text-gray-800"
+              className={`w-full pl-10 pr-4 py-2.5 ${
+                !isDark
+                  ? "border border-gray-300 text-gray-800"
+                  : "border border-gray-700 text-gray-400"
+              } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all placeholder:text-gray-400 `}
             />
 
             {isSearching && (
@@ -460,7 +476,6 @@ const Index = () => {
                       gender: val,
                     }))
                   }
-                  // required
                   returnObject={false}
                 />
               </div>
@@ -493,7 +508,6 @@ const Index = () => {
                     education_degree: val,
                   }))
                 }
-                // required
                 returnObject={false}
               />
             </div>
@@ -503,7 +517,11 @@ const Index = () => {
               <div className="mt-4 flex justify-end">
                 <button
                   onClick={clearAllFilters}
-                  className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-all font-medium"
+                  className={`flex items-center gap-2 px-4 py-2 ${
+                    !isDark
+                      ? "bg-red-50 text-red-600 hover:bg-red-100"
+                      : "bg-red-600 text-red-50 hover:bg-red-700"
+                  } rounded-lg  transition-all font-medium cursor-pointer`}
                 >
                   <Close className="w-4 h-4" />
                   Очистить фильтры
@@ -516,32 +534,52 @@ const Index = () => {
 
       {/* Active Filters Summary */}
       {hasActiveFilters() && (
-        <div className="bg-blue-50 p-3 mt-3 rounded-md border border-blue-200">
+        <div
+          className={`${
+            !isDark
+              ? "bg-blue-50 text-blue-700 border border-blue-200"
+              : "bg-blue-900 border border-blue-700"
+          } p-3 mt-3 rounded-md `}
+        >
           <div className="flex flex-wrap gap-2 items-center">
-            <span className="text-sm font-medium text-blue-700">
-              Активные фильтры:
-            </span>
+            <span className="text-sm font-medium ">Активные фильтры:</span>
             {searchTerm && (
-              <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">
+              <span
+                className={`px-3 py-1 ${
+                  !isDark ? "bg-blue-100" : "bg-blue-500"
+                }  rounded-full text-sm`}
+              >
                 Поиск: {searchTerm}
               </span>
             )}
             {filters.gender && (
-              <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">
+              <span
+                className={`px-3 py-1 ${
+                  !isDark ? "bg-blue-100" : "bg-blue-500"
+                }  rounded-full text-sm`}
+              >
                 Пол:{" "}
                 {genderOptions.find((o) => o.value === filters.gender)?.label ||
                   filters.gender}
               </span>
             )}
             {filters.level && (
-              <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">
+              <span
+                className={`px-3 py-1 ${
+                  !isDark ? "bg-blue-100" : "bg-blue-500"
+                }  rounded-full text-sm`}
+              >
                 Разряд:{" "}
                 {razryadOptions.find((o) => o.value === filters.level)?.label ||
                   filters.level}
               </span>
             )}
             {filters.education_degree && (
-              <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">
+              <span
+                className={`px-3 py-1 ${
+                  !isDark ? "bg-blue-100" : "bg-blue-500"
+                }  rounded-full text-sm`}
+              >
                 Образование:{" "}
                 {educationLevelOptions.find(
                   (o) => o.value === filters.education_degree
@@ -549,12 +587,12 @@ const Index = () => {
               </span>
             )}
             {filters.hire_date_from && (
-              <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">
+              <span className="px-3 py-1 bg-blue-100 rounded-full text-sm">
                 От: {dayjs(filters.hire_date_from).format("DD.MM.YYYY")}
               </span>
             )}
             {filters.hire_date_to && (
-              <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">
+              <span className="px-3 py-1 bg-blue-100 rounded-full text-sm">
                 До: {dayjs(filters.hire_date_to).format("DD.MM.YYYY")}
               </span>
             )}
@@ -567,7 +605,7 @@ const Index = () => {
         <div className="bg-white p-4 mt-3 rounded-md border border-gray-200">
           <ContentLoader />
         </div>
-      ) : isEmpty(get(employee, "data.data", [])) ? (
+      ) : isEmpty(paginatedEmployees) ? (
         <NoData onCreate={() => setOpen(true)} />
       ) : (
         <div
@@ -580,12 +618,12 @@ const Index = () => {
           <div className="grid grid-cols-12 gap-[12px] p-2">
             <div className="col-span-12">
               <CustomTable
-                data={get(employee, "data.data", [])}
+                data={paginatedEmployees}
                 columns={columns}
                 pagination={{
                   currentPage,
                   pageSize,
-                  total: get(employee, "data.count", 0),
+                  total: filteredEmployees.length,
                   onPaginationChange: ({ page }) => setCurrentPage(page),
                 }}
               />
@@ -602,7 +640,6 @@ const Index = () => {
           </div>
         </div>
       )}
-
       <MethodModal
         open={open}
         closeClick={() => {
@@ -626,11 +663,9 @@ const Index = () => {
             photo: null,
           });
         }}
+        title={"Добавить нового сотрудника"}
         showCloseIcon={true}
       >
-        <Typography variant="h6" className="text-xl font-bold">
-          Добавить нового сотрудника
-        </Typography>
         <div className="flex items-center justify-between my-6">
           {steps.map((_, index) => {
             const current = index + 1;
@@ -644,20 +679,28 @@ const Index = () => {
                 onClick={() => setStep(current)}
               >
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold transition-colors
+                  className={`w-10 h-10 rounded-full flex items-center justify-center text-white text-[15px] font-bold transition-colors
                     ${
                       isActive
                         ? "bg-blue-600"
                         : isCompleted
                         ? "bg-green-500 hover:bg-green-600"
-                        : "bg-gray-300 hover:bg-gray-400"
+                        : `${
+                            isDark
+                              ? "bg-gray-600 hover:bg-gray-500"
+                              : "bg-gray-300 hover:bg-gray-400"
+                          }`
                     }`}
                 >
                   {current}
                 </div>
 
                 {index !== steps.length - 1 && (
-                  <div className="flex-1 h-[2px] bg-gray-300 mx-2 relative">
+                  <div
+                    className={`flex-1 h-[2px] ${
+                      isDark ? "bg-gray-600" : "bg-gray-300"
+                    } mx-2 relative`}
+                  >
                     <div
                       className={`absolute top-0 left-0 h-full transition-all ${
                         step > current ? "bg-green-500 w-full" : "w-0"
@@ -679,8 +722,9 @@ const Index = () => {
               value={formData.first_name}
               onChange={handleChange}
               placeholder="Имя"
-              inputClass="!h-[45px] border !border-gray-200"
-              // required
+              inputClass={`!h-[45px] border ${
+                isDark ? "!border-gray-800" : "!border-gray-300"
+              }`}
               error={errors.first_name}
             />
             <Input
@@ -689,8 +733,9 @@ const Index = () => {
               value={formData.last_name}
               onChange={handleChange}
               placeholder="Фамилия"
-              inputClass="!h-[45px] border !border-gray-200"
-              // required={true}
+              inputClass={`!h-[45px] border ${
+                isDark ? "!border-gray-800" : "!border-gray-300"
+              }`}
             />
             <Input
               label={"Отчество сотрудника"}
@@ -698,7 +743,9 @@ const Index = () => {
               value={formData.middle_name}
               onChange={handleChange}
               placeholder="Отчество"
-              inputClass="!h-[45px] border !border-gray-200"
+              inputClass={`!h-[45px] border ${
+                isDark ? "!border-gray-800" : "!border-gray-300"
+              }`}
             />
 
             <Input
@@ -707,7 +754,9 @@ const Index = () => {
               value={formData.email}
               onChange={handleChange}
               placeholder="Электронная почта"
-              inputClass="!h-[45px] border !border-gray-200"
+              inputClass={`!h-[45px] border ${
+                isDark ? "!border-gray-800" : "!border-gray-300"
+              }`}
               error={errors.email}
             />
             <PhoneInputUz
@@ -716,7 +765,9 @@ const Index = () => {
               value={formData.phone_number}
               onChange={handleChange}
               placeholder="Телефонный номер"
-              inputClass="!h-[45px] border !border-gray-200"
+              inputClass={`!h-[45px] border ${
+                isDark ? "!border-gray-800" : "!border-gray-300"
+              }`}
               error={errors.phone_number}
             />
 
@@ -725,8 +776,9 @@ const Index = () => {
                 value={formData.date_of_birth}
                 onChange={handleChange}
                 error={errors.date_of_birth}
-                inputClass="!h-[45px] border !border-gray-200"
-                // required
+                inputClass={`!h-[45px] border ${
+                  isDark ? "!border-gray-800" : "!border-gray-300"
+                }`}
               />
 
               <CustomSelect
@@ -740,7 +792,6 @@ const Index = () => {
                     gender: val,
                   }))
                 }
-                // required
                 returnObject={false}
               />
             </div>
@@ -750,9 +801,10 @@ const Index = () => {
               value={formData.address}
               label={"Адрес проживания"}
               onChange={handleChange}
-              placeholder="Введите"
-              inputClass="!h-[45px] border !border-gray-200"
-              // required={true}
+              placeholder="Введите адрес"
+              inputClass={`!h-[45px] border ${
+                isDark ? "!border-gray-800" : "!border-gray-300"
+              }`}
             />
           </div>
         )}
@@ -771,7 +823,6 @@ const Index = () => {
                   education_degree: val,
                 }))
               }
-              // required
               returnObject={false}
             />
 
@@ -781,8 +832,9 @@ const Index = () => {
               onChange={handleChange}
               placeholder={"Введите"}
               label="Место получения образования"
-              inputClass="!h-[45px] border !border-gray-200"
-              // required={true}
+              inputClass={`!h-[45px] border ${
+                isDark ? "!border-gray-800" : "!border-gray-300"
+              }`}
             />
             <div className="flex gap-2 ">
               <Input
@@ -791,9 +843,10 @@ const Index = () => {
                 value={formData.tabel_number}
                 onChange={handleChange}
                 placeholder="Введите"
-                inputClass="!h-[45px] border !border-gray-200"
+                inputClass={`!h-[45px] border ${
+                  isDark ? "!border-gray-800" : "!border-gray-300"
+                }`}
                 error={errors.tabel_number}
-                // required
               />
 
               <CustomSelect
@@ -817,9 +870,10 @@ const Index = () => {
               label={"Дата приема на работу"}
               value={formData.hire_date}
               onChange={handleChange}
-              inputClass="!h-[45px] border !border-gray-200"
+              inputClass={`!h-[45px] border ${
+                isDark ? "!border-gray-800" : "!border-gray-300"
+              }`}
               error={errors.hire_date}
-              // required
             />
 
             {/* LEVEL 1 */}
@@ -859,40 +913,83 @@ const Index = () => {
         {/* Step 3 */}
         {step === 3 && (
           <div className="space-y-3">
-            <div className="bg-blue-50 border-l-4 border-blue-400 p-3 mb-8 rounded-r-lg">
-              <div className="text-[16px] font-semibold text-blue-800 mb-4 items-center flex gap-1">
+            <div
+              className={`${
+                isDark
+                  ? "bg-blue-900/30 border-blue-500"
+                  : "bg-blue-50 border-blue-400"
+              } border-l-4 p-3 mb-8 rounded-r-lg`}
+            >
+              <div
+                className={`text-[16px] font-semibold ${
+                  isDark ? "text-blue-300" : "text-blue-800"
+                } mb-4 items-center flex gap-1`}
+              >
                 <ReportGmailerrorredIcon />
                 <h2>Требования к фотографии</h2>
               </div>
               <div className="space-y-3 text-sm">
                 <div className="flex items-start">
-                  <div className="w-2 h-2 bg-blue-400 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                  <div
+                    className={`w-2 h-2 ${
+                      isDark ? "bg-blue-500" : "bg-blue-400"
+                    } rounded-full mt-2 mr-3 flex-shrink-0`}
+                  ></div>
                   <div>
-                    <span className="font-medium text-blue-800">
+                    <span
+                      className={`font-medium ${
+                        isDark ? "text-blue-300" : "text-blue-800"
+                      }`}
+                    >
                       Размер файла:
                     </span>
-                    <span className="text-blue-700"> Максимум 10МБ</span>
+                    <span
+                      className={isDark ? "text-blue-200" : "text-blue-700"}
+                    >
+                      {" "}
+                      Максимум 10МБ
+                    </span>
                   </div>
                 </div>
                 <div className="flex items-start">
-                  <div className="w-2 h-2 bg-blue-400 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                  <div
+                    className={`w-2 h-2 ${
+                      isDark ? "bg-blue-500" : "bg-blue-400"
+                    } rounded-full mt-2 mr-3 flex-shrink-0`}
+                  ></div>
                   <div>
-                    <span className="font-medium text-blue-800">
+                    <span
+                      className={`font-medium ${
+                        isDark ? "text-blue-300" : "text-blue-800"
+                      }`}
+                    >
                       Положение лица:
                     </span>
-                    <span className="text-blue-700">
+                    <span
+                      className={isDark ? "text-blue-200" : "text-blue-700"}
+                    >
                       {" "}
                       Ваше лицо должно быть в центре фотографии
                     </span>
                   </div>
                 </div>
                 <div className="flex items-start">
-                  <div className="w-2 h-2 bg-blue-400 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                  <div
+                    className={`w-2 h-2 ${
+                      isDark ? "bg-blue-500" : "bg-blue-400"
+                    } rounded-full mt-2 mr-3 flex-shrink-0`}
+                  ></div>
                   <div>
-                    <span className="font-medium text-blue-800">
+                    <span
+                      className={`font-medium ${
+                        isDark ? "text-blue-300" : "text-blue-800"
+                      }`}
+                    >
                       Качество изображения:
                     </span>
-                    <span className="text-blue-700">
+                    <span
+                      className={isDark ? "text-blue-200" : "text-blue-700"}
+                    >
                       {" "}
                       Четкое, хорошо освещенное фото с резким фокусом
                     </span>
@@ -915,8 +1012,8 @@ const Index = () => {
           {step > 1 ? (
             <PrimaryButton
               onClick={handlePrev}
-              backgroundColor="#EDEDF2"
-              color="black"
+              backgroundColor={isDark ? "#374151" : "#EDEDF2"}
+              color={isDark ? "white" : "black"}
             >
               Назад
             </PrimaryButton>

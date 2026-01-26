@@ -6,7 +6,7 @@ export const genderOptions = [
 export const educationLevelOptions = [
   { value: "школа", label: "Школа" },
   { value: "среднее", label: "Среднее" },
-  { value: "среднее специальноe", label: "Среднее специальноe" },
+  { value: "среднее специальное", label: "Среднее специальноe" },
   { value: "военное училище", label: "Военное училище" },
   { value: "высшее", label: "Высшее" },
   { value: "бакалавр", label: "бакалавр" },

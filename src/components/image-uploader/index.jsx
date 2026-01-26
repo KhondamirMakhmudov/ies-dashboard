@@ -2,22 +2,23 @@ import Image from "next/image";
 import { useState, useRef } from "react";
 import AvatarEditor from "react-avatar-editor";
 import toast from "react-hot-toast";
+import useAppTheme from "@/hooks/useAppTheme";
 
 export default function ImageUploader({ image, onFileChange }) {
   const [scale, setScale] = useState(1.0);
   const editorRef = useRef(null);
+  const { isDark, bg, text, border } = useAppTheme();
 
-  // Fayl yuklash
   const handleImageUpload = (event) => {
     const file = event.target.files[0];
     if (!file) return;
 
     if (file.size > 10 * 1024 * 1024) {
-      toast.error("Файл 10MB dan kichik bo‘lishi kerak!");
+      toast.error("Файл 10MB dan kichik bo'lishi kerak!");
       return;
     }
 
-    onFileChange(file); // ✅ parentga yuboramiz
+    onFileChange(file);
   };
 
   const handleDrop = (event) => {
@@ -26,11 +27,11 @@ export default function ImageUploader({ image, onFileChange }) {
     if (!file) return;
 
     if (file.size > 2 * 1024 * 1024) {
-      toast.error("Файл 2MB dan kichik bo‘lishi kerak!");
+      toast.error("Файл 2MB dan kichik bo'lishi kerak!");
       return;
     }
 
-    onFileChange(file); // ✅ parentga yuboramiz
+    onFileChange(file);
   };
 
   const handleSave = () => {
@@ -40,7 +41,7 @@ export default function ImageUploader({ image, onFileChange }) {
           const croppedFile = new File([blob], image.name, {
             type: image.type,
           });
-          onFileChange(croppedFile); // ✅ parent state update
+          onFileChange(croppedFile);
         }
       }, image.type);
     }
@@ -48,7 +49,7 @@ export default function ImageUploader({ image, onFileChange }) {
 
   return (
     <div
-      className="relative w-full h-[350px] border border-[#C9C9C9] rounded-xl flex flex-col items-center justify-center text-center p-4 bg-white overflow-hidden"
+      className={`relative w-full h-[350px] border ${border} rounded-xl flex flex-col items-center justify-center text-center p-4 ${bg} overflow-hidden`}
       onDragOver={(e) => e.preventDefault()}
       onDrop={handleDrop}
     >
@@ -59,19 +60,23 @@ export default function ImageUploader({ image, onFileChange }) {
             alt="upload"
             width={35}
             height={35}
+            className={isDark ? "invert" : ""}
           />
-          <p className="text-black text-[17px] font-medium my-[24px]">
+          <p className={`${text} text-[17px] font-medium my-[24px]`}>
             Перетащите фото или загрузите
           </p>
           <label
             htmlFor="fileInput"
-            className="mt-3 py-2 px-4 bg-gray-100 text-gray-900 rounded-lg cursor-pointer flex items-center gap-2 scale-100 active:scale-90 transition-all duration-200"
+            className={`mt-3 py-2 px-4 ${
+              isDark ? "bg-gray-700 text-gray-100" : "bg-gray-100 text-gray-900"
+            } rounded-lg cursor-pointer flex items-center gap-2 scale-100 active:scale-90 transition-all duration-200`}
           >
             <Image
               src={"/icons/upload.svg"}
               alt="upload"
               width={20}
               height={20}
+              className={isDark ? "invert" : ""}
             />
             <p>Загрузить</p>
           </label>
@@ -102,7 +107,9 @@ export default function ImageUploader({ image, onFileChange }) {
           <div className="flex gap-3">
             <label
               htmlFor="fileInput"
-              className="py-2 px-4 border border-[#C9c9c9] rounded-lg cursor-pointer hover:bg-gray-100 active:scale-90 transition-all duration-200"
+              className={`py-2 px-4 border ${border} rounded-lg cursor-pointer ${
+                isDark ? "hover:bg-gray-700" : "hover:bg-gray-100"
+              } active:scale-90 transition-all duration-200`}
             >
               Изменить фото
             </label>

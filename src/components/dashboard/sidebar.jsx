@@ -150,23 +150,20 @@ function Sidebar({ isOpen = true }) {
 
   // Role ga qarab menuItems filter qilish - YANGILANDI
   const menuItems = useMemo(() => {
-    // Agar roles array mavjud bo'lsa (yangi format)
     if (session?.user?.roles && Array.isArray(session.user.roles)) {
       const userRoles = session.user.roles.map((r) => r.toLowerCase());
 
       return allMenuItems.filter((item) => {
         if (item.roles && Array.isArray(item.roles)) {
-          // Userning birorta ham rolesi item.roles ichida bo'lsa, ko'rsat
           return item.roles.some((role) =>
-            userRoles.includes(role.toLowerCase())
+            userRoles.includes(role.toLowerCase()),
           );
         }
-        // Agar roles yo'q bo'lsa, hamma uchun
+
         return true;
       });
     }
 
-    // Eski format bilan backward compatibility (role string)
     if (session?.user?.role) {
       const userRole = session.user.role.toLowerCase();
 
@@ -178,11 +175,9 @@ function Sidebar({ isOpen = true }) {
       });
     }
 
-    // Role yo'q bo'lsa, hech narsa ko'rsatma
     return [];
   }, [session?.user?.roles, session?.user?.role]);
 
-  // Open active submenu on first render
   useEffect(() => {
     const newOpen = {};
     menuItems.forEach((item, index) => {
@@ -190,7 +185,7 @@ function Sidebar({ isOpen = true }) {
         item.submenu?.some(
           (sub) =>
             router.pathname === sub.path ||
-            router.pathname.startsWith(sub.path + "/")
+            router.pathname.startsWith(sub.path + "/"),
         )
       ) {
         newOpen[index] = true;
@@ -308,7 +303,7 @@ function Sidebar({ isOpen = true }) {
               item.submenu?.some(
                 (sub) =>
                   router.pathname === sub.path ||
-                  router.pathname.startsWith(sub.path + "/")
+                  router.pathname.startsWith(sub.path + "/"),
               ) || false;
 
             const isOpenSubmenu = openSubmenus[index] || false;
@@ -332,8 +327,8 @@ function Sidebar({ isOpen = true }) {
                           ? "#f3f4f6"
                           : "#1F2937"
                         : isDark
-                        ? "#9ca3af"
-                        : "#6B7280",
+                          ? "#9ca3af"
+                          : "#6B7280",
                     background:
                       isActive || isAnySubmenuActive
                         ? isDark
@@ -353,8 +348,8 @@ function Sidebar({ isOpen = true }) {
                             ? "#1e40af"
                             : "#DBEAFE"
                           : isDark
-                          ? "#2a2a2a"
-                          : "#F9FAFB",
+                            ? "#2a2a2a"
+                            : "#F9FAFB",
                       transform: "translateX(4px)",
                     },
                     transition: "all 0.2s ease",
@@ -385,8 +380,8 @@ function Sidebar({ isOpen = true }) {
                         isActive || isAnySubmenuActive
                           ? "#3B82F6"
                           : isDark
-                          ? "#9ca3af"
-                          : "#9CA3AF",
+                            ? "#9ca3af"
+                            : "#9CA3AF",
                       justifyContent: "center",
                     }}
                   >
@@ -444,8 +439,8 @@ function Sidebar({ isOpen = true }) {
                                     ? "#f3f4f6"
                                     : "#1F2937"
                                   : isDark
-                                  ? "#9ca3af"
-                                  : "#6B7280",
+                                    ? "#9ca3af"
+                                    : "#6B7280",
                                 backgroundColor: isSubActive
                                   ? isDark
                                     ? "#2a2a2a"
@@ -457,8 +452,8 @@ function Sidebar({ isOpen = true }) {
                                       ? "#333333"
                                       : "#E5E7EB"
                                     : isDark
-                                    ? "#2a2a2a"
-                                    : "#F9FAFB",
+                                      ? "#2a2a2a"
+                                      : "#F9FAFB",
                                 },
                                 transition: "all 0.15s ease",
                                 px: 2,
@@ -469,8 +464,8 @@ function Sidebar({ isOpen = true }) {
                                   isSubActive
                                     ? "bg-blue-500 scale-110"
                                     : isDark
-                                    ? "bg-gray-600"
-                                    : "bg-gray-300"
+                                      ? "bg-gray-600"
+                                      : "bg-gray-300"
                                 }`}
                               ></div>
                               <Typography

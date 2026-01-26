@@ -35,7 +35,11 @@ import Link from "next/link";
 import { OpenInNew as OpenInNewIcon } from "@mui/icons-material";
 import ContentLoader from "@/components/loader";
 import CustomSelect from "@/components/select";
-
+import StatCard from "@/components/card/statisticCard";
+import GamesIcon from "@mui/icons-material/Games";
+import VpnKeyIcon from "@mui/icons-material/VpnKey";
+import PersonAddIcon from "@mui/icons-material/PersonAdd";
+import PeopleIcon from "@mui/icons-material/People";
 const Index = () => {
   const queryClient = useQueryClient();
   const { bg, text, border, isDark } = useAppTheme();
@@ -128,7 +132,7 @@ const Index = () => {
 
   const optionsPermissions = get(permissions, "data.data", []).map((entry) => ({
     value: entry.id,
-    label: entry.name,
+    label: `Ресурс(${entry.resource?.name}) - Действие(${entry.action?.name})`,
   }));
 
   const optionsUsers = get(users, "data.data", []).map((entry) => ({
@@ -166,7 +170,7 @@ const Index = () => {
             position: "top-right",
           });
         },
-      }
+      },
     );
   };
 
@@ -187,7 +191,7 @@ const Index = () => {
             Authorization: `Bearer ${session?.accessToken}`,
           },
           body: JSON.stringify({ name: name }),
-        }
+        },
       );
 
       if (!response.ok) throw new Error("Ошибка при обновлении");
@@ -215,7 +219,7 @@ const Index = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${session?.accessToken}`,
           },
-        }
+        },
       );
 
       if (!response.ok) throw new Error("Ошибка при удалении");
@@ -264,7 +268,7 @@ const Index = () => {
             position: "top-right",
           });
         },
-      }
+      },
     );
   };
 
@@ -296,7 +300,7 @@ const Index = () => {
             position: "top-right",
           });
         },
-      }
+      },
     );
   };
 
@@ -333,7 +337,7 @@ const Index = () => {
             position: "top-right",
           });
         },
-      }
+      },
     );
   };
 
@@ -365,46 +369,8 @@ const Index = () => {
             position: "top-right",
           });
         },
-      }
+      },
     );
-  };
-
-  // Helper function for permission colors
-  const getPermissionColor = (permissionName) => {
-    const colors = {
-      "*": {
-        bg: isDark ? "#7c2d12" : "#fed7aa",
-        text: isDark ? "#fb923c" : "#c2410c",
-      },
-      create: {
-        bg: isDark ? "#065f46" : "#d1fae5",
-        text: isDark ? "#6ee7b7" : "#047857",
-      },
-      read: {
-        bg: isDark ? "#1e3a8a" : "#dbeafe",
-        text: isDark ? "#93c5fd" : "#1e40af",
-      },
-      update: {
-        bg: isDark ? "#7c2d12" : "#fed7aa",
-        text: isDark ? "#fb923c" : "#c2410c",
-      },
-      delete: {
-        bg: isDark ? "#7f1d1d" : "#fecaca",
-        text: isDark ? "#fca5a5" : "#dc2626",
-      },
-    };
-
-    const lowerName = permissionName?.toLowerCase();
-    for (const [key, value] of Object.entries(colors)) {
-      if (lowerName.includes(key)) {
-        return value;
-      }
-    }
-
-    return {
-      bg: isDark ? "#374151" : "#f3f4f6",
-      text: isDark ? "#9ca3af" : "#6b7280",
-    };
   };
 
   if (isLoading || isFetching) {
@@ -429,7 +395,7 @@ const Index = () => {
         >
           {/* Header Actions */}
           <div
-            className="flex justify-between items-center p-4 rounded-lg border"
+            className={`flex justify-between items-center p-4 rounded-lg border ${!isDark ? "border-gray-200" : "border-gray-400"}`}
             style={{
               background: bg("white", "#1E1E1E"),
               borderColor: border("#d1d5db", "#4b5563"),
@@ -441,105 +407,37 @@ const Index = () => {
             >
               Создать роль
             </PrimaryButton>
-
-            <Link
-              href="/dashboard/permissions"
-              className="bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-all duration-200 flex items-center justify-center gap-2 shadow-sm hover:shadow-md px-4 py-2"
-            >
-              <span>Все разрешения</span>
-              <OpenInNewIcon sx={{ fontSize: 16 }} />
-            </Link>
           </div>
 
           {/* Statistics */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div
-              className="p-4 rounded-lg border"
-              style={{
-                background: bg("white", "#1E1E1E"),
-                borderColor: border("#d1d5db", "#4b5563"),
-              }}
-            >
-              <Typography
-                variant="body2"
-                style={{ color: text("#6b7280", "#9ca3af") }}
-              >
-                Всего ролей
-              </Typography>
-              <Typography
-                variant="h4"
-                style={{ color: text("#111827", "#f9fafb") }}
-                className="font-bold"
-              >
-                {rolesData.length}
-              </Typography>
-            </div>
-            <div
-              className="p-4 rounded-lg border"
-              style={{
-                background: bg("white", "#1E1E1E"),
-                borderColor: border("#d1d5db", "#4b5563"),
-              }}
-            >
-              <Typography
-                variant="body2"
-                style={{ color: text("#6b7280", "#9ca3af") }}
-              >
-                С разрешениями
-              </Typography>
-              <Typography
-                variant="h4"
-                style={{ color: text("#111827", "#f9fafb") }}
-                className="font-bold"
-              >
-                {rolesData.filter((r) => r.permissions?.length > 0).length}
-              </Typography>
-            </div>
-            <div
-              className="p-4 rounded-lg border"
-              style={{
-                background: bg("white", "#1E1E1E"),
-                borderColor: border("#d1d5db", "#4b5563"),
-              }}
-            >
-              <Typography
-                variant="body2"
-                style={{ color: text("#6b7280", "#9ca3af") }}
-              >
-                С пользователями
-              </Typography>
-              <Typography
-                variant="h4"
-                style={{ color: text("#111827", "#f9fafb") }}
-                className="font-bold"
-              >
-                {rolesData.filter((r) => r.users?.length > 0).length}
-              </Typography>
-            </div>
-            <div
-              className="p-4 rounded-lg border"
-              style={{
-                background: bg("white", "#1E1E1E"),
-                borderColor: border("#d1d5db", "#4b5563"),
-              }}
-            >
-              <Typography
-                variant="body2"
-                style={{ color: text("#6b7280", "#9ca3af") }}
-              >
-                Всего пользователей
-              </Typography>
-              <Typography
-                variant="h4"
-                style={{ color: text("#111827", "#f9fafb") }}
-                className="font-bold"
-              >
-                {rolesData.reduce(
-                  (sum, role) => sum + (role.users?.length || 0),
-                  0
-                )}
-              </Typography>
-            </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <StatCard
+              value={rolesData.length}
+              title={"Всего ролей"}
+              icon={GamesIcon}
+              iconColor={"black"}
+            />
+            <StatCard
+              value={rolesData.filter((r) => r.permissions?.length > 0).length}
+              title={"С разрешениями"}
+              icon={VpnKeyIcon}
+              iconColor={"black"}
+            />
+            <StatCard
+              value={rolesData.filter((r) => r.users?.length > 0).length}
+              title={"С пользователями"}
+              icon={PersonAddIcon}
+              iconColor={"black"}
+            />
+            <StatCard
+              value={rolesData.reduce(
+                (sum, role) => sum + (role.users?.length || 0),
+                0,
+              )}
+              title={"Всего пользователей"}
+              icon={PeopleIcon}
+              iconColor={"black"}
+            />
           </div>
 
           {/* Roles Cards Grid */}
@@ -553,265 +451,224 @@ const Index = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
                 >
-                  <Card
-                    sx={{
-                      background: bg("#ffffff", "#1e1e1e"),
-                      borderColor: border("#e5e7eb", "#374151"),
-                      border: "1px solid #C9C9C9",
-                      borderRadius: "12px",
-                      transition: "all 0.2s",
-                      "&:hover": {
-                        boxShadow: isDark
-                          ? "0 4px 12px rgba(0,0,0,0.3)"
-                          : "0 4px 12px rgba(0,0,0,0.1)",
-                        transform: "translateY(-2px)",
-                      },
-                    }}
+                  <div
+                    className={`rounded-xl border transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 ${
+                      isDark
+                        ? "bg-gray-800 border-gray-700 hover:shadow-black/30"
+                        : "bg-white border-gray-300 hover:shadow-gray-200"
+                    }`}
                   >
-                    <CardContent>
+                    <div className="p-6">
                       {/* Header */}
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex items-center gap-2 flex-1">
-                          <Typography
-                            variant="h6"
-                            style={{
-                              color: text("#111827", "#f9fafb"),
-                              fontWeight: 600,
-                            }}
+                          <h3
+                            className={`text-lg font-semibold ${
+                              isDark ? "text-gray-50" : "text-gray-900"
+                            }`}
                           >
                             {role.name}
-                          </Typography>
+                          </h3>
                           {isAdmin && (
-                            <Chip
-                              label="Администратор"
-                              size="small"
-                              sx={{
-                                backgroundColor: isDark ? "#1e3a8a" : "#dbeafe",
-                                color: isDark ? "#93c5fd" : "#1e40af",
-                                fontWeight: 600,
-                                fontSize: "11px",
-                              }}
-                            />
+                            <span
+                              className={`px-2 py-0.5 rounded text-xs font-semibold ${
+                                isDark
+                                  ? "bg-blue-900 text-blue-300"
+                                  : "bg-blue-100 text-blue-800"
+                              }`}
+                            >
+                              Администратор
+                            </span>
                           )}
                         </div>
                         <div className="flex gap-1">
-                          <Button
-                            size="small"
+                          <button
                             onClick={() => {
                               setEditModal(true);
                               setName(role.name);
                               setSelectedId(role.id);
                             }}
                             disabled={isAdmin}
-                            sx={{
-                              width: "32px",
-                              height: "32px",
-                              minWidth: "32px",
-                              background: isDark ? "#7c2d12" : "#F0D8C8",
-                              color: isDark ? "#fb923c" : "#FF6200",
-                              "&:hover": {
-                                background: isDark ? "#9a3412" : "#F0B28B",
-                              },
-                              "&:disabled": { color: "#9ca3af" },
-                            }}
+                            className={`w-8 h-8 rounded flex items-center justify-center transition-colors ${
+                              isAdmin
+                                ? "opacity-40 cursor-not-allowed"
+                                : isDark
+                                  ? "bg-orange-900 text-orange-400 hover:bg-orange-800"
+                                  : "bg-orange-100 text-orange-600 hover:bg-orange-200"
+                            }`}
                           >
-                            <EditIcon fontSize="small" />
-                          </Button>
-                          <Button
-                            size="small"
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                              />
+                            </svg>
+                          </button>
+                          <button
                             onClick={() => {
                               setDeleteModal(true);
                               setSelectedId(role.id);
                             }}
                             disabled={isAdmin}
-                            sx={{
-                              width: "32px",
-                              height: "32px",
-                              minWidth: "32px",
-                              background: isDark ? "#7f1d1d" : "#FCD8D3",
-                              color: isDark ? "#fca5a5" : "#FF1E00",
-                              "&:hover": {
-                                background: isDark ? "#991b1b" : "#FCA89D",
-                              },
-                              "&:disabled": { color: "#9ca3af" },
-                            }}
+                            className={`w-8 h-8 rounded flex items-center justify-center transition-colors ${
+                              isAdmin
+                                ? "opacity-40 cursor-not-allowed"
+                                : isDark
+                                  ? "bg-red-900 text-red-400 hover:bg-red-800"
+                                  : "bg-red-100 text-red-600 hover:bg-red-200"
+                            }`}
                           >
-                            <DeleteIcon fontSize="small" />
-                          </Button>
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                              />
+                            </svg>
+                          </button>
                         </div>
                       </div>
 
-                      <Divider sx={{ my: 2 }} />
+                      <div
+                        className={`my-4 border-t ${isDark ? "border-gray-700" : "border-gray-200"}`}
+                      />
 
                       {/* Users Section */}
-                      <Box className="mb-3">
+                      <div className="mb-4">
                         <div className="flex items-center justify-between mb-2">
-                          <Typography
-                            variant="caption"
-                            style={{
-                              color: text("#6b7280", "#9ca3af"),
-                              fontWeight: 600,
-                              textTransform: "uppercase",
-                              fontSize: "11px",
-                            }}
+                          <span
+                            className={`text-xs font-semibold uppercase tracking-wide ${
+                              isDark ? "text-gray-400" : "text-gray-600"
+                            }`}
                           >
                             Пользователи
-                          </Typography>
+                          </span>
                         </div>
 
-                        <Stack
-                          direction="row"
-                          spacing={1}
-                          flexWrap="wrap"
-                          useFlexGap
-                          className="mt-2"
-                        >
+                        <div className="flex flex-col gap-2 mt-2">
                           {role.users?.length > 0 ? (
-                            <>
-                              <Stack
-                                direction="column"
-                                spacing={1}
-                                className="mt-2"
-                              >
-                                {role.users.map((user) => {
-                                  const employeeData = user.employee_id
-                                    ? employeeDataMap[user.employee_id]
-                                    : null;
-                                  let displayName = user.username;
+                            role.users.map((user) => {
+                              const employeeData = user.employee_id
+                                ? employeeDataMap[user.employee_id]
+                                : null;
+                              let displayName = user.username;
 
-                                  if (employeeData) {
-                                    const parts = [
-                                      employeeData.last_name,
-                                      employeeData.first_name,
-                                      employeeData.middle_name,
-                                    ].filter(Boolean);
-                                    if (parts.length > 0) {
-                                      displayName = parts.join(" ");
-                                    }
-                                  }
+                              if (employeeData) {
+                                const parts = [
+                                  employeeData.last_name,
+                                  employeeData.first_name,
+                                  employeeData.middle_name,
+                                ].filter(Boolean);
+                                if (parts.length > 0) {
+                                  displayName = parts.join(" ");
+                                }
+                              }
 
-                                  return (
-                                    <Chip
-                                      key={user.id}
-                                      label={displayName}
-                                      size="small"
-                                      sx={{
-                                        backgroundColor: isDark
-                                          ? "#374151"
-                                          : "#f3f4f6",
-                                        color: text("#111827", "#f9fafb"),
-                                        fontWeight: 500,
-                                      }}
-                                    />
-                                  );
-                                })}
-                              </Stack>
-                            </>
+                              return (
+                                <span
+                                  key={user.id}
+                                  className={`inline-block px-3 py-1 rounded-md text-sm font-medium ${
+                                    isDark
+                                      ? "bg-gray-700 text-gray-50"
+                                      : "bg-gray-100 text-gray-900"
+                                  }`}
+                                >
+                                  {displayName}
+                                </span>
+                              );
+                            })
                           ) : (
-                            <Typography
-                              variant="body2"
-                              style={{ color: text("#9ca3af", "#6b7280") }}
+                            <p
+                              className={`text-sm ${isDark ? "text-gray-500" : "text-gray-400"}`}
                             >
                               Нет пользователей
-                            </Typography>
+                            </p>
                           )}
-                        </Stack>
-                      </Box>
+                        </div>
+                      </div>
 
                       {/* Permissions Section */}
-                      <Box>
+                      <div>
                         <div className="flex items-center justify-between mb-2">
-                          <Typography
-                            variant="caption"
-                            style={{
-                              color: text("#6b7280", "#9ca3af"),
-                              fontWeight: 600,
-                              textTransform: "uppercase",
-                              fontSize: "11px",
-                            }}
+                          <span
+                            className={`text-xs font-semibold uppercase tracking-wide ${
+                              isDark ? "text-gray-400" : "text-gray-600"
+                            }`}
                           >
                             Разрешения
-                          </Typography>
+                          </span>
                           <div className="flex gap-1">
-                            <IconButton
-                              size="small"
+                            <button
                               onClick={() => {
                                 setAddPermissionModal(true);
                                 setSelectedId(role.id);
                               }}
-                              sx={{
-                                width: "32px",
-                                height: "32px",
-                                background: isDark ? "#064e3b" : "#D0F3E0",
-                                color: isDark ? "#6ee7b7" : "#047857",
-                                "&:hover": {
-                                  background: isDark ? "#065f46" : "#B8EBD1",
-                                },
-                              }}
+                              className={`w-8 h-8 rounded flex items-center justify-center transition-colors ${
+                                isDark
+                                  ? "bg-green-900 text-green-400 hover:bg-green-800"
+                                  : "bg-green-100 text-green-700 hover:bg-green-200"
+                              }`}
                             >
-                              <AddIcon fontSize="small" />
-                            </IconButton>
+                              <svg
+                                className="w-4 h-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M12 4v16m8-8H4"
+                                />
+                              </svg>
+                            </button>
 
                             {role.permissions?.length > 0 && (
-                              <IconButton
-                                size="small"
+                              <button
                                 onClick={() => {
                                   setRemovePermissionModal(true);
                                   setSelectedId(role.id);
                                 }}
-                                sx={{
-                                  width: "32px",
-                                  height: "32px",
-                                  background: isDark ? "#7f1d1d" : "#FCD8D3",
-                                  color: isDark ? "#fca5a5" : "#FF1E00",
-                                  "&:hover": {
-                                    background: isDark ? "#991b1b" : "#FCA89D",
-                                  },
-                                }}
+                                className={`w-8 h-8 rounded flex items-center justify-center transition-colors ${
+                                  isDark
+                                    ? "bg-red-900 text-red-400 hover:bg-red-800"
+                                    : "bg-red-100 text-red-600 hover:bg-red-200"
+                                }`}
                               >
-                                <RemoveIcon fontSize="small" />
-                              </IconButton>
+                                <svg
+                                  className="w-4 h-4"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M20 12H4"
+                                  />
+                                </svg>
+                              </button>
                             )}
                           </div>
                         </div>
-                        <Stack
-                          direction="row"
-                          spacing={1}
-                          flexWrap="wrap"
-                          useFlexGap
-                        >
-                          {role.permissions?.length > 0 ? (
-                            role.permissions.map((permission) => {
-                              const colors = getPermissionColor(
-                                permission.name
-                              );
-                              return (
-                                <Chip
-                                  key={permission.id}
-                                  label={permission.name}
-                                  size="small"
-                                  sx={{
-                                    backgroundColor: colors.bg,
-                                    color: colors.text,
-                                    fontWeight: 500,
-                                    textTransform: "uppercase",
-                                    letterSpacing: "0.5px",
-                                  }}
-                                />
-                              );
-                            })
-                          ) : (
-                            <Typography
-                              variant="body2"
-                              style={{ color: text("#9ca3af", "#6b7280") }}
-                            >
-                              Нет разрешений
-                            </Typography>
-                          )}
-                        </Stack>
-                      </Box>
-                    </CardContent>
-                  </Card>
+                      </div>
+                    </div>
+                  </div>
                 </motion.div>
               );
             })}

@@ -98,8 +98,8 @@ const Index = () => {
 
   const positions = Array.from(
     new Set(
-      filteredEmployees.map((e) => e.workplace?.position?.name).filter(Boolean)
-    )
+      filteredEmployees.map((e) => e.workplace?.position?.name).filter(Boolean),
+    ),
   );
 
   const {
@@ -169,7 +169,7 @@ const Index = () => {
             position: "top-right",
           });
         },
-      }
+      },
     );
   };
 
@@ -186,7 +186,7 @@ const Index = () => {
             Authorization: `Bearer ${session?.accessToken}`,
           },
           body: JSON.stringify({ jobTripId: selectedJobTrip }),
-        }
+        },
       );
 
       if (!response.ok) {
@@ -447,7 +447,7 @@ const Index = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label
-                  className="block text-sm font-medium mb-2"
+                  className="block text-sm font-medium mb-1"
                   style={{ color: text("#374151", "#d1d5db") }}
                 >
                   Номер приказа *
@@ -466,13 +466,13 @@ const Index = () => {
                   onMouseEnter={(e) => {
                     e.currentTarget.style.borderColor = border(
                       "#9ca3af",
-                      "#6b7280"
+                      "#6b7280",
                     );
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.borderColor = border(
                       "#d1d5db",
-                      "#4b5563"
+                      "#4b5563",
                     );
                   }}
                 />
@@ -509,13 +509,13 @@ const Index = () => {
                   onMouseEnter={(e) => {
                     e.currentTarget.style.borderColor = border(
                       "#9ca3af",
-                      "#6b7280"
+                      "#6b7280",
                     );
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.borderColor = border(
                       "#d1d5db",
-                      "#4b5563"
+                      "#4b5563",
                     );
                   }}
                 />
@@ -541,13 +541,13 @@ const Index = () => {
                   onMouseEnter={(e) => {
                     e.currentTarget.style.borderColor = border(
                       "#9ca3af",
-                      "#6b7280"
+                      "#6b7280",
                     );
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.borderColor = border(
                       "#d1d5db",
-                      "#4b5563"
+                      "#4b5563",
                     );
                   }}
                 />
@@ -607,13 +607,13 @@ const Index = () => {
                       onMouseEnter={(e) => {
                         e.currentTarget.style.borderColor = border(
                           "#9ca3af",
-                          "#6b7280"
+                          "#6b7280",
                         );
                       }}
                       onMouseLeave={(e) => {
                         e.currentTarget.style.borderColor = border(
                           "#d1d5db",
-                          "#4b5563"
+                          "#4b5563",
                         );
                       }}
                     />
@@ -638,13 +638,13 @@ const Index = () => {
                   onMouseEnter={(e) => {
                     e.currentTarget.style.borderColor = border(
                       "#9ca3af",
-                      "#6b7280"
+                      "#6b7280",
                     );
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.borderColor = border(
                       "#d1d5db",
-                      "#4b5563"
+                      "#4b5563",
                     );
                   }}
                 >
@@ -677,13 +677,13 @@ const Index = () => {
                   onMouseEnter={(e) => {
                     e.currentTarget.style.backgroundColor = bg(
                       "#d1d5db",
-                      "#6b7280"
+                      "#6b7280",
                     );
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.backgroundColor = bg(
                       "#e5e7eb",
-                      "#4b5563"
+                      "#4b5563",
                     );
                   }}
                 >
@@ -795,7 +795,7 @@ const Index = () => {
                   <div style={{ borderColor: border("#f3f4f6", "#2a2a2a") }}>
                     {filteredEmployees.map((emp) => {
                       const isSelected = selectedEmployeesForJobTrip.has(
-                        emp.id
+                        emp.id,
                       );
                       return (
                         <div
@@ -815,7 +815,7 @@ const Index = () => {
                             if (!isSelected) {
                               e.currentTarget.style.backgroundColor = bg(
                                 "#f9fafb",
-                                "#2a2a2a"
+                                "#2a2a2a",
                               );
                             }
                           }}
@@ -915,7 +915,7 @@ const Index = () => {
                 onMouseEnter={(e) => {
                   e.currentTarget.style.backgroundColor = bg(
                     "#f9fafb",
-                    "#2a2a2a"
+                    "#2a2a2a",
                   );
                 }}
                 onMouseLeave={(e) => {
