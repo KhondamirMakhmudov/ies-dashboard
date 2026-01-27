@@ -44,6 +44,35 @@ const Index = () => {
   const queryClient = useQueryClient();
   const { bg, text, border, isDark } = useAppTheme();
 
+  // Mapping for user-friendly resource and action names
+  const resourceNameMap = {
+    "*": "Все ресурсы",
+    users: "Пользователи",
+    roles: "Роли",
+    permissions: "Разрешения",
+    employees: "Сотрудники",
+    departments: "Отделы",
+    projects: "Проекты",
+    // Add more mappings as needed
+  };
+
+  const actionNameMap = {
+    "*": "Все действия",
+    create: "Создание",
+    read: "Чтение",
+    update: "Обновление",
+    delete: "Удаление",
+    list: "Просмотр списка",
+    view: "Просмотр",
+    edit: "Редактирование",
+    // Add more mappings as needed
+  };
+
+  // Helper function to get readable names
+  const getReadableName = (name, mapping) => {
+    return mapping[name?.toLowerCase()] || name || "Unknown";
+  };
+
   // State for modals
   const [createModal, setCreateModal] = useState(false);
   const [editModal, setEditModal] = useState(false);
@@ -546,60 +575,6 @@ const Index = () => {
                         className={`my-4 border-t ${isDark ? "border-gray-700" : "border-gray-200"}`}
                       />
 
-                      {/* Users Section */}
-                      <div className="mb-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <span
-                            className={`text-xs font-semibold uppercase tracking-wide ${
-                              isDark ? "text-gray-400" : "text-gray-600"
-                            }`}
-                          >
-                            Пользователи
-                          </span>
-                        </div>
-
-                        <div className="flex flex-col gap-2 mt-2">
-                          {role.users?.length > 0 ? (
-                            role.users.map((user) => {
-                              const employeeData = user.employee_id
-                                ? employeeDataMap[user.employee_id]
-                                : null;
-                              let displayName = user.username;
-
-                              if (employeeData) {
-                                const parts = [
-                                  employeeData.last_name,
-                                  employeeData.first_name,
-                                  employeeData.middle_name,
-                                ].filter(Boolean);
-                                if (parts.length > 0) {
-                                  displayName = parts.join(" ");
-                                }
-                              }
-
-                              return (
-                                <span
-                                  key={user.id}
-                                  className={`inline-block px-3 py-1 rounded-md text-sm font-medium ${
-                                    isDark
-                                      ? "bg-gray-700 text-gray-50"
-                                      : "bg-gray-100 text-gray-900"
-                                  }`}
-                                >
-                                  {displayName}
-                                </span>
-                              );
-                            })
-                          ) : (
-                            <p
-                              className={`text-sm ${isDark ? "text-gray-500" : "text-gray-400"}`}
-                            >
-                              Нет пользователей
-                            </p>
-                          )}
-                        </div>
-                      </div>
-
                       {/* Permissions Section */}
                       <div>
                         <div className="flex items-center justify-between mb-2">
@@ -665,6 +640,84 @@ const Index = () => {
                               </button>
                             )}
                           </div>
+                        </div>
+
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {role.permissions?.length > 0 ? (
+                            role.permissions.map((permission) => {
+                              const resourceName =
+                                permission.resource?.name || "Unknown";
+                              const actionName =
+                                permission.action?.name || "Unknown";
+
+                              // Format for better readability
+                              const formatPermission = (resource, action) => {
+                                if (resource === "*" && action === "*") {
+                                  return {
+                                    display: "Полный доступ ко всем ресурсам",
+                                    color: isDark
+                                      ? "bg-green-900 text-green-300"
+                                      : "bg-green-100 text-green-800",
+                                  };
+                                }
+                                if (resource === "*") {
+                                  return {
+                                    display: `Все ресурсы: ${action}`,
+                                    color: isDark
+                                      ? "bg-blue-900 text-blue-300"
+                                      : "bg-blue-100 text-blue-800",
+                                  };
+                                }
+                                if (action === "*") {
+                                  return {
+                                    display: `${resource}: Все действия`,
+                                    color: isDark
+                                      ? "bg-purple-900 text-purple-300"
+                                      : "bg-purple-100 text-purple-800",
+                                  };
+                                }
+                                return {
+                                  display: `${resource}: ${action}`,
+                                  color: isDark
+                                    ? "bg-indigo-900 text-indigo-300"
+                                    : "bg-indigo-100 text-indigo-800",
+                                };
+                              };
+
+                              const formatted = formatPermission(
+                                resourceName,
+                                actionName,
+                              );
+
+                              return (
+                                <span
+                                  key={permission.id}
+                                  className={`inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium ${formatted.color}`}
+                                >
+                                  <svg
+                                    className="w-3.5 h-3.5 mr-1.5"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
+                                    />
+                                  </svg>
+                                  {formatted.display}
+                                </span>
+                              );
+                            })
+                          ) : (
+                            <p
+                              className={`text-sm ${isDark ? "text-gray-500" : "text-gray-400"}`}
+                            >
+                              Нет разрешений
+                            </p>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -793,7 +846,7 @@ const Index = () => {
                   .find((r) => r.id === selectedId)
                   ?.permissions?.map((permission) => ({
                     value: permission.id,
-                    label: permission.name,
+                    label: `${permission.resource?.name || "Unknown"} - ${permission.action?.name || "Unknown"}`,
                   })) || []
               }
               placeholder="Выберите разрешение"
