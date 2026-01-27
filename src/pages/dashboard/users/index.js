@@ -248,6 +248,9 @@ const Index = () => {
     if (editFormData.employee_id !== selectedUser.employee_id) {
       updateData.employee_id = editFormData.employee_id || null;
     }
+    if (editFormData.username !== selectedUser.username) {
+      updateData.username = editFormData.username || null;
+    }
     if (editFormData.role_ids && editFormData.role_ids.length > 0) {
       // Compare with existing roles
       const existingRoleIds = selectedUser.roles?.map((r) => r.id) || [];
@@ -487,6 +490,7 @@ const Index = () => {
       role_ids: user.roles?.map((role) => role.id) || [],
       unit_code: user.unit_code || "",
       name: user.name || "",
+      username: user.username || "",
       password: "",
     });
     setEditModal(true);
@@ -1276,6 +1280,7 @@ const Index = () => {
               unit_code: "",
               name: "",
               password: "",
+              username: "",
             });
             setEditEmployeeSearch("");
           }}
@@ -1302,30 +1307,24 @@ const Index = () => {
               required
             />
 
-            <div className="space-y-2">
-              <label
-                className="block text-sm font-medium"
-                style={{ color: text("#374151", "#d1d5db") }}
-              >
-                Имя пользователя
-              </label>
-              <div
-                className="h-[48px] px-3 rounded-[8px] border flex items-center"
-                style={{
-                  backgroundColor: bg("white", "#262626"),
-                  borderColor: border("#d1d5db", "#4b5563"),
-                  color: text("black", "white"),
-                }}
-              >
-                <span className="text-[15px]">{selectedUser.username}</span>
-              </div>
-              <p
-                className="text-xs"
-                style={{ color: text("#6b7280", "#9ca3af") }}
-              >
-                Имя пользователя нельзя изменить
-              </p>
-            </div>
+            <Input
+              label="Имя пользователя"
+              type="text"
+              value={editFormData.username}
+              inputClass={
+                bg("bg-white", "bg-[#262626]") +
+                " " +
+                text("text-black", "text-white") +
+                " " +
+                border("!border-gray-300", "!border-gray-600") +
+                " !h-[48px] rounded-[8px] text-[15px]"
+              }
+              onChange={(e) =>
+                setEditFormData({ ...editFormData, username: e.target.value })
+              }
+              placeholder="Введите имя пользователя"
+              required
+            />
 
             <Input
               label="Новый пароль"

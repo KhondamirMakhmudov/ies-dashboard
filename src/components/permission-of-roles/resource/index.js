@@ -88,7 +88,7 @@ const ResourceSection = () => {
 
     try {
       const response = await fetch(
-        `${config.GENERAL_AUTH_URL}/${URLS.resources}/${selectResourceId}`,
+        `${config.GENERAL_AUTH_URL}${URLS.resources}/${selectResourceId}`,
         {
           method: "PATCH",
           headers: {
@@ -117,7 +117,7 @@ const ResourceSection = () => {
   const submitDeleteResource = async () => {
     try {
       const response = await fetch(
-        `${config.GENERAL_AUTH_URL}/${URLS.resources}/${setSelectResourceId}`,
+        `${config.GENERAL_AUTH_URL}${URLS.resources}/${selectResourceId}`,
         {
           method: "DELETE",
           headers: {
@@ -149,18 +149,18 @@ const ResourceSection = () => {
     {
       accessorKey: "created_at",
       header: "Дата создания",
-      cell: ({ getValue, row }) => {
-        const isActive = getValue();
+      cell: ({ row }) => {
         return (
-          <span
-            className={`font-medium p-1 rounded-md border ${
-              isDark
-                ? "text-blue-400 bg-blue-900/30 border-blue-600"
-                : "text-blue-600 bg-blue-50 border-blue-600"
+          <p
+            className={`font-medium p-1 rounded-md  ${
+              isDark ? "text-blue-400 " : "text-blue-600"
             }`}
           >
-            {dayjs(row.original.created_at).format("DD.MM.YYYY")}
-          </span>
+            {dayjs(row.original.created_at).format("DD.MM.YYYY")}{" "}
+            <span className="text-sm">
+              {dayjs(row.original.created_at).format("HH:mm")}
+            </span>
+          </p>
         );
       },
     },
@@ -212,7 +212,9 @@ const ResourceSection = () => {
   }
 
   return (
-    <div className="my-2 border border-gray-200 rounded-md">
+    <div
+      className={`my-2 border ${isDark ? "border-gray-700" : "border-gray-200"} rounded-md`}
+    >
       {/* Header Section */}
       <div
         className="flex justify-between items-center p-[16px] rounded-t-lg "

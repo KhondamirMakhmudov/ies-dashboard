@@ -32,13 +32,17 @@ import ContactPageIcon from "@mui/icons-material/ContactPage";
 import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
 import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutline";
 
-// Hammasi uchun menu items (role filter qilinadi)
+// Menu items with resource and action mappings for permission-based access
 const allMenuItems = [
   {
     text: "Сотрудники",
     icon: <ContactPageIcon />,
     path: "/dashboard/employees",
-    roles: ["admin", "main-hr-tpp"], // Ikkala role uchun ham
+    roles: ["admin", "main-hr-tpp", "hr-admin", "hr-moderator"],
+    requiredPermissions: {
+      resource: "employees",
+      action: "read", // or "*"
+    },
   },
   {
     text: "Структура организации",
@@ -57,7 +61,11 @@ const allMenuItems = [
         path: "/dashboard/structure-organizations/workplace",
       },
     ],
-    roles: ["admin"], // Faqat admin uchun
+    roles: ["admin"],
+    requiredPermissions: {
+      resource: "structure",
+      action: "read",
+    },
   },
   {
     text: "Точки контроля",
@@ -79,7 +87,11 @@ const allMenuItems = [
         path: "/dashboard/access-points",
       },
     ],
-    roles: ["admin"], // Faqat admin uchun
+    roles: ["admin", "acs-admin"],
+    requiredPermissions: {
+      resource: "checkpoints",
+      action: "read",
+    },
   },
   {
     text: "Отчёты",
@@ -99,19 +111,31 @@ const allMenuItems = [
         path: "/dashboard/reports/all-employees",
       },
     ],
-    roles: ["admin", "main-hr-tpp"], // Ikkala role uchun ham
+    roles: ["admin", "hr-admin", "hr-moderator"],
+    requiredPermissions: {
+      resource: "reports",
+      action: "read",
+    },
   },
   {
     text: "Расписание",
     icon: <EventNoteIcon />,
     path: "/dashboard/schedule",
-    roles: ["admin"], // Faqat admin uchun
+    roles: ["admin"],
+    requiredPermissions: {
+      resource: "schedule",
+      action: "read",
+    },
   },
   {
     text: "Командировки",
     icon: <AirlineStopsIcon />,
     path: "/dashboard/business-trips",
-    roles: ["admin"], // Faqat admin uchun
+    roles: ["admin"],
+    requiredPermissions: {
+      resource: "business-trips",
+      action: "read",
+    },
   },
   {
     text: "Управление профилями",
@@ -125,19 +149,26 @@ const allMenuItems = [
         text: "Роли",
         path: "/dashboard/roles",
       },
-
       {
         text: "Доступ и права",
         path: "/dashboard/permission-of-roles",
       },
     ],
-    roles: ["admin"], // Faqat admin uchun
+    roles: ["admin"],
+    requiredPermissions: {
+      resource: "users",
+      action: "read",
+    },
   },
   {
     text: "Настройки",
     icon: <SettingsRoundedIcon />,
     path: "/dashboard/settings",
-    roles: ["admin"], // Faqat admin uchun
+    roles: ["admin"],
+    requiredPermissions: {
+      resource: "settings",
+      action: "read",
+    },
   },
 ];
 
@@ -148,35 +179,94 @@ function Sidebar({ isOpen = true }) {
   const router = useRouter();
   const { isDark, bg, text, border } = useAppTheme();
 
-  // Role ga qarab menuItems filter qilish - YANGILANDI
+  // Helper function to check if user has required permission
+  const hasPermission = (requiredPermission) => {
+    if (!requiredPermission) return true;
+
+    // If user is admin (has * -> * permission), grant all access
+    if (session?.user?.isAdmin) return true;
+
+    const rolesDetail = session?.user?.rolesDetail;
+    if (!rolesDetail || !Array.isArray(rolesDetail)) return false;
+
+    // Check each role's permissions
+    for (const role of rolesDetail) {
+      if (!role.permissions || !Array.isArray(role.permissions)) continue;
+
+      for (const permission of role.permissions) {
+        const resourceName = permission.resource?.name;
+        const actionName = permission.action?.name;
+
+        // Full access (* -> *)
+        if (resourceName === "*" && actionName === "*") {
+          return true;
+        }
+
+        // All resources with specific action (* -> action)
+        if (
+          resourceName === "*" &&
+          (actionName === requiredPermission.action || actionName === "*")
+        ) {
+          return true;
+        }
+
+        // Specific resource with all actions (resource -> *)
+        if (
+          (resourceName === requiredPermission.resource ||
+            resourceName === "*") &&
+          actionName === "*"
+        ) {
+          return true;
+        }
+
+        // Specific resource with specific action
+        if (
+          (resourceName === requiredPermission.resource ||
+            resourceName === "*") &&
+          (actionName === requiredPermission.action || actionName === "*")
+        ) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  };
+
+  // Filter menu items based on user's roles and permissions
   const menuItems = useMemo(() => {
-    if (session?.user?.roles && Array.isArray(session.user.roles)) {
-      const userRoles = session.user.roles.map((r) => r.toLowerCase());
+    const userRoles = session?.user?.roles || [];
 
-      return allMenuItems.filter((item) => {
-        if (item.roles && Array.isArray(item.roles)) {
-          return item.roles.some((role) =>
-            userRoles.includes(role.toLowerCase()),
-          );
-        }
-
-        return true;
-      });
+    // If no roles, return empty array
+    if (!Array.isArray(userRoles) || userRoles.length === 0) {
+      return [];
     }
 
-    if (session?.user?.role) {
-      const userRole = session.user.role.toLowerCase();
+    // Convert user roles to lowercase for comparison
+    const normalizedUserRoles = userRoles.map((r) =>
+      typeof r === "string" ? r.toLowerCase() : "",
+    );
 
-      return allMenuItems.filter((item) => {
-        if (item.roles && Array.isArray(item.roles)) {
-          return item.roles.includes(userRole);
-        }
-        return true;
-      });
-    }
+    return allMenuItems.filter((item) => {
+      // Check role-based access
+      const hasRole =
+        !item.roles ||
+        item.roles.some((role) =>
+          normalizedUserRoles.includes(role.toLowerCase()),
+        );
 
-    return [];
-  }, [session?.user?.roles, session?.user?.role]);
+      if (!hasRole) return false;
+
+      // Check permission-based access
+      const hasRequiredPermission = hasPermission(item.requiredPermissions);
+
+      return hasRequiredPermission;
+    });
+  }, [
+    session?.user?.roles,
+    session?.user?.rolesDetail,
+    session?.user?.isAdmin,
+  ]);
 
   useEffect(() => {
     const newOpen = {};
@@ -207,8 +297,8 @@ function Sidebar({ isOpen = true }) {
     sessionStorage.clear();
   };
 
-  // Agar user role noto'g'ri bo'lsa yoki yo'q bo'lsa
-  if (!session?.user?.roles && !session?.user?.role) {
+  // Show loading or no access state
+  if (!session?.user?.roles || session.user.roles.length === 0) {
     return (
       <aside
         className={`${
@@ -224,7 +314,7 @@ function Sidebar({ isOpen = true }) {
             sx={{ color: text("#6b7280", "#9ca3af") }}
             className="text-center"
           >
-            No access
+            Нет доступа
           </Typography>
         </div>
       </aside>
@@ -290,6 +380,40 @@ function Sidebar({ isOpen = true }) {
                 : "linear-gradient(to right, transparent, #e5e7eb, transparent)",
             }}
           ></div>
+        )}
+
+        {/* User Info Badge (Optional - shows current role) */}
+        {isOpen && session?.user?.roles && (
+          <div
+            className="mb-4 p-3 rounded-lg"
+            style={{
+              backgroundColor: isDark ? "#1e3a8a" : "#eff6ff",
+              border: isDark ? "1px solid #3b82f6" : "1px solid #bfdbfe",
+            }}
+          >
+            <Typography
+              sx={{
+                fontSize: "12px",
+                fontWeight: 600,
+                color: isDark ? "#93c5fd" : "#1e40af",
+                textTransform: "uppercase",
+                letterSpacing: "0.5px",
+              }}
+            >
+              {session.user.roles[0]}
+            </Typography>
+            {session.user.username && (
+              <Typography
+                sx={{
+                  fontSize: "11px",
+                  color: isDark ? "#9ca3af" : "#6b7280",
+                  marginTop: "2px",
+                }}
+              >
+                @{session.user.username}
+              </Typography>
+            )}
+          </div>
         )}
 
         {/* MENU */}
@@ -488,6 +612,21 @@ function Sidebar({ isOpen = true }) {
             );
           })}
         </List>
+
+        {/* No menu items available message */}
+        {menuItems.length === 0 && isOpen && (
+          <div className="text-center py-8">
+            <Typography
+              sx={{
+                color: text("#9ca3af", "#6b7280"),
+                fontSize: "14px",
+                fontStyle: "italic",
+              }}
+            >
+              Нет доступных пунктов меню
+            </Typography>
+          </div>
+        )}
       </div>
 
       {/* LOGOUT */}
