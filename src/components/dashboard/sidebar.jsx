@@ -15,7 +15,6 @@ import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { motion } from "framer-motion";
 import {
-  PeopleAlt as PeopleAltIcon,
   Mediation as MediationIcon,
   SettingsRounded as SettingsRoundedIcon,
   CameraAlt as CameraAltIcon,
@@ -30,19 +29,13 @@ import { signOut, useSession } from "next-auth/react";
 import useAppTheme from "@/hooks/useAppTheme";
 import ContactPageIcon from "@mui/icons-material/ContactPage";
 import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
-import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutline";
 
-// Menu items with resource and action mappings for permission-based access
 const allMenuItems = [
   {
     text: "Сотрудники",
     icon: <ContactPageIcon />,
     path: "/dashboard/employees",
-    roles: ["admin", "main-hr-tpp", "hr-admin", "hr-moderator"],
-    requiredPermissions: {
-      resource: "employees",
-      action: "read", // or "*"
-    },
+    roles: ["admin", "main-hr-tpp", "hr-admin", "hr-moderator", "acs-admin"],
   },
   {
     text: "Структура организации",
@@ -62,10 +55,6 @@ const allMenuItems = [
       },
     ],
     roles: ["admin"],
-    requiredPermissions: {
-      resource: "structure",
-      action: "read",
-    },
   },
   {
     text: "Точки контроля",
@@ -88,10 +77,6 @@ const allMenuItems = [
       },
     ],
     roles: ["admin", "acs-admin"],
-    requiredPermissions: {
-      resource: "checkpoints",
-      action: "read",
-    },
   },
   {
     text: "Отчёты",
@@ -112,30 +97,18 @@ const allMenuItems = [
       },
     ],
     roles: ["admin", "hr-admin", "hr-moderator"],
-    requiredPermissions: {
-      resource: "reports",
-      action: "read",
-    },
   },
   {
     text: "Расписание",
     icon: <EventNoteIcon />,
     path: "/dashboard/schedule",
-    roles: ["admin"],
-    requiredPermissions: {
-      resource: "schedule",
-      action: "read",
-    },
+    roles: ["admin", "acs-admin"],
   },
   {
     text: "Командировки",
     icon: <AirlineStopsIcon />,
     path: "/dashboard/business-trips",
-    roles: ["admin"],
-    requiredPermissions: {
-      resource: "business-trips",
-      action: "read",
-    },
+    roles: ["admin", "hr-admin"],
   },
   {
     text: "Управление профилями",
@@ -155,20 +128,12 @@ const allMenuItems = [
       },
     ],
     roles: ["admin"],
-    requiredPermissions: {
-      resource: "users",
-      action: "read",
-    },
   },
   {
     text: "Настройки",
     icon: <SettingsRoundedIcon />,
     path: "/dashboard/settings",
     roles: ["admin"],
-    requiredPermissions: {
-      resource: "settings",
-      action: "read",
-    },
   },
 ];
 
@@ -179,61 +144,7 @@ function Sidebar({ isOpen = true }) {
   const router = useRouter();
   const { isDark, bg, text, border } = useAppTheme();
 
-  // Helper function to check if user has required permission
-  const hasPermission = (requiredPermission) => {
-    if (!requiredPermission) return true;
-
-    // If user is admin (has * -> * permission), grant all access
-    if (session?.user?.isAdmin) return true;
-
-    const rolesDetail = session?.user?.rolesDetail;
-    if (!rolesDetail || !Array.isArray(rolesDetail)) return false;
-
-    // Check each role's permissions
-    for (const role of rolesDetail) {
-      if (!role.permissions || !Array.isArray(role.permissions)) continue;
-
-      for (const permission of role.permissions) {
-        const resourceName = permission.resource?.name;
-        const actionName = permission.action?.name;
-
-        // Full access (* -> *)
-        if (resourceName === "*" && actionName === "*") {
-          return true;
-        }
-
-        // All resources with specific action (* -> action)
-        if (
-          resourceName === "*" &&
-          (actionName === requiredPermission.action || actionName === "*")
-        ) {
-          return true;
-        }
-
-        // Specific resource with all actions (resource -> *)
-        if (
-          (resourceName === requiredPermission.resource ||
-            resourceName === "*") &&
-          actionName === "*"
-        ) {
-          return true;
-        }
-
-        // Specific resource with specific action
-        if (
-          (resourceName === requiredPermission.resource ||
-            resourceName === "*") &&
-          (actionName === requiredPermission.action || actionName === "*")
-        ) {
-          return true;
-        }
-      }
-    }
-
-    return false;
-  };
-
-  // Filter menu items based on user's roles and permissions
+  // Filter menu items based on user's roles only
   const menuItems = useMemo(() => {
     const userRoles = session?.user?.roles || [];
 
@@ -248,25 +159,17 @@ function Sidebar({ isOpen = true }) {
     );
 
     return allMenuItems.filter((item) => {
-      // Check role-based access
-      const hasRole =
-        !item.roles ||
-        item.roles.some((role) =>
-          normalizedUserRoles.includes(role.toLowerCase()),
-        );
+      // If item has no role restrictions, show it to everyone
+      if (!item.roles || item.roles.length === 0) {
+        return true;
+      }
 
-      if (!hasRole) return false;
-
-      // Check permission-based access
-      const hasRequiredPermission = hasPermission(item.requiredPermissions);
-
-      return hasRequiredPermission;
+      // Check if user has any of the required roles
+      return item.roles.some((role) =>
+        normalizedUserRoles.includes(role.toLowerCase()),
+      );
     });
-  }, [
-    session?.user?.roles,
-    session?.user?.rolesDetail,
-    session?.user?.isAdmin,
-  ]);
+  }, [session?.user?.roles]);
 
   useEffect(() => {
     const newOpen = {};
@@ -380,40 +283,6 @@ function Sidebar({ isOpen = true }) {
                 : "linear-gradient(to right, transparent, #e5e7eb, transparent)",
             }}
           ></div>
-        )}
-
-        {/* User Info Badge (Optional - shows current role) */}
-        {isOpen && session?.user?.roles && (
-          <div
-            className="mb-4 p-3 rounded-lg"
-            style={{
-              backgroundColor: isDark ? "#1e3a8a" : "#eff6ff",
-              border: isDark ? "1px solid #3b82f6" : "1px solid #bfdbfe",
-            }}
-          >
-            <Typography
-              sx={{
-                fontSize: "12px",
-                fontWeight: 600,
-                color: isDark ? "#93c5fd" : "#1e40af",
-                textTransform: "uppercase",
-                letterSpacing: "0.5px",
-              }}
-            >
-              {session.user.roles[0]}
-            </Typography>
-            {session.user.username && (
-              <Typography
-                sx={{
-                  fontSize: "11px",
-                  color: isDark ? "#9ca3af" : "#6b7280",
-                  marginTop: "2px",
-                }}
-              >
-                @{session.user.username}
-              </Typography>
-            )}
-          </div>
         )}
 
         {/* MENU */}

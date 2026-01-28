@@ -22,20 +22,15 @@ function decodeJWT(token) {
 }
 
 // Helper function to fetch user details including roles
-async function fetchUserDetails(userId, accessToken) {
+async function fetchUserDetails(accessToken) {
   try {
-    console.log(`=== FETCHING USER DETAILS FOR USER ID: ${userId} ===`);
-
-    const response = await fetch(
-      `${config.GENERAL_AUTH_URL}/auth/user/${userId}`,
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
+    const response = await fetch(`${config.GENERAL_AUTH_URL}/auth/me`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
       },
-    );
+    });
 
     console.log("User details response status:", response.status);
 
@@ -164,10 +159,7 @@ async function refreshAccessToken(token) {
 
       // Fetch updated user details with new token
       console.log("Fetching updated user details after token refresh...");
-      const userDetails = await fetchUserDetails(
-        newDecoded.sub,
-        refreshedTokens.access_token,
-      );
+      const userDetails = await fetchUserDetails(refreshedTokens.access_token);
 
       return {
         ...token,
@@ -261,10 +253,7 @@ export const authOptions = {
 
           // Fetch user details including roles
           console.log("=== STEP 3: FETCHING USER DETAILS ===");
-          const userDetails = await fetchUserDetails(
-            decoded.sub,
-            data.access_token,
-          );
+          const userDetails = await fetchUserDetails(data.access_token);
 
           if (!userDetails) {
             console.error("Failed to fetch user details");

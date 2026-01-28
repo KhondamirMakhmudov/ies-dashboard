@@ -33,6 +33,7 @@ import {
 } from "@mui/icons-material";
 import DeleteModal from "@/components/modal/delete-modal";
 import useAppTheme from "@/hooks/useAppTheme";
+import { canUserDo } from "@/utils/checkpermission";
 
 const Index = () => {
   const queryClient = useQueryClient();
@@ -51,6 +52,10 @@ const Index = () => {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [selectedSchedule, setSelectedSchedule] = useState(null);
+
+  const canCreateJobTrip = canUserDo(session?.user, "командировки", "create");
+  const canDeleteJobTrip = canUserDo(session?.user, "командировки", "delete");
+  const canReadJobTrip = canUserDo(session?.user, "командировки", "read");
 
   const {
     data: jobTrips,
@@ -341,24 +346,26 @@ const Index = () => {
           >
             <VisibilityIcon fontSize="small" />
           </Link>
-          <Button
-            onClick={() => {
-              setDeleteModal(true);
-              setSelectedJobTrip(row.original.jobTripID);
-            }}
-            sx={{
-              width: "32px",
-              height: "32px",
-              minWidth: "32px",
-              background: isDark ? "#7f1d1d" : "#FCD8D3",
-              color: isDark ? "#fca5a5" : "#FF1E00",
-              "&:hover": {
-                background: isDark ? "#991b1b" : "#FCA89D",
-              },
-            }}
-          >
-            <DeleteIcon fontSize="small" />
-          </Button>
+          {canDeleteJobTrip && (
+            <Button
+              onClick={() => {
+                setDeleteModal(true);
+                setSelectedJobTrip(row.original.jobTripID);
+              }}
+              sx={{
+                width: "32px",
+                height: "32px",
+                minWidth: "32px",
+                background: isDark ? "#7f1d1d" : "#FCD8D3",
+                color: isDark ? "#fca5a5" : "#FF1E00",
+                "&:hover": {
+                  background: isDark ? "#991b1b" : "#FCA89D",
+                },
+              }}
+            >
+              <DeleteIcon fontSize="small" />
+            </Button>
+          )}
         </div>
       ),
       enableSorting: false,
@@ -385,21 +392,25 @@ const Index = () => {
         }}
       >
         <div className="my-[10px]">
-          <PrimaryButton onClick={() => setCreateModal(true)}>
-            Назначить командировку
-          </PrimaryButton>
+          {canCreateJobTrip && (
+            <PrimaryButton onClick={() => setCreateModal(true)}>
+              Назначить командировку
+            </PrimaryButton>
+          )}
         </div>
 
-        <CustomTable
-          data={get(jobTrips, "data.data", [])}
-          columns={columns}
-          pagination={{
-            currentPage,
-            pageSize,
-            total: get(jobTrips, "data.totalCount", 0),
-            onPaginationChange: ({ page }) => setCurrentPage(page),
-          }}
-        />
+        {canReadJobTrip && (
+          <CustomTable
+            data={get(jobTrips, "data.data", [])}
+            columns={columns}
+            pagination={{
+              currentPage,
+              pageSize,
+              total: get(jobTrips, "data.totalCount", 0),
+              onPaginationChange: ({ page }) => setCurrentPage(page),
+            }}
+          />
+        )}
       </motion.div>
 
       <MethodModal

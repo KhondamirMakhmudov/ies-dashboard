@@ -15,11 +15,17 @@ import ScheduleModal from "@/components/modal/schedule-modal";
 import PrimaryButton from "@/components/button/primary-button";
 import Link from "next/link";
 import useAppTheme from "@/hooks/useAppTheme";
+import { canUserDo } from "@/utils/checkpermission";
 
 const Index = () => {
   const { bg, text, border, isDark } = useAppTheme();
   const { data: session } = useSession();
   const [createModal, setCreateModal] = useState(false);
+
+  const canCreateSchedule = canUserDo(session?.user, "расписания", "create");
+  const canUpdateSchedule = canUserDo(session?.user, "расписания", "update");
+  const canReadSchedule = canUserDo(session?.user, "расписания", "read");
+  const canDeleteSchedule = canUserDo(session?.user, "расписания", "delete");
 
   const {
     data: allSchedules,
@@ -90,18 +96,22 @@ const Index = () => {
             borderColor: border("#d1d5db", "#4b5563"),
           }}
         >
-          <PrimaryButton
-            onClick={() => setCreateModal(true)}
-            variant={"contained"}
-          >
-            <p>Создать расписание</p>
-          </PrimaryButton>
+          {canCreateSchedule && (
+            <PrimaryButton
+              onClick={() => setCreateModal(true)}
+              variant={"contained"}
+            >
+              <p>Создать расписание</p>
+            </PrimaryButton>
+          )}
 
           <div className="my-[30px]">
-            <CustomTable
-              data={get(allSchedules, "data", [])}
-              columns={columns}
-            />
+            {canReadSchedule && (
+              <CustomTable
+                data={get(allSchedules, "data", [])}
+                columns={columns}
+              />
+            )}
           </div>
         </motion.div>
       )}
@@ -133,7 +143,7 @@ const Index = () => {
                 onError: (error) => {
                   toast.error(`Ошибка: ${error}`, { position: "top-right" });
                 },
-              }
+              },
             );
           }}
         />

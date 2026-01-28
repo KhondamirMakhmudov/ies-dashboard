@@ -30,7 +30,10 @@ import { Search, FilterList, Close } from "@mui/icons-material";
 import useAppTheme from "@/hooks/useAppTheme";
 import { OpenInNew as OpenInNewIcon } from "@mui/icons-material";
 import PersonIcon from "@mui/icons-material/Person";
+import { canUserDo } from "@/utils/checkpermission";
+import { useSession } from "next-auth/react";
 const Index = () => {
+  const { data: session } = useSession();
   const { isDark, bg, text, border } = useAppTheme();
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(15);
@@ -44,6 +47,8 @@ const Index = () => {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+
+  const canCreate = canUserDo(session?.user, "сотрудники", "create");
 
   // Filter states
   const [filters, setFilters] = useState({
@@ -219,7 +224,7 @@ const Index = () => {
         {
           method: "POST",
           body: form,
-        }
+        },
       );
       const result = await response.json();
       if (!response.ok) {
@@ -350,7 +355,7 @@ const Index = () => {
   const fetchAllEmployeesForExport = async () => {
     try {
       const response = await fetch(
-        `${config.PYTHON_API_URL}${URLS.employees}?limit=10000`
+        `${config.PYTHON_API_URL}${URLS.employees}?limit=10000`,
       );
       const result = await response.json();
       return result.data || [];
@@ -393,7 +398,7 @@ const Index = () => {
                 if (allEmployees.length > 0) {
                   exportToExcel(allEmployees);
                   toast.success(
-                    `Экспортировано ${allEmployees.length} сотрудников`
+                    `Экспортировано ${allEmployees.length} сотрудников`,
                   );
                 } else {
                   toast.error("Нет данных для экспорта");
@@ -401,9 +406,11 @@ const Index = () => {
               }}
             />
 
-            <PrimaryButton onClick={() => setOpen(true)}>
-              Добавить
-            </PrimaryButton>
+            {canCreate && (
+              <PrimaryButton onClick={() => setOpen(true)}>
+                Добавить
+              </PrimaryButton>
+            )}
           </div>
         </div>
       </div>
@@ -582,7 +589,7 @@ const Index = () => {
               >
                 Образование:{" "}
                 {educationLevelOptions.find(
-                  (o) => o.value === filters.education_degree
+                  (o) => o.value === filters.education_degree,
                 )?.label || filters.education_degree}
               </span>
             )}
@@ -684,12 +691,12 @@ const Index = () => {
                       isActive
                         ? "bg-blue-600"
                         : isCompleted
-                        ? "bg-green-500 hover:bg-green-600"
-                        : `${
-                            isDark
-                              ? "bg-gray-600 hover:bg-gray-500"
-                              : "bg-gray-300 hover:bg-gray-400"
-                          }`
+                          ? "bg-green-500 hover:bg-green-600"
+                          : `${
+                              isDark
+                                ? "bg-gray-600 hover:bg-gray-500"
+                                : "bg-gray-300 hover:bg-gray-400"
+                            }`
                     }`}
                 >
                   {current}
