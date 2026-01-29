@@ -6,7 +6,7 @@ import useGetQuery from "@/hooks/java/useGetQuery";
 import DashboardLayout from "@/layouts/dashboard/DashboardLayout";
 import { motion } from "framer-motion";
 import CustomTable from "@/components/table";
-import { Button, Typography } from "@mui/material";
+import { Button } from "@mui/material";
 import { get, isEmpty } from "lodash";
 import DeleteModal from "@/components/modal/delete-modal";
 import EditIcon from "@mui/icons-material/Edit";
@@ -23,6 +23,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import NoData from "@/components/no-data";
 import PrimaryButton from "@/components/button/primary-button";
 import useAppTheme from "@/hooks/useAppTheme";
+import { canUserDo } from "@/utils/checkpermission";
 const Index = () => {
   const { bg, text, border, isDark } = useAppTheme();
   const queryClient = useQueryClient();
@@ -33,6 +34,28 @@ const Index = () => {
   const [nameOfCheckpointName, setNameOfCheckpointName] = useState("");
   const [deleteCheckpoints, setDeleteCheckpoints] = useState(false);
   const [selectedCheckpointId, setSelectedCheckpointId] = useState(null);
+
+  const canReadCheckpoints = canUserDo(
+    session?.user,
+    "устройства и точки доступа",
+    "read",
+  );
+  const canCreateCheckpoints = canUserDo(
+    session?.user,
+    "устройства и точки доступа",
+    "create",
+  );
+  const canUpdateCheckpoints = canUserDo(
+    session?.user,
+    "устройства и точки доступа",
+    "update",
+  );
+
+  const canDeleteCheckpoints = canUserDo(
+    session?.user,
+    "устройства и точки доступа",
+    "delete",
+  );
 
   // checkpoint get
   const {
@@ -106,7 +129,7 @@ const Index = () => {
             position: "top-right",
           });
         },
-      }
+      },
     );
   };
 
@@ -144,7 +167,7 @@ const Index = () => {
             position: "top-right",
           });
         },
-      }
+      },
     );
   };
 
@@ -160,7 +183,7 @@ const Index = () => {
             Authorization: `Bearer ${session?.accessToken}`,
           },
           body: JSON.stringify({ id }), // faqat agar backend body kutsa
-        }
+        },
       );
 
       if (!response.ok) {
@@ -207,46 +230,50 @@ const Index = () => {
       header: "Действия",
       cell: ({ row }) => (
         <div className="flex gap-2">
-          <Button
-            onClick={() => {
-              setSelectedCheckpointId(row?.original.id);
-              setEditCheckpoints(true);
-              setNameOfCheckpointName(row.original.checkPointName);
+          {canUpdateCheckpoints && (
+            <Button
+              onClick={() => {
+                setSelectedCheckpointId(row?.original.id);
+                setEditCheckpoints(true);
+                setNameOfCheckpointName(row.original.checkPointName);
 
-              // faqat id yuboramiz
-              setSelectedEntryPoint(row.original.entryPoint?.id || null);
-            }}
-            sx={{
-              width: "32px",
-              height: "32px",
-              minWidth: "32px",
-              background: isDark ? "#7c2d12" : "#F0D8C8",
-              color: isDark ? "#fb923c" : "#FF6200",
-              "&:hover": {
-                background: isDark ? "#9a3412" : "#F0B28B",
-              },
-            }}
-          >
-            <EditIcon fontSize="small" />
-          </Button>
-          <Button
-            onClick={() => {
-              setSelectedCheckpointId(row?.original.id);
-              setDeleteCheckpoints(true);
-            }}
-            sx={{
-              width: "32px",
-              height: "32px",
-              minWidth: "32px",
-              background: isDark ? "#7f1d1d" : "#FCD8D3",
-              color: isDark ? "#fca5a5" : "#FF1E00",
-              "&:hover": {
-                background: isDark ? "#991b1b" : "#FCA89D",
-              },
-            }}
-          >
-            <DeleteIcon fontSize="small" />
-          </Button>
+                // faqat id yuboramiz
+                setSelectedEntryPoint(row.original.entryPoint?.id || null);
+              }}
+              sx={{
+                width: "32px",
+                height: "32px",
+                minWidth: "32px",
+                background: isDark ? "#7c2d12" : "#F0D8C8",
+                color: isDark ? "#fb923c" : "#FF6200",
+                "&:hover": {
+                  background: isDark ? "#9a3412" : "#F0B28B",
+                },
+              }}
+            >
+              <EditIcon fontSize="small" />
+            </Button>
+          )}
+          {canDeleteCheckpoints && (
+            <Button
+              onClick={() => {
+                setSelectedCheckpointId(row?.original.id);
+                setDeleteCheckpoints(true);
+              }}
+              sx={{
+                width: "32px",
+                height: "32px",
+                minWidth: "32px",
+                background: isDark ? "#7f1d1d" : "#FCD8D3",
+                color: isDark ? "#fca5a5" : "#FF1E00",
+                "&:hover": {
+                  background: isDark ? "#991b1b" : "#FCA89D",
+                },
+              }}
+            >
+              <DeleteIcon fontSize="small" />
+            </Button>
+          )}
         </div>
       ),
       enableSorting: false,
@@ -267,15 +294,19 @@ const Index = () => {
           }}
         >
           <div className="col-span-12 space-y-[15px]">
-            <div className="max-w-[100px]">
-              <PrimaryButton
-                onClick={() => setCreateCheckpoints(true)}
-                variant={"contained"}
-              >
-                Создать
-              </PrimaryButton>
-            </div>
-            <CustomTable data={get(checkpoints, "data")} columns={columns} />
+            {canCreateCheckpoints && (
+              <div className="max-w-[100px]">
+                <PrimaryButton
+                  onClick={() => setCreateCheckpoints(true)}
+                  variant={"contained"}
+                >
+                  Создать
+                </PrimaryButton>
+              </div>
+            )}
+            {canReadCheckpoints && (
+              <CustomTable data={get(checkpoints, "data")} columns={columns} />
+            )}
           </div>
         </motion.div>
       )}

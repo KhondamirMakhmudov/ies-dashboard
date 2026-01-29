@@ -107,7 +107,6 @@ const Index = () => {
     enabled: !!session?.accessToken,
   });
 
-  // Get permissions for add/remove
   const { data: permissions, isLoading: isLoadingPermissions } =
     useGetGeneralAuthQuery({
       key: KEYS.permissions,
@@ -115,6 +114,9 @@ const Index = () => {
       headers: {
         Authorization: `Bearer ${session?.accessToken}`,
         Accept: "application/json",
+      },
+      params: {
+        limit: 1000,
       },
       enabled: !!session?.accessToken,
     });
@@ -142,8 +144,6 @@ const Index = () => {
         });
       });
 
-      // Bu yerda employee ma'lumotlarini olish uchun API chaqirish kerak
-      // Hozircha demo ma'lumotlar bilan ishlaymiz
       if (employeeIds.length > 0) {
         const mockEmployeeData = {};
         employeeIds.forEach((id) => {

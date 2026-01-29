@@ -49,6 +49,7 @@ const Index = () => {
   const [showFilters, setShowFilters] = useState(false);
 
   const canCreate = canUserDo(session?.user, "сотрудники", "create");
+  const canReadEmployee = canUserDo(session?.user, "сотрудники", "read");
 
   // Filter states
   const [filters, setFilters] = useState({
@@ -376,168 +377,172 @@ const Index = () => {
 
   return (
     <DashboardLayout headerTitle={"Сотрудники"}>
-      <div
-        className=" p-[15px] mt-[10px] rounded-md border border-[#E9E9E9]"
-        style={{
-          background: bg("white", "#1E1E1E"),
-          borderColor: border("#d1d5db", "#4b5563"),
-        }}
-      >
-        <div className="col-span-12 flex justify-between items-center ">
-          <Typography variant="h6" fontWeight={"600"}>
-            Просмотр и управление сотрудниками
-          </Typography>
+      {canReadEmployee && (
+        <div
+          className=" p-[15px] mt-[10px] rounded-md border border-[#E9E9E9]"
+          style={{
+            background: bg("white", "#1E1E1E"),
+            borderColor: border("#d1d5db", "#4b5563"),
+          }}
+        >
+          <div className="col-span-12 flex justify-between items-center ">
+            <Typography variant="h6" fontWeight={"600"}>
+              Просмотр и управление сотрудниками
+            </Typography>
 
-          <div className="flex gap-2 items-center">
-            <ExcelButton
-              onClick={async () => {
-                const loadingToast = toast.loading("Загрузка данных...");
-                const allEmployees = await fetchAllEmployeesForExport();
-                toast.dismiss(loadingToast);
+            <div className="flex gap-2 items-center">
+              <ExcelButton
+                onClick={async () => {
+                  const loadingToast = toast.loading("Загрузка данных...");
+                  const allEmployees = await fetchAllEmployeesForExport();
+                  toast.dismiss(loadingToast);
 
-                if (allEmployees.length > 0) {
-                  exportToExcel(allEmployees);
-                  toast.success(
-                    `Экспортировано ${allEmployees.length} сотрудников`,
-                  );
-                } else {
-                  toast.error("Нет данных для экспорта");
-                }
-              }}
-            />
+                  if (allEmployees.length > 0) {
+                    exportToExcel(allEmployees);
+                    toast.success(
+                      `Экспортировано ${allEmployees.length} сотрудников`,
+                    );
+                  } else {
+                    toast.error("Нет данных для экспорта");
+                  }
+                }}
+              />
 
-            {canCreate && (
-              <PrimaryButton onClick={() => setOpen(true)}>
-                Добавить
-              </PrimaryButton>
-            )}
+              {canCreate && (
+                <PrimaryButton onClick={() => setOpen(true)}>
+                  Добавить
+                </PrimaryButton>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Search and Filter Section */}
-      <div
-        className="bg-white p-4 mt-3 rounded-md border border-gray-200"
-        style={{
-          background: bg("white", "#1E1E1E"),
-          borderColor: border("#d1d5db", "#4b5563"),
-        }}
-      >
-        <div className="flex gap-3 items-center">
-          {/* Search Input */}
-          <div className="relative flex-1">
-            <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+      {canReadEmployee && (
+        <div
+          className="bg-white p-4 mt-3 rounded-md border border-gray-200"
+          style={{
+            background: bg("white", "#1E1E1E"),
+            borderColor: border("#d1d5db", "#4b5563"),
+          }}
+        >
+          <div className="flex gap-3 items-center">
+            {/* Search Input */}
+            <div className="relative flex-1">
+              <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
 
-            <input
-              type="text"
-              placeholder="Поиск по имени"
-              value={searchTerm}
-              onChange={handleSearchChange}
-              className={`w-full pl-10 pr-4 py-2.5 ${
-                !isDark
-                  ? "border border-gray-300 text-gray-800"
-                  : "border border-gray-700 text-gray-400"
-              } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all placeholder:text-gray-400 `}
-            />
+              <input
+                type="text"
+                placeholder="Поиск по имени"
+                value={searchTerm}
+                onChange={handleSearchChange}
+                className={`w-full pl-10 pr-4 py-2.5 ${
+                  !isDark
+                    ? "border border-gray-300 text-gray-800"
+                    : "border border-gray-700 text-gray-400"
+                } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all placeholder:text-gray-400 `}
+              />
 
-            {isSearching && (
-              <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
-              </div>
-            )}
+              {isSearching && (
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+                </div>
+              )}
+            </div>
+
+            {/* Filter Toggle Button */}
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-all ${
+                showFilters || hasActiveFilters()
+                  ? "bg-blue-500 text-white hover:bg-blue-600"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+            >
+              <FilterList className="w-5 h-5" />
+              Фильтры
+              {hasActiveFilters() && (
+                <span className="bg-white text-blue-500 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
+                  !
+                </span>
+              )}
+            </button>
           </div>
 
-          {/* Filter Toggle Button */}
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-all ${
-              showFilters || hasActiveFilters()
-                ? "bg-blue-500 text-white hover:bg-blue-600"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-            }`}
-          >
-            <FilterList className="w-5 h-5" />
-            Фильтры
-            {hasActiveFilters() && (
-              <span className="bg-white text-blue-500 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
-                !
-              </span>
-            )}
-          </button>
-        </div>
+          {/* Filters Panel */}
+          {showFilters && (
+            <div className="mt-4 pt-4 border-t border-gray-200">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* Gender Filter */}
+                <div>
+                  <CustomSelect
+                    label={"Пол"}
+                    options={genderOptions}
+                    value={filters.gender}
+                    placeholder="Выберите пол"
+                    onChange={(val) =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        gender: val,
+                      }))
+                    }
+                    returnObject={false}
+                  />
+                </div>
 
-        {/* Filters Panel */}
-        {showFilters && (
-          <div className="mt-4 pt-4 border-t border-gray-200">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {/* Gender Filter */}
-              <div>
+                {/* Level Filter */}
                 <CustomSelect
-                  label={"Пол"}
-                  options={genderOptions}
-                  value={filters.gender}
-                  placeholder="Выберите пол"
+                  label={"Выберите разряд"}
+                  options={razryadOptions}
+                  value={filters.level}
+                  placeholder="Выберите разряд"
                   onChange={(val) =>
                     setFilters((prev) => ({
                       ...prev,
-                      gender: val,
+                      level: val,
+                    }))
+                  }
+                  sortOptions={false}
+                  returnObject={false}
+                />
+
+                {/* Education Filter */}
+                <CustomSelect
+                  options={educationLevelOptions}
+                  value={filters.education_degree}
+                  label="Степень образования"
+                  placeholder="Выберите уровень образования"
+                  onChange={(val) =>
+                    setFilters((prev) => ({
+                      ...prev,
+                      education_degree: val,
                     }))
                   }
                   returnObject={false}
                 />
               </div>
 
-              {/* Level Filter */}
-              <CustomSelect
-                label={"Выберите разряд"}
-                options={razryadOptions}
-                value={filters.level}
-                placeholder="Выберите разряд"
-                onChange={(val) =>
-                  setFilters((prev) => ({
-                    ...prev,
-                    level: val,
-                  }))
-                }
-                sortOptions={false}
-                returnObject={false}
-              />
-
-              {/* Education Filter */}
-              <CustomSelect
-                options={educationLevelOptions}
-                value={filters.education_degree}
-                label="Степень образования"
-                placeholder="Выберите уровень образования"
-                onChange={(val) =>
-                  setFilters((prev) => ({
-                    ...prev,
-                    education_degree: val,
-                  }))
-                }
-                returnObject={false}
-              />
+              {/* Clear Filters Button */}
+              {hasActiveFilters() && (
+                <div className="mt-4 flex justify-end">
+                  <button
+                    onClick={clearAllFilters}
+                    className={`flex items-center gap-2 px-4 py-2 ${
+                      !isDark
+                        ? "bg-red-50 text-red-600 hover:bg-red-100"
+                        : "bg-red-600 text-red-50 hover:bg-red-700"
+                    } rounded-lg  transition-all font-medium cursor-pointer`}
+                  >
+                    <Close className="w-4 h-4" />
+                    Очистить фильтры
+                  </button>
+                </div>
+              )}
             </div>
-
-            {/* Clear Filters Button */}
-            {hasActiveFilters() && (
-              <div className="mt-4 flex justify-end">
-                <button
-                  onClick={clearAllFilters}
-                  className={`flex items-center gap-2 px-4 py-2 ${
-                    !isDark
-                      ? "bg-red-50 text-red-600 hover:bg-red-100"
-                      : "bg-red-600 text-red-50 hover:bg-red-700"
-                  } rounded-lg  transition-all font-medium cursor-pointer`}
-                >
-                  <Close className="w-4 h-4" />
-                  Очистить фильтры
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
 
       {/* Active Filters Summary */}
       {hasActiveFilters() && (
@@ -607,7 +612,6 @@ const Index = () => {
         </div>
       )}
 
-      {/* Table with smooth loading states */}
       {isSearching && isFetching ? (
         <div className="bg-white p-4 mt-3 rounded-md border border-gray-200">
           <ContentLoader />
