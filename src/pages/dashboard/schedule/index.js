@@ -80,7 +80,7 @@ const Index = () => {
 
   return (
     <DashboardLayout headerTitle={"Расписание"}>
-      {isEmpty(get(allSchedules, "data", [])) ? (
+      {isEmpty(get(allSchedules, "data", [])) && canReadSchedule ? (
         <NoData
           onCreate={() => setCreateModal(true)}
           title="Расписание не найдено"
@@ -106,12 +106,10 @@ const Index = () => {
           )}
 
           <div className="my-[30px]">
-            {canReadSchedule && (
-              <CustomTable
-                data={get(allSchedules, "data", [])}
-                columns={columns}
-              />
-            )}
+            <CustomTable
+              data={get(allSchedules, "data", [])}
+              columns={columns}
+            />
           </div>
         </motion.div>
       )}

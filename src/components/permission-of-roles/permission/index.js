@@ -42,6 +42,9 @@ const PermissionSection = () => {
         Authorization: `Bearer ${session?.accessToken}`,
         Accept: "application/json",
       },
+      params: {
+        limit: 1000,
+      },
       enabled: !!session?.accessToken,
     });
 

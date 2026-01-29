@@ -1547,7 +1547,7 @@ const Index = () => {
                 usersData
                   .find((u) => u.id === selectedId)
                   ?.roles?.map((role) => ({
-                    value: role.id, // <-- id mavjud bo'lsa, bo'lmasa name
+                    value: role.id,
                     label: role.name,
                   })) || []
               }
