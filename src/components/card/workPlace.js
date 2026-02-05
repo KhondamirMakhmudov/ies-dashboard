@@ -13,6 +13,7 @@ const WorkPlaceCard = ({
   employeeURL = "#",
   deleteWorkplace = () => {},
   id,
+  showByRole,
 }) => {
   const { bg, isDark, text, border } = useAppTheme();
 
@@ -21,7 +22,7 @@ const WorkPlaceCard = ({
       className={
         bg(
           "bg-gradient-to-br from-white to-gray-50",
-          "bg-gradient-to-br from-gray-800 to-gray-900"
+          "bg-gradient-to-br from-gray-800 to-gray-900",
         ) +
         " " +
         border("border-gray-200", "border-gray-700") +
@@ -92,7 +93,7 @@ const WorkPlaceCard = ({
         className={
           bg(
             "bg-gradient-to-r from-transparent via-gray-300 to-transparent",
-            "bg-gradient-to-r from-transparent via-gray-600 to-transparent"
+            "bg-gradient-to-r from-transparent via-gray-600 to-transparent",
           ) + " h-px mb-4"
         }
       ></div>
@@ -215,15 +216,17 @@ const WorkPlaceCard = ({
             {id}
           </span>
         </div>
-        <button
-          onClick={deleteWorkplace}
-          className={
-            bg("bg-red-500", "bg-red-600") +
-            " hover:bg-red-600 dark:hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 hover:shadow-lg active:scale-95"
-          }
-        >
-          Удалить
-        </button>
+        {showByRole && (
+          <button
+            onClick={deleteWorkplace}
+            className={
+              bg("bg-red-500", "bg-red-600") +
+              " hover:bg-red-600 dark:hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 hover:shadow-lg active:scale-95"
+            }
+          >
+            Удалить
+          </button>
+        )}
       </div>
     </div>
   );

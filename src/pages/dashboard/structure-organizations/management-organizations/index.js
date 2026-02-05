@@ -37,6 +37,8 @@ import {
   ErrorOutline as ErrorOutlineIcon,
   OpenInNew as OpenInNewIcon,
 } from "@mui/icons-material";
+import { canUserDo } from "@/utils/checkpermission";
+import { useSession } from "next-auth/react";
 
 const WorkplaceEmployeeSection = ({ workplace = [], levelColor }) => {
   const { bg, isDark, text, border } = useAppTheme();
@@ -67,7 +69,7 @@ const WorkplaceEmployeeSection = ({ workplace = [], levelColor }) => {
         className={
           bg(
             "bg-gradient-to-r from-blue-50 to-indigo-50",
-            "bg-gradient-to-r from-gray-800 to-gray-700"
+            "bg-gradient-to-r from-gray-800 to-gray-700",
           ) +
           " " +
           border("border-blue-100", "border-gray-600") +
@@ -334,7 +336,7 @@ const WorkplaceEmployeeSection = ({ workplace = [], levelColor }) => {
                               <span className="text-xs">
                                 С:{" "}
                                 {new Date(wp.start_date).toLocaleDateString(
-                                  "ru-RU"
+                                  "ru-RU",
                                 )}
                               </span>
                             </div>
@@ -387,6 +389,7 @@ const WorkplaceEmployeeSection = ({ workplace = [], levelColor }) => {
 };
 
 const Index = () => {
+  const { data: session } = useSession();
   const { bg, text, isDark, border } = useAppTheme();
   const queryClient = useQueryClient();
   const [createModal, setCreateModal] = useState(false);
@@ -403,6 +406,30 @@ const Index = () => {
   const [openLevel3Id, setOpenLevel3Id] = useState(null);
   const [openLevel4Id, setOpenLevel4Id] = useState(null);
   const [openLevel5Id, setOpenLevel5Id] = useState(null);
+
+  const canCreateOrgUnit = canUserDo(
+    session?.user,
+    "структура организации",
+    "create",
+  );
+
+  const canUpdateOrgUnit = canUserDo(
+    session?.user,
+    "структура организации",
+    "update",
+  );
+
+  const canReadOrgUnit = canUserDo(
+    session?.user,
+    "структура организации",
+    "read",
+  );
+
+  const canDeleteOrgUnit = canUserDo(
+    session?.user,
+    "структура организации",
+    "delete",
+  );
 
   // LEVEL 1 - Asosiy bo'limlar
   const { data: level1List } = useGetPythonQuery({
@@ -492,7 +519,7 @@ const Index = () => {
         onError: (error) => {
           toast.error(`Xatolik: ${error}`, { position: "top-right" });
         },
-      }
+      },
     );
   };
 
@@ -529,7 +556,7 @@ const Index = () => {
         onError: (error) => {
           toast.error(`Xatolik: ${error}`, { position: "top-right" });
         },
-      }
+      },
     );
   };
 
@@ -545,7 +572,7 @@ const Index = () => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ organizational_unit_id: id }),
-        }
+        },
       );
 
       if (!response.ok) {
@@ -575,961 +602,1004 @@ const Index = () => {
         }}
       >
         <div className="mb-[20px]">
-          <PrimaryButton
-            onClick={() => {
-              setCreateModal(true);
-              setCreateModalParentId(null);
-            }}
-          >
-            Создать
-          </PrimaryButton>
+          {canCreateOrgUnit && (
+            <PrimaryButton
+              onClick={() => {
+                setCreateModal(true);
+                setCreateModalParentId(null);
+              }}
+            >
+              Создать
+            </PrimaryButton>
+          )}
         </div>
 
-        {get(level1List, "data", []).map((level1) => {
-          const isLevel1Open = openLevel1Id === level1.id;
+        {canReadOrgUnit &&
+          get(level1List, "data", []).map((level1) => {
+            const isLevel1Open = openLevel1Id === level1.id;
 
-          return (
-            <div key={level1.id}>
-              {/* LEVEL 1 */}
-              <div
-                onClick={() => {
-                  setOpenLevel1Id(isLevel1Open ? null : level1.id);
-                  setOpenLevel2Id(null);
-                  setOpenLevel3Id(null);
-                }}
-                className="p-4 border rounded hover:bg-gray-100 cursor-pointer flex justify-between items-center"
-                style={{
-                  borderColor: border("#e5e7eb", "#333333"),
-                }}
-              >
-                <div className="flex gap-3 items-center">
-                  <AccountTreeIcon
-                    sx={{
-                      background: "#ECF2FF",
-                      color: "#1E5EFF",
-                      padding: "8px",
-                      width: "35px",
-                      height: "35px",
-                      borderRadius: "100%",
-                    }}
-                  />
-                  <div>
-                    <h4 className="text-lg font-semibold">{level1.name}</h4>
-                    {level1.workplace && level1.workplace.length > 0 && (
-                      <div className="flex items-center gap-2 mt-1">
-                        <WorkIcon sx={{ fontSize: 14, color: "#1E5EFF" }} />
-                        <span className="text-xs text-gray-600">
-                          {level1.workplace.length} рабочих мест
-                        </span>
-                      </div>
+            return (
+              <div key={level1.id}>
+                {/* LEVEL 1 */}
+                <div
+                  onClick={() => {
+                    setOpenLevel1Id(isLevel1Open ? null : level1.id);
+                    setOpenLevel2Id(null);
+                    setOpenLevel3Id(null);
+                  }}
+                  className="p-4 border rounded hover:bg-gray-100 cursor-pointer flex justify-between items-center"
+                  style={{
+                    borderColor: border("#e5e7eb", "#333333"),
+                  }}
+                >
+                  <div className="flex gap-3 items-center">
+                    <AccountTreeIcon
+                      sx={{
+                        background: "#ECF2FF",
+                        color: "#1E5EFF",
+                        padding: "8px",
+                        width: "35px",
+                        height: "35px",
+                        borderRadius: "100%",
+                      }}
+                    />
+                    <div>
+                      <h4 className="text-lg font-semibold">{level1.name}</h4>
+                      {level1.workplace && level1.workplace.length > 0 && (
+                        <div className="flex items-center gap-2 mt-1">
+                          <WorkIcon sx={{ fontSize: 14, color: "#1E5EFF" }} />
+                          <span className="text-xs text-gray-600">
+                            {level1.workplace.length} рабочих мест
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    {canCreateOrgUnit && (
+                      <IconButton
+                        onClick={() => {
+                          setCreateModal(true);
+                          setCreateModalParentId(level1.id);
+                        }}
+                        className="text-blue-600 text-sm hover:underline normal-case"
+                      >
+                        <AddCircleIcon
+                          sx={{
+                            background: "#ECF2FF",
+                            color: "#1E5EFF",
+                            padding: "4px",
+                            width: "30px",
+                            height: "30px",
+                            borderRadius: "100%",
+                          }}
+                        />
+                      </IconButton>
+                    )}
+
+                    {canUpdateOrgUnit && (
+                      <IconButton
+                        onClick={() => {
+                          setEditModal(true);
+                          setSelectEditId(level1.id);
+                          setName(level1.name);
+                          setUnitCode(level1.unit_code);
+                        }}
+                        className="text-blue-600 text-sm hover:underline normal-case"
+                      >
+                        <EditIcon
+                          sx={{
+                            background: "#ECF2FF",
+                            color: "#1E5EFF",
+                            padding: "4px",
+                            width: "30px",
+                            height: "30px",
+                            borderRadius: "100%",
+                          }}
+                        />
+                      </IconButton>
+                    )}
+
+                    {canDeleteOrgUnit && (
+                      <IconButton
+                        onClick={() => {
+                          setDeleteModal(true);
+                          setSelectEditId(level1.id);
+                        }}
+                        className="text-blue-600 text-sm hover:underline normal-case"
+                      >
+                        <DeleteIcon
+                          sx={{
+                            background: "#ECF2FF",
+                            color: "#1E5EFF",
+                            padding: "4px",
+                            width: "30px",
+                            height: "30px",
+                            borderRadius: "100%",
+                          }}
+                        />
+                      </IconButton>
+                    )}
+                    {isLevel1Open ? (
+                      <KeyboardArrowUpIcon />
+                    ) : (
+                      <KeyboardArrowDownIcon />
                     )}
                   </div>
                 </div>
-                <div className="flex items-center gap-1">
-                  <IconButton
-                    onClick={() => {
-                      setCreateModal(true);
-                      setCreateModalParentId(level1.id);
-                    }}
-                    className="text-blue-600 text-sm hover:underline normal-case"
-                  >
-                    <AddCircleIcon
-                      sx={{
-                        background: "#ECF2FF",
-                        color: "#1E5EFF",
-                        padding: "4px",
-                        width: "30px",
-                        height: "30px",
-                        borderRadius: "100%",
-                      }}
-                    />
-                  </IconButton>
 
-                  <IconButton
-                    onClick={() => {
-                      setEditModal(true);
-                      setSelectEditId(level1.id);
-                      setName(level1.name);
-                      setUnitCode(level1.unit_code);
-                    }}
-                    className="text-blue-600 text-sm hover:underline normal-case"
-                  >
-                    <EditIcon
-                      sx={{
-                        background: "#ECF2FF",
-                        color: "#1E5EFF",
-                        padding: "4px",
-                        width: "30px",
-                        height: "30px",
-                        borderRadius: "100%",
-                      }}
-                    />
-                  </IconButton>
-
-                  <IconButton
-                    onClick={() => {
-                      setDeleteModal(true);
-                      setSelectEditId(level1.id);
-                    }}
-                    className="text-blue-600 text-sm hover:underline normal-case"
-                  >
-                    <DeleteIcon
-                      sx={{
-                        background: "#ECF2FF",
-                        color: "#1E5EFF",
-                        padding: "4px",
-                        width: "30px",
-                        height: "30px",
-                        borderRadius: "100%",
-                      }}
-                    />
-                  </IconButton>
-                  {isLevel1Open ? (
-                    <KeyboardArrowUpIcon />
-                  ) : (
-                    <KeyboardArrowDownIcon />
+                {/* LEVEL 1 WORKPLACE/EMPLOYEE */}
+                <AnimatePresence>
+                  {isLevel1Open && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="ml-6"
+                    >
+                      <WorkplaceEmployeeSection
+                        workplace={level1.workplace}
+                        levelColor="#1E5EFF"
+                      />
+                    </motion.div>
                   )}
-                </div>
-              </div>
+                </AnimatePresence>
 
-              {/* LEVEL 1 WORKPLACE/EMPLOYEE */}
-              <AnimatePresence>
-                {isLevel1Open && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="ml-6"
-                  >
-                    <WorkplaceEmployeeSection
-                      workplace={level1.workplace}
-                      levelColor="#1E5EFF"
-                    />
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                {/* LEVEL 2 */}
+                <AnimatePresence>
+                  {isLevel1Open && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="ml-6 mt-2 space-y-2 rounded"
+                    >
+                      {get(level2List, "data", []).length > 0 ? (
+                        get(level2List, "data", []).map((level2) => {
+                          const isLevel2Open = openLevel2Id === level2.id;
 
-              {/* LEVEL 2 */}
-              <AnimatePresence>
-                {isLevel1Open && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="ml-6 mt-2 space-y-2 rounded"
-                  >
-                    {get(level2List, "data", []).length > 0 ? (
-                      get(level2List, "data", []).map((level2) => {
-                        const isLevel2Open = openLevel2Id === level2.id;
-
-                        return (
-                          <div key={level2.id}>
-                            <div
-                              onClick={() => {
-                                setOpenLevel2Id(
-                                  isLevel2Open ? null : level2.id
-                                );
-                                setOpenLevel3Id(null);
-                              }}
-                              className="p-3 bg-white rounded hover:bg-gray-50 flex border border-gray-200 justify-between items-center cursor-pointer"
-                              style={{
-                                backgroundColor: bg("#ffffff", "#1e1e1e"),
-                                borderColor: border("#e5e7eb", "#333333"),
-                              }}
-                            >
-                              <div className="flex items-center gap-3">
-                                <HiveIcon
-                                  sx={{
-                                    background: "#FFF4C9",
-                                    color: "#FFC700",
-                                    padding: "4px",
-                                    width: "30px",
-                                    height: "30px",
-                                    borderRadius: "100%",
-                                  }}
-                                />
-                                <div>
-                                  <span>{level2.name}</span>
-                                  {level2.workplace &&
-                                    level2.workplace.length > 0 && (
-                                      <div className="flex items-center gap-2 mt-1">
-                                        <WorkIcon
-                                          sx={{
-                                            fontSize: 12,
-                                            color: "#FFC700",
-                                          }}
-                                        />
-                                        <span className="text-xs text-gray-600">
-                                          {level2.workplace.length} рабочих мест
-                                        </span>
-                                      </div>
-                                    )}
+                          return (
+                            <div key={level2.id}>
+                              <div
+                                onClick={() => {
+                                  setOpenLevel2Id(
+                                    isLevel2Open ? null : level2.id,
+                                  );
+                                  setOpenLevel3Id(null);
+                                }}
+                                className="p-3 bg-white rounded hover:bg-gray-50 flex border border-gray-200 justify-between items-center cursor-pointer"
+                                style={{
+                                  backgroundColor: bg("#ffffff", "#1e1e1e"),
+                                  borderColor: border("#e5e7eb", "#333333"),
+                                }}
+                              >
+                                <div className="flex items-center gap-3">
+                                  <HiveIcon
+                                    sx={{
+                                      background: "#FFF4C9",
+                                      color: "#FFC700",
+                                      padding: "4px",
+                                      width: "30px",
+                                      height: "30px",
+                                      borderRadius: "100%",
+                                    }}
+                                  />
+                                  <div>
+                                    <span>{level2.name}</span>
+                                    {level2.workplace &&
+                                      level2.workplace.length > 0 && (
+                                        <div className="flex items-center gap-2 mt-1">
+                                          <WorkIcon
+                                            sx={{
+                                              fontSize: 12,
+                                              color: "#FFC700",
+                                            }}
+                                          />
+                                          <span className="text-xs text-gray-600">
+                                            {level2.workplace.length} рабочих
+                                            мест
+                                          </span>
+                                        </div>
+                                      )}
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  {canCreateOrgUnit && (
+                                    <IconButton
+                                      onClick={() => {
+                                        setCreateModal(true);
+                                        setCreateModalParentId(level2.id);
+                                      }}
+                                      className="text-blue-600 text-sm hover:underline normal-case"
+                                    >
+                                      <AddCircleIcon
+                                        sx={{
+                                          background: "#FFF4C9",
+                                          color: "#FFC700",
+                                          padding: "4px",
+                                          width: "30px",
+                                          height: "30px",
+                                          borderRadius: "100%",
+                                        }}
+                                      />
+                                    </IconButton>
+                                  )}
+                                  {canUpdateOrgUnit && (
+                                    <IconButton
+                                      onClick={() => {
+                                        setEditModal(true);
+                                        setSelectEditId(level2.id);
+                                        setName(level2.name);
+                                        setUnitCode(level2.unit_code);
+                                      }}
+                                      className="text-blue-600 text-sm hover:underline normal-case"
+                                    >
+                                      <EditIcon
+                                        sx={{
+                                          background: "#FFF4C9",
+                                          color: "#FFC700",
+                                          padding: "4px",
+                                          width: "30px",
+                                          height: "30px",
+                                          borderRadius: "100%",
+                                        }}
+                                      />
+                                    </IconButton>
+                                  )}
+                                  {canDeleteOrgUnit && (
+                                    <IconButton
+                                      onClick={() => {
+                                        setDeleteModal(true);
+                                        setSelectEditId(level2.id);
+                                      }}
+                                      className="text-blue-600 text-sm hover:underline normal-case"
+                                    >
+                                      <DeleteIcon
+                                        sx={{
+                                          background: "#FFF4C9",
+                                          color: "#FFC700",
+                                          padding: "4px",
+                                          width: "30px",
+                                          height: "30px",
+                                          borderRadius: "100%",
+                                        }}
+                                      />
+                                    </IconButton>
+                                  )}
+                                  {isLevel2Open ? (
+                                    <KeyboardArrowUpIcon />
+                                  ) : (
+                                    <KeyboardArrowDownIcon />
+                                  )}
                                 </div>
                               </div>
-                              <div className="flex items-center gap-1">
-                                <IconButton
-                                  onClick={() => {
-                                    setCreateModal(true);
-                                    setCreateModalParentId(level2.id);
-                                  }}
-                                  className="text-blue-600 text-sm hover:underline normal-case"
-                                >
-                                  <AddCircleIcon
-                                    sx={{
-                                      background: "#FFF4C9",
-                                      color: "#FFC700",
-                                      padding: "4px",
-                                      width: "30px",
-                                      height: "30px",
-                                      borderRadius: "100%",
-                                    }}
-                                  />
-                                </IconButton>
-                                <IconButton
-                                  onClick={() => {
-                                    setEditModal(true);
-                                    setSelectEditId(level2.id);
-                                    setName(level2.name);
-                                    setUnitCode(level2.unit_code);
-                                  }}
-                                  className="text-blue-600 text-sm hover:underline normal-case"
-                                >
-                                  <EditIcon
-                                    sx={{
-                                      background: "#FFF4C9",
-                                      color: "#FFC700",
-                                      padding: "4px",
-                                      width: "30px",
-                                      height: "30px",
-                                      borderRadius: "100%",
-                                    }}
-                                  />
-                                </IconButton>
-                                <IconButton
-                                  onClick={() => {
-                                    setDeleteModal(true);
-                                    setSelectEditId(level2.id);
-                                  }}
-                                  className="text-blue-600 text-sm hover:underline normal-case"
-                                >
-                                  <DeleteIcon
-                                    sx={{
-                                      background: "#FFF4C9",
-                                      color: "#FFC700",
-                                      padding: "4px",
-                                      width: "30px",
-                                      height: "30px",
-                                      borderRadius: "100%",
-                                    }}
-                                  />
-                                </IconButton>
-                                {isLevel2Open ? (
-                                  <KeyboardArrowUpIcon />
-                                ) : (
-                                  <KeyboardArrowDownIcon />
+
+                              {/* LEVEL 2 WORKPLACE/EMPLOYEE */}
+                              <AnimatePresence>
+                                {isLevel2Open && (
+                                  <motion.div
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: "auto" }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                    className="ml-6"
+                                  >
+                                    <WorkplaceEmployeeSection
+                                      workplace={level2.workplace}
+                                      levelColor="#FFC700"
+                                    />
+                                  </motion.div>
                                 )}
-                              </div>
-                            </div>
+                              </AnimatePresence>
 
-                            {/* LEVEL 2 WORKPLACE/EMPLOYEE */}
-                            <AnimatePresence>
-                              {isLevel2Open && (
-                                <motion.div
-                                  initial={{ opacity: 0, height: 0 }}
-                                  animate={{ opacity: 1, height: "auto" }}
-                                  exit={{ opacity: 0, height: 0 }}
-                                  className="ml-6"
-                                >
-                                  <WorkplaceEmployeeSection
-                                    workplace={level2.workplace}
-                                    levelColor="#FFC700"
-                                  />
-                                </motion.div>
-                              )}
-                            </AnimatePresence>
+                              {/* Continue with LEVEL 3, 4, 5 following the same pattern... */}
 
-                            {/* Continue with LEVEL 3, 4, 5 following the same pattern... */}
+                              {/* LEVEL 3 */}
+                              <AnimatePresence>
+                                {isLevel2Open && (
+                                  <motion.div
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: "auto" }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                    className="ml-6 my-2 space-y-2 mr-3"
+                                  >
+                                    {get(level3List, "data", []).length > 0 ? (
+                                      get(level3List, "data", []).map(
+                                        (level3) => {
+                                          const isLevel3Open =
+                                            openLevel3Id === level3.id;
 
-                            {/* LEVEL 3 */}
-                            <AnimatePresence>
-                              {isLevel2Open && (
-                                <motion.div
-                                  initial={{ opacity: 0, height: 0 }}
-                                  animate={{ opacity: 1, height: "auto" }}
-                                  exit={{ opacity: 0, height: 0 }}
-                                  className="ml-6 my-2 space-y-2 mr-3"
-                                >
-                                  {get(level3List, "data", []).length > 0 ? (
-                                    get(level3List, "data", []).map(
-                                      (level3) => {
-                                        const isLevel3Open =
-                                          openLevel3Id === level3.id;
-
-                                        return (
-                                          <div key={level3.id}>
-                                            <div
-                                              onClick={() =>
-                                                setOpenLevel3Id(
-                                                  isLevel3Open
-                                                    ? null
-                                                    : level3.id
-                                                )
-                                              }
-                                              className="p-2 bg-white hover:bg-gray-50 border border-gray-200 rounded flex justify-between items-center cursor-pointer"
-                                              style={{
-                                                backgroundColor: bg(
-                                                  "#ffffff",
-                                                  "#1e1e1e"
-                                                ),
-                                                borderColor: border(
-                                                  "#e5e7eb",
-                                                  "#333333"
-                                                ),
-                                              }}
-                                            >
-                                              <div className="flex items-center gap-3">
-                                                <DetailsIcon
-                                                  sx={{
-                                                    background: "#C4F8E2",
-                                                    color: "#1FD286",
-                                                    padding: "4px",
-                                                    width: "30px",
-                                                    height: "30px",
-                                                    borderRadius: "100%",
-                                                  }}
-                                                />
-                                                <div>
-                                                  <span>{level3.name}</span>
-                                                  {level3.workplace &&
-                                                    level3.workplace.length >
-                                                      0 && (
-                                                      <div className="flex items-center gap-2 mt-1">
-                                                        <WorkIcon
-                                                          sx={{
-                                                            fontSize: 12,
-                                                            color: "#1FD286",
-                                                          }}
-                                                        />
-                                                        <span className="text-xs text-gray-600">
-                                                          {
-                                                            level3.workplace
-                                                              .length
-                                                          }{" "}
-                                                          рабочих мест
-                                                        </span>
-                                                      </div>
-                                                    )}
+                                          return (
+                                            <div key={level3.id}>
+                                              <div
+                                                onClick={() =>
+                                                  setOpenLevel3Id(
+                                                    isLevel3Open
+                                                      ? null
+                                                      : level3.id,
+                                                  )
+                                                }
+                                                className="p-2 bg-white hover:bg-gray-50 border border-gray-200 rounded flex justify-between items-center cursor-pointer"
+                                                style={{
+                                                  backgroundColor: bg(
+                                                    "#ffffff",
+                                                    "#1e1e1e",
+                                                  ),
+                                                  borderColor: border(
+                                                    "#e5e7eb",
+                                                    "#333333",
+                                                  ),
+                                                }}
+                                              >
+                                                <div className="flex items-center gap-3">
+                                                  <DetailsIcon
+                                                    sx={{
+                                                      background: "#C4F8E2",
+                                                      color: "#1FD286",
+                                                      padding: "4px",
+                                                      width: "30px",
+                                                      height: "30px",
+                                                      borderRadius: "100%",
+                                                    }}
+                                                  />
+                                                  <div>
+                                                    <span>{level3.name}</span>
+                                                    {level3.workplace &&
+                                                      level3.workplace.length >
+                                                        0 && (
+                                                        <div className="flex items-center gap-2 mt-1">
+                                                          <WorkIcon
+                                                            sx={{
+                                                              fontSize: 12,
+                                                              color: "#1FD286",
+                                                            }}
+                                                          />
+                                                          <span className="text-xs text-gray-600">
+                                                            {
+                                                              level3.workplace
+                                                                .length
+                                                            }{" "}
+                                                            рабочих мест
+                                                          </span>
+                                                        </div>
+                                                      )}
+                                                  </div>
+                                                </div>
+                                                <div className="flex items-center gap-1">
+                                                  {/* Action buttons for Level 3 */}
+                                                  {canCreateOrgUnit && (
+                                                    <IconButton
+                                                      onClick={() => {
+                                                        setCreateModal(true);
+                                                        setCreateModalParentId(
+                                                          level3.id,
+                                                        );
+                                                      }}
+                                                    >
+                                                      <AddCircleIcon
+                                                        sx={{
+                                                          background: "#C4F8E2",
+                                                          color: "#1FD286",
+                                                          padding: "4px",
+                                                          width: "30px",
+                                                          height: "30px",
+                                                          borderRadius: "100%",
+                                                        }}
+                                                      />
+                                                    </IconButton>
+                                                  )}
+                                                  {canUpdateOrgUnit && (
+                                                    <IconButton
+                                                      onClick={() => {
+                                                        setEditModal(true);
+                                                        setSelectEditId(
+                                                          level3.id,
+                                                        );
+                                                        setName(level3.name);
+                                                        setUnitCode(
+                                                          level3.unit_code,
+                                                        );
+                                                      }}
+                                                    >
+                                                      <EditIcon
+                                                        sx={{
+                                                          background: "#C4F8E2",
+                                                          color: "#1FD286",
+                                                          padding: "4px",
+                                                          width: "30px",
+                                                          height: "30px",
+                                                          borderRadius: "100%",
+                                                        }}
+                                                      />
+                                                    </IconButton>
+                                                  )}
+                                                  {canDeleteOrgUnit && (
+                                                    <IconButton
+                                                      onClick={() => {
+                                                        setDeleteModal(true);
+                                                        setSelectEditId(
+                                                          level3.id,
+                                                        );
+                                                      }}
+                                                    >
+                                                      <DeleteIcon
+                                                        sx={{
+                                                          background: "#C4F8E2",
+                                                          color: "#1FD286",
+                                                          padding: "4px",
+                                                          width: "30px",
+                                                          height: "30px",
+                                                          borderRadius: "100%",
+                                                        }}
+                                                      />
+                                                    </IconButton>
+                                                  )}
+                                                  {isLevel3Open ? (
+                                                    <KeyboardArrowUpIcon />
+                                                  ) : (
+                                                    <KeyboardArrowDownIcon />
+                                                  )}
                                                 </div>
                                               </div>
-                                              <div className="flex items-center gap-1">
-                                                {/* Action buttons for Level 3 */}
-                                                <IconButton
-                                                  onClick={() => {
-                                                    setCreateModal(true);
-                                                    setCreateModalParentId(
-                                                      level3.id
-                                                    );
-                                                  }}
-                                                >
-                                                  <AddCircleIcon
-                                                    sx={{
-                                                      background: "#C4F8E2",
-                                                      color: "#1FD286",
-                                                      padding: "4px",
-                                                      width: "30px",
-                                                      height: "30px",
-                                                      borderRadius: "100%",
+
+                                              {/* LEVEL 3 WORKPLACE/EMPLOYEE */}
+                                              <AnimatePresence>
+                                                {isLevel3Open && (
+                                                  <motion.div
+                                                    initial={{
+                                                      opacity: 0,
+                                                      height: 0,
                                                     }}
-                                                  />
-                                                </IconButton>
-                                                <IconButton
-                                                  onClick={() => {
-                                                    setEditModal(true);
-                                                    setSelectEditId(level3.id);
-                                                    setName(level3.name);
-                                                    setUnitCode(
-                                                      level3.unit_code
-                                                    );
-                                                  }}
-                                                >
-                                                  <EditIcon
-                                                    sx={{
-                                                      background: "#C4F8E2",
-                                                      color: "#1FD286",
-                                                      padding: "4px",
-                                                      width: "30px",
-                                                      height: "30px",
-                                                      borderRadius: "100%",
+                                                    animate={{
+                                                      opacity: 1,
+                                                      height: "auto",
                                                     }}
-                                                  />
-                                                </IconButton>
-                                                <IconButton
-                                                  onClick={() => {
-                                                    setDeleteModal(true);
-                                                    setSelectEditId(level3.id);
-                                                  }}
-                                                >
-                                                  <DeleteIcon
-                                                    sx={{
-                                                      background: "#C4F8E2",
-                                                      color: "#1FD286",
-                                                      padding: "4px",
-                                                      width: "30px",
-                                                      height: "30px",
-                                                      borderRadius: "100%",
+                                                    exit={{
+                                                      opacity: 0,
+                                                      height: 0,
                                                     }}
-                                                  />
-                                                </IconButton>
-                                                {isLevel3Open ? (
-                                                  <KeyboardArrowUpIcon />
-                                                ) : (
-                                                  <KeyboardArrowDownIcon />
+                                                    className="ml-6"
+                                                  >
+                                                    <WorkplaceEmployeeSection
+                                                      workplace={
+                                                        level3.workplace
+                                                      }
+                                                      levelColor="#1FD286"
+                                                    />
+                                                  </motion.div>
                                                 )}
-                                              </div>
-                                            </div>
+                                              </AnimatePresence>
 
-                                            {/* LEVEL 3 WORKPLACE/EMPLOYEE */}
-                                            <AnimatePresence>
-                                              {isLevel3Open && (
-                                                <motion.div
-                                                  initial={{
-                                                    opacity: 0,
-                                                    height: 0,
-                                                  }}
-                                                  animate={{
-                                                    opacity: 1,
-                                                    height: "auto",
-                                                  }}
-                                                  exit={{
-                                                    opacity: 0,
-                                                    height: 0,
-                                                  }}
-                                                  className="ml-6"
-                                                >
-                                                  <WorkplaceEmployeeSection
-                                                    workplace={level3.workplace}
-                                                    levelColor="#1FD286"
-                                                  />
-                                                </motion.div>
-                                              )}
-                                            </AnimatePresence>
+                                              {/* Continue with Level 4 and 5 following the same pattern... */}
 
-                                            {/* Continue with Level 4 and 5 following the same pattern... */}
+                                              {/* LEVEL 4 */}
+                                              <AnimatePresence>
+                                                {isLevel3Open && (
+                                                  <motion.div
+                                                    initial={{
+                                                      opacity: 0,
+                                                      height: 0,
+                                                    }}
+                                                    animate={{
+                                                      opacity: 1,
+                                                      height: "auto",
+                                                    }}
+                                                    exit={{
+                                                      opacity: 0,
+                                                      height: 0,
+                                                    }}
+                                                    className="ml-6 my-2 space-y-2"
+                                                  >
+                                                    {get(level4List, "data", [])
+                                                      .length > 0 ? (
+                                                      get(
+                                                        level4List,
+                                                        "data",
+                                                        [],
+                                                      ).map((level4) => {
+                                                        const isLevel4Open =
+                                                          openLevel4Id ===
+                                                          level4.id;
 
-                                            {/* LEVEL 4 */}
-                                            <AnimatePresence>
-                                              {isLevel3Open && (
-                                                <motion.div
-                                                  initial={{
-                                                    opacity: 0,
-                                                    height: 0,
-                                                  }}
-                                                  animate={{
-                                                    opacity: 1,
-                                                    height: "auto",
-                                                  }}
-                                                  exit={{
-                                                    opacity: 0,
-                                                    height: 0,
-                                                  }}
-                                                  className="ml-6 my-2 space-y-2"
-                                                >
-                                                  {get(level4List, "data", [])
-                                                    .length > 0 ? (
-                                                    get(
-                                                      level4List,
-                                                      "data",
-                                                      []
-                                                    ).map((level4) => {
-                                                      const isLevel4Open =
-                                                        openLevel4Id ===
-                                                        level4.id;
-
-                                                      return (
-                                                        <div key={level4.id}>
-                                                          <div
-                                                            onClick={() =>
-                                                              setOpenLevel4Id(
-                                                                isLevel4Open
-                                                                  ? null
-                                                                  : level4.id
-                                                              )
-                                                            }
-                                                            className="p-2 bg-white hover:bg-gray-50 border border-gray-200 rounded flex justify-between items-center cursor-pointer"
-                                                            style={{
-                                                              backgroundColor:
-                                                                bg(
-                                                                  "#ffffff",
-                                                                  "#1e1e1e"
-                                                                ),
-                                                              borderColor:
-                                                                border(
-                                                                  "#e5e7eb",
-                                                                  "#333333"
-                                                                ),
-                                                            }}
-                                                          >
-                                                            <div className="flex items-center gap-3">
-                                                              <HexagonIcon
-                                                                sx={{
-                                                                  background:
-                                                                    "#E0C8FF",
-                                                                  color:
-                                                                    "#8A2BE2",
-                                                                  padding:
-                                                                    "4px",
-                                                                  width: "30px",
-                                                                  height:
-                                                                    "30px",
-                                                                  borderRadius:
-                                                                    "100%",
-                                                                }}
-                                                              />
-                                                              <div>
-                                                                <span>
-                                                                  {level4.name}
-                                                                </span>
-                                                                {level4.workplace &&
-                                                                  level4
-                                                                    .workplace
-                                                                    .length >
-                                                                    0 && (
-                                                                    <div className="flex items-center gap-2 mt-1">
-                                                                      <WorkIcon
-                                                                        sx={{
-                                                                          fontSize: 12,
-                                                                          color:
-                                                                            "#8A2BE2",
-                                                                        }}
-                                                                      />
-                                                                      <span className="text-xs text-gray-600">
-                                                                        {
-                                                                          level4
-                                                                            .workplace
-                                                                            .length
-                                                                        }{" "}
-                                                                        рабочих
-                                                                        мест
-                                                                      </span>
-                                                                    </div>
-                                                                  )}
+                                                        return (
+                                                          <div key={level4.id}>
+                                                            <div
+                                                              onClick={() =>
+                                                                setOpenLevel4Id(
+                                                                  isLevel4Open
+                                                                    ? null
+                                                                    : level4.id,
+                                                                )
+                                                              }
+                                                              className="p-2 bg-white hover:bg-gray-50 border border-gray-200 rounded flex justify-between items-center cursor-pointer"
+                                                              style={{
+                                                                backgroundColor:
+                                                                  bg(
+                                                                    "#ffffff",
+                                                                    "#1e1e1e",
+                                                                  ),
+                                                                borderColor:
+                                                                  border(
+                                                                    "#e5e7eb",
+                                                                    "#333333",
+                                                                  ),
+                                                              }}
+                                                            >
+                                                              <div className="flex items-center gap-3">
+                                                                <HexagonIcon
+                                                                  sx={{
+                                                                    background:
+                                                                      "#E0C8FF",
+                                                                    color:
+                                                                      "#8A2BE2",
+                                                                    padding:
+                                                                      "4px",
+                                                                    width:
+                                                                      "30px",
+                                                                    height:
+                                                                      "30px",
+                                                                    borderRadius:
+                                                                      "100%",
+                                                                  }}
+                                                                />
+                                                                <div>
+                                                                  <span>
+                                                                    {
+                                                                      level4.name
+                                                                    }
+                                                                  </span>
+                                                                  {level4.workplace &&
+                                                                    level4
+                                                                      .workplace
+                                                                      .length >
+                                                                      0 && (
+                                                                      <div className="flex items-center gap-2 mt-1">
+                                                                        <WorkIcon
+                                                                          sx={{
+                                                                            fontSize: 12,
+                                                                            color:
+                                                                              "#8A2BE2",
+                                                                          }}
+                                                                        />
+                                                                        <span className="text-xs text-gray-600">
+                                                                          {
+                                                                            level4
+                                                                              .workplace
+                                                                              .length
+                                                                          }{" "}
+                                                                          рабочих
+                                                                          мест
+                                                                        </span>
+                                                                      </div>
+                                                                    )}
+                                                                </div>
+                                                              </div>
+                                                              <div className="flex items-center gap-1">
+                                                                {canCreateOrgUnit && (
+                                                                  <IconButton
+                                                                    onClick={() => {
+                                                                      setCreateModal(
+                                                                        true,
+                                                                      );
+                                                                      setCreateModalParentId(
+                                                                        level4.id,
+                                                                      );
+                                                                    }}
+                                                                  >
+                                                                    <AddCircleIcon
+                                                                      sx={{
+                                                                        background:
+                                                                          "#E0C8FF",
+                                                                        color:
+                                                                          "#8A2BE2",
+                                                                        padding:
+                                                                          "4px",
+                                                                        width:
+                                                                          "30px",
+                                                                        height:
+                                                                          "30px",
+                                                                        borderRadius:
+                                                                          "100%",
+                                                                      }}
+                                                                    />
+                                                                  </IconButton>
+                                                                )}
+                                                                {canUpdateOrgUnit && (
+                                                                  <IconButton
+                                                                    onClick={() => {
+                                                                      setEditModal(
+                                                                        true,
+                                                                      );
+                                                                      setSelectEditId(
+                                                                        level4.id,
+                                                                      );
+                                                                      setName(
+                                                                        level4.name,
+                                                                      );
+                                                                      setUnitCode(
+                                                                        level4.unit_code,
+                                                                      );
+                                                                    }}
+                                                                  >
+                                                                    <EditIcon
+                                                                      sx={{
+                                                                        background:
+                                                                          "#E0C8FF",
+                                                                        color:
+                                                                          "#8A2BE2",
+                                                                        padding:
+                                                                          "4px",
+                                                                        width:
+                                                                          "30px",
+                                                                        height:
+                                                                          "30px",
+                                                                        borderRadius:
+                                                                          "100%",
+                                                                      }}
+                                                                    />
+                                                                  </IconButton>
+                                                                )}
+                                                                {canDeleteOrgUnit && (
+                                                                  <IconButton
+                                                                    onClick={() => {
+                                                                      setDeleteModal(
+                                                                        true,
+                                                                      );
+                                                                      setSelectEditId(
+                                                                        level4.id,
+                                                                      );
+                                                                    }}
+                                                                  >
+                                                                    <DeleteIcon
+                                                                      sx={{
+                                                                        background:
+                                                                          "#E0C8FF",
+                                                                        color:
+                                                                          "#8A2BE2",
+                                                                        padding:
+                                                                          "4px",
+                                                                        width:
+                                                                          "30px",
+                                                                        height:
+                                                                          "30px",
+                                                                        borderRadius:
+                                                                          "100%",
+                                                                      }}
+                                                                    />
+                                                                  </IconButton>
+                                                                )}
+                                                                {isLevel4Open ? (
+                                                                  <KeyboardArrowUpIcon />
+                                                                ) : (
+                                                                  <KeyboardArrowDownIcon />
+                                                                )}
                                                               </div>
                                                             </div>
-                                                            <div className="flex items-center gap-1">
-                                                              <IconButton
-                                                                onClick={() => {
-                                                                  setCreateModal(
-                                                                    true
-                                                                  );
-                                                                  setCreateModalParentId(
-                                                                    level4.id
-                                                                  );
-                                                                }}
-                                                              >
-                                                                <AddCircleIcon
-                                                                  sx={{
-                                                                    background:
-                                                                      "#E0C8FF",
-                                                                    color:
-                                                                      "#8A2BE2",
-                                                                    padding:
-                                                                      "4px",
-                                                                    width:
-                                                                      "30px",
-                                                                    height:
-                                                                      "30px",
-                                                                    borderRadius:
-                                                                      "100%",
+
+                                                            {/* LEVEL 4 WORKPLACE/EMPLOYEE */}
+                                                            <AnimatePresence>
+                                                              {isLevel4Open && (
+                                                                <motion.div
+                                                                  initial={{
+                                                                    opacity: 0,
+                                                                    height: 0,
                                                                   }}
-                                                                />
-                                                              </IconButton>
-                                                              <IconButton
-                                                                onClick={() => {
-                                                                  setEditModal(
-                                                                    true
-                                                                  );
-                                                                  setSelectEditId(
-                                                                    level4.id
-                                                                  );
-                                                                  setName(
-                                                                    level4.name
-                                                                  );
-                                                                  setUnitCode(
-                                                                    level4.unit_code
-                                                                  );
-                                                                }}
-                                                              >
-                                                                <EditIcon
-                                                                  sx={{
-                                                                    background:
-                                                                      "#E0C8FF",
-                                                                    color:
-                                                                      "#8A2BE2",
-                                                                    padding:
-                                                                      "4px",
-                                                                    width:
-                                                                      "30px",
+                                                                  animate={{
+                                                                    opacity: 1,
                                                                     height:
-                                                                      "30px",
-                                                                    borderRadius:
-                                                                      "100%",
+                                                                      "auto",
                                                                   }}
-                                                                />
-                                                              </IconButton>
-                                                              <IconButton
-                                                                onClick={() => {
-                                                                  setDeleteModal(
-                                                                    true
-                                                                  );
-                                                                  setSelectEditId(
-                                                                    level4.id
-                                                                  );
-                                                                }}
-                                                              >
-                                                                <DeleteIcon
-                                                                  sx={{
-                                                                    background:
-                                                                      "#E0C8FF",
-                                                                    color:
-                                                                      "#8A2BE2",
-                                                                    padding:
-                                                                      "4px",
-                                                                    width:
-                                                                      "30px",
-                                                                    height:
-                                                                      "30px",
-                                                                    borderRadius:
-                                                                      "100%",
+                                                                  exit={{
+                                                                    opacity: 0,
+                                                                    height: 0,
                                                                   }}
-                                                                />
-                                                              </IconButton>
-                                                              {isLevel4Open ? (
-                                                                <KeyboardArrowUpIcon />
-                                                              ) : (
-                                                                <KeyboardArrowDownIcon />
+                                                                  className="ml-6"
+                                                                >
+                                                                  <WorkplaceEmployeeSection
+                                                                    workplace={
+                                                                      level4.workplace
+                                                                    }
+                                                                    levelColor="#8A2BE2"
+                                                                  />
+                                                                </motion.div>
                                                               )}
-                                                            </div>
-                                                          </div>
+                                                            </AnimatePresence>
 
-                                                          {/* LEVEL 4 WORKPLACE/EMPLOYEE */}
-                                                          <AnimatePresence>
-                                                            {isLevel4Open && (
-                                                              <motion.div
-                                                                initial={{
-                                                                  opacity: 0,
-                                                                  height: 0,
-                                                                }}
-                                                                animate={{
-                                                                  opacity: 1,
-                                                                  height:
-                                                                    "auto",
-                                                                }}
-                                                                exit={{
-                                                                  opacity: 0,
-                                                                  height: 0,
-                                                                }}
-                                                                className="ml-6"
-                                                              >
-                                                                <WorkplaceEmployeeSection
-                                                                  workplace={
-                                                                    level4.workplace
-                                                                  }
-                                                                  levelColor="#8A2BE2"
-                                                                />
-                                                              </motion.div>
-                                                            )}
-                                                          </AnimatePresence>
-
-                                                          {/* LEVEL 5 */}
-                                                          <AnimatePresence>
-                                                            {isLevel4Open && (
-                                                              <motion.div
-                                                                initial={{
-                                                                  opacity: 0,
-                                                                  height: 0,
-                                                                }}
-                                                                animate={{
-                                                                  opacity: 1,
-                                                                  height:
-                                                                    "auto",
-                                                                }}
-                                                                exit={{
-                                                                  opacity: 0,
-                                                                  height: 0,
-                                                                }}
-                                                                className="ml-6 my-2 space-y-2"
-                                                              >
-                                                                {get(
-                                                                  level5List,
-                                                                  "data",
-                                                                  []
-                                                                ).length > 0 ? (
-                                                                  get(
+                                                            {/* LEVEL 5 */}
+                                                            <AnimatePresence>
+                                                              {isLevel4Open && (
+                                                                <motion.div
+                                                                  initial={{
+                                                                    opacity: 0,
+                                                                    height: 0,
+                                                                  }}
+                                                                  animate={{
+                                                                    opacity: 1,
+                                                                    height:
+                                                                      "auto",
+                                                                  }}
+                                                                  exit={{
+                                                                    opacity: 0,
+                                                                    height: 0,
+                                                                  }}
+                                                                  className="ml-6 my-2 space-y-2"
+                                                                >
+                                                                  {get(
                                                                     level5List,
                                                                     "data",
-                                                                    []
-                                                                  ).map(
-                                                                    (
-                                                                      level5
-                                                                    ) => {
-                                                                      const isLevel5Open =
-                                                                        openLevel5Id ===
-                                                                        level5.id;
+                                                                    [],
+                                                                  ).length >
+                                                                  0 ? (
+                                                                    get(
+                                                                      level5List,
+                                                                      "data",
+                                                                      [],
+                                                                    ).map(
+                                                                      (
+                                                                        level5,
+                                                                      ) => {
+                                                                        const isLevel5Open =
+                                                                          openLevel5Id ===
+                                                                          level5.id;
 
-                                                                      return (
-                                                                        <div
-                                                                          key={
-                                                                            level5.id
-                                                                          }
-                                                                        >
+                                                                        return (
                                                                           <div
-                                                                            onClick={() =>
-                                                                              setOpenLevel5Id(
-                                                                                isLevel5Open
-                                                                                  ? null
-                                                                                  : level5.id
-                                                                              )
+                                                                            key={
+                                                                              level5.id
                                                                             }
-                                                                            className="p-2 bg-white hover:bg-gray-50 border border-gray-200 rounded flex justify-between items-center cursor-pointer"
-                                                                            style={{
-                                                                              backgroundColor:
-                                                                                bg(
-                                                                                  "#ffffff",
-                                                                                  "#1e1e1e"
-                                                                                ),
-                                                                              borderColor:
-                                                                                border(
-                                                                                  "#e5e7eb",
-                                                                                  "#333333"
-                                                                                ),
-                                                                            }}
                                                                           >
-                                                                            <div className="flex items-center gap-3">
-                                                                              <StarIcon
-                                                                                sx={{
-                                                                                  background:
-                                                                                    "#FFC8C8",
-                                                                                  color:
-                                                                                    "#FF4D4D",
-                                                                                  padding:
-                                                                                    "4px",
-                                                                                  width:
-                                                                                    "30px",
-                                                                                  height:
-                                                                                    "30px",
-                                                                                  borderRadius:
-                                                                                    "100%",
-                                                                                }}
-                                                                              />
-                                                                              <div>
-                                                                                <span>
-                                                                                  {
-                                                                                    level5.name
-                                                                                  }
-                                                                                </span>
-                                                                                {level5.workplace &&
-                                                                                  level5
-                                                                                    .workplace
-                                                                                    .length >
-                                                                                    0 && (
-                                                                                    <div className="flex items-center gap-2 mt-1">
-                                                                                      <WorkIcon
-                                                                                        sx={{
-                                                                                          fontSize: 12,
-                                                                                          color:
-                                                                                            "#FF4D4D",
-                                                                                        }}
-                                                                                      />
-                                                                                      <span className="text-xs text-gray-600">
-                                                                                        {
-                                                                                          level5
-                                                                                            .workplace
-                                                                                            .length
-                                                                                        }{" "}
-                                                                                        рабочих
-                                                                                        мест
-                                                                                      </span>
-                                                                                    </div>
-                                                                                  )}
+                                                                            <div
+                                                                              onClick={() =>
+                                                                                setOpenLevel5Id(
+                                                                                  isLevel5Open
+                                                                                    ? null
+                                                                                    : level5.id,
+                                                                                )
+                                                                              }
+                                                                              className="p-2 bg-white hover:bg-gray-50 border border-gray-200 rounded flex justify-between items-center cursor-pointer"
+                                                                              style={{
+                                                                                backgroundColor:
+                                                                                  bg(
+                                                                                    "#ffffff",
+                                                                                    "#1e1e1e",
+                                                                                  ),
+                                                                                borderColor:
+                                                                                  border(
+                                                                                    "#e5e7eb",
+                                                                                    "#333333",
+                                                                                  ),
+                                                                              }}
+                                                                            >
+                                                                              <div className="flex items-center gap-3">
+                                                                                <StarIcon
+                                                                                  sx={{
+                                                                                    background:
+                                                                                      "#FFC8C8",
+                                                                                    color:
+                                                                                      "#FF4D4D",
+                                                                                    padding:
+                                                                                      "4px",
+                                                                                    width:
+                                                                                      "30px",
+                                                                                    height:
+                                                                                      "30px",
+                                                                                    borderRadius:
+                                                                                      "100%",
+                                                                                  }}
+                                                                                />
+                                                                                <div>
+                                                                                  <span>
+                                                                                    {
+                                                                                      level5.name
+                                                                                    }
+                                                                                  </span>
+                                                                                  {level5.workplace &&
+                                                                                    level5
+                                                                                      .workplace
+                                                                                      .length >
+                                                                                      0 && (
+                                                                                      <div className="flex items-center gap-2 mt-1">
+                                                                                        <WorkIcon
+                                                                                          sx={{
+                                                                                            fontSize: 12,
+                                                                                            color:
+                                                                                              "#FF4D4D",
+                                                                                          }}
+                                                                                        />
+                                                                                        <span className="text-xs text-gray-600">
+                                                                                          {
+                                                                                            level5
+                                                                                              .workplace
+                                                                                              .length
+                                                                                          }{" "}
+                                                                                          рабочих
+                                                                                          мест
+                                                                                        </span>
+                                                                                      </div>
+                                                                                    )}
+                                                                                </div>
+                                                                              </div>
+                                                                              <div className="flex items-center gap-1">
+                                                                                {canCreateOrgUnit && (
+                                                                                  <IconButton
+                                                                                    onClick={() => {
+                                                                                      setCreateModal(
+                                                                                        true,
+                                                                                      );
+                                                                                      setCreateModalParentId(
+                                                                                        level5.id,
+                                                                                      );
+                                                                                    }}
+                                                                                  >
+                                                                                    <AddCircleIcon
+                                                                                      sx={{
+                                                                                        background:
+                                                                                          "#FFC8C8",
+                                                                                        color:
+                                                                                          "#FF4D4D",
+                                                                                        padding:
+                                                                                          "4px",
+                                                                                        width:
+                                                                                          "30px",
+                                                                                        height:
+                                                                                          "30px",
+                                                                                        borderRadius:
+                                                                                          "100%",
+                                                                                      }}
+                                                                                    />
+                                                                                  </IconButton>
+                                                                                )}
+                                                                                {canUpdateOrgUnit && (
+                                                                                  <IconButton
+                                                                                    onClick={() => {
+                                                                                      setEditModal(
+                                                                                        true,
+                                                                                      );
+                                                                                      setSelectEditId(
+                                                                                        level5.id,
+                                                                                      );
+                                                                                      setName(
+                                                                                        level5.name,
+                                                                                      );
+                                                                                      setUnitCode(
+                                                                                        level5.unit_code,
+                                                                                      );
+                                                                                    }}
+                                                                                  >
+                                                                                    <EditIcon
+                                                                                      sx={{
+                                                                                        background:
+                                                                                          "#FFC8C8",
+                                                                                        color:
+                                                                                          "#FF4D4D",
+                                                                                        padding:
+                                                                                          "4px",
+                                                                                        width:
+                                                                                          "30px",
+                                                                                        height:
+                                                                                          "30px",
+                                                                                        borderRadius:
+                                                                                          "100%",
+                                                                                      }}
+                                                                                    />
+                                                                                  </IconButton>
+                                                                                )}
+                                                                                {canDeleteOrgUnit && (
+                                                                                  <IconButton
+                                                                                    onClick={() => {
+                                                                                      setDeleteModal(
+                                                                                        true,
+                                                                                      );
+                                                                                      setSelectEditId(
+                                                                                        level5.id,
+                                                                                      );
+                                                                                    }}
+                                                                                  >
+                                                                                    <DeleteIcon
+                                                                                      sx={{
+                                                                                        background:
+                                                                                          "#FFC8C8",
+                                                                                        color:
+                                                                                          "#FF4D4D",
+                                                                                        padding:
+                                                                                          "4px",
+                                                                                        width:
+                                                                                          "30px",
+                                                                                        height:
+                                                                                          "30px",
+                                                                                        borderRadius:
+                                                                                          "100%",
+                                                                                      }}
+                                                                                    />
+                                                                                  </IconButton>
+                                                                                )}
+                                                                                {isLevel5Open ? (
+                                                                                  <KeyboardArrowUpIcon />
+                                                                                ) : (
+                                                                                  <KeyboardArrowDownIcon />
+                                                                                )}
                                                                               </div>
                                                                             </div>
-                                                                            <div className="flex items-center gap-1">
-                                                                              <IconButton
-                                                                                onClick={() => {
-                                                                                  setCreateModal(
-                                                                                    true
-                                                                                  );
-                                                                                  setCreateModalParentId(
-                                                                                    level5.id
-                                                                                  );
-                                                                                }}
-                                                                              >
-                                                                                <AddCircleIcon
-                                                                                  sx={{
-                                                                                    background:
-                                                                                      "#FFC8C8",
-                                                                                    color:
-                                                                                      "#FF4D4D",
-                                                                                    padding:
-                                                                                      "4px",
-                                                                                    width:
-                                                                                      "30px",
-                                                                                    height:
-                                                                                      "30px",
-                                                                                    borderRadius:
-                                                                                      "100%",
-                                                                                  }}
-                                                                                />
-                                                                              </IconButton>
-                                                                              <IconButton
-                                                                                onClick={() => {
-                                                                                  setEditModal(
-                                                                                    true
-                                                                                  );
-                                                                                  setSelectEditId(
-                                                                                    level5.id
-                                                                                  );
-                                                                                  setName(
-                                                                                    level5.name
-                                                                                  );
-                                                                                  setUnitCode(
-                                                                                    level5.unit_code
-                                                                                  );
-                                                                                }}
-                                                                              >
-                                                                                <EditIcon
-                                                                                  sx={{
-                                                                                    background:
-                                                                                      "#FFC8C8",
-                                                                                    color:
-                                                                                      "#FF4D4D",
-                                                                                    padding:
-                                                                                      "4px",
-                                                                                    width:
-                                                                                      "30px",
-                                                                                    height:
-                                                                                      "30px",
-                                                                                    borderRadius:
-                                                                                      "100%",
-                                                                                  }}
-                                                                                />
-                                                                              </IconButton>
-                                                                              <IconButton
-                                                                                onClick={() => {
-                                                                                  setDeleteModal(
-                                                                                    true
-                                                                                  );
-                                                                                  setSelectEditId(
-                                                                                    level5.id
-                                                                                  );
-                                                                                }}
-                                                                              >
-                                                                                <DeleteIcon
-                                                                                  sx={{
-                                                                                    background:
-                                                                                      "#FFC8C8",
-                                                                                    color:
-                                                                                      "#FF4D4D",
-                                                                                    padding:
-                                                                                      "4px",
-                                                                                    width:
-                                                                                      "30px",
-                                                                                    height:
-                                                                                      "30px",
-                                                                                    borderRadius:
-                                                                                      "100%",
-                                                                                  }}
-                                                                                />
-                                                                              </IconButton>
-                                                                              {isLevel5Open ? (
-                                                                                <KeyboardArrowUpIcon />
-                                                                              ) : (
-                                                                                <KeyboardArrowDownIcon />
-                                                                              )}
-                                                                            </div>
-                                                                          </div>
 
-                                                                          {/* LEVEL 5 WORKPLACE/EMPLOYEE */}
-                                                                          <AnimatePresence>
-                                                                            {isLevel5Open && (
-                                                                              <motion.div
-                                                                                initial={{
-                                                                                  opacity: 0,
-                                                                                  height: 0,
-                                                                                }}
-                                                                                animate={{
-                                                                                  opacity: 1,
-                                                                                  height:
-                                                                                    "auto",
-                                                                                }}
-                                                                                exit={{
-                                                                                  opacity: 0,
-                                                                                  height: 0,
-                                                                                }}
-                                                                                className="ml-6"
-                                                                              >
-                                                                                <WorkplaceEmployeeSection
-                                                                                  workplace={
-                                                                                    level5.workplace
-                                                                                  }
-                                                                                  levelColor="#FF4D4D"
-                                                                                />
-                                                                              </motion.div>
-                                                                            )}
-                                                                          </AnimatePresence>
-                                                                        </div>
-                                                                      );
-                                                                    }
-                                                                  )
-                                                                ) : (
-                                                                  <div className="text-gray-400 italic text-sm">
-                                                                    Разделы
-                                                                    отсутствуют
-                                                                  </div>
-                                                                )}
-                                                              </motion.div>
-                                                            )}
-                                                          </AnimatePresence>
-                                                        </div>
-                                                      );
-                                                    })
-                                                  ) : (
-                                                    <div className="text-gray-400 italic text-base">
-                                                      Разделы отсутствуют
-                                                    </div>
-                                                  )}
-                                                </motion.div>
-                                              )}
-                                            </AnimatePresence>
-                                          </div>
-                                        );
-                                      }
-                                    )
-                                  ) : (
-                                    <div className="text-gray-400 text-sm italic">
-                                      Разделы отсутствуют
-                                    </div>
-                                  )}
-                                </motion.div>
-                              )}
-                            </AnimatePresence>
-                          </div>
-                        );
-                      })
-                    ) : (
-                      <div className="text-gray-400 italic text-base">
-                        Разделы отсутствуют
-                      </div>
-                    )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          );
-        })}
+                                                                            {/* LEVEL 5 WORKPLACE/EMPLOYEE */}
+                                                                            <AnimatePresence>
+                                                                              {isLevel5Open && (
+                                                                                <motion.div
+                                                                                  initial={{
+                                                                                    opacity: 0,
+                                                                                    height: 0,
+                                                                                  }}
+                                                                                  animate={{
+                                                                                    opacity: 1,
+                                                                                    height:
+                                                                                      "auto",
+                                                                                  }}
+                                                                                  exit={{
+                                                                                    opacity: 0,
+                                                                                    height: 0,
+                                                                                  }}
+                                                                                  className="ml-6"
+                                                                                >
+                                                                                  <WorkplaceEmployeeSection
+                                                                                    workplace={
+                                                                                      level5.workplace
+                                                                                    }
+                                                                                    levelColor="#FF4D4D"
+                                                                                  />
+                                                                                </motion.div>
+                                                                              )}
+                                                                            </AnimatePresence>
+                                                                          </div>
+                                                                        );
+                                                                      },
+                                                                    )
+                                                                  ) : (
+                                                                    <div className="text-gray-400 italic text-sm">
+                                                                      Разделы
+                                                                      отсутствуют
+                                                                    </div>
+                                                                  )}
+                                                                </motion.div>
+                                                              )}
+                                                            </AnimatePresence>
+                                                          </div>
+                                                        );
+                                                      })
+                                                    ) : (
+                                                      <div className="text-gray-400 italic text-base">
+                                                        Разделы отсутствуют
+                                                      </div>
+                                                    )}
+                                                  </motion.div>
+                                                )}
+                                              </AnimatePresence>
+                                            </div>
+                                          );
+                                        },
+                                      )
+                                    ) : (
+                                      <div className="text-gray-400 text-sm italic">
+                                        Разделы отсутствуют
+                                      </div>
+                                    )}
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <div className="text-gray-400 italic text-base">
+                          Разделы отсутствуют
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            );
+          })}
 
         {/* create modal */}
-
         {createModal && (
           <MethodModal
             open={createModal}
