@@ -20,8 +20,11 @@ import CustomSelect from "@/components/select";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
 import useAppTheme from "@/hooks/useAppTheme";
+import { canUserDo } from "@/utils/checkpermission";
+import { useSession } from "next-auth/react";
 
 const Index = () => {
+  const { data: session } = useSession();
   const { bg, isDark, text, border } = useAppTheme();
   const queryClient = useQueryClient();
   const [createModal, setCreateModal] = useState(false);
@@ -36,6 +39,14 @@ const Index = () => {
   // Filter states
   const [filterPosition, setFilterPosition] = useState(null);
   const [filterStatus, setFilterStatus] = useState(null);
+
+  const canCreateWorkplace = canUserDo(session?.user, "место работы", "create");
+
+  const canUpdateWorkplace = canUserDo(session?.user, "место работы", "update");
+
+  const canReadWorkplace = canUserDo(session?.user, "место работы", "read");
+
+  const canDeleteWorkplace = canUserDo(session?.user, "место работы", "delete");
 
   const {
     data: orgUnits,
@@ -88,11 +99,6 @@ const Index = () => {
     },
   });
 
-  const optionsWorkplace = get(workplace, "data", []).map((item) => ({
-    value: item.id,
-    label: item.organizational_unit.name,
-  }));
-
   // Status filter options
   const statusOptions = [
     { value: "all", label: "Все" },
@@ -121,7 +127,7 @@ const Index = () => {
     // Position filter
     if (filterPosition) {
       filtered = filtered.filter(
-        (item) => get(item, "position.id") === filterPosition
+        (item) => get(item, "position.id") === filterPosition,
       );
     }
 
@@ -178,7 +184,7 @@ const Index = () => {
         onError: (error) => {
           toast.error(`Ошибка: ${error}`, { position: "top-right" });
         },
-      }
+      },
     );
   };
 
@@ -192,7 +198,7 @@ const Index = () => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ workplace_id: id }),
-        }
+        },
       );
 
       if (!response.ok) {
@@ -223,241 +229,251 @@ const Index = () => {
 
   return (
     <DashboardLayout headerTitle="Место работы">
-      {!selectUnitCode ? (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.4 }}
-          className="bg-white p-4 my-10 rounded-md space-y-2 shadow"
-          style={{
-            backgroundColor: bg("#ffffff", "#1e1e1e"),
-            borderColor: border("#e5e7eb", "#333333"),
-          }}
-        >
-          {isLoading || isFetching ? (
-            <ContentLoader />
+      {canReadWorkplace && (
+        <div>
+          {" "}
+          {!selectUnitCode ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.4 }}
+              className="bg-white p-4 my-10 rounded-md space-y-2 shadow"
+              style={{
+                backgroundColor: bg("#ffffff", "#1e1e1e"),
+                borderColor: border("#e5e7eb", "#333333"),
+              }}
+            >
+              {isLoading || isFetching ? (
+                <ContentLoader />
+              ) : (
+                <div className="grid grid-cols-12 gap-4">
+                  {get(orgUnits, "data", []).map((item, index) => (
+                    <div
+                      key={index}
+                      onClick={() => setSelectUnitCode(get(item, "unit_code"))}
+                      className="col-span-6 relative min-h-[150px] border p-2  rounded-md shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+                      style={{
+                        borderColor: border("#e5e7eb", "#333333"),
+                      }}
+                    >
+                      <div className="absolute bottom-2 right-2">
+                        <Image
+                          src={"/images/factory-3.png"}
+                          alt="folder"
+                          width={90}
+                          height={140}
+                        />
+                      </div>
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-[5px]">
+                          <Typography variant="h6">
+                            {get(item, "name")}
+                          </Typography>
+                          <Typography variant="h7" sx={{ color: "#C9C9C9" }}>
+                            Тип организационные единицы:{" "}
+                            {get(item, "unit_code")}
+                          </Typography>
+                        </div>
+                        <div>
+                          <span
+                            className="px-3 py-1 text-xs font-medium rounded-full"
+                            style={{
+                              backgroundColor: get(item, "is_active")
+                                ? isDark
+                                  ? "rgba(16, 185, 129, 0.2)"
+                                  : "#D1FAE5"
+                                : isDark
+                                  ? "rgba(239, 68, 68, 0.2)"
+                                  : "#FEE2E2",
+                              color: get(item, "is_active")
+                                ? isDark
+                                  ? "#6EE7B7"
+                                  : "#065F46"
+                                : isDark
+                                  ? "#FCA5A5"
+                                  : "#991B1B",
+                            }}
+                          >
+                            {get(item, "is_active") ? "Активный" : "Неактивный"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </motion.div>
           ) : (
-            <div className="grid grid-cols-12 gap-4">
-              {get(orgUnits, "data", []).map((item, index) => (
-                <div
-                  key={index}
-                  onClick={() => setSelectUnitCode(get(item, "unit_code"))}
-                  className="col-span-6 relative min-h-[150px] border p-2  rounded-md shadow-sm cursor-pointer hover:shadow-md transition-shadow"
-                  style={{
-                    borderColor: border("#e5e7eb", "#333333"),
-                  }}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.4 }}
+              className="bg-white p-4 my-10 rounded-md space-y-2 shadow"
+              style={{
+                backgroundColor: bg("#ffffff", "#1e1e1e"),
+                borderColor: border("#e5e7eb", "#333333"),
+              }}
+            >
+              <div className="flex justify-between items-center mb-4">
+                <button
+                  onClick={() => setSelectUnitCode(null)}
+                  className={`${
+                    isDark
+                      ? "bg-gray-600 hover:bg-gray-700"
+                      : "bg-gray-200 hover:bg-gray-300"
+                  } px-4 py-2 rounded-md  transition-all duration-200 cursor-pointer`}
                 >
-                  <div className="absolute bottom-2 right-2">
-                    <Image
-                      src={"/images/factory-3.png"}
-                      alt="folder"
-                      width={90}
-                      height={140}
+                  Назад
+                </button>
+                {canCreateWorkplace && (
+                  <Button
+                    onClick={() => setCreateModal(true)}
+                    sx={{
+                      textTransform: "initial",
+                      fontFamily: "DM Sans, sans-serif",
+                      backgroundColor: "#4182F9",
+                      boxShadow: "none",
+                      color: "white",
+                      display: "flex",
+                      gap: "4px",
+                      fontSize: "14px",
+                      borderRadius: "8px",
+                    }}
+                    variant="contained"
+                  >
+                    <p>Создать</p>
+                  </Button>
+                )}
+              </div>
+
+              {/* Search and Filter Section */}
+              <div
+                className="bg-gray-50 p-4 rounded-lg space-y-3"
+                style={{
+                  backgroundColor: bg("#ffffff", "#1e1e1e"),
+                  borderColor: border("#e5e7eb", "#333333"),
+                }}
+              >
+                <div className="grid grid-cols-12 gap-3">
+                  {/* Search Input */}
+                  <div className="col-span-12 md:col-span-6">
+                    <TextField
+                      fullWidth
+                      size="small"
+                      placeholder="Поиск по отделу или должности..."
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <SearchIcon
+                              sx={{ color: isDark ? "#9CA3AF" : "#6B7280" }}
+                            />
+                          </InputAdornment>
+                        ),
+                        endAdornment: search && (
+                          <InputAdornment position="end">
+                            <ClearIcon
+                              sx={{
+                                color: isDark ? "#9CA3AF" : "#6B7280",
+                                cursor: "pointer",
+                              }}
+                              onClick={() => setSearch("")}
+                            />
+                          </InputAdornment>
+                        ),
+                      }}
+                      sx={{
+                        "& .MuiOutlinedInput-root": {
+                          backgroundColor: bg("#ffffff", "#2d2d2d"),
+                          borderRadius: "8px",
+                          color: text("#1f2937", "#f3f4f6"),
+                          "& fieldset": {
+                            borderColor: border("#e5e7eb", "#444444"),
+                          },
+                          "&:hover fieldset": {
+                            borderColor: border("#d1d5db", "#555555"),
+                          },
+                          "&.Mui-focused fieldset": {
+                            borderColor: "#4182F9",
+                          },
+                        },
+                        "& .MuiInputBase-input::placeholder": {
+                          color: isDark ? "#9CA3AF" : "#6B7280",
+                          opacity: 1,
+                        },
+                      }}
                     />
                   </div>
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-[5px]">
-                      <Typography variant="h6">{get(item, "name")}</Typography>
-                      <Typography variant="h7" sx={{ color: "#C9C9C9" }}>
-                        Тип организационные единицы: {get(item, "unit_code")}
-                      </Typography>
-                    </div>
-                    <div>
-                      <span
-                        className="px-3 py-1 text-xs font-medium rounded-full"
-                        style={{
-                          backgroundColor: get(item, "is_active")
-                            ? isDark
-                              ? "rgba(16, 185, 129, 0.2)"
-                              : "#D1FAE5"
-                            : isDark
-                            ? "rgba(239, 68, 68, 0.2)"
-                            : "#FEE2E2",
-                          color: get(item, "is_active")
-                            ? isDark
-                              ? "#6EE7B7"
-                              : "#065F46"
-                            : isDark
-                            ? "#FCA5A5"
-                            : "#991B1B",
-                        }}
-                      >
-                        {get(item, "is_active") ? "Активный" : "Неактивный"}
-                      </span>
-                    </div>
+
+                  {/* Status Filter */}
+                  <div className="col-span-12 md:col-span-3">
+                    <CustomSelect
+                      options={statusOptions}
+                      value={filterStatus}
+                      placeholder="Фильтр по статусу"
+                      onChange={(val) => setFilterStatus(val)}
+                      sortOptions={false}
+                      returnObject={false}
+                      isClearable
+                    />
                   </div>
                 </div>
-              ))}
-            </div>
+
+                {/* Clear Filters Button */}
+                {(search || filterPosition || filterStatus) && (
+                  <div className="flex justify-end">
+                    <button
+                      onClick={handleClearFilters}
+                      className="text-sm text-blue-600 hover:text-blue-800 underline"
+                    >
+                      Очистить все фильтры
+                    </button>
+                  </div>
+                )}
+
+                {/* Results Count */}
+                <div className="text-sm text-gray-600">
+                  Найдено: {filteredWorkplaceData.length} из{" "}
+                  {get(workplace, "data", []).length}
+                </div>
+              </div>
+
+              {/* Workplace List */}
+              <div className="my-[30px] space-y-[10px]">
+                {filteredWorkplaceData.length > 0 ? (
+                  filteredWorkplaceData.map((item, index) => (
+                    <WorkPlaceCard
+                      key={index}
+                      workplace={get(item, "organizational_unit.name")}
+                      unitCode={get(item, "organizational_unit.unit_code")}
+                      unitType={get(item, "organizational_unit.unit_type.name")}
+                      position={get(item, "position.name")}
+                      is_active={get(item, "is_active")}
+                      is_vacant={get(item, "is_vacant")}
+                      employee={get(item, "employee")}
+                      employeeURL={`/dashboard/employees/${get(
+                        item,
+                        "employee.id",
+                      )}`}
+                      deleteWorkplace={() => {
+                        setDeleteModal(true);
+                        setSelect(get(item, "id"));
+                      }}
+                      id={get(item, "id")}
+                    />
+                  ))
+                ) : (
+                  <div className="text-center py-10">
+                    <Typography variant="body1" sx={{ color: "#9CA3AF" }}>
+                      Рабочие места не найдены
+                    </Typography>
+                  </div>
+                )}
+              </div>
+            </motion.div>
           )}
-        </motion.div>
-      ) : (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.4 }}
-          className="bg-white p-4 my-10 rounded-md space-y-2 shadow"
-          style={{
-            backgroundColor: bg("#ffffff", "#1e1e1e"),
-            borderColor: border("#e5e7eb", "#333333"),
-          }}
-        >
-          <div className="flex justify-between items-center mb-4">
-            <button
-              onClick={() => setSelectUnitCode(null)}
-              className={`${
-                isDark
-                  ? "bg-gray-600 hover:bg-gray-700"
-                  : "bg-gray-200 hover:bg-gray-300"
-              } px-4 py-2 rounded-md  transition-all duration-200 cursor-pointer`}
-            >
-              Назад
-            </button>
-            <Button
-              onClick={() => setCreateModal(true)}
-              sx={{
-                textTransform: "initial",
-                fontFamily: "DM Sans, sans-serif",
-                backgroundColor: "#4182F9",
-                boxShadow: "none",
-                color: "white",
-                display: "flex",
-                gap: "4px",
-                fontSize: "14px",
-                borderRadius: "8px",
-              }}
-              variant="contained"
-            >
-              <p>Создать</p>
-            </Button>
-          </div>
-
-          {/* Search and Filter Section */}
-          <div
-            className="bg-gray-50 p-4 rounded-lg space-y-3"
-            style={{
-              backgroundColor: bg("#ffffff", "#1e1e1e"),
-              borderColor: border("#e5e7eb", "#333333"),
-            }}
-          >
-            <div className="grid grid-cols-12 gap-3">
-              {/* Search Input */}
-              <div className="col-span-12 md:col-span-6">
-                <TextField
-                  fullWidth
-                  size="small"
-                  placeholder="Поиск по отделу или должности..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <SearchIcon
-                          sx={{ color: isDark ? "#9CA3AF" : "#6B7280" }}
-                        />
-                      </InputAdornment>
-                    ),
-                    endAdornment: search && (
-                      <InputAdornment position="end">
-                        <ClearIcon
-                          sx={{
-                            color: isDark ? "#9CA3AF" : "#6B7280",
-                            cursor: "pointer",
-                          }}
-                          onClick={() => setSearch("")}
-                        />
-                      </InputAdornment>
-                    ),
-                  }}
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      backgroundColor: bg("#ffffff", "#2d2d2d"),
-                      borderRadius: "8px",
-                      color: text("#1f2937", "#f3f4f6"),
-                      "& fieldset": {
-                        borderColor: border("#e5e7eb", "#444444"),
-                      },
-                      "&:hover fieldset": {
-                        borderColor: border("#d1d5db", "#555555"),
-                      },
-                      "&.Mui-focused fieldset": {
-                        borderColor: "#4182F9",
-                      },
-                    },
-                    "& .MuiInputBase-input::placeholder": {
-                      color: isDark ? "#9CA3AF" : "#6B7280",
-                      opacity: 1,
-                    },
-                  }}
-                />
-              </div>
-
-              {/* Status Filter */}
-              <div className="col-span-12 md:col-span-3">
-                <CustomSelect
-                  options={statusOptions}
-                  value={filterStatus}
-                  placeholder="Фильтр по статусу"
-                  onChange={(val) => setFilterStatus(val)}
-                  sortOptions={false}
-                  returnObject={false}
-                  isClearable
-                />
-              </div>
-            </div>
-
-            {/* Clear Filters Button */}
-            {(search || filterPosition || filterStatus) && (
-              <div className="flex justify-end">
-                <button
-                  onClick={handleClearFilters}
-                  className="text-sm text-blue-600 hover:text-blue-800 underline"
-                >
-                  Очистить все фильтры
-                </button>
-              </div>
-            )}
-
-            {/* Results Count */}
-            <div className="text-sm text-gray-600">
-              Найдено: {filteredWorkplaceData.length} из{" "}
-              {get(workplace, "data", []).length}
-            </div>
-          </div>
-
-          {/* Workplace List */}
-          <div className="my-[30px] space-y-[10px]">
-            {filteredWorkplaceData.length > 0 ? (
-              filteredWorkplaceData.map((item, index) => (
-                <WorkPlaceCard
-                  key={index}
-                  workplace={get(item, "organizational_unit.name")}
-                  unitCode={get(item, "organizational_unit.unit_code")}
-                  unitType={get(item, "organizational_unit.unit_type.name")}
-                  position={get(item, "position.name")}
-                  is_active={get(item, "is_active")}
-                  is_vacant={get(item, "is_vacant")}
-                  employee={get(item, "employee")}
-                  employeeURL={`/dashboard/employees/${get(
-                    item,
-                    "employee.id"
-                  )}`}
-                  deleteWorkplace={() => {
-                    setDeleteModal(true);
-                    setSelect(get(item, "id"));
-                  }}
-                  id={get(item, "id")}
-                />
-              ))
-            ) : (
-              <div className="text-center py-10">
-                <Typography variant="body1" sx={{ color: "#9CA3AF" }}>
-                  Рабочие места не найдены
-                </Typography>
-              </div>
-            )}
-          </div>
-        </motion.div>
+        </div>
       )}
 
       {/* create workplace */}

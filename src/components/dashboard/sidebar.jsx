@@ -44,17 +44,20 @@ const allMenuItems = [
       {
         text: "Справочник",
         path: "/dashboard/structure-organizations/reference",
+        roles: ["admin"],
       },
       {
         text: "Руководства управлении",
         path: "/dashboard/structure-organizations/management-organizations",
+        roles: ["admin", "hr-admin"],
       },
       {
         text: "Место работы",
         path: "/dashboard/structure-organizations/workplace",
+        roles: ["admin", "hr-admin"],
       },
     ],
-    roles: ["admin"],
+    roles: ["admin", "hr-admin"],
   },
   {
     text: "Точки контроля",
@@ -64,16 +67,19 @@ const allMenuItems = [
         text: "Контрольные точки",
         icon: <SecurityIcon />,
         path: "/dashboard/checkpoints",
+        roles: ["admin", "acs-admin"],
       },
       {
         text: "Устройства (камеры)",
         icon: <CameraAltIcon />,
         path: "/dashboard/devices",
+        roles: ["admin", "acs-admin"],
       },
       {
         text: "Точки доступа",
         icon: <WifiIcon />,
         path: "/dashboard/access-points",
+        roles: ["admin", "acs-admin"],
       },
     ],
     roles: ["admin", "acs-admin"],
@@ -82,18 +88,25 @@ const allMenuItems = [
     text: "Отчёты",
     icon: <AssessmentIcon />,
     submenu: [
-      { text: "по сотрудникам", path: "/dashboard/reports/employee-uuid" },
+      {
+        text: "по сотрудникам",
+        path: "/dashboard/reports/employee-uuid",
+        roles: ["admin", "hr-admin", "hr-moderator"],
+      },
       {
         text: "по подразделениям",
         path: "/dashboard/reports/report-by-orgUnit",
+        roles: ["admin", "hr-admin"],
       },
       {
         text: "по подразделениям и точкам доступа",
         path: "/dashboard/reports/report-by-entrypointid-orgUnit",
+        roles: ["admin", "hr-admin"],
       },
       {
         text: "отчёты всех сотрудников",
         path: "/dashboard/reports/all-employees",
+        roles: ["admin", "hr-admin", "hr-moderator"],
       },
     ],
     roles: ["admin", "hr-admin", "hr-moderator"],
@@ -117,14 +130,17 @@ const allMenuItems = [
       {
         text: "Пользователи",
         path: "/dashboard/users",
+        roles: ["admin"],
       },
       {
         text: "Роли",
         path: "/dashboard/roles",
+        roles: ["admin"],
       },
       {
         text: "Доступ и права",
         path: "/dashboard/permission-of-roles",
+        roles: ["admin"],
       },
     ],
     roles: ["admin"],
@@ -144,7 +160,22 @@ function Sidebar({ isOpen = true }) {
   const router = useRouter();
   const { isDark, bg, text, border } = useAppTheme();
 
-  // Filter menu items based on user's roles only
+  // Helper function to check if user has required roles
+  const hasRequiredRole = (requiredRoles, userRoles) => {
+    if (!requiredRoles || requiredRoles.length === 0) {
+      return true;
+    }
+
+    const normalizedUserRoles = userRoles.map((r) =>
+      typeof r === "string" ? r.toLowerCase() : "",
+    );
+
+    return requiredRoles.some((role) =>
+      normalizedUserRoles.includes(role.toLowerCase()),
+    );
+  };
+
+  // Filter menu items based on user's roles (both parent and submenu items)
   const menuItems = useMemo(() => {
     const userRoles = session?.user?.roles || [];
 
@@ -153,22 +184,28 @@ function Sidebar({ isOpen = true }) {
       return [];
     }
 
-    // Convert user roles to lowercase for comparison
-    const normalizedUserRoles = userRoles.map((r) =>
-      typeof r === "string" ? r.toLowerCase() : "",
-    );
+    return allMenuItems
+      .filter((item) => hasRequiredRole(item.roles, userRoles))
+      .map((item) => {
+        // If item has submenu, filter submenu items based on roles
+        if (item.submenu) {
+          const filteredSubmenu = item.submenu.filter((subItem) =>
+            hasRequiredRole(subItem.roles, userRoles),
+          );
 
-    return allMenuItems.filter((item) => {
-      // If item has no role restrictions, show it to everyone
-      if (!item.roles || item.roles.length === 0) {
-        return true;
-      }
+          // Only return the parent item if it has at least one visible submenu item
+          if (filteredSubmenu.length > 0) {
+            return {
+              ...item,
+              submenu: filteredSubmenu,
+            };
+          }
+          return null;
+        }
 
-      // Check if user has any of the required roles
-      return item.roles.some((role) =>
-        normalizedUserRoles.includes(role.toLowerCase()),
-      );
-    });
+        return item;
+      })
+      .filter(Boolean); // Remove null items
   }, [session?.user?.roles]);
 
   useEffect(() => {
