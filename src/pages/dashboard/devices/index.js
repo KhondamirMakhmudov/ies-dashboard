@@ -18,22 +18,21 @@ import usePostQuery from "@/hooks/java/usePostQuery";
 import { config } from "@/config";
 import { useSession } from "next-auth/react";
 import CustomSelect from "@/components/select";
-// Remove usePutQuery import since we'll use fetch for PATCH
 import { useQueryClient } from "@tanstack/react-query";
 import ActiveStatusRadio from "@/components/activeStatusRadio";
 import NoData from "@/components/no-data";
 import PrimaryButton from "@/components/button/primary-button";
 import Link from "next/link";
 import useAppTheme from "@/hooks/useAppTheme";
+import { canUserDo } from "@/utils/checkpermission";
 
 const ipRegex =
   /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
 
 const Index = () => {
-  const { bg, text, border, isDark } = useAppTheme();
+  const { bg, border, isDark } = useAppTheme();
   const { data: session } = useSession();
   const queryClient = useQueryClient();
-  const [searchTerm, setSearchTerm] = useState("");
   const [createCameraModal, setCreateCameraModal] = useState(false);
   const [editCameraModal, setEditCameraModal] = useState(false);
   const [deleteCameraModal, setDeleteCameraModal] = useState(false);
@@ -43,13 +42,34 @@ const Index = () => {
   const [password, setPassword] = useState("");
   const [doorType, setDoorType] = useState("");
   const [isActive, setIsActive] = useState(true);
-
+  const [selectCameraType, setSelectCameraType] = useState(null);
   const [selectedEntryPoint, setSelectedEntryPoint] = useState("");
   const [selectedCheckPoint, setSelectedCheckPoint] = useState(null);
   const [selectedCamera, setSelectedCamera] = useState(null);
   const [editingCameraId, setEditingCameraId] = useState(null);
 
-  // all cameras get
+  const canReadCameras = canUserDo(
+    session?.user,
+    "устройства и точки доступа",
+    "read",
+  );
+  const canCreateCameras = canUserDo(
+    session?.user,
+    "устройства и точки доступа",
+    "create",
+  );
+  const canUpdateCameras = canUserDo(
+    session?.user,
+    "устройства и точки доступа",
+    "update",
+  );
+
+  const canDeleteCameras = canUserDo(
+    session?.user,
+    "устройства и точки доступа",
+    "delete",
+  );
+
   const {
     data: allCameras,
     isLoading,
@@ -108,6 +128,7 @@ const Index = () => {
     setDoorType("");
     setIsActive(true);
     setEditingCameraId(null);
+    setSelectCameraType(null);
   };
 
   // create camera
@@ -118,7 +139,6 @@ const Index = () => {
   const onSubmitCreateCamera = (e) => {
     e.preventDefault();
 
-    // Ma'lumotlar to'g'ri bo'lsa, serverga yuboriladi
     createCamera(
       {
         url: URLS.createCamera,
@@ -128,6 +148,7 @@ const Index = () => {
           login,
           password,
           checkPointId: selectedCheckPoint,
+          vendor: selectCameraType,
           doorTypeId: doorType === "in" ? 1 : 2,
           isActive: isActive === true ? 1 : 0,
         },
@@ -154,17 +175,14 @@ const Index = () => {
 
           toast.error(message, { position: "top-right" });
         },
-      }
+      },
     );
   };
 
-  // edit camera with PATCH (only changed fields)
-  // edit camera with PATCH (only changed fields)
   const onSubmitEditCamera = async (id) => {
     try {
-      // Get current camera data to compare
       const currentCamera = get(allCameras, "data", []).find(
-        (cam) => cam.id === id
+        (cam) => cam.id === id,
       );
 
       if (!currentCamera) {
@@ -172,12 +190,14 @@ const Index = () => {
         return;
       }
 
-      // Create object with only changed fields
       const patchData = {};
 
-      // Compare each field and add to patchData only if changed
       if (ipAddress !== currentCamera.ipAddress) {
         patchData.ipAddress = ipAddress;
+      }
+
+      if (selectCameraType !== currentCamera.vendor) {
+        patchData.vendor = selectCameraType;
       }
 
       if (building !== currentCamera.building) {
@@ -196,7 +216,6 @@ const Index = () => {
         patchData.checkPointId = selectedCheckPoint;
       }
 
-      // Convert doorType to compare properly
       const currentDoorTypeValue =
         currentCamera.doorType === "Выход" ? "out" : "in";
       if (doorType !== currentDoorTypeValue) {
@@ -207,7 +226,6 @@ const Index = () => {
         patchData.isActive = isActive === true ? 1 : 0;
       }
 
-      // If nothing changed, show message and return
       if (Object.keys(patchData).length === 0) {
         toast.info("Нет изменений для сохранения");
         return;
@@ -224,7 +242,7 @@ const Index = () => {
             Authorization: `Bearer ${session?.accessToken}`,
           },
           body: JSON.stringify(patchData),
-        }
+        },
       );
 
       if (!response.ok) {
@@ -257,7 +275,7 @@ const Index = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${session?.accessToken}`,
           },
-        }
+        },
       );
 
       if (!response.ok) {
@@ -278,6 +296,10 @@ const Index = () => {
     {
       header: "№",
       cell: ({ row }) => row.index + 1,
+    },
+    {
+      accessorKey: "vendor",
+      header: "Тип камеры",
     },
     {
       accessorKey: "ipAddress",
@@ -310,8 +332,8 @@ const Index = () => {
                   ? "text-green-400 bg-green-900/30 border-green-600"
                   : "text-green-600 bg-[#E8F6F0] border-green-600"
                 : isDark
-                ? "text-red-400 bg-red-900/30 border-red-600"
-                : "text-red-600 bg-[#FAE7E7] border-red-600"
+                  ? "text-red-400 bg-red-900/30 border-red-600"
+                  : "text-red-600 bg-[#FAE7E7] border-red-600"
             }`}
           >
             {isActive ? "Активный" : "Неактивный"}
@@ -325,51 +347,56 @@ const Index = () => {
       header: "Действия",
       cell: ({ row }) => (
         <div className="flex gap-2">
-          <Button
-            onClick={() => {
-              const camera = row.original;
-              setEditingCameraId(camera.id);
-              setEditCameraModal(true);
-              setLogin(camera.login);
-              setBuilding(camera.building);
-              setPassword(camera.password);
-              setIpAddress(camera.ipAddress);
-              setSelectedCheckPoint(camera.checkPointId);
-              setSelectedEntryPoint(camera.entryPointId);
-              setDoorType(camera.doorType === "Выход" ? "out" : "in");
-              setIsActive(camera.isActive);
-            }}
-            sx={{
-              width: "32px",
-              height: "32px",
-              minWidth: "32px",
-              background: isDark ? "#7c2d12" : "#F0D8C8",
-              color: isDark ? "#fb923c" : "#FF6200",
-              "&:hover": {
-                background: isDark ? "#9a3412" : "#F0B28B",
-              },
-            }}
-          >
-            <EditIcon fontSize="small" />
-          </Button>
-          <Button
-            onClick={() => {
-              setSelectedCamera(row.original.id);
-              setDeleteCameraModal(true);
-            }}
-            sx={{
-              width: "32px",
-              height: "32px",
-              minWidth: "32px",
-              background: isDark ? "#7f1d1d" : "#FCD8D3",
-              color: isDark ? "#fca5a5" : "#FF1E00",
-              "&:hover": {
-                background: isDark ? "#991b1b" : "#FCA89D",
-              },
-            }}
-          >
-            <DeleteIcon fontSize="small" />
-          </Button>
+          {canUpdateCameras && (
+            <Button
+              onClick={() => {
+                const camera = row.original;
+                setEditingCameraId(camera.id);
+                setEditCameraModal(true);
+                setLogin(camera.login);
+                setBuilding(camera.building);
+                setPassword(camera.password);
+                setIpAddress(camera.ipAddress);
+                setSelectCameraType(camera.vendor);
+                setSelectedCheckPoint(camera.checkPointId);
+                setSelectedEntryPoint(camera.entryPointId);
+                setDoorType(camera.doorType === "Выход" ? "out" : "in");
+                setIsActive(camera.isActive);
+              }}
+              sx={{
+                width: "32px",
+                height: "32px",
+                minWidth: "32px",
+                background: isDark ? "#7c2d12" : "#F0D8C8",
+                color: isDark ? "#fb923c" : "#FF6200",
+                "&:hover": {
+                  background: isDark ? "#9a3412" : "#F0B28B",
+                },
+              }}
+            >
+              <EditIcon fontSize="small" />
+            </Button>
+          )}
+          {canDeleteCameras && (
+            <Button
+              onClick={() => {
+                setSelectedCamera(row.original.id);
+                setDeleteCameraModal(true);
+              }}
+              sx={{
+                width: "32px",
+                height: "32px",
+                minWidth: "32px",
+                background: isDark ? "#7f1d1d" : "#FCD8D3",
+                color: isDark ? "#fca5a5" : "#FF1E00",
+                "&:hover": {
+                  background: isDark ? "#991b1b" : "#FCA89D",
+                },
+              }}
+            >
+              <DeleteIcon fontSize="small" />
+            </Button>
+          )}
         </div>
       ),
       enableSorting: false,
@@ -400,11 +427,18 @@ const Index = () => {
         >
           <div className="col-span-12 space-y-[15px]">
             <div className="flex justify-between items-center">
-              <PrimaryButton onClick={() => setCreateCameraModal(true)}>
-                <p>Создать</p>
-              </PrimaryButton>
+              {canCreateCameras && (
+                <PrimaryButton onClick={() => setCreateCameraModal(true)}>
+                  <p>Создать</p>
+                </PrimaryButton>
+              )}
             </div>
-            <CustomTable data={get(allCameras, "data", [])} columns={columns} />
+            {canReadCameras && (
+              <CustomTable
+                data={get(allCameras, "data", [])}
+                columns={columns}
+              />
+            )}
           </div>
         </motion.div>
       )}
@@ -428,6 +462,18 @@ const Index = () => {
               onSubmit={onSubmitCreateCamera}
               className="grid grid-cols-4 my-[30px] gap-[15px]"
             >
+              <CustomSelect
+                label={"Тип камеры"}
+                options={[
+                  { label: "DAHUA", value: "DAHUA" },
+                  { label: "HIKVISION", value: "HIKVISION" },
+                ]}
+                value={selectCameraType}
+                onChange={(val) => setSelectCameraType(val)}
+                placeholder="Выберите тип камеры"
+                className="col-span-4"
+                required
+              />
               <Input
                 label="IP адрес"
                 type="text"
@@ -552,6 +598,18 @@ const Index = () => {
 
           <div className="my-[15px]">
             <form className="grid grid-cols-4 my-[30px] gap-[15px]">
+              <CustomSelect
+                label={"Тип камеры"}
+                options={[
+                  { label: "DAHUA", value: "DAHUA" },
+                  { label: "HIKVISION", value: "HIKVISION" },
+                ]}
+                value={selectCameraType}
+                onChange={(val) => setSelectCameraType(val)}
+                placeholder="Выберите тип камеры"
+                className="col-span-4"
+                required
+              />
               <Input
                 label="IP адрес"
                 type="text"
