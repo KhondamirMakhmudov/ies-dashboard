@@ -1,5 +1,6 @@
-import { LockOutline } from "@mui/icons-material/LockOutline";
+import LockOutline from "@mui/icons-material/LockOutline";
 import useAppTheme from "@/hooks/useAppTheme";
+
 const StatusNotAllowed = () => {
   const { text, isDark } = useAppTheme();
   return (

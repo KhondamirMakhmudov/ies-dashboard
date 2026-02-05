@@ -62,7 +62,7 @@ const useGetQuery = ({
     data,
     error,
     isFetching,
-    errorStatus: error?.response?.status, // Extract status from error object
+    status: error?.response?.status, // Add status code
   };
 };
 
