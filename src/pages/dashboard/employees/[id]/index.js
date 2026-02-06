@@ -1593,10 +1593,10 @@ const Index = () => {
           endDate={endDate}
           isLoadingReport={isLoadingReport}
           isFetchingReport={isFetchingReport}
-          fileNameEmployee={`${get(employeePhoto, "data.first_name")} ${get(
+          name={`${get(employeePhoto, "data.first_name")} ${get(
             employeePhoto,
             "data.last_name",
-          )}`}
+          )} ${get(employeePhoto, "data.middle_name")}`}
         />
       </div>
 

@@ -42,7 +42,7 @@ const Index = () => {
 
   const canCreateWorkplace = canUserDo(session?.user, "место работы", "create");
 
-  const canUpdateWorkplace = canUserDo(session?.user, "место работы", "update");
+  // const canUpdateWorkplace = canUserDo(session?.user, "место работы", "update");
 
   const canReadWorkplace = canUserDo(session?.user, "место работы", "read");
 
@@ -461,6 +461,7 @@ const Index = () => {
                         setSelect(get(item, "id"));
                       }}
                       id={get(item, "id")}
+                      showByRole={canDeleteWorkplace}
                     />
                   ))
                 ) : (
@@ -487,9 +488,10 @@ const Index = () => {
             setPositionId(null);
             setOrgUnitsId(null);
           }}
+          closeClick={() => setCreateModal(false)}
+          showCloseIcon={true}
+          title={"Создать рабочие место"}
         >
-          <Typography variant="h6">Создать рабочие место</Typography>
-
           <div className="my-[30px] space-y-[15px]">
             <CustomSelect
               options={optionsPosition}
@@ -502,6 +504,7 @@ const Index = () => {
             />
 
             <CustomSelect
+              label={"Подразделение"}
               options={get(orgUnits, "data", []).map((unit) => ({
                 label: unit.name,
                 value: unit.unit_code,
@@ -512,10 +515,12 @@ const Index = () => {
                 setOrgUnitsId(null);
               }}
               placeholder="Выберите филиал"
+              required
               returnObject={false}
             />
 
             <CustomSelect
+              label={"Тип позиции"}
               options={childUnits?.data?.map((unit) => ({
                 label: unit.name,
                 value: unit.id,
@@ -525,6 +530,7 @@ const Index = () => {
               onChange={(val) => setOrgUnitsId(val)}
               placeholder="Выберите тип позицию"
               isDisabled={!selectedParentCode}
+              required
             />
 
             <Button
