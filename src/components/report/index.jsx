@@ -32,6 +32,7 @@ const ReportComponent = ({
   isLoadingReport,
   isFetchingReport,
   fileNameEmployee,
+  name,
 }) => {
   const { isDark, bg, text, border } = useAppTheme();
   const [selectedPeriod, setSelectedPeriod] = useState("today");
@@ -66,28 +67,6 @@ const ReportComponent = ({
       default:
         return "Статистика доступа";
     }
-  };
-
-  const exportToExcel = (data, filename = "employees.xlsx") => {
-    if (!data || data.length === 0) {
-      alert("Ma'lumot topilmadi");
-      return;
-    }
-
-    const worksheet = XLSX.utils.json_to_sheet(data);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Employees");
-
-    const excelBuffer = XLSX.write(workbook, {
-      bookType: "xlsx",
-      type: "array",
-    });
-
-    const blob = new Blob([excelBuffer], {
-      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    });
-
-    saveAs(blob, filename);
   };
 
   const columns = [
@@ -130,8 +109,8 @@ const ReportComponent = ({
                   ? "text-green-400 bg-green-900/30 border-green-600"
                   : "text-green-600 bg-[#E8F6F0] border-green-600"
                 : isDark
-                ? "text-red-400 bg-red-900/30 border-red-600"
-                : "text-red-600 bg-[#FAE7E7] border-red-600"
+                  ? "text-red-400 bg-red-900/30 border-red-600"
+                  : "text-red-600 bg-[#FAE7E7] border-red-600"
             }`}
           >
             {errorCode === 0 ? "доступ разрешен" : "отказ в доступе"}
@@ -152,8 +131,8 @@ const ReportComponent = ({
                   ? "text-green-400 bg-green-900/30 border-green-600"
                   : "text-green-600 bg-[#E8F6F0] border-green-600"
                 : isDark
-                ? "text-red-400 bg-red-900/30 border-red-600"
-                : "text-red-600 bg-[#FAE7E7] border-red-600"
+                  ? "text-red-400 bg-red-900/30 border-red-600"
+                  : "text-red-600 bg-[#FAE7E7] border-red-600"
             }`}
           >
             {event === "enter" ? "Вход" : "Выход"}
@@ -229,7 +208,12 @@ const ReportComponent = ({
 
             <ExcelButton
               onClick={() =>
-                exportReportToExcel(data, getPeriodTitle(), fileNameEmployee)
+                exportReportToExcel(
+                  data,
+                  name,
+                  getPeriodTitle(),
+                  fileNameEmployee,
+                )
               }
               enableHover={false}
             />

@@ -79,7 +79,7 @@ export default function Home() {
         redirect: false,
       });
 
-      console.log("SignIn response:", response);
+      // console.log("SignIn response:", response);
 
       if (response?.ok && !response?.error) {
         toast.success("Добро пожаловать");
@@ -88,7 +88,7 @@ export default function Home() {
       } else {
         console.error("SignIn error details:", response?.error);
         toast.error(
-          "Login xato! " + (response?.error || "Ma'lumotlar noto'g'ri.")
+          "Login xato! " + (response?.error || "Ma'lumotlar noto'g'ri."),
         );
       }
     } catch (error) {
@@ -239,7 +239,7 @@ export default function Home() {
                     className={
                       bg(
                         "bg-blue-600 hover:bg-blue-700",
-                        "bg-blue-600 hover:bg-blue-700"
+                        "bg-blue-600 hover:bg-blue-700",
                       ) +
                       " text-white h-14 rounded-xl font-medium text-base transition-all shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2"
                     }
@@ -255,7 +255,7 @@ export default function Home() {
                     className={
                       bg(
                         "bg-gray-200 hover:bg-gray-300",
-                        "bg-gray-800 hover:bg-gray-700"
+                        "bg-gray-800 hover:bg-gray-700",
                       ) +
                       " " +
                       text("text-gray-700", "text-gray-200") +

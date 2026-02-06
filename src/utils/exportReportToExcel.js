@@ -4,7 +4,12 @@ import dayjs from "dayjs";
 import { toast } from "react-hot-toast";
 
 // ✅ ReportComponent uchun maxsus Excel export funksiyasi
-export const exportReportToExcel = (data, periodTitle = "Отчёт") => {
+export const exportReportToExcel = (
+  data,
+  employeeName, // Changed from generic 'name' to 'employeeName' for clarity
+  periodTitle = "Отчёт",
+  reportName = "отчёт_сотрудники", // Optional custom filename prefix
+) => {
   if (!data || data.length === 0) {
     toast.error("Нет данных для экспорта");
     return;
@@ -89,10 +94,12 @@ export const exportReportToExcel = (data, periodTitle = "Отчёт") => {
 
   let rowIndex = 0;
 
-  // Sarlavha qo'shish
+  // Sarlavha qo'shish - Now includes employee name
+  const title = employeeName ? `${periodTitle} - ${employeeName}` : periodTitle;
+
   rows.push([
     {
-      v: `${periodTitle} - ${dayjs().format("DD.MM.YYYY HH:mm")}`,
+      v: `${title} - ${dayjs().format("DD.MM.YYYY HH:mm")}`,
       s: {
         font: { bold: true, sz: 16 },
         alignment: { horizontal: "center", vertical: "center" },
@@ -220,7 +227,7 @@ export const exportReportToExcel = (data, periodTitle = "Отчёт") => {
     rowIndex++;
   });
 
-  // Statistika qo'shish
+  // Statistika qo'shish - Also includes employee name
   const accessGranted = data.filter((e) => e.errorCode === 0).length;
   const accessDenied = data.filter((e) => e.errorCode !== 0).length;
   const total = data.length;
@@ -284,6 +291,32 @@ export const exportReportToExcel = (data, periodTitle = "Отчёт") => {
   ]);
   rowIndex++;
 
+  // Add employee name row if provided
+  if (employeeName) {
+    rows.push([]);
+    rowIndex++;
+
+    rows.push([
+      {
+        v: `Сотрудник: ${employeeName}`,
+        s: {
+          font: { italic: true },
+          alignment: { horizontal: "left", vertical: "center" },
+          fill: { fgColor: { rgb: "F2F2F2" } },
+        },
+      },
+      {},
+      {},
+      {},
+      {},
+    ]);
+
+    merges.push({
+      s: { r: rowIndex, c: 0 },
+      e: { r: rowIndex, c: 4 },
+    });
+  }
+
   try {
     const worksheet = XLSX.utils.aoa_to_sheet(rows);
     worksheet["!merges"] = merges;
@@ -307,7 +340,16 @@ export const exportReportToExcel = (data, periodTitle = "Отчёт") => {
       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     });
 
-    saveAs(blob, `отчёт_сотрудники_${dayjs().format("DD-MM-YYYY_HH-mm")}.xlsx`);
+    // Create filename with employee name if provided
+    const safeEmployeeName = employeeName
+      ? employeeName.replace(/[^a-zA-Z0-9а-яА-Я]/g, "_")
+      : "";
+
+    const filename = safeEmployeeName
+      ? `${reportName}_${safeEmployeeName}_${dayjs().format("DD-MM-YYYY_HH-mm")}.xlsx`
+      : `${reportName}_${dayjs().format("DD-MM-YYYY_HH-mm")}.xlsx`;
+
+    saveAs(blob, filename);
     toast.success("Excel файл успешно загружен");
   } catch (error) {
     console.error("Excel export error", error);
