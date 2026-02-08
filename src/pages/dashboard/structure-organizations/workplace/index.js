@@ -1,4 +1,3 @@
-import OrganizationalCard from "@/components/card/organizationType";
 import WorkPlaceCard from "@/components/card/workPlace";
 import ContentLoader from "@/components/loader";
 import MethodModal from "@/components/modal/method-modal";
@@ -39,13 +38,9 @@ const Index = () => {
   // Filter states
   const [filterPosition, setFilterPosition] = useState(null);
   const [filterStatus, setFilterStatus] = useState(null);
-
+  // permissions
   const canCreateWorkplace = canUserDo(session?.user, "место работы", "create");
-
-  // const canUpdateWorkplace = canUserDo(session?.user, "место работы", "update");
-
   const canReadWorkplace = canUserDo(session?.user, "место работы", "read");
-
   const canDeleteWorkplace = canUserDo(session?.user, "место работы", "delete");
 
   const {
@@ -73,7 +68,7 @@ const Index = () => {
     isLoading: isLoadingPosition,
     isFetching: isFetchingPosition,
   } = useGetPythonQuery({
-    key: KEYS.positions,
+    key: [KEYS.positions, createModal],
     url: URLS.positions,
     params: {
       is_active: true,
@@ -481,14 +476,13 @@ const Index = () => {
       {createModal && (
         <MethodModal
           open={createModal}
-          onClose={() => {
+          closeClick={() => {
             setCreateModal(false);
             setSelect(null);
             setSelectedParentCode(null);
             setPositionId(null);
             setOrgUnitsId(null);
           }}
-          closeClick={() => setCreateModal(false)}
           showCloseIcon={true}
           title={"Создать рабочие место"}
         >
@@ -519,19 +513,26 @@ const Index = () => {
               returnObject={false}
             />
 
-            <CustomSelect
-              label={"Тип позиции"}
-              options={childUnits?.data?.map((unit) => ({
-                label: unit.name,
-                value: unit.id,
-              }))}
-              value={orgUnitsId}
-              isLoading={isChildLoading}
-              onChange={(val) => setOrgUnitsId(val)}
-              placeholder="Выберите тип позицию"
-              isDisabled={!selectedParentCode}
-              required
-            />
+            {selectedParentCode && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+              >
+                <CustomSelect
+                  label={"Тип позиции"}
+                  options={childUnits?.data?.map((unit) => ({
+                    label: unit.name,
+                    value: unit.id,
+                  }))}
+                  value={orgUnitsId}
+                  isLoading={isChildLoading}
+                  onChange={(val) => setOrgUnitsId(val)}
+                  placeholder="Выберите тип позицию"
+                  isDisabled={!selectedParentCode}
+                  required
+                />
+              </motion.div>
+            )}
 
             <Button
               onClick={onSubmitCreateWorkplace}

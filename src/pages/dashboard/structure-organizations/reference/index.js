@@ -97,7 +97,6 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Content rendering */}
       {tab === "unit-type" && <UnitType />}
       {tab === "position-type" && <PositionType />}
       {tab === "position" && <Position />}

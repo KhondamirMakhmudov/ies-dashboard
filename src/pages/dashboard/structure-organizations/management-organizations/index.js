@@ -11,13 +11,10 @@ import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import DetailsIcon from "@mui/icons-material/Details";
 import HexagonIcon from "@mui/icons-material/Hexagon";
 import StarIcon from "@mui/icons-material/Star";
-import PersonIcon from "@mui/icons-material/Person";
+
 import WorkIcon from "@mui/icons-material/Work";
-import EmailIcon from "@mui/icons-material/Email";
-import PhoneIcon from "@mui/icons-material/Phone";
-import BadgeIcon from "@mui/icons-material/Badge";
-import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
-import { Button, IconButton, Typography, Chip, Avatar } from "@mui/material";
+
+import { Button, IconButton } from "@mui/material";
 import { useState } from "react";
 import MethodModal from "@/components/modal/method-modal";
 import Input from "@/components/input";
@@ -33,364 +30,13 @@ import DeleteModal from "@/components/modal/delete-modal";
 import { config } from "@/config";
 import PrimaryButton from "@/components/button/primary-button";
 import useAppTheme from "@/hooks/useAppTheme";
-import {
-  ErrorOutline as ErrorOutlineIcon,
-  OpenInNew as OpenInNewIcon,
-} from "@mui/icons-material";
 import { canUserDo } from "@/utils/checkpermission";
 import { useSession } from "next-auth/react";
-
-const WorkplaceEmployeeSection = ({ workplace = [], levelColor }) => {
-  const { bg, isDark, text, border } = useAppTheme();
-  const [showEmployees, setShowEmployees] = useState(false);
-
-  if (!workplace || workplace.length === 0) {
-    return (
-      <div
-        className={
-          bg("bg-gray-50", "bg-gray-800/30") +
-          " " +
-          text("text-gray-500", "text-gray-400") +
-          " mt-3 p-4 rounded-lg border-2 border-dashed " +
-          border("border-gray-200", "border-gray-700") +
-          " flex items-center gap-2 transition-colors"
-        }
-      >
-        <ErrorOutlineIcon sx={{ fontSize: 18, opacity: 0.6 }} />
-        <span className="text-sm italic">Рабочие места не назначены</span>
-      </div>
-    );
-  }
-
-  return (
-    <div className="mt-4">
-      {/* Toggle Header */}
-      <motion.div
-        className={
-          bg(
-            "bg-gradient-to-r from-blue-50 to-indigo-50",
-            "bg-gradient-to-r from-gray-800 to-gray-700",
-          ) +
-          " " +
-          border("border-blue-100", "border-gray-600") +
-          " flex items-center justify-between cursor-pointer p-4 rounded-xl border shadow-sm hover:shadow-md transition-all duration-200"
-        }
-        onClick={() => setShowEmployees(!showEmployees)}
-        whileHover={{ scale: 1.01 }}
-        whileTap={{ scale: 0.99 }}
-      >
-        <div className="flex items-center gap-3">
-          <div
-            className={
-              bg("bg-white", "bg-gray-900") + " p-2 rounded-lg shadow-sm"
-            }
-          >
-            <WorkIcon sx={{ fontSize: 20, color: levelColor || "#3b82f6" }} />
-          </div>
-          <div>
-            <span
-              className={
-                text("text-gray-900", "text-white") +
-                " text-sm font-semibold block"
-              }
-            >
-              Рабочие места
-            </span>
-            <span
-              className={text("text-gray-500", "text-gray-400") + " text-xs"}
-            >
-              {workplace.length}{" "}
-              {workplace.length === 1 ? "позиция" : "позиций"}
-            </span>
-          </div>
-        </div>
-
-        <motion.div
-          animate={{ rotate: showEmployees ? 180 : 0 }}
-          transition={{ duration: 0.3 }}
-          className={bg("bg-white", "bg-gray-900") + " p-1.5 rounded-full"}
-        >
-          <KeyboardArrowDownIcon
-            sx={{ fontSize: 20, color: isDark ? "#9ca3af" : "#6b7280" }}
-          />
-        </motion.div>
-      </motion.div>
-
-      {/* Workplace Cards */}
-      <AnimatePresence>
-        {showEmployees && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3 }}
-            className="mt-3 space-y-3"
-          >
-            {workplace.map((wp, index) => (
-              <motion.div
-                key={wp.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.05 }}
-                className={
-                  bg("bg-white", "bg-gray-800") +
-                  " " +
-                  border("border-gray-200", "border-gray-700") +
-                  " ml-6 p-4 rounded-xl border shadow-sm hover:shadow-lg transition-all duration-200"
-                }
-              >
-                {/* Position Header */}
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center gap-2 flex-1">
-                    <div
-                      className={
-                        bg("bg-blue-50", "bg-blue-900/30") + " p-2 rounded-lg"
-                      }
-                    >
-                      <BadgeIcon
-                        sx={{ fontSize: 18, color: levelColor || "#3b82f6" }}
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <h4
-                        className={
-                          text("text-gray-900", "text-white") +
-                          " text-sm font-semibold"
-                        }
-                      >
-                        {wp.position?.name || "Без названия"}
-                      </h4>
-                      <p
-                        className={
-                          text("text-gray-500", "text-gray-400") +
-                          " text-xs mt-0.5"
-                        }
-                      >
-                        ID: {wp.id}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2 justify-end">
-                    <Chip
-                      label={wp.is_vacant ? "Вакантно" : "Занято"}
-                      size="small"
-                      color={wp.is_vacant ? "warning" : "success"}
-                      variant={isDark ? "filled" : "outlined"}
-                      sx={{ fontSize: "0.7rem", height: "24px" }}
-                    />
-                    <Chip
-                      label={wp.is_active ? "Активно" : "Неактивно"}
-                      size="small"
-                      color={wp.is_active ? "success" : "error"}
-                      variant={isDark ? "filled" : "outlined"}
-                      sx={{ fontSize: "0.7rem", height: "24px" }}
-                    />
-                  </div>
-                </div>
-
-                {/* Employee Information */}
-                {wp.employee && !wp.is_vacant ? (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.1 }}
-                    className={
-                      bg("bg-gray-50", "bg-gray-900/50") +
-                      " " +
-                      border("border-gray-100", "border-gray-700") +
-                      " p-4 rounded-lg border"
-                    }
-                  >
-                    <div className="flex items-start gap-4">
-                      {/* Avatar */}
-                      <Avatar
-                        sx={{
-                          width: 56,
-                          height: 56,
-                          bgcolor: levelColor || "#3b82f6",
-                          fontSize: 18,
-                          fontWeight: 600,
-                          boxShadow: isDark
-                            ? "0 4px 6px rgba(0,0,0,0.3)"
-                            : "0 4px 6px rgba(0,0,0,0.1)",
-                        }}
-                      >
-                        {wp.employee.last_name?.[0]}
-                        {wp.employee.first_name?.[0]}
-                      </Avatar>
-
-                      {/* Employee Details */}
-                      <div className="flex-1 space-y-3">
-                        {/* Name */}
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <PersonIcon
-                              sx={{
-                                fontSize: 16,
-                                color: isDark ? "#9ca3af" : "#6b7280",
-                              }}
-                            />
-                            <span
-                              className={
-                                text("text-gray-900", "text-white") +
-                                " text-base font-semibold"
-                              }
-                            >
-                              {wp.employee.last_name} {wp.employee.first_name}{" "}
-                              {wp.employee.middle_name}
-                            </span>
-                          </div>
-                          {wp.employee.education_degree && (
-                            <p
-                              className={
-                                text("text-gray-500", "text-gray-400") +
-                                " text-xs ml-6"
-                              }
-                            >
-                              {wp.employee.education_degree}
-                            </p>
-                          )}
-                        </div>
-
-                        {/* Contact Grid */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                          {wp.employee.phone_number && (
-                            <div
-                              className={
-                                bg("bg-white", "bg-gray-800") +
-                                " " +
-                                text("text-gray-700", "text-gray-300") +
-                                " flex items-center gap-2 p-2 rounded-lg text-sm"
-                              }
-                            >
-                              <PhoneIcon
-                                sx={{
-                                  fontSize: 16,
-                                  color: "#10b981",
-                                }}
-                              />
-                              <span className="text-xs">
-                                +998 {wp.employee.phone_number}
-                              </span>
-                            </div>
-                          )}
-
-                          {wp.employee.email && (
-                            <div
-                              className={
-                                bg("bg-white", "bg-gray-800") +
-                                " " +
-                                text("text-gray-700", "text-gray-300") +
-                                " flex items-center gap-2 p-2 rounded-lg text-sm"
-                              }
-                            >
-                              <EmailIcon
-                                sx={{
-                                  fontSize: 16,
-                                  color: "#3b82f6",
-                                }}
-                              />
-                              <span className="text-xs truncate">
-                                {wp.employee.email}
-                              </span>
-                            </div>
-                          )}
-
-                          {wp.employee.tabel_number && (
-                            <div
-                              className={
-                                bg("bg-white", "bg-gray-800") +
-                                " " +
-                                text("text-gray-700", "text-gray-300") +
-                                " flex items-center gap-2 p-2 rounded-lg text-sm"
-                              }
-                            >
-                              <BadgeIcon
-                                sx={{
-                                  fontSize: 16,
-                                  color: "#f59e0b",
-                                }}
-                              />
-                              <span className="text-xs">
-                                Таб. №: {wp.employee.tabel_number}
-                              </span>
-                            </div>
-                          )}
-
-                          {wp.start_date && (
-                            <div
-                              className={
-                                bg("bg-white", "bg-gray-800") +
-                                " " +
-                                text("text-gray-700", "text-gray-300") +
-                                " flex items-center gap-2 p-2 rounded-lg text-sm"
-                              }
-                            >
-                              <CalendarTodayIcon
-                                sx={{
-                                  fontSize: 16,
-                                  color: "#8b5cf6",
-                                }}
-                              />
-                              <span className="text-xs">
-                                С:{" "}
-                                {new Date(wp.start_date).toLocaleDateString(
-                                  "ru-RU",
-                                )}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Action Button */}
-                        <div className="flex justify-end pt-2">
-                          <a
-                            href={`/dashboard/employees/${wp.employee.id}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className={
-                              bg("bg-blue-500", "bg-blue-600") +
-                              " hover:bg-blue-600 dark:hover:bg-blue-700 text-white text-sm font-medium py-2 px-4 rounded-lg transition-all duration-200 flex items-center gap-2 shadow-sm hover:shadow-md"
-                            }
-                          >
-                            <span>Подробнее</span>
-                            <OpenInNewIcon sx={{ fontSize: 16 }} />
-                          </a>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                ) : (
-                  /* Vacant Position */
-                  <div
-                    className={
-                      bg("bg-orange-50", "bg-orange-900/20") +
-                      " " +
-                      border("border-orange-200", "border-orange-800") +
-                      " " +
-                      text("text-orange-700", "text-orange-300") +
-                      " p-3 rounded-lg border flex items-center gap-2"
-                    }
-                  >
-                    <PersonIcon sx={{ fontSize: 18 }} />
-                    <span className="text-sm font-medium">
-                      Позиция вакантна - ожидается назначение
-                    </span>
-                  </div>
-                )}
-              </motion.div>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-};
+import WorkplaceEmployeeSection from "@/components/card/workPlaceOrgUnit";
 
 const Index = () => {
   const { data: session } = useSession();
-  const { bg, text, isDark, border } = useAppTheme();
+  const { bg, isDark, border } = useAppTheme();
   const queryClient = useQueryClient();
   const [createModal, setCreateModal] = useState(false);
   const [createModalParentId, setCreateModalParentId] = useState(null);
@@ -627,7 +273,7 @@ const Index = () => {
                     setOpenLevel2Id(null);
                     setOpenLevel3Id(null);
                   }}
-                  className="p-4 border rounded hover:bg-gray-100 cursor-pointer flex justify-between items-center"
+                  className={`p-4 border rounded ${isLevel1Open ? "bg-blue-50" : ""} ${isDark ? "bg-gray-800 hover:bg-gray-700" : "bg-white hover:bg-gray-100"} cursor-pointer flex justify-between items-center transition-colors duration-100`}
                   style={{
                     borderColor: border("#e5e7eb", "#333333"),
                   }}
@@ -1603,7 +1249,9 @@ const Index = () => {
         {createModal && (
           <MethodModal
             open={createModal}
-            onClose={() => {
+            showCloseIcon={true}
+            title={"Создать структурное дерево управления"}
+            closeClick={() => {
               setName("");
               setCreateModal(false);
               setUnitCode("");
@@ -1611,10 +1259,6 @@ const Index = () => {
               setIsActive();
             }}
           >
-            <Typography variant="h6" className="mb-2">
-              Создать структурное дерево управления
-            </Typography>
-
             <div className="space-y-[15px] my-[30px]">
               <Input
                 type={"text"}
@@ -1702,7 +1346,9 @@ const Index = () => {
         {editModal && (
           <MethodModal
             open={editModal}
-            onClose={() => {
+            showCloseIcon={true}
+            title={"Изменить структурное дерево управления"}
+            closeClick={() => {
               setName("");
               setEditModal(false);
               setUnitCode("");
@@ -1710,10 +1356,6 @@ const Index = () => {
               setIsActive();
             }}
           >
-            <Typography variant="h6" className="mb-2">
-              Изменить
-            </Typography>
-
             <div className="space-y-[15px] my-[30px]">
               <Input
                 type={"text"}
@@ -1723,45 +1365,6 @@ const Index = () => {
                 inputClass="!h-[45px] border !border-[#C9C9C9]"
                 required
               />
-
-              {/* <Input
-                type={"text"}
-                value={unitCode}
-                onChange={(e) => setUnitCode(e.target.value)}
-                required
-                inputClass="!h-[43px] border !border-[#C9C9C9]"
-                placeholder={"Enter the unit code"}
-              /> */}
-
-              {/* <CustomSelect
-                options={optionsUnitType}
-                value={unitTypeId}
-                onChange={(val) => setUnitTypeId(val)}
-                placeholder="Выберите"
-              />
-
-              <div className="col-span-2 flex items-center gap-4">
-                <label className="flex items-center gap-1">
-                  <input
-                    type="radio"
-                    name="isActive"
-                    value="true"
-                    checked={isActive === true}
-                    onChange={() => setIsActive(true)}
-                  />
-                  <span>Активный</span>
-                </label>
-                <label className="flex items-center gap-1">
-                  <input
-                    type="radio"
-                    name="isActive"
-                    value="false"
-                    checked={isActive === false}
-                    onChange={() => setIsActive(false)}
-                  />
-                  <span>Неактивный</span>
-                </label>
-              </div> */}
 
               <Button
                 sx={{

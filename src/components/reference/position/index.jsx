@@ -118,7 +118,7 @@ const Position = () => {
             position: "top-right",
           });
         },
-      }
+      },
     );
   };
 
@@ -153,7 +153,7 @@ const Position = () => {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(updates),
-        }
+        },
       );
 
       if (!response.ok) {
@@ -181,7 +181,7 @@ const Position = () => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ position_id: id }),
-        }
+        },
       );
 
       if (!response.ok) {
@@ -216,8 +216,8 @@ const Position = () => {
                   ? "text-green-400 bg-green-900/30 border-green-600"
                   : "text-green-600 bg-[#E8F6F0] border-green-600"
                 : isDark
-                ? "text-red-400 bg-red-900/30 border-red-600"
-                : "text-red-600 bg-[#FAE7E7] border-red-600"
+                  ? "text-red-400 bg-red-900/30 border-red-600"
+                  : "text-red-600 bg-[#FAE7E7] border-red-600"
             }`}
           >
             {isActive ? "Активный" : "Неактивный"}
@@ -248,8 +248,11 @@ const Position = () => {
               width: "32px",
               height: "32px",
               minWidth: "32px",
-              background: "#F0D8C8",
-              color: "#FF6200",
+              background: isDark ? "#7c2d12" : "#F0D8C8",
+              color: isDark ? "#fb923c" : "#FF6200",
+              "&:hover": {
+                background: isDark ? "#9a3412" : "#F0B28B",
+              },
             }}
           >
             <EditIcon fontSize="small" />
@@ -263,8 +266,11 @@ const Position = () => {
               width: "32px",
               height: "32px",
               minWidth: "32px",
-              background: "#FCD8D3",
-              color: "#FF1E00",
+              background: isDark ? "#7f1d1d" : "#FCD8D3",
+              color: isDark ? "#fca5a5" : "#FF1E00",
+              "&:hover": {
+                background: isDark ? "#991b1b" : "#FCA89D",
+              },
             }}
           >
             <DeleteIcon fontSize="small" />
@@ -304,8 +310,8 @@ const Position = () => {
                   ? "bg-gray-700 text-green-400 shadow-sm"
                   : "bg-white text-green-600 shadow-sm"
                 : isDark
-                ? "bg-gray-500 text-gray-300 hover:text-gray-100"
-                : "bg-gray-100 text-gray-600 hover:text-gray-900"
+                  ? "bg-gray-500 text-gray-300 hover:text-gray-100"
+                  : "bg-gray-100 text-gray-600 hover:text-gray-900"
             }`}
             onClick={() => setSelectStatus(true)}
           >
@@ -318,8 +324,8 @@ const Position = () => {
                   ? "bg-gray-700 text-red-400 shadow-sm"
                   : "bg-white text-red-600 shadow-sm"
                 : isDark
-                ? "bg-gray-500 text-gray-300 hover:text-gray-100"
-                : "bg-gray-100 text-gray-600 hover:text-gray-900"
+                  ? "bg-gray-500 text-gray-300 hover:text-gray-100"
+                  : "bg-gray-100 text-gray-600 hover:text-gray-900"
             }`}
             onClick={() => setSelectStatus(false)}
           >
@@ -360,13 +366,13 @@ const Position = () => {
       {/* create modal */}
       <MethodModal
         open={createModal}
-        onClose={() => {
+        title={"Создать позицию"}
+        showCloseIcon={true}
+        closeClick={() => {
           setCreateModal(false);
           handleRemoveAll();
         }}
       >
-        <Typography variant="h6">Создать позицию</Typography>
-
         <div className="space-y-[15px] my-[30px]">
           <Input
             label="Имя"
@@ -406,13 +412,13 @@ const Position = () => {
 
       <MethodModal
         open={editModal}
-        onClose={() => {
+        showCloseIcon={true}
+        closeClick={() => {
           setEditModal(false);
           handleRemoveAll();
         }}
+        title={"Изменить позицию"}
       >
-        <Typography variant="h6">Изменить</Typography>
-
         <div className="space-y-[15px] my-[30px] ">
           <Input
             label="Имя"

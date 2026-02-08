@@ -1,9 +1,12 @@
 import { Html, Head, Main, NextScript } from "next/document";
+import { emotionCache } from "@/config/emotion-cache";
 
-export default function Document() {
+export default function Document(props) {
   return (
     <Html lang="en">
       <Head>
+        <meta name="emotion-insertion-point" content="" />
+        {props.emotionStyleTags}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
           rel="preconnect"
@@ -33,3 +36,19 @@ export default function Document() {
     </Html>
   );
 }
+
+Document.getInitialProps = async (ctx) => {
+  const originalRenderPage = ctx.renderPage;
+
+  ctx.renderPage = () =>
+    originalRenderPage({
+      enhanceApp: (App) => (props) =>
+        <App emotionCache={emotionCache} {...props} />,
+    });
+
+  const initialProps = await ctx.defaultGetInitialProps(ctx);
+  return {
+    ...initialProps,
+    emotionStyleTags: [],
+  };
+};

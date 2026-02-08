@@ -6,7 +6,7 @@ import { useState } from "react";
 export default function ExcelButton({ onClick, enableHover = true }) {
   const [isHovering, setIsHovering] = useState(false);
 
-  const hovering = enableHover ? isHovering : true; // agar hover o‘chirilsa doimiy ravishda ko‘rsatadi
+  const hovering = enableHover ? isHovering : true;
 
   return (
     <motion.button

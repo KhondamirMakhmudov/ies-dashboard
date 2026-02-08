@@ -11,6 +11,8 @@ import {
 } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import { ThemeProvider as NextThemeProvider, useTheme } from "next-themes";
+import { CacheProvider } from "@emotion/react";
+import { emotionCache } from "@/config/emotion-cache";
 import "@/styles/globals.css";
 import "@/styles/loader.css";
 
@@ -87,28 +89,31 @@ function MuiThemeSync({ children }) {
 
 export default function App({
   Component,
-  pageProps: { session, ...pageProps },
+  pageProps: { session, emotionCache: pageEmotionCache, ...pageProps },
 }) {
   const [queryClient] = useState(() => reactQueryClient);
+  const cache = pageEmotionCache || emotionCache;
 
   return (
-    <SessionProvider session={session}>
-      <QueryClientProvider client={queryClient}>
-        <Hydrate state={pageProps?.dehydratedState}>
-          <NextThemeProvider
-            attribute="class"
-            defaultTheme="light"
-            enableSystem={false}
-          >
-            <MuiThemeSync>
-              <SessionErrorHandler />
-              <Component {...pageProps} />
-            </MuiThemeSync>
-          </NextThemeProvider>
-          <ReactQueryDevtools initialIsOpen={false} />
-          <ClientOnlyToaster />
-        </Hydrate>
-      </QueryClientProvider>
-    </SessionProvider>
+    <CacheProvider value={cache}>
+      <SessionProvider session={session}>
+        <QueryClientProvider client={queryClient}>
+          <Hydrate state={pageProps?.dehydratedState}>
+            <NextThemeProvider
+              attribute="class"
+              defaultTheme="light"
+              enableSystem={false}
+            >
+              <MuiThemeSync>
+                <SessionErrorHandler />
+                <Component {...pageProps} />
+              </MuiThemeSync>
+            </NextThemeProvider>
+            <ReactQueryDevtools initialIsOpen={false} />
+            <ClientOnlyToaster />
+          </Hydrate>
+        </QueryClientProvider>
+      </SessionProvider>
+    </CacheProvider>
   );
 }

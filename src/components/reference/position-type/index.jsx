@@ -88,7 +88,7 @@ const PositionType = () => {
             position: "top-right",
           });
         },
-      }
+      },
     );
   };
 
@@ -120,7 +120,7 @@ const PositionType = () => {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(updates),
-        }
+        },
       );
 
       if (!response.ok) {
@@ -148,7 +148,7 @@ const PositionType = () => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ position_type_id: id }),
-        }
+        },
       );
 
       if (!response.ok) {
@@ -182,8 +182,8 @@ const PositionType = () => {
                   ? "text-green-400 bg-green-900/30 border-green-600"
                   : "text-green-600 bg-[#E8F6F0] border-green-600"
                 : isDark
-                ? "text-red-400 bg-red-900/30 border-red-600"
-                : "text-red-600 bg-[#FAE7E7] border-red-600"
+                  ? "text-red-400 bg-red-900/30 border-red-600"
+                  : "text-red-600 bg-[#FAE7E7] border-red-600"
             }`}
           >
             {isActive ? "Активный" : "Неактивный"}
@@ -212,8 +212,11 @@ const PositionType = () => {
               width: "32px",
               height: "32px",
               minWidth: "32px",
-              background: "#F0D8C8",
-              color: "#FF6200",
+              background: isDark ? "#7c2d12" : "#F0D8C8",
+              color: isDark ? "#fb923c" : "#FF6200",
+              "&:hover": {
+                background: isDark ? "#9a3412" : "#F0B28B",
+              },
             }}
           >
             <EditIcon fontSize="small" />
@@ -227,8 +230,11 @@ const PositionType = () => {
               width: "32px",
               height: "32px",
               minWidth: "32px",
-              background: "#FCD8D3",
-              color: "#FF1E00",
+              background: isDark ? "#7f1d1d" : "#FCD8D3",
+              color: isDark ? "#fca5a5" : "#FF1E00",
+              "&:hover": {
+                background: isDark ? "#991b1b" : "#FCA89D",
+              },
             }}
           >
             <DeleteIcon fontSize="small" />
@@ -268,8 +274,8 @@ const PositionType = () => {
                   ? "bg-gray-700 text-green-400 shadow-sm"
                   : "bg-white text-green-600 shadow-sm"
                 : isDark
-                ? "bg-gray-500 text-gray-300 hover:text-gray-100"
-                : "bg-gray-100 text-gray-600 hover:text-gray-900"
+                  ? "bg-gray-500 text-gray-300 hover:text-gray-100"
+                  : "bg-gray-100 text-gray-600 hover:text-gray-900"
             }`}
             onClick={() => setSelectStatus(true)}
           >
@@ -282,8 +288,8 @@ const PositionType = () => {
                   ? "bg-gray-700 text-red-400 shadow-sm"
                   : "bg-white text-red-600 shadow-sm"
                 : isDark
-                ? "bg-gray-500 text-gray-300 hover:text-gray-100"
-                : "bg-gray-100 text-gray-600 hover:text-gray-900"
+                  ? "bg-gray-500 text-gray-300 hover:text-gray-100"
+                  : "bg-gray-100 text-gray-600 hover:text-gray-900"
             }`}
             onClick={() => setSelectStatus(false)}
           >
@@ -325,14 +331,14 @@ const PositionType = () => {
       {/* create modal */}
       <MethodModal
         open={createModal}
-        onClose={() => {
+        showCloseIcon={true}
+        title={"Создать тип позиции"}
+        closeClick={() => {
           setCreateModal(false);
           setName("");
           setIsActive();
         }}
       >
-        <Typography variant="h6">Создать тип позицию </Typography>
-
         <div
           onSubmit={onSubmitCreatePositionType}
           className="space-y-[15px] my-[30px]"
@@ -383,17 +389,16 @@ const PositionType = () => {
       </MethodModal>
 
       {/* edit modal */}
-
       <MethodModal
         open={editModal}
-        onClose={() => {
+        showCloseIcon={true}
+        closeClick={() => {
           setEditModal(false);
           setName("");
           setIsActive();
         }}
+        title={"Изменить тип позиции"}
       >
-        <Typography variant="h6">Изменить тип позицы</Typography>
-
         <div className="space-y-[15px] my-[30px]">
           <Input
             label="Имя"

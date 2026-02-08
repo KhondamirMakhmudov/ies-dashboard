@@ -3,13 +3,11 @@ import { useEffect, useState } from "react";
 import { Typography } from "@mui/material";
 import { motion } from "framer-motion";
 import ContentLoader from "../loader";
-import { get, isEmpty } from "lodash";
+import { isEmpty } from "lodash";
 import EmojiEmotionsIcon from "@mui/icons-material/EmojiEmotions";
 import dayjs from "dayjs";
 import ExcelButton from "../button/excel-button";
 import { exportReportToExcel } from "@/utils/exportReportToExcel";
-import * as XLSX from "xlsx";
-import { saveAs } from "file-saver";
 import {
   PieChart,
   Pie,
@@ -103,7 +101,7 @@ const ReportComponent = ({
 
         return (
           <span
-            className={`font-medium p-1 rounded-md border ${
+            className={`font-medium p-1 rounded-md border line-clamp-1 ${
               errorCode === 0
                 ? isDark
                   ? "text-green-400 bg-green-900/30 border-green-600"
@@ -147,7 +145,7 @@ const ReportComponent = ({
         const eventType = getValue();
         return (
           <div
-            className={`font-medium p-1 px-3 rounded-md border items-center gap-1 inline-flex ${
+            className={`font-medium p-1 px-3 rounded-md border items-center gap-1  inline-flex ${
               isDark
                 ? "text-blue-400 bg-blue-900/30 border-blue-600"
                 : "text-[#1E5EFF] bg-[#ECF2FF] border-[#1E5EFF]"
@@ -160,7 +158,9 @@ const ReportComponent = ({
                 color: isDark ? "#60a5fa" : "#1E5EFF",
               }}
             />
-            <span>{eventType === 15 ? "FACE ID" : "Другое"}</span>
+            <span className="line-clamp-1">
+              {eventType === 15 ? "FACE ID" : "Другое"}
+            </span>
           </div>
         );
       },
@@ -178,27 +178,29 @@ const ReportComponent = ({
 
   return (
     <>
-      <div className="grid grid-cols-12 gap-4 self-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 self-start">
+        {/* Main Report Section */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.3 }}
           className={`${
-            isEmpty(data) ? "col-span-12" : "col-span-8"
-          } p-6 rounded-md border`}
+            isEmpty(data) ? "lg:col-span-12" : "lg:col-span-8"
+          } p-4 sm:p-6 rounded-md border w-full`}
           style={{
             backgroundColor: bg("#ffffff", "#1e1e1e"),
             borderColor: border("#e9e9e9", "#333333"),
           }}
         >
+          =
           <div
-            className="border-b pb-[10px] flex justify-between"
+            className="border-b pb-3 sm:pb-[10px] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3"
             style={{ borderColor: border("#e5e7eb", "#333333") }}
           >
             <Typography
               variant="h6"
               sx={{
-                fontSize: "20px",
+                fontSize: { xs: "18px", sm: "20px" },
                 fontWeight: "600",
                 color: text("#000000", "#f3f4f6"),
               }}
@@ -218,57 +220,61 @@ const ReportComponent = ({
               enableHover={false}
             />
           </div>
-          <div className="flex gap-6 items-end flex-wrap mt-[15px]">
-            {/* Start date */}
-            <div className="mb-4">
-              <label
-                className="block text-sm font-medium mb-1"
-                style={{ color: text("#374151", "#d1d5db") }}
-              >
-                Дата начала
-              </label>
-              <input
-                type="datetime-local"
-                value={startDate}
-                onChange={(e) => {
-                  setStartDate(e.target.value);
-                  setSelectedPeriod("custom");
-                }}
-                className="!h-[44px] border px-2 rounded-md"
-                style={{
-                  backgroundColor: bg("#ffffff", "#2a2a2a"),
-                  borderColor: border("#c9c9c9", "#4b5563"),
-                  color: text("#000000", "#f3f4f6"),
-                }}
-              />
+          =
+          <div className="flex flex-col gap-4 mt-4 sm:mt-[15px]">
+            {/* Date Inputs - Stack on mobile, row on larger screens */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Start date */}
+              <div>
+                <label
+                  className="block text-xs sm:text-sm font-medium mb-1"
+                  style={{ color: text("#374151", "#d1d5db") }}
+                >
+                  Дата начала
+                </label>
+                <input
+                  type="datetime-local"
+                  value={startDate}
+                  onChange={(e) => {
+                    setStartDate(e.target.value);
+                    setSelectedPeriod("custom");
+                  }}
+                  className="w-full !h-[44px] border px-2 rounded-md text-sm"
+                  style={{
+                    backgroundColor: bg("#ffffff", "#2a2a2a"),
+                    borderColor: border("#c9c9c9", "#4b5563"),
+                    color: text("#000000", "#f3f4f6"),
+                  }}
+                />
+              </div>
+
+              {/* End date */}
+              <div>
+                <label
+                  className="block text-xs sm:text-sm font-medium mb-1"
+                  style={{ color: text("#374151", "#d1d5db") }}
+                >
+                  Дата окончания
+                </label>
+                <input
+                  type="datetime-local"
+                  value={endDate}
+                  onChange={(e) => {
+                    setEndDate(e.target.value);
+                    setSelectedPeriod("custom");
+                  }}
+                  className="w-full !h-[44px] border px-2 rounded-md text-sm"
+                  style={{
+                    backgroundColor: bg("#ffffff", "#2a2a2a"),
+                    borderColor: border("#c9c9c9", "#4b5563"),
+                    color: text("#000000", "#f3f4f6"),
+                  }}
+                />
+              </div>
             </div>
 
-            {/* End date */}
-            <div className="mb-4">
-              <label
-                className="block text-sm font-medium mb-1"
-                style={{ color: text("#374151", "#d1d5db") }}
-              >
-                Дата окончания
-              </label>
-              <input
-                type="datetime-local"
-                value={endDate}
-                onChange={(e) => {
-                  setEndDate(e.target.value);
-                  setSelectedPeriod("custom");
-                }}
-                className="!h-[44px] border px-2 rounded-md"
-                style={{
-                  backgroundColor: bg("#ffffff", "#2a2a2a"),
-                  borderColor: border("#c9c9c9", "#4b5563"),
-                  color: text("#000000", "#f3f4f6"),
-                }}
-              />
-            </div>
-
-            <div className="flex gap-3 mb-4">
-              {/* Period buttons */}
+            {/* Period buttons - Grid layout that adapts to screen size */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
               {[
                 { key: "today", label: "Сегодня" },
                 { key: "yesterday", label: "Вчера" },
@@ -303,7 +309,7 @@ const ReportComponent = ({
                     setEndDate(formatDateTime(end));
                     setSelectedPeriod(key);
                   }}
-                  className={`px-4 py-2 rounded-md transition cursor-pointer ${
+                  className={`px-3 sm:px-4 py-2 rounded-md transition cursor-pointer text-sm sm:text-base ${
                     selectedPeriod === key
                       ? "bg-blue-600 text-white"
                       : "bg-blue-500 text-white hover:bg-blue-600"
@@ -314,14 +320,16 @@ const ReportComponent = ({
               ))}
             </div>
           </div>
-
+          {/* Content Area */}
           {isEmpty(data) ? (
-            <NoData
-              title="Нет данных"
-              description="За выбранный период данные по сотрудникам не найдены. Попробуйте изменить диапазон дат"
-            />
+            <div className="mt-6">
+              <NoData
+                title="Нет данных"
+                description="За выбранный период данные по сотрудникам не найдены. Попробуйте изменить диапазон дат"
+              />
+            </div>
           ) : (
-            <div>
+            <div className="mt-4 sm:mt-6">
               {isLoadingReport || isFetchingReport ? (
                 <ContentLoader />
               ) : (
@@ -329,7 +337,7 @@ const ReportComponent = ({
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.3 }}
-                  className="my-[20px] w-full p-3 rounded-md border"
+                  className="w-full p-2 sm:p-3 rounded-md border overflow-x-auto"
                   style={{
                     backgroundColor: bg("#ffffff", "#1e1e1e"),
                     borderColor: border("#e5e7eb", "#333333"),
@@ -342,25 +350,26 @@ const ReportComponent = ({
           )}
         </motion.div>
 
+        {/* Statistics Sidebar - Moves below on mobile */}
         {!isEmpty(data) && (
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3 }}
-            className="col-span-4 self-start p-6 rounded-md border"
+            className="lg:col-span-4 w-full p-4 sm:p-6 rounded-md border"
             style={{
               backgroundColor: bg("#ffffff", "#1e1e1e"),
               borderColor: border("#e5e7eb", "#333333"),
             }}
           >
             <h3
-              className="text-lg font-semibold mb-4"
+              className="text-base sm:text-lg font-semibold mb-4"
               style={{ color: text("#000000", "#f3f4f6") }}
             >
               {getPeriodTitle()}
             </h3>
 
-            {/* Statistics */}
+            {/* Statistics Cards */}
             <div className="grid grid-cols-2 gap-3 mb-4">
               <div
                 className="border rounded-lg p-3 text-center"
@@ -370,13 +379,13 @@ const ReportComponent = ({
                 }}
               >
                 <div
-                  className="text-2xl font-bold"
+                  className="text-xl sm:text-2xl font-bold"
                   style={{ color: isDark ? "#4ade80" : "#16a34a" }}
                 >
                   {accessGranted}
                 </div>
                 <div
-                  className="text-sm"
+                  className="text-xs sm:text-sm mt-1"
                   style={{ color: isDark ? "#86efac" : "#15803d" }}
                 >
                   Разрешено
@@ -390,13 +399,13 @@ const ReportComponent = ({
                 }}
               >
                 <div
-                  className="text-2xl font-bold"
+                  className="text-xl sm:text-2xl font-bold"
                   style={{ color: isDark ? "#f87171" : "#dc2626" }}
                 >
                   {accessDenied}
                 </div>
                 <div
-                  className="text-sm"
+                  className="text-xs sm:text-sm mt-1"
                   style={{ color: isDark ? "#fca5a5" : "#b91c1c" }}
                 >
                   Запрещено
@@ -404,39 +413,43 @@ const ReportComponent = ({
               </div>
             </div>
 
-            <ResponsiveContainer width="100%" height={250}>
-              <PieChart>
-                <Pie
-                  data={pieData}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={80}
-                  label={({ name, percent }) =>
-                    `${name}: ${(percent * 100).toFixed(1)}%`
-                  }
-                >
-                  {pieData.map((_, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index]} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  formatter={(value, name) => [value, name]}
-                  labelFormatter={(label) => `Количество: ${label}`}
-                  contentStyle={{
-                    backgroundColor: bg("#ffffff", "#1e1e1e"),
-                    borderColor: border("#e5e7eb", "#333333"),
-                    color: text("#000000", "#f3f4f6"),
-                  }}
-                />
-                <Legend
-                  wrapperStyle={{
-                    color: text("#000000", "#f3f4f6"),
-                  }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
+            {/* Pie Chart - Responsive height */}
+            <div className="w-full">
+              <ResponsiveContainer width="100%" height={250}>
+                <PieChart>
+                  <Pie
+                    data={pieData}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={80}
+                    label={({ name, percent }) =>
+                      `${name}: ${(percent * 100).toFixed(1)}%`
+                    }
+                  >
+                    {pieData.map((_, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index]} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    formatter={(value, name) => [value, name]}
+                    labelFormatter={(label) => `Количество: ${label}`}
+                    contentStyle={{
+                      backgroundColor: bg("#ffffff", "#1e1e1e"),
+                      borderColor: border("#e5e7eb", "#333333"),
+                      color: text("#000000", "#f3f4f6"),
+                    }}
+                  />
+                  <Legend
+                    wrapperStyle={{
+                      color: text("#000000", "#f3f4f6"),
+                      fontSize: "12px",
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
           </motion.div>
         )}
       </div>
