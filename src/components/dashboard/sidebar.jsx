@@ -231,10 +231,8 @@ function Sidebar({ isOpen = true }) {
     }));
   };
 
-  const handleLogout = async () => {
-    await signOut({ callbackUrl: "/" });
-    localStorage.clear();
-    sessionStorage.clear();
+  const handleLogout = () => {
+    signOut({ redirect: true, callbackUrl: "/" });
   };
 
   // Show loading or no access state

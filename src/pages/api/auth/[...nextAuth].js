@@ -444,7 +444,7 @@ export const authOptions = {
 
   pages: {
     signIn: "/",
-    signOut: "/",
+    signOut: "localhost:3001",
     error: "/auth/error",
   },
 
