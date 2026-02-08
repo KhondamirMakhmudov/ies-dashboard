@@ -20,7 +20,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import useAppTheme from "@/hooks/useAppTheme";
 import { canUserDo } from "@/utils/checkpermission";
 const Index = () => {
-  const { bg, text, border, isDark } = useAppTheme();
+  const { bg, border, isDark } = useAppTheme();
   const queryClient = useQueryClient();
   const { data: session } = useSession();
   const router = useRouter();
@@ -112,8 +112,11 @@ const Index = () => {
                     width: "32px",
                     height: "32px",
                     minWidth: "32px",
-                    background: "#F0D8C8",
-                    color: "#FF6200",
+                    background: isDark ? "#7c2d12" : "#F0D8C8",
+                    color: isDark ? "#fb923c" : "#FF6200",
+                    "&:hover": {
+                      background: isDark ? "#9a3412" : "#F0B28B",
+                    },
                   }}
                 >
                   <EditIcon fontSize="small" />
@@ -126,8 +129,11 @@ const Index = () => {
                     width: "32px",
                     height: "32px",
                     minWidth: "32px",
-                    background: "#FCD8D3",
-                    color: "#FF1E00",
+                    background: isDark ? "#7f1d1d" : "#FCD8D3",
+                    color: isDark ? "#fca5a5" : "#FF1E00",
+                    "&:hover": {
+                      background: isDark ? "#991b1b" : "#FCA89D",
+                    },
                   }}
                 >
                   <DeleteIcon fontSize="small" />

@@ -2,13 +2,9 @@ import React, { useState } from "react";
 import toast from "react-hot-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
-import { Typography } from "@mui/material";
-import FlightTakeoffIcon from "@mui/icons-material/FlightTakeoff";
 import usePostQuery from "@/hooks/java/usePostQuery";
 import { URLS } from "@/constants/url";
 import { KEYS } from "@/constants/key";
-
-// Import your custom components
 import MethodModal from "../modal/method-modal";
 import Input from "../input";
 import CustomSelect from "../select";
@@ -17,7 +13,7 @@ import PrimaryButton from "../button/primary-button";
 export default function EmployeeBusinessTripSection({
   employeeUuid,
   isDark,
-  schedules = [], // Pass available schedules from parent
+  schedules = [],
 }) {
   const { data: session } = useSession();
   const queryClient = useQueryClient();
@@ -89,7 +85,7 @@ export default function EmployeeBusinessTripSection({
             position: "top-right",
           });
         },
-      }
+      },
     );
   };
 

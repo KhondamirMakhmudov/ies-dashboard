@@ -71,7 +71,7 @@ function MuiThemeSync({ children }) {
           },
         },
       }),
-    [currentTheme, mounted]
+    [currentTheme, mounted],
   );
 
   // Prevent flash during SSR

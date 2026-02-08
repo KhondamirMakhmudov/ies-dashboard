@@ -23,10 +23,12 @@ export default function Home() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   const [savedLogins, setSavedLogins] = useState([]);
 
   useEffect(() => {
+    setMounted(true);
     const stored = JSON.parse(localStorage.getItem("logins") || "[]");
     setSavedLogins(stored);
   }, []);
@@ -48,6 +50,11 @@ export default function Home() {
     setSavedLogins(updated);
     localStorage.setItem("logins", JSON.stringify(updated));
   };
+
+  // Helper functions that respect SSR hydration
+  const safeBg = (light, dark) => (mounted && isDark ? dark : light);
+  const safeText = (light, dark) => (mounted && isDark ? dark : light);
+  const safeBorder = (light, dark) => (mounted && isDark ? dark : light);
 
   const handleSelectLogin = (login) => {
     setUsername(login.username);
@@ -102,7 +109,7 @@ export default function Home() {
   return (
     <motion.div
       className={
-        bg("bg-white", "bg-[#0D0D0D]") +
+        safeBg("bg-white", "bg-[#0D0D0D]") +
         " login min-h-screen transition-colors duration-300 overflow-hidden"
       }
       initial={{ opacity: 0 }}
@@ -112,7 +119,7 @@ export default function Home() {
       {isLoading && (
         <div
           className={
-            bg("bg-white/80", "bg-black/60") +
+            safeBg("bg-white/80", "bg-black/60") +
             " fixed inset-0 z-[9999] backdrop-blur-sm flex items-center justify-center"
           }
         >
@@ -121,7 +128,6 @@ export default function Home() {
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-12 w-full min-h-screen overflow-hidden">
-        {/* Left side image - Hidden on mobile, visible on large screens */}
         <motion.div
           className="hidden lg:flex lg:col-span-6 justify-center items-center h-full px-4 overflow-hidden"
           initial={{ x: -80, opacity: 0 }}
@@ -133,16 +139,19 @@ export default function Home() {
             alt="login"
             width={600}
             height={300}
+            priority
             className="max-w-full h-auto"
           />
         </motion.div>
 
-        {/* Right side form */}
         <motion.div
           className={
-            bg("bg-white", "bg-[#1A1A1A]") +
+            safeBg("bg-white", "bg-[#1A1A1A]") +
             " col-span-1 lg:col-span-6 w-full flex flex-col items-center justify-center min-h-screen p-4 sm:p-6 md:p-8 lg:p-[24px] transition-colors duration-300 overflow-hidden " +
-            border("lg:border-l border-gray-200", "lg:border-l border-gray-700")
+            safeBorder(
+              "lg:border-l border-gray-200",
+              "lg:border-l border-gray-700",
+            )
           }
           initial={{ x: 80, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
@@ -158,7 +167,7 @@ export default function Home() {
 
             <div
               className={
-                bg("bg-gray-200", "bg-gray-700") +
+                safeBg("bg-gray-200", "bg-gray-700") +
                 " w-full h-[1px] my-[10px] transition-colors"
               }
             />
@@ -166,7 +175,7 @@ export default function Home() {
             <div className="mb-[20px] w-full">
               <h1
                 className={
-                  text("text-black", "text-white") +
+                  safeText("text-black", "text-white") +
                   " text-[24px] sm:text-[28px] md:text-[32px] lg:text-[36px] mb-[12px] font-semibold"
                 }
               >
@@ -175,7 +184,7 @@ export default function Home() {
               {!session?.accessToken && (
                 <p
                   className={
-                    text("text-gray-400", "text-gray-300") +
+                    safeText("text-gray-400", "text-gray-300") +
                     " text-sm sm:text-base"
                   }
                 >
@@ -191,7 +200,6 @@ export default function Home() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.7 }}
               >
-                {/* Simple centered icon */}
                 <motion.div
                   className="flex justify-center mb-8"
                   initial={{ scale: 0 }}
@@ -200,22 +208,21 @@ export default function Home() {
                 >
                   <div
                     className={
-                      bg("bg-green-100", "bg-green-900/20") +
+                      safeBg("bg-green-100", "bg-green-900/20") +
                       " w-24 h-24 rounded-full flex items-center justify-center"
                     }
                   >
                     <CheckCircleIcon
-                      className={text("text-green-600", "text-green-400")}
+                      className={safeText("text-green-600", "text-green-400")}
                       sx={{ fontSize: 64 }}
                     />
                   </div>
                 </motion.div>
 
-                {/* Simple text */}
                 <div className="text-center mb-10">
                   <h2
                     className={
-                      text("text-gray-900", "text-white") +
+                      safeText("text-gray-900", "text-white") +
                       " text-2xl font-semibold mb-2"
                     }
                   >
@@ -223,21 +230,20 @@ export default function Home() {
                   </h2>
                   <p
                     className={
-                      text("text-gray-500", "text-gray-400") + " text-sm"
+                      safeText("text-gray-500", "text-gray-400") + " text-sm"
                     }
                   >
                     Выберите действие
                   </p>
                 </div>
 
-                {/* Clean buttons */}
                 <div className="grid grid-cols-2 gap-4">
                   <motion.button
                     onClick={handleEnter}
                     whileHover={{ y: -4 }}
                     whileTap={{ scale: 0.98 }}
                     className={
-                      bg(
+                      safeBg(
                         "bg-blue-600 hover:bg-blue-700",
                         "bg-blue-600 hover:bg-blue-700",
                       ) +
@@ -253,12 +259,12 @@ export default function Home() {
                     whileHover={{ y: -4 }}
                     whileTap={{ scale: 0.98 }}
                     className={
-                      bg(
+                      safeBg(
                         "bg-gray-200 hover:bg-gray-300",
                         "bg-gray-800 hover:bg-gray-700",
                       ) +
                       " " +
-                      text("text-gray-700", "text-gray-200") +
+                      safeText("text-gray-700", "text-gray-200") +
                       " h-14 rounded-xl font-medium text-base transition-all flex items-center justify-center gap-2"
                     }
                   >
@@ -275,12 +281,11 @@ export default function Home() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.7 }}
               >
-                {/* Saved logins */}
                 {savedLogins.length > 0 && (
                   <div className="mb-4">
                     <p
                       className={
-                        text("text-gray-600", "text-gray-300") +
+                        safeText("text-gray-600", "text-gray-300") +
                         " text-xs sm:text-sm mb-2"
                       }
                     >
@@ -293,13 +298,13 @@ export default function Home() {
                           key={i}
                           onClick={() => handleSelectLogin(login)}
                           className={
-                            bg("bg-blue-50", "bg-blue-900/30") +
+                            safeBg("bg-blue-50", "bg-blue-900/30") +
                             " flex items-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-full text-blue-600 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-800/40 transition-all text-sm"
                           }
                         >
                           <span
                             className={
-                              bg("bg-blue-500", "bg-blue-700") +
+                              safeBg("bg-blue-500", "bg-blue-700") +
                               " w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full text-white text-xs"
                             }
                           >
@@ -307,7 +312,7 @@ export default function Home() {
                           </span>
                           <span
                             className={
-                              text("text-blue-600", "text-blue-300") +
+                              safeText("text-blue-600", "text-blue-300") +
                               " text-xs sm:text-sm truncate max-w-[100px] sm:max-w-none"
                             }
                           >
@@ -336,11 +341,11 @@ export default function Home() {
                   type="text"
                   value={username}
                   inputClass={
-                    bg("bg-white", "bg-[#262626]") +
+                    safeBg("bg-white", "bg-[#262626]") +
                     " " +
-                    text("text-black", "text-white") +
+                    safeText("text-black", "text-white") +
                     " " +
-                    border("!border-gray-300", "!border-gray-600") +
+                    safeBorder("!border-gray-300", "!border-gray-600") +
                     " !h-[44px] sm:!h-[48px] rounded-[8px] text-[14px] sm:text-[15px]"
                   }
                   onChange={(e) => setUsername(e.target.value)}
@@ -352,11 +357,11 @@ export default function Home() {
                   type="password"
                   value={password}
                   inputClass={
-                    bg("bg-white", "bg-[#262626]") +
+                    safeBg("bg-white", "bg-[#262626]") +
                     " " +
-                    text("text-black", "text-white") +
+                    safeText("text-black", "text-white") +
                     " " +
-                    border("!border-gray-300", "!border-gray-600") +
+                    safeBorder("!border-gray-300", "!border-gray-600") +
                     " !h-[44px] sm:!h-[48px] rounded-[8px] text-[14px] sm:text-[15px]"
                   }
                   onChange={(e) => setPassword(e.target.value)}
