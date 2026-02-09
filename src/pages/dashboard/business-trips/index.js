@@ -43,6 +43,7 @@ const Index = () => {
   const [createModal, setCreateModal] = useState(false);
   const [deleteModal, setDeleteModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [tableSearchTerm, setTableSearchTerm] = useState("");
   const [selectedPosition, setSelectedPosition] = useState("");
   const [selectedJobTrip, setSelectedJobTrip] = useState(null);
   const [selectedEmployeesForJobTrip, setSelectedEmployeesForJobTrip] =
@@ -75,6 +76,27 @@ const Index = () => {
     enabled: !!session?.accessToken,
   });
 
+  const filteredEmployeesOfJobTrips = get(jobTrips, "data.data", []).filter(
+    (trip) => {
+      const term = tableSearchTerm.toLowerCase();
+      if (!term) return true;
+
+      const lastName = trip.lastName?.toLowerCase() || "";
+      const firstName = trip.firstName?.toLowerCase() || "";
+      const fatherName = trip.fatherName?.toLowerCase() || "";
+      const numOrder = trip.numOrder?.toLowerCase() || "";
+      const entryPointName = trip.entryPointName?.toLowerCase() || "";
+
+      return (
+        lastName.includes(term) ||
+        firstName.includes(term) ||
+        fatherName.includes(term) ||
+        numOrder.includes(term) ||
+        entryPointName.includes(term)
+      );
+    },
+  );
+
   const {
     data: employee,
     isLoading: isLoadingEmployee,
@@ -89,11 +111,18 @@ const Index = () => {
   });
 
   const filteredEmployees = get(employee, "data.data", []).filter((emp) => {
+    const firstName = emp.first_name?.toLowerCase() || "";
+    const lastName = emp.last_name?.toLowerCase() || "";
     const fio = `${emp.first_name || ""} ${emp.last_name || ""}`.toLowerCase();
     const position = emp.workplace?.position?.name?.toLowerCase() || "";
     const term = searchTerm.toLowerCase();
 
-    const matchesSearch = fio.includes(term) || position.includes(term);
+    // Search by surname (last_name), first name, full name, or position
+    const matchesSearch =
+      lastName.includes(term) ||
+      firstName.includes(term) ||
+      fio.includes(term) ||
+      position.includes(term);
     const matchesPosition = selectedPosition
       ? emp.workplace?.position?.name === selectedPosition
       : true;
@@ -399,9 +428,50 @@ const Index = () => {
           )}
         </div>
 
+        {/* Search and Filter for Job Trips Table */}
+        {canReadJobTrip && (
+          <div className="mb-4 flex flex-col sm:flex-row gap-3">
+            <div className="flex-1 relative">
+              <input
+                type="text"
+                value={tableSearchTerm}
+                onChange={(e) => {
+                  setTableSearchTerm(e.target.value);
+                  setCurrentPage(1);
+                }}
+                placeholder="Поиск по фамилии сотрудника, приказу или точке входа..."
+                className="w-full h-12 rounded-lg border pl-11 pr-4 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                style={{
+                  backgroundColor: bg("#ffffff", "#1e1e1e"),
+                  borderColor: border("#d1d5db", "#4b5563"),
+                  color: text("#111827", "#f3f4f6"),
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = border(
+                    "#9ca3af",
+                    "#6b7280",
+                  );
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = border(
+                    "#d1d5db",
+                    "#4b5563",
+                  );
+                }}
+              />
+              <div
+                className="absolute left-4 top-1/2 transform -translate-y-1/2"
+                style={{ color: text("#9ca3af", "#6b7280") }}
+              >
+                <Search fontSize="small" />
+              </div>
+            </div>
+          </div>
+        )}
+
         {canReadJobTrip && (
           <CustomTable
-            data={get(jobTrips, "data.data", [])}
+            data={filteredEmployeesOfJobTrips}
             columns={columns}
             pagination={{
               currentPage,
@@ -608,7 +678,7 @@ const Index = () => {
                       type="text"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      placeholder="Поиск по имени или должности..."
+                      placeholder="Поиск по фамилии, имени или должности..."
                       className="w-full h-12 rounded-lg border pl-11 pr-4 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       style={{
                         backgroundColor: bg("#ffffff", "#1e1e1e"),
