@@ -149,7 +149,7 @@ const allMenuItems = [
     text: "Настройки",
     icon: <SettingsRoundedIcon />,
     path: "/dashboard/settings",
-    roles: ["admin"],
+    roles: ["admin", "hr-admin", "hr-moderator", "acs-admin"],
   },
 ];
 
