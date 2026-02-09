@@ -34,6 +34,7 @@ import {
 import DeleteModal from "@/components/modal/delete-modal";
 import useAppTheme from "@/hooks/useAppTheme";
 import { canUserDo } from "@/utils/checkpermission";
+import SearchInput from "@/components/search";
 
 const Index = () => {
   const queryClient = useQueryClient();
@@ -52,6 +53,7 @@ const Index = () => {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [selectedSchedule, setSelectedSchedule] = useState(null);
+  const [jobTripSearch, setJobTripSearch] = useState("");
 
   const canCreateJobTrip = canUserDo(session?.user, "командировки", "create");
   const canDeleteJobTrip = canUserDo(session?.user, "командировки", "delete");
@@ -380,6 +382,28 @@ const Index = () => {
     );
   }
 
+  // prepare filtered / paginated data for table when searching employees
+  const allJobTrips = get(jobTrips, "data.data", []) || [];
+  const displayedJobTrips = allJobTrips.filter((jt) => {
+    const term = jobTripSearch.trim().toLowerCase();
+    if (!term) return true;
+    const fullName =
+      `${jt.lastName || ""} ${jt.firstName || ""} ${jt.fatherName || ""}`.toLowerCase();
+    const unit = (
+      jt.unitCodeNameLong ||
+      jt.destinationUnitCodeNameLong ||
+      ""
+    ).toLowerCase();
+    return fullName.includes(term) || unit.includes(term);
+  });
+
+  const paginatedData = jobTripSearch
+    ? displayedJobTrips.slice(
+        (currentPage - 1) * pageSize,
+        currentPage * pageSize,
+      )
+    : allJobTrips;
+
   return (
     <DashboardLayout headerTitle={"Командировки"}>
       <motion.div
@@ -400,16 +424,29 @@ const Index = () => {
         </div>
 
         {canReadJobTrip && (
-          <CustomTable
-            data={get(jobTrips, "data.data", [])}
-            columns={columns}
-            pagination={{
-              currentPage,
-              pageSize,
-              total: get(jobTrips, "data.totalCount", 0),
-              onPaginationChange: ({ page }) => setCurrentPage(page),
-            }}
-          />
+          <>
+            <SearchInput
+              value={jobTripSearch}
+              onChange={(e) => {
+                setJobTripSearch(e.target.value);
+                setCurrentPage(1);
+              }}
+              placeholder={"Поиск по сотрудникам или подразделению..."}
+            />
+
+            <CustomTable
+              data={paginatedData}
+              columns={columns}
+              pagination={{
+                currentPage,
+                pageSize,
+                total: jobTripSearch
+                  ? displayedJobTrips.length
+                  : get(jobTrips, "data.totalCount", 0),
+                onPaginationChange: ({ page }) => setCurrentPage(page),
+              }}
+            />
+          </>
         )}
       </motion.div>
 

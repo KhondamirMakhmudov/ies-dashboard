@@ -192,7 +192,6 @@ const ReportComponent = ({
             borderColor: border("#e9e9e9", "#333333"),
           }}
         >
-          =
           <div
             className="border-b pb-3 sm:pb-[10px] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3"
             style={{ borderColor: border("#e5e7eb", "#333333") }}
@@ -220,7 +219,7 @@ const ReportComponent = ({
               enableHover={false}
             />
           </div>
-          =
+
           <div className="flex flex-col gap-4 mt-4 sm:mt-[15px]">
             {/* Date Inputs - Stack on mobile, row on larger screens */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
