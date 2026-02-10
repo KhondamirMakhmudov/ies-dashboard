@@ -3,20 +3,20 @@ import React from "react";
 import { useRouter } from "next/router";
 import DashboardLayout from "@/layouts/dashboard/DashboardLayout";
 
-const NotAllowedPage = () => {
+const UnauthorizedPage = () => {
   const router = useRouter();
 
   return (
     <DashboardLayout>
       <div className="flex flex-col items-center justify-center text-center min-h-screen px-4">
         <div>
-          <Image src="/icons/403.svg" alt="403" width={400} height={400} />
+          <Image src="/icons/401.svg" alt="401" width={400} height={400} />
         </div>
         <h1 className="text-3xl font-semibold mt-4">
-          Страница вам не доступна
+          Требуется аутентификация
         </h1>
         <p className="text-lg text-gray-600 mt-2 max-w-md">
-          Извините, страница, которую вы ищете, вам не разрешено.
+          Извините, вам необходимо войти в систему для доступа к этой странице.
         </p>
         <button
           onClick={() => router.back()}
@@ -29,4 +29,4 @@ const NotAllowedPage = () => {
   );
 };
 
-export default NotAllowedPage;
+export default UnauthorizedPage;

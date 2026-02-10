@@ -20,8 +20,10 @@ import NoData from "@/components/no-data";
 import PrimaryButton from "@/components/button/primary-button";
 import ActiveStatusRadio from "@/components/activeStatusRadio";
 import useAppTheme from "@/hooks/useAppTheme";
+import { useSession } from "next-auth/react";
 const UnitType = () => {
-  const { isDark, bg, text, border } = useAppTheme();
+  const { data: session } = useSession();
+  const { isDark, bg, border } = useAppTheme();
   const queryClient = useQueryClient();
   const [currentPage, setCurrentPage] = useState(1);
   const limit = 150;
@@ -41,11 +43,15 @@ const UnitType = () => {
   } = useGetPythonQuery({
     key: KEYS.unitTypes,
     url: URLS.unitTypes,
+    headers: {
+      Authorization: `Bearer ${session?.accessToken}`,
+    },
     params: {
       is_active: selectStatus,
       limit: limit,
       offset: offset,
     },
+    enabled: !!session?.accessToken,
   });
 
   const handlePaginationChange = ({ page }) => {
@@ -71,6 +77,11 @@ const UnitType = () => {
         attributes: {
           name: name,
           is_active: isActive,
+        },
+        config: {
+          headers: {
+            Authorization: `Bearer ${session?.accessToken}`,
+          },
         },
       },
       {
@@ -121,7 +132,10 @@ const UnitType = () => {
         `${config.PYTHON_API_URL}${URLS.unitTypes}${id}`,
         {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            Authorization: `Bearer ${session?.accessToken}`,
+            "Content-Type": "application/json",
+          },
           body: JSON.stringify(updates),
         },
       );
@@ -149,6 +163,7 @@ const UnitType = () => {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${session?.accessToken}`,
           },
           body: JSON.stringify({ unit_type_id: id }),
         },

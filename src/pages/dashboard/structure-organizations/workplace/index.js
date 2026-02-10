@@ -39,9 +39,9 @@ const Index = () => {
   const [filterPosition, setFilterPosition] = useState(null);
   const [filterStatus, setFilterStatus] = useState(null);
   // permissions
-  const canCreateWorkplace = canUserDo(session?.user, "место работы", "create");
-  const canReadWorkplace = canUserDo(session?.user, "место работы", "read");
-  const canDeleteWorkplace = canUserDo(session?.user, "место работы", "delete");
+  const canCreateWorkplace = canUserDo(session?.user, "workplace", "create");
+  const canReadWorkplace = canUserDo(session?.user, "workplace", "all-read");
+  const canDeleteWorkplace = canUserDo(session?.user, "workplace", "delete");
 
   const {
     data: orgUnits,
@@ -50,17 +50,24 @@ const Index = () => {
   } = useGetPythonQuery({
     key: KEYS.organizationalUnits,
     url: URLS.organizationalUnits,
+    headers: {
+      Authorization: `Bearer ${session?.accessToken}`,
+    },
     params: { is_root: true, limit: 150 },
+    enabled: !!session?.accessToken,
   });
 
   const { data: childUnits, isLoading: isChildLoading } = useGetPythonQuery({
     key: [KEYS.organizationalUnits, selectedParentCode],
     url: URLS.organizationalUnits,
+    headers: {
+      Authorization: `Bearer ${session?.accessToken}`,
+    },
     params: {
       unit_code: selectedParentCode,
       limit: 150,
     },
-    enabled: !!selectedParentCode,
+    enabled: !!selectedParentCode && !!session?.accessToken,
   });
 
   const {
@@ -70,10 +77,14 @@ const Index = () => {
   } = useGetPythonQuery({
     key: [KEYS.positions, createModal],
     url: URLS.positions,
+    headers: {
+      Authorization: `Bearer ${session?.accessToken}`,
+    },
     params: {
       is_active: true,
       limit: 150,
     },
+    enabled: !!session?.accessToken,
   });
 
   const optionsPosition = get(positions, "data", []).map((entry) => ({
@@ -88,10 +99,14 @@ const Index = () => {
   } = useGetPythonQuery({
     key: [KEYS.workplace, selectUnitCode],
     url: URLS.workplace,
+    headers: {
+      Authorization: `Bearer ${session?.accessToken}`,
+    },
     params: {
       limit: 1000,
       unit_code: +selectUnitCode,
     },
+    enabled: !!session?.accessToken,
   });
 
   // Status filter options

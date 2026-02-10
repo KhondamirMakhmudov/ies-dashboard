@@ -8,10 +8,10 @@ import { isArray, get, forEach, isObject, values } from "lodash";
 const postRequest = (url, attributes, config = {}) =>
   requestPython.post(url, attributes, {
     headers: {
-      "Content-Type": "application/json", // default header
-      ...(config.headers || {}), // custom headers
+      "Content-Type": "application/json",
+      ...(config.headers || {}),
     },
-    ...config, // rest of the config (e.g., timeout)
+    ...config,
   });
 
 const usePostPythonQuery = ({
@@ -55,7 +55,7 @@ const usePostPythonQuery = ({
           }
         }
       },
-    }
+    },
   );
 
   return {

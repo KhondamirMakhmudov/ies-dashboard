@@ -21,8 +21,10 @@ import NoData from "@/components/no-data";
 import PrimaryButton from "@/components/button/primary-button";
 import ActiveStatusRadio from "@/components/activeStatusRadio";
 import useAppTheme from "@/hooks/useAppTheme";
+import { useSession } from "next-auth/react";
 
 const Position = () => {
+  const { data: session } = useSession();
   const queryClient = useQueryClient();
   const { isDark, bg, text, border } = useAppTheme();
 
@@ -39,6 +41,9 @@ const Position = () => {
   const [positionTypeId, setPositionTypeId] = useState(null);
   const [positionParentId, setPositionParentId] = useState(null);
   const [originalUnitType, setOriginalUnitType] = useState(null);
+  const [isChief, setIsChief] = useState(false);
+  const [isUniquePerUnit, setIsUniquePerUnit] = useState(false);
+  const [hierarchyLevel, setHierarchyLevel] = useState(0);
 
   const {
     data: positions,
@@ -47,11 +52,15 @@ const Position = () => {
   } = useGetPythonQuery({
     key: KEYS.positions,
     url: URLS.positions,
+    headers: {
+      Authorization: `Bearer ${session?.accessToken}`,
+    },
     params: {
       is_active: selectStatus,
       limit: limit,
       offset: offset,
     },
+    enabled: !!session?.accessToken,
   });
 
   const {
@@ -61,18 +70,17 @@ const Position = () => {
   } = useGetPythonQuery({
     key: KEYS.positionTypes,
     url: URLS.positionTypes,
+    headers: {
+      Authorization: `Bearer ${session?.accessToken}`,
+    },
     params: {
       is_active: true,
     },
+    enabled: !!session?.accessToken,
   });
 
   const optionsPositionType = get(positionTypes, "data", []).map((entry) => ({
     value: entry.id,
-    label: entry.name,
-  }));
-
-  const optionsPosition = get(positions, "data", []).map((entry) => ({
-    value: entry.parent_id,
     label: entry.name,
   }));
 
@@ -83,8 +91,11 @@ const Position = () => {
   const handleRemoveAll = () => {
     setOriginalUnitType(null);
     setPositionTypeId(null);
-    setIsActive();
+    setIsActive(true);
     setName("");
+    setIsChief(false);
+    setIsUniquePerUnit(false);
+    setHierarchyLevel(0);
   };
 
   // create unit type
@@ -100,7 +111,15 @@ const Position = () => {
         attributes: {
           name: name,
           position_type_id: positionTypeId,
+          is_unique_per_unit: isUniquePerUnit,
           is_active: isActive,
+          is_chief: isChief,
+          hierarchy_level: hierarchyLevel,
+        },
+        config: {
+          headers: {
+            Authorization: `Bearer ${session?.accessToken}`,
+          },
         },
       },
       {
@@ -140,6 +159,18 @@ const Position = () => {
         updates.position_type_id = positionTypeId;
       }
 
+      if (isChief !== originalUnitType.is_chief) {
+        updates.is_chief = isChief;
+      }
+
+      if (isUniquePerUnit !== originalUnitType.is_unique_per_unit) {
+        updates.is_unique_per_unit = isUniquePerUnit;
+      }
+
+      if (hierarchyLevel !== originalUnitType.hierarchy_level) {
+        updates.hierarchy_level = hierarchyLevel;
+      }
+
       // If nothing changed, just close modal
       if (Object.keys(updates).length === 0) {
         toast.info("Изменений не обнаружено");
@@ -151,7 +182,10 @@ const Position = () => {
         `${config.PYTHON_API_URL}${URLS.positions}${id}`,
         {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session?.accessToken}`,
+          },
           body: JSON.stringify(updates),
         },
       );
@@ -179,6 +213,7 @@ const Position = () => {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${session?.accessToken}`,
           },
           body: JSON.stringify({ position_id: id }),
         },
@@ -202,7 +237,10 @@ const Position = () => {
       header: "№",
       cell: ({ row }) => row.index + 1,
     },
-    { accessorKey: "name", header: "Имя точки входа" },
+    {
+      accessorKey: "name",
+      header: "Название должности",
+    },
     {
       accessorKey: "is_active",
       header: "Статус",
@@ -225,7 +263,71 @@ const Position = () => {
         );
       },
     },
-
+    {
+      accessorKey: "is_chief",
+      header: "Руководитель",
+      cell: ({ getValue }) => {
+        const isChief = getValue();
+        return (
+          <span
+            className={`font-medium p-1 rounded-md border ${
+              isChief
+                ? isDark
+                  ? "text-blue-400 bg-blue-900/30 border-blue-600"
+                  : "text-blue-600 bg-[#E3F2FD] border-blue-600"
+                : isDark
+                  ? "text-gray-400 bg-gray-900/30 border-gray-600"
+                  : "text-gray-600 bg-gray-100 border-gray-400"
+            }`}
+          >
+            {isChief ? "Да" : "Нет"}
+          </span>
+        );
+      },
+    },
+    {
+      accessorKey: "is_unique_per_unit",
+      header: "Уникальность",
+      cell: ({ getValue }) => {
+        const isUnique = getValue();
+        if (isUnique === null) {
+          return (
+            <span
+              className={`font-medium p-1 rounded-md border ${
+                isDark
+                  ? "text-gray-400 bg-gray-900/30 border-gray-600"
+                  : "text-gray-500 bg-gray-100 border-gray-300"
+              }`}
+            >
+              —
+            </span>
+          );
+        }
+        return (
+          <span
+            className={`font-medium p-1 rounded-md border ${
+              isUnique
+                ? isDark
+                  ? "text-purple-400 bg-purple-900/30 border-purple-600"
+                  : "text-purple-600 bg-[#F3E5F5] border-purple-600"
+                : isDark
+                  ? "text-gray-400 bg-gray-900/30 border-gray-600"
+                  : "text-gray-600 bg-gray-100 border-gray-400"
+            }`}
+          >
+            {isUnique ? "Да" : "Нет"}
+          </span>
+        );
+      },
+    },
+    {
+      accessorKey: "hierarchy_level",
+      header: "Уровень иерархии",
+      cell: ({ getValue }) => {
+        const level = getValue();
+        return level !== null ? level : "—";
+      },
+    },
     {
       accessorKey: "actions",
       header: "Действия",
@@ -237,11 +339,17 @@ const Position = () => {
               setSelectedUnitType(row.original.id);
               setName(row.original.name);
               setIsActive(row.original.is_active);
+              setIsChief(row.original.is_chief);
+              setIsUniquePerUnit(row.original.is_unique_per_unit);
+              setHierarchyLevel(row.original.hierarchy_level);
               setPositionTypeId(row.original.position_type_id);
               setOriginalUnitType({
                 name: row.original.name,
-                position_type_id: row.original.position_type_id,
                 is_active: row.original.is_active,
+                is_chief: row.original.is_chief,
+                is_unique_per_unit: row.original.is_unique_per_unit,
+                hierarchy_level: row.original.hierarchy_level,
+                position_type_id: row.original.position_type_id,
               });
             }}
             sx={{
@@ -373,39 +481,197 @@ const Position = () => {
           handleRemoveAll();
         }}
       >
-        <div className="space-y-[15px] my-[30px]">
-          <Input
-            label="Имя"
-            type="text"
-            placeholder="Введите имя"
-            classNames="col-span-4"
-            inputClass={"!h-[45px] rounded-[8px] !border-gray-300 text-[15px]"}
-            labelClass={"text-sm"}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-          />
+        <form onSubmit={onSubmitCreatePosition} className="space-y-5 my-6">
+          {/* Основная информация */}
+          <div className="space-y-4">
+            <Input
+              label="Название позиции"
+              type="text"
+              placeholder="Введите название позиции"
+              inputClass={"!h-[45px] rounded-lg !border-gray-300 text-[15px]"}
+              labelClass={"text-sm font-medium text-gray-700"}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
 
-          <CustomSelect
-            label={"Тип единицы"}
-            options={optionsPositionType}
-            value={positionTypeId}
-            onChange={(val) => setPositionTypeId(val)}
-            placeholder="Выберите тип позиции"
-            returnObject={false}
-          />
+            <CustomSelect
+              label={"Тип позиции"}
+              options={optionsPositionType}
+              value={positionTypeId}
+              onChange={(val) => setPositionTypeId(val)}
+              placeholder="Выберите тип позиции"
+              returnObject={false}
+            />
 
-          <div className="col-span-2">
-            <ActiveStatusRadio isActive={isActive} setIsActive={setIsActive} />
+            <Input
+              label="Уровень иерархии"
+              type="number"
+              placeholder="0"
+              inputClass={"!h-[45px] rounded-lg !border-gray-300 text-[15px]"}
+              labelClass={"text-sm font-medium text-gray-700"}
+              value={hierarchyLevel}
+              onChange={(e) => setHierarchyLevel(parseInt(e.target.value) || 0)}
+              min={0}
+            />
           </div>
-          <button
-            onClick={onSubmitCreatePosition}
-            type="submit"
-            className=" bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 w-1/4 rounded-xl transition-all duration-200"
+
+          {/* Настройки статуса и свойств */}
+          <div
+            className={`p-4 rounded-lg border ${
+              isDark
+                ? "bg-gray-800/50 border-gray-700"
+                : "bg-gray-50 border-gray-200"
+            }`}
           >
-            Создать
-          </button>
-        </div>
+            <h3 className="text-sm font-semibold mb-4 text-gray-700 dark:text-gray-300">
+              Настройки
+            </h3>
+
+            <div className="space-y-4">
+              {/* Статус активности */}
+              <div>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                  Статус
+                </label>
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsActive(true)}
+                    className={`flex-1 py-2.5 px-4 rounded-lg border-2 text-sm font-medium transition-all ${
+                      isActive
+                        ? isDark
+                          ? "bg-green-900/30 border-green-600 text-green-400"
+                          : "bg-green-50 border-green-600 text-green-700"
+                        : isDark
+                          ? "bg-gray-800 border-gray-600 text-gray-400 hover:border-gray-500"
+                          : "bg-white border-gray-300 text-gray-600 hover:border-gray-400"
+                    }`}
+                  >
+                    Активный
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsActive(false)}
+                    className={`flex-1 py-2.5 px-4 rounded-lg border-2 text-sm font-medium transition-all ${
+                      !isActive
+                        ? isDark
+                          ? "bg-red-900/30 border-red-600 text-red-400"
+                          : "bg-red-50 border-red-600 text-red-700"
+                        : isDark
+                          ? "bg-gray-800 border-gray-600 text-gray-400 hover:border-gray-500"
+                          : "bg-white border-gray-300 text-gray-600 hover:border-gray-400"
+                    }`}
+                  >
+                    Неактивный
+                  </button>
+                </div>
+              </div>
+
+              {/* Руководитель */}
+              <div>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                  Руководящая должность
+                </label>
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsChief(true)}
+                    className={`flex-1 py-2.5 px-4 rounded-lg border-2 text-sm font-medium transition-all ${
+                      isChief
+                        ? isDark
+                          ? "bg-blue-900/30 border-blue-600 text-blue-400"
+                          : "bg-blue-50 border-blue-600 text-blue-700"
+                        : isDark
+                          ? "bg-gray-800 border-gray-600 text-gray-400 hover:border-gray-500"
+                          : "bg-white border-gray-300 text-gray-600 hover:border-gray-400"
+                    }`}
+                  >
+                    Да
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsChief(false)}
+                    className={`flex-1 py-2.5 px-4 rounded-lg border-2 text-sm font-medium transition-all ${
+                      !isChief
+                        ? isDark
+                          ? "bg-gray-700 border-gray-500 text-gray-300"
+                          : "bg-gray-100 border-gray-500 text-gray-700"
+                        : isDark
+                          ? "bg-gray-800 border-gray-600 text-gray-400 hover:border-gray-500"
+                          : "bg-white border-gray-300 text-gray-600 hover:border-gray-400"
+                    }`}
+                  >
+                    Нет
+                  </button>
+                </div>
+              </div>
+
+              {/* Уникальность */}
+              <div>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                  Уникальная позиция для единицы
+                </label>
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsUniquePerUnit(true)}
+                    className={`flex-1 py-2.5 px-4 rounded-lg border-2 text-sm font-medium transition-all ${
+                      isUniquePerUnit
+                        ? isDark
+                          ? "bg-purple-900/30 border-purple-600 text-purple-400"
+                          : "bg-purple-50 border-purple-600 text-purple-700"
+                        : isDark
+                          ? "bg-gray-800 border-gray-600 text-gray-400 hover:border-gray-500"
+                          : "bg-white border-gray-300 text-gray-600 hover:border-gray-400"
+                    }`}
+                  >
+                    Да
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsUniquePerUnit(false)}
+                    className={`flex-1 py-2.5 px-4 rounded-lg border-2 text-sm font-medium transition-all ${
+                      !isUniquePerUnit
+                        ? isDark
+                          ? "bg-gray-700 border-gray-500 text-gray-300"
+                          : "bg-gray-100 border-gray-500 text-gray-700"
+                        : isDark
+                          ? "bg-gray-800 border-gray-600 text-gray-400 hover:border-gray-500"
+                          : "bg-white border-gray-300 text-gray-600 hover:border-gray-400"
+                    }`}
+                  >
+                    Нет
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Кнопки действий */}
+          <div className="flex gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => {
+                setCreateModal(false);
+                handleRemoveAll();
+              }}
+              className={`flex-1 py-2.5 px-4 rounded-lg border-2 font-medium transition-all ${
+                isDark
+                  ? "bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700"
+                  : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+              }`}
+            >
+              Отмена
+            </button>
+            <button
+              type="submit"
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-4 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
+            >
+              Создать позицию
+            </button>
+          </div>
+        </form>
       </MethodModal>
 
       {/* edit modal */}
@@ -443,6 +709,68 @@ const Position = () => {
           <div className="col-span-2">
             <ActiveStatusRadio isActive={isActive} setIsActive={setIsActive} />
           </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Руководитель</label>
+            <div className="flex items-center gap-4">
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={isChief}
+                  onChange={(e) => setIsChief(e.target.checked)}
+                  className="w-4 h-4 rounded"
+                />
+                <span className="text-sm">Да</span>
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={!isChief}
+                  onChange={(e) => setIsChief(!e.target.checked)}
+                  className="w-4 h-4 rounded"
+                />
+                <span className="text-sm">Нет</span>
+              </label>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">
+              Уникальность по единице
+            </label>
+            <div className="flex items-center gap-4">
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={isUniquePerUnit}
+                  onChange={(e) => setIsUniquePerUnit(e.target.checked)}
+                  className="w-4 h-4 rounded"
+                />
+                <span className="text-sm">Да</span>
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={!isUniquePerUnit}
+                  onChange={(e) => setIsUniquePerUnit(!e.target.checked)}
+                  className="w-4 h-4 rounded"
+                />
+                <span className="text-sm">Нет</span>
+              </label>
+            </div>
+          </div>
+
+          <Input
+            label="Уровень иерархии"
+            type="number"
+            placeholder="Введите уровень иерархии"
+            classNames="col-span-4"
+            inputClass={"!h-[45px] rounded-[8px] !border-gray-300 text-[15px]"}
+            labelClass={"text-sm"}
+            value={hierarchyLevel}
+            onChange={(e) => setHierarchyLevel(parseInt(e.target.value) || 0)}
+          />
+
           <button
             onClick={() => onSubmitEditPosition(selectedUnitType)}
             type="submit"

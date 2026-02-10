@@ -94,15 +94,15 @@ const Index = () => {
     photo: null,
   });
 
-  const canReadEmployeeDetail = canUserDo(session?.user, "сотрудник", "read");
+  const canReadEmployeeDetail = canUserDo(session?.user, "employee", "read");
   const canUpdateEmployeeDetail = canUserDo(
     session?.user,
-    "сотрудник",
+    "employee",
     "update",
   );
   const canDeleteEmployeeDetail = canUserDo(
     session?.user,
-    "сотрудник",
+    "employee",
     "delete",
   );
 

@@ -48,8 +48,13 @@ const Index = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
 
-  const canCreate = canUserDo(session?.user, "сотрудники", "create");
-  const canReadEmployee = canUserDo(session?.user, "сотрудники", "read");
+  const canCreate = canUserDo(session?.user, "employee", "create");
+  const canReadEmployee = canUserDo(session?.user, "employee", "all-read");
+  const canReadOrgUnit = canUserDo(
+    session?.user,
+    "organizational-unit",
+    "all-read",
+  );
 
   // Filter states
   const [filters, setFilters] = useState({
@@ -155,7 +160,6 @@ const Index = () => {
     url: URLS.organizationalUnits,
     headers: {
       Authorization: `Bearer ${session?.accessToken}`,
-      Accept: "application/json",
     },
     params: { is_root: true, limit: 150 },
   });
@@ -172,7 +176,6 @@ const Index = () => {
       },
       headers: {
         Authorization: `Bearer ${session?.accessToken}`,
-        Accept: "application/json",
       },
       enabled: !!selectUnitCode && !!session?.accessToken,
     });

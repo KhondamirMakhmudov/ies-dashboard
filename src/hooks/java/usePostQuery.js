@@ -6,17 +6,13 @@ import { isArray, get, forEach, isObject, values } from "lodash";
 
 // ✅ Modified postRequest to allow merging default and custom headers
 const postRequest = (url, attributes, config = {}) =>
-  request.post(
-    url,
-    attributes,
-    {
-      headers: {
-        "Content-Type": "application/json", // default header
-        ...(config.headers || {}), // custom headers
-      },
-      ...config, // rest of the config (e.g., timeout)
-    }
-  );
+  request.post(url, attributes, {
+    headers: {
+      "Content-Type": "application/json",
+      ...(config.headers || {}),
+    },
+    ...config,
+  });
 
 const usePostQuery = ({
   hideSuccessToast = false,
@@ -59,7 +55,7 @@ const usePostQuery = ({
           }
         }
       },
-    }
+    },
   );
 
   return {

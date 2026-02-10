@@ -241,15 +241,6 @@ const MainContentHeader = ({ children, toggleSidebar }) => {
                     >
                       {session?.user?.name}
                     </Typography>
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        color: text("#6B7280", "#9ca3af"),
-                        fontSize: "13px",
-                      }}
-                    >
-                      Роль: admin
-                    </Typography>
                   </div>
                 </div>
               </div>

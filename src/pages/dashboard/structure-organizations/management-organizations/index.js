@@ -55,25 +55,25 @@ const Index = () => {
 
   const canCreateOrgUnit = canUserDo(
     session?.user,
-    "структура организации",
+    "organizational-unit",
     "create",
   );
 
   const canUpdateOrgUnit = canUserDo(
     session?.user,
-    "структура организации",
+    "organizational-unit",
     "update",
   );
 
   const canReadOrgUnit = canUserDo(
     session?.user,
-    "структура организации",
-    "read",
+    "organizational-unit",
+    "all-read",
   );
 
   const canDeleteOrgUnit = canUserDo(
     session?.user,
-    "структура организации",
+    "organizational-unit",
     "delete",
   );
 

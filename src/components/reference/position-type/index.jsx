@@ -3,7 +3,7 @@ import { KEYS } from "@/constants/key";
 import { URLS } from "@/constants/url";
 import useGetPythonQuery from "@/hooks/python/useGetQuery";
 import { motion } from "framer-motion";
-import { get, isEmpty } from "lodash";
+import { get, head, isEmpty } from "lodash";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { Button, Typography } from "@mui/material";
@@ -19,9 +19,11 @@ import DeleteModal from "@/components/modal/delete-modal";
 import NoData from "@/components/no-data";
 import PrimaryButton from "@/components/button/primary-button";
 import useAppTheme from "@/hooks/useAppTheme";
+import { useSession } from "next-auth/react";
 
 const PositionType = () => {
-  const { bg, isDark, text, border } = useAppTheme();
+  const { data: session } = useSession();
+  const { bg, isDark, border } = useAppTheme();
   const queryClient = useQueryClient();
   const [currentPage, setCurrentPage] = useState(1);
   const [originalUnitType, setOriginalUnitType] = useState(null);
@@ -41,11 +43,15 @@ const PositionType = () => {
   } = useGetPythonQuery({
     key: KEYS.positionTypes,
     url: URLS.positionTypes,
+    headers: {
+      Authorization: `Bearer ${session?.accessToken}`,
+    },
     params: {
       is_active: selectStatus,
       limit: limit,
       offset: offset,
     },
+    enabled: !!session?.accessToken,
   });
 
   const handlePaginationChange = ({ page }) => {
@@ -72,6 +78,11 @@ const PositionType = () => {
           name: name,
           is_active: isActive,
         },
+        config: {
+          headers: {
+            Authorization: `Bearer ${session?.accessToken}`,
+          },
+        },
       },
       {
         onSuccess: () => {
@@ -80,7 +91,6 @@ const PositionType = () => {
           toast.success("Тип позиции успешно создан", {
             position: "top-center",
           });
-
           queryClient.invalidateQueries(KEYS.positionTypes);
         },
         onError: (error) => {
@@ -118,7 +128,10 @@ const PositionType = () => {
         `${config.PYTHON_API_URL}${URLS.positionTypes}${id}`,
         {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            Authorization: `Bearer ${session?.accessToken}`,
+            "Content-Type": "application/json",
+          },
           body: JSON.stringify(updates),
         },
       );
@@ -146,6 +159,7 @@ const PositionType = () => {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${session?.accessToken}`,
           },
           body: JSON.stringify({ position_type_id: id }),
         },

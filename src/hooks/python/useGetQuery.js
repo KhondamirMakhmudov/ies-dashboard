@@ -35,6 +35,12 @@ const useGetQuery = ({
       onError: (error) => {
         const status = error?.response?.status;
 
+        // 🔴 401
+        if (status === 401) {
+          router.replace("/401");
+          return;
+        }
+
         // 🔴 403
         if (status === 403 && redirectOn403) {
           router.replace("/403");

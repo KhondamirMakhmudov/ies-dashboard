@@ -16,7 +16,7 @@ import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import LogoutIcon from "@mui/icons-material/Logout";
 
 export default function Home() {
-  const { bg, text, border, isDark } = useAppTheme();
+  const { isDark } = useAppTheme();
   const { data: session } = useSession();
   const router = useRouter();
 

@@ -73,7 +73,6 @@ const Index = () => {
   });
 
   // entrypoint get
-
   const { data: entrypoints } = useGetQuery({
     key: [KEYS.entrypoints, createCheckpoints || editCheckpoints],
     url: URLS.entrypoints,

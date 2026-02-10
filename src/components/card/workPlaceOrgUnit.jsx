@@ -12,7 +12,7 @@ import { Chip, Avatar } from "@mui/material";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import useAppTheme from "@/hooks/useAppTheme";
-
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 const WorkplaceEmployeeSection = ({ workplace = [], levelColor }) => {
   const { bg, isDark, text, border } = useAppTheme();
   const [showEmployees, setShowEmployees] = useState(false);

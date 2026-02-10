@@ -25,7 +25,6 @@ const Index = () => {
     url: URLS.me,
     headers: {
       Authorization: `Bearer ${session?.accessToken}`,
-      Accept: "application/json",
     },
     enabled: !!session?.accessToken,
   });
@@ -63,7 +62,7 @@ const Index = () => {
       <p
         className={`text-base font-medium ${text(
           "text-[#1A1A1A]",
-          "text-gray-100"
+          "text-gray-100",
         )}`}
       >
         {value || "-"}
@@ -111,7 +110,7 @@ const Index = () => {
               <h2
                 className={`text-xl font-semibold ${text(
                   "text-[#1A1A1A]",
-                  "text-gray-100"
+                  "text-gray-100",
                 )}`}
               >
                 {fullName || "Пользователь"}
@@ -158,7 +157,7 @@ const Index = () => {
           <h3
             className={`text-lg font-semibold mb-4 ${text(
               "text-[#1A1A1A]",
-              "text-gray-100"
+              "text-gray-100",
             )}`}
           >
             Личная информация
@@ -206,7 +205,7 @@ const Index = () => {
                 value={
                   employeeData.date_of_birth
                     ? new Date(employeeData.date_of_birth).toLocaleDateString(
-                        "ru-RU"
+                        "ru-RU",
                       )
                     : null
                 }
@@ -224,7 +223,7 @@ const Index = () => {
           <h3
             className={`text-lg font-semibold mb-4 ${text(
               "text-[#1A1A1A]",
-              "text-gray-100"
+              "text-gray-100",
             )}`}
           >
             Контактная информация
