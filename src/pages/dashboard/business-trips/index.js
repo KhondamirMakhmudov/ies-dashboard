@@ -55,9 +55,9 @@ const Index = () => {
   const [selectedSchedule, setSelectedSchedule] = useState(null);
   const [jobTripSearch, setJobTripSearch] = useState("");
 
-  const canCreateJobTrip = canUserDo(session?.user, "командировки", "create");
-  const canDeleteJobTrip = canUserDo(session?.user, "командировки", "delete");
-  const canReadJobTrip = canUserDo(session?.user, "командировки", "read");
+  const canCreateJobTrip = canUserDo(session?.user, "job-trips", "create");
+  const canDeleteJobTrip = canUserDo(session?.user, "job-trips", "delete");
+  const canReadJobTrip = canUserDo(session?.user, "job-trips", "read");
 
   const {
     data: jobTrips,
@@ -84,10 +84,14 @@ const Index = () => {
   } = useGetPythonQuery({
     key: KEYS.employees,
     url: URLS.employees,
+    headers: {
+      Authorization: `Bearer ${session?.accessToken}`,
+    },
     params: {
       limit: 1000,
       offset: 0,
     },
+    enabled: !!session?.accessToken,
   });
 
   const filteredEmployees = get(employee, "data.data", []).filter((emp) => {
