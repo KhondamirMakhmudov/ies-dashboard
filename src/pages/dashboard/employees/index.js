@@ -114,7 +114,11 @@ const Index = () => {
   } = useGetPythonQuery({
     key: [KEYS.employees, filters],
     url: URLS.employees,
-    enabled: true,
+    headers: {
+      Authorization: `Bearer ${session?.accessToken}`,
+      Accept: "application/json",
+    },
+    enabled: !!session?.accessToken,
     keepPreviousData: true,
     staleTime: 30000,
     params: buildQueryParams(),
@@ -149,6 +153,10 @@ const Index = () => {
   const { data: level1List, isLoading: isLoadingLevel1 } = useGetPythonQuery({
     key: KEYS.organizationalUnits,
     url: URLS.organizationalUnits,
+    headers: {
+      Authorization: `Bearer ${session?.accessToken}`,
+      Accept: "application/json",
+    },
     params: { is_root: true, limit: 150 },
   });
 
@@ -162,7 +170,11 @@ const Index = () => {
         unit_code: selectUnitCode ? +selectUnitCode : undefined,
         is_vacant: true,
       },
-      enabled: !!selectUnitCode,
+      headers: {
+        Authorization: `Bearer ${session?.accessToken}`,
+        Accept: "application/json",
+      },
+      enabled: !!selectUnitCode && !!session?.accessToken,
     });
 
   const handleChange = (e) => {
@@ -225,6 +237,9 @@ const Index = () => {
         {
           method: "POST",
           body: form,
+          headers: {
+            Authorization: `Bearer ${session?.accessToken}`,
+          },
         },
       );
       const result = await response.json();

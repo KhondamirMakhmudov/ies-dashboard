@@ -43,7 +43,6 @@ import useAppTheme from "@/hooks/useAppTheme";
 import EmployeeBusinessTripSection from "@/components/business-trip-section";
 import DocsOfEmployee from "@/components/docs-employee";
 import { canUserDo } from "@/utils/checkpermission";
-import LockOutline from "@mui/icons-material/LockOutline";
 import StatusNotAllowed from "@/components/status/statusNotAllowed";
 
 const Index = () => {
@@ -115,7 +114,10 @@ const Index = () => {
   } = useGetPythonQuery({
     key: KEYS.employeePhoto,
     url: `${URLS.employeePhoto}${employee_id}`,
-    enabled: !!employee_id,
+    headers: {
+      Authorization: `Bearer ${session?.accessToken}`,
+    },
+    enabled: !!employee_id && !!session?.accessToken,
   });
 
   useEffect(() => {
@@ -284,6 +286,7 @@ const Index = () => {
         `${config.PYTHON_API_URL}${URLS.employees}${employee_id}`,
         {
           method: "PATCH",
+          headers: { Authorization: `Bearer ${session?.accessToken}` },
           body: formDataToSend,
         },
       );
@@ -309,6 +312,7 @@ const Index = () => {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${session?.accessToken}`,
           },
           body: JSON.stringify({ employee_id: employee_id }),
         },

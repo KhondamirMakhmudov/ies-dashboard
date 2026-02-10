@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { requestPython } from "@/services/api";
 import { toast } from "react-hot-toast";
+import { useRouter } from "next/router";
 
-const useGetPythonQuery = ({
+const useGetQuery = ({
   key = "get-all",
   url = "/",
   params = {},
@@ -10,7 +11,11 @@ const useGetPythonQuery = ({
   showSuccessMsg = false,
   showErrorMsg = false,
   enabled = true,
+  redirectOn403 = true,
+  redirectOn500 = true,
 }) => {
+  const router = useRouter();
+
   const { isLoading, isError, data, error, isFetching } = useQuery(
     [key, params],
     () =>
@@ -20,19 +25,35 @@ const useGetPythonQuery = ({
       }),
     {
       keepPreviousData: true,
+
       onSuccess: () => {
         if (showSuccessMsg) {
           toast.success("SUCCESS");
         }
       },
 
-      onError: (data) => {
+      onError: (error) => {
+        const status = error?.response?.status;
+
+        // 🔴 403
+        if (status === 403 && redirectOn403) {
+          router.replace("/403");
+          return;
+        }
+
+        // 🔴 500
+        if (status >= 500 && redirectOn500) {
+          router.replace("/500");
+          return;
+        }
+
         if (showErrorMsg) {
-          toast.error("ERROR");
+          toast.error(error?.response?.data?.message || "Ошибка запроса");
         }
       },
+
       enabled,
-    }
+    },
   );
 
   return {
@@ -41,7 +62,8 @@ const useGetPythonQuery = ({
     data,
     error,
     isFetching,
+    status: error?.response?.status, // Add status code
   };
 };
 
-export default useGetPythonQuery;
+export default useGetQuery;

@@ -81,22 +81,32 @@ const Index = () => {
   const { data: level1List } = useGetPythonQuery({
     key: KEYS.organizationalUnits,
     url: URLS.organizationalUnits,
+    headers: {
+      Authorization: `Bearer ${session?.accessToken}`,
+    },
     params: { is_root: true, limit: 150 },
+    enabled: !!session?.accessToken && canReadOrgUnit,
   });
 
   // LEVEL 2 - Level 1 child
   const { data: level2List } = useGetPythonQuery({
     key: [KEYS.organizationalUnits, openLevel1Id],
     url: URLS.organizationalUnits,
+    headers: {
+      Authorization: `Bearer ${session?.accessToken}`,
+    },
     params: { parent_id: openLevel1Id, limit: 150 },
-    enabled: !!openLevel1Id,
+    enabled: !!openLevel1Id && !!session?.accessToken,
   });
 
   // LEVEL 3 - Level 2 child
   const { data: level3List } = useGetPythonQuery({
     key: [KEYS.organizationalUnits, openLevel2Id],
     url: URLS.organizationalUnits,
-    enabled: !!openLevel2Id,
+    headers: {
+      Authorization: `Bearer ${session?.accessToken}`,
+    },
+    enabled: !!openLevel2Id && !!session?.accessToken,
     params: { parent_id: openLevel2Id, limit: 150 },
   });
 
@@ -104,14 +114,20 @@ const Index = () => {
   const { data: level4List } = useGetPythonQuery({
     key: [KEYS.organizationalUnits, openLevel3Id],
     url: URLS.organizationalUnits,
-    enabled: !!openLevel3Id,
+    headers: {
+      Authorization: `Bearer ${session?.accessToken}`,
+    },
+    enabled: !!openLevel3Id && !!session?.accessToken,
     params: { parent_id: openLevel3Id, limit: 150 },
   });
 
   const { data: level5List } = useGetPythonQuery({
     key: [KEYS.organizationalUnits, openLevel4Id],
     url: URLS.organizationalUnits,
-    enabled: !!openLevel4Id,
+    headers: {
+      Authorization: `Bearer ${session?.accessToken}`,
+    },
+    enabled: !!openLevel4Id && !!session?.accessToken,
     params: { parent_id: openLevel4Id, limit: 150 },
   });
 
@@ -122,10 +138,14 @@ const Index = () => {
   } = useGetPythonQuery({
     key: KEYS.unitTypes,
     url: URLS.unitTypes,
+    headers: {
+      Authorization: `Bearer ${session?.accessToken}`,
+    },
     params: {
       is_active: true,
       limit: 100,
     },
+    enabled: !!session?.accessToken,
   });
 
   const optionsUnitType = get(unitType, "data", []).map((unit) => ({

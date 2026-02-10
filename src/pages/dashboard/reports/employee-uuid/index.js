@@ -43,13 +43,17 @@ const Index = () => {
       limit: 1000,
       offset: 0,
     },
+    headers: {
+      Authorization: `Bearer ${session?.accessToken}`,
+    },
+    enabled: !!session?.accessToken,
   });
 
   const employeeList = get(employees, "data.data", []);
 
   const uniquePositions = [
     ...new Set(
-      employeeList.map((emp) => emp.workplace?.position?.name).filter(Boolean)
+      employeeList.map((emp) => emp.workplace?.position?.name).filter(Boolean),
     ),
   ];
 
@@ -61,7 +65,7 @@ const Index = () => {
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
     const notSelected = !selectedEmployees.find(
-      (selected) => selected.id === emp.id
+      (selected) => selected.id === emp.id,
     );
     return matchesPosition && matchesSearch && notSelected;
   });
@@ -106,7 +110,7 @@ const Index = () => {
             Authorization: `Bearer ${session?.accessToken}`,
             Accept: "application/json",
           },
-        }
+        },
       );
       const data = await response.json();
       return data;
