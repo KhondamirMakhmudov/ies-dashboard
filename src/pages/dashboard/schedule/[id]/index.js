@@ -26,9 +26,9 @@ const Index = () => {
   const router = useRouter();
   const { id } = router.query;
 
-  const canUpdateSchedule = canUserDo(session?.user, "расписания", "update");
-  const canReadSchedule = canUserDo(session?.user, "расписания", "read");
-  const canDeleteSchedule = canUserDo(session?.user, "расписания", "delete");
+  const canUpdateSchedule = canUserDo(session?.user, "schedules", "update");
+  const canReadSchedule = canUserDo(session?.user, "schedules", "read");
+  const canDeleteSchedule = canUserDo(session?.user, "schedules", "delete");
 
   const [editModal, setEditModal] = useState(false);
   const [deleteModal, setDeleteModal] = useState(false);

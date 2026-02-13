@@ -50,23 +50,23 @@ const Index = () => {
 
   const canReadCameras = canUserDo(
     session?.user,
-    "устройства и точки доступа",
+    "devices and entrypoints",
     "read",
   );
   const canCreateCameras = canUserDo(
     session?.user,
-    "устройства и точки доступа",
+    "devices and entrypoints",
     "create",
   );
   const canUpdateCameras = canUserDo(
     session?.user,
-    "устройства и точки доступа",
+    "devices and entrypoints",
     "update",
   );
 
   const canDeleteCameras = canUserDo(
     session?.user,
-    "устройства и точки доступа",
+    "devices and entrypoints",
     "delete",
   );
 

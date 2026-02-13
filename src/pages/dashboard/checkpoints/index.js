@@ -25,7 +25,7 @@ import PrimaryButton from "@/components/button/primary-button";
 import useAppTheme from "@/hooks/useAppTheme";
 import { canUserDo } from "@/utils/checkpermission";
 const Index = () => {
-  const { bg, text, border, isDark } = useAppTheme();
+  const { bg, border, isDark } = useAppTheme();
   const queryClient = useQueryClient();
   const { data: session } = useSession();
   const [createCheckpoints, setCreateCheckpoints] = useState(false);
@@ -37,23 +37,23 @@ const Index = () => {
 
   const canReadCheckpoints = canUserDo(
     session?.user,
-    "устройства и точки доступа",
+    "devices and entrypoints",
     "read",
   );
   const canCreateCheckpoints = canUserDo(
     session?.user,
-    "устройства и точки доступа",
+    "devices and entrypoints",
     "create",
   );
   const canUpdateCheckpoints = canUserDo(
     session?.user,
-    "устройства и точки доступа",
+    "devices and entrypoints",
     "update",
   );
 
   const canDeleteCheckpoints = canUserDo(
     session?.user,
-    "устройства и точки доступа",
+    "devices and entrypoints",
     "delete",
   );
 
@@ -68,6 +68,7 @@ const Index = () => {
     headers: {
       Authorization: `Bearer ${session?.accessToken}`,
       Accept: "application/json",
+      "X-Target-Station": +session?.user?.unit_code,
     },
     enabled: !!session?.accessToken,
   });
@@ -79,6 +80,7 @@ const Index = () => {
     headers: {
       Authorization: `Bearer ${session?.accessToken}`,
       Accept: "application/json",
+      "X-Target-Station": +session?.user?.unit_code || null,
     },
     enabled: !!session?.accessToken && (createCheckpoints || editCheckpoints),
   });

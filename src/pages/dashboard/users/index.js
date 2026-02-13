@@ -130,10 +130,14 @@ const Index = () => {
   } = useGetPythonQuery({
     key: KEYS.employees,
     url: URLS.employees,
+    headers: {
+      Authorization: `Bearer ${session?.accessToken}`,
+      Accept: "application/json",
+    },
     params: {
       limit: 1000,
     },
-    enabled: createModal || editModal,
+    enabled: (createModal || editModal) && !!session?.accessToken,
   });
 
   // Options for role select
