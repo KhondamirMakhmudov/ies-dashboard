@@ -30,6 +30,9 @@ const Index = () => {
   const { data: orgUnits } = useGetPythonQuery({
     key: KEYS.organizationalUnits,
     url: URLS.organizationalUnits,
+    headers: {
+      Authorization: `Bearer ${session?.accessToken}`,
+    },
     params: { limit: 150 },
   });
 

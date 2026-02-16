@@ -50,7 +50,7 @@ const Index = () => {
       ...(startDate && { startDate }),
       ...(endDate && { endDate }),
     },
-    enabled: !!session?.accessToken,
+    enabled: !!session?.accessToken && !!startDate && !!endDate,
   });
 
   const columns = [
@@ -95,7 +95,7 @@ const Index = () => {
 
         return (
           <span
-            className="font-medium p-1 rounded-md border"
+            className="font-medium p-1 rounded-md border line-clamp-1"
             style={{
               color:
                 errorCode === 0
@@ -103,24 +103,24 @@ const Index = () => {
                     ? "#4ade80"
                     : "#16a34a"
                   : isDark
-                  ? "#f87171"
-                  : "#dc2626",
+                    ? "#f87171"
+                    : "#dc2626",
               backgroundColor:
                 errorCode === 0
                   ? isDark
                     ? "rgba(34, 197, 94, 0.15)"
                     : "#E8F6F0"
                   : isDark
-                  ? "rgba(239, 68, 68, 0.15)"
-                  : "#FAE7E7",
+                    ? "rgba(239, 68, 68, 0.15)"
+                    : "#FAE7E7",
               borderColor:
                 errorCode === 0
                   ? isDark
                     ? "rgba(34, 197, 94, 0.3)"
                     : "#16a34a"
                   : isDark
-                  ? "rgba(239, 68, 68, 0.3)"
-                  : "#dc2626",
+                    ? "rgba(239, 68, 68, 0.3)"
+                    : "#dc2626",
             }}
           >
             {errorCode === 0 ? "доступ разрешен" : "отказ в доступе"}
@@ -144,22 +144,22 @@ const Index = () => {
                   ? "#4ade80"
                   : "#16a34a"
                 : isDark
-                ? "#f87171"
-                : "#dc2626",
+                  ? "#f87171"
+                  : "#dc2626",
               backgroundColor: isEnter
                 ? isDark
                   ? "rgba(34, 197, 94, 0.15)"
                   : "#E8F6F0"
                 : isDark
-                ? "rgba(239, 68, 68, 0.15)"
-                : "#FAE7E7",
+                  ? "rgba(239, 68, 68, 0.15)"
+                  : "#FAE7E7",
               borderColor: isEnter
                 ? isDark
                   ? "rgba(34, 197, 94, 0.3)"
                   : "#16a34a"
                 : isDark
-                ? "rgba(239, 68, 68, 0.3)"
-                : "#dc2626",
+                  ? "rgba(239, 68, 68, 0.3)"
+                  : "#dc2626",
             }}
           >
             {isEnter ? "Вход" : "Выход"}

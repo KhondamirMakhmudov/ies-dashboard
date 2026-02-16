@@ -50,6 +50,9 @@ const Index = () => {
   const { data: enterprises } = useGetPythonQuery({
     key: KEYS.organizationalUnits,
     url: URLS.organizationalUnits,
+    headers: {
+      Authorization: `Bearer ${session?.accessToken}`,
+    },
     params: { is_root: true, limit: 150 },
   });
 
@@ -116,7 +119,7 @@ const Index = () => {
 
     // Validate that each unit has at least one schedule
     const invalidUnit = unitCodes.find(
-      (unit) => !unit.schedules || unit.schedules.length === 0
+      (unit) => !unit.schedules || unit.schedules.length === 0,
     );
     if (invalidUnit) {
       toast.error("Каждое подразделение должно иметь хотя бы одно расписание", {
@@ -154,7 +157,7 @@ const Index = () => {
             error?.response?.data?.message || "Непредвиденная ошибка";
           toast.error(message, { position: "top-right" });
         },
-      }
+      },
     );
   };
 
@@ -190,7 +193,7 @@ const Index = () => {
 
     const currentNormalized = normalizeForComparison(unitCodes);
     const originalNormalized = normalizeForComparison(
-      originalData.unitCodes || []
+      originalData.unitCodes || [],
     );
 
     return (
@@ -250,7 +253,7 @@ const Index = () => {
             Authorization: `Bearer ${session?.accessToken}`,
           },
           body: JSON.stringify(updatedData),
-        }
+        },
       );
 
       if (!res.ok) {
@@ -288,7 +291,7 @@ const Index = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${session?.accessToken}`,
           },
-        }
+        },
       );
 
       if (!response.ok) {
@@ -306,7 +309,7 @@ const Index = () => {
   // Helper function to get unit name by code
   const getUnitNameByCode = (code) => {
     const unit = get(enterprises, "data", []).find(
-      (item) => item.unit_code === code
+      (item) => item.unit_code === code,
     );
     return unit?.name || code;
   };
@@ -314,7 +317,7 @@ const Index = () => {
   // Helper function to get schedule name by id
   const getScheduleNameById = (id) => {
     const schedule = get(allSchedules, "data", []).find(
-      (item) => item.id === id
+      (item) => item.id === id,
     );
     return schedule?.name || `Schedule ${id}`;
   };
@@ -467,7 +470,7 @@ const Index = () => {
 
   const handleUnitCodeChange = (index, field, value) => {
     setUnitCodes((prev) =>
-      prev.map((u, i) => (i === index ? { ...u, [field]: value } : u))
+      prev.map((u, i) => (i === index ? { ...u, [field]: value } : u)),
     );
   };
 
@@ -478,11 +481,11 @@ const Index = () => {
           ? {
               ...u,
               schedules: u.schedules.map((s, si) =>
-                si === scheduleIndex ? { ...s, [field]: value } : s
+                si === scheduleIndex ? { ...s, [field]: value } : s,
               ),
             }
-          : u
-      )
+          : u,
+      ),
     );
   };
 
@@ -502,7 +505,7 @@ const Index = () => {
 
       // Yangi schedules array yaratish
       const updatedSchedules = updated[unitIndex].schedules.filter(
-        (_, idx) => idx !== scheduleIndex
+        (_, idx) => idx !== scheduleIndex,
       );
 
       updated[unitIndex] = {
@@ -813,7 +816,7 @@ const Index = () => {
                                   handleUnitCodeChange(
                                     unitIndex,
                                     "isMain",
-                                    e.target.checked ? 1 : 0
+                                    e.target.checked ? 1 : 0,
                                   )
                                 }
                                 className="w-4 h-4 text-indigo-600 focus:ring-indigo-500"
@@ -902,7 +905,7 @@ const Index = () => {
                                       unitIndex,
                                       scheduleIndex,
                                       "scheduleId",
-                                      val
+                                      val,
                                     )
                                   }
                                   className="flex-1"
@@ -922,7 +925,7 @@ const Index = () => {
                                         unitIndex,
                                         scheduleIndex,
                                         "isMain",
-                                        e.target.checked ? 1 : 0
+                                        e.target.checked ? 1 : 0,
                                       )
                                     }
                                     className="w-3.5 h-3.5 text-indigo-600"
@@ -939,7 +942,7 @@ const Index = () => {
                                   onClick={() =>
                                     removeScheduleFromUnit(
                                       unitIndex,
-                                      scheduleIndex
+                                      scheduleIndex,
                                     )
                                   }
                                   className={`w-8 h-8 flex items-center justify-center rounded-md transition shadow-sm ${
@@ -1270,7 +1273,7 @@ const Index = () => {
                                   handleUnitCodeChange(
                                     unitIndex,
                                     "isMain",
-                                    e.target.checked ? 1 : 0
+                                    e.target.checked ? 1 : 0,
                                   )
                                 }
                                 className="w-4 h-4 text-indigo-600 focus:ring-indigo-500"
@@ -1329,7 +1332,7 @@ const Index = () => {
                                       unitIndex,
                                       scheduleIndex,
                                       "scheduleId",
-                                      val
+                                      val,
                                     )
                                   }
                                   className="flex-1"
@@ -1343,7 +1346,7 @@ const Index = () => {
                                         unitIndex,
                                         scheduleIndex,
                                         "isMain",
-                                        e.target.checked ? 1 : 0
+                                        e.target.checked ? 1 : 0,
                                       )
                                     }
                                     className="w-3.5 h-3.5 text-indigo-600"
@@ -1356,7 +1359,7 @@ const Index = () => {
                                   onClick={() =>
                                     removeScheduleFromUnit(
                                       unitIndex,
-                                      scheduleIndex
+                                      scheduleIndex,
                                     )
                                   }
                                   className="w-8 h-8 flex items-center justify-center bg-red-50 hover:bg-red-100 text-red-600 rounded-md transition shadow-sm"

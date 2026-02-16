@@ -68,7 +68,7 @@ const Index = () => {
     headers: {
       Authorization: `Bearer ${session?.accessToken}`,
       Accept: "application/json",
-      "X-Target-Station": +session?.user?.unit_code,
+      "X-Target-Station": +session?.user?.unit_code || null,
     },
     enabled: !!session?.accessToken,
   });
@@ -114,6 +114,7 @@ const Index = () => {
         config: {
           headers: {
             Authorization: `Bearer ${session?.accessToken}`,
+            "X-Target-Station": +session?.user?.unit_code || null,
           },
         },
       },
@@ -151,6 +152,7 @@ const Index = () => {
         config: {
           headers: {
             Authorization: `Bearer ${session?.accessToken}`,
+            "X-Target-Station": +session?.user?.unit_code || null,
           },
         },
       },
@@ -182,6 +184,7 @@ const Index = () => {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${session?.accessToken}`,
+            "X-Target-Station": +session?.user?.unit_code || null,
           },
           body: JSON.stringify({ id }), // faqat agar backend body kutsa
         },

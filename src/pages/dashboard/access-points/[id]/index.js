@@ -86,7 +86,7 @@ const Index = () => {
     (item) => ({
       label: `${item.scheduleName} - ${item.unitCodeName}`,
       value: item.entryPointScheduleId,
-    })
+    }),
   );
 
   const { data: allSchedules } = useGetQuery({
@@ -106,6 +106,9 @@ const Index = () => {
   } = useGetPythonQuery({
     key: KEYS.employees,
     url: URLS.employees,
+    headers: {
+      Authorization: `Bearer ${session?.accessToken}`,
+    },
     params: {
       limit: 1000,
       offset: 0,
@@ -127,8 +130,8 @@ const Index = () => {
 
   const positions = Array.from(
     new Set(
-      filteredEmployees.map((e) => e.workplace?.position?.name).filter(Boolean)
-    )
+      filteredEmployees.map((e) => e.workplace?.position?.name).filter(Boolean),
+    ),
   );
   const { data: connectedEmployeesToSchedule } = useGetQuery({
     key: KEYS.connectedEmployeesToSchedule,
@@ -166,7 +169,7 @@ const Index = () => {
         const fullName = `${get(employee, "firstName", "")} ${get(
           employee,
           "lastName",
-          ""
+          "",
         )}`.toLowerCase();
         return fullName.includes(searchQuery.toLowerCase());
       }
@@ -255,7 +258,7 @@ const Index = () => {
         onError: (error) => {
           toast.error(`Error is ${error}`, { position: "top-right" });
         },
-      }
+      },
     );
   };
 
@@ -387,8 +390,8 @@ const Index = () => {
                       tab === t.key
                         ? "#2563eb"
                         : isDark
-                        ? "#d1d5db"
-                        : "#4b5563",
+                          ? "#d1d5db"
+                          : "#4b5563",
                     background:
                       tab === t.key
                         ? isDark
@@ -491,7 +494,7 @@ const Index = () => {
                               schedules={get(unitCode, "schedules", [])}
                             />
                           </li>
-                        )
+                        ),
                       )}
                     </ul>
                   )}
@@ -539,14 +542,14 @@ const Index = () => {
                               ? "#2563eb"
                               : "#3b82f6"
                             : isDark
-                            ? "#374151"
-                            : "#e5e7eb",
+                              ? "#374151"
+                              : "#e5e7eb",
                         color:
                           selectedScheduleTab === "all"
                             ? "white"
                             : isDark
-                            ? "#d1d5db"
-                            : "#4b5563",
+                              ? "#d1d5db"
+                              : "#4b5563",
                         fontWeight:
                           selectedScheduleTab === "all" ? "600" : "400",
                       }}
@@ -565,14 +568,14 @@ const Index = () => {
                                 ? "#2563eb"
                                 : "#3b82f6"
                               : isDark
-                              ? "#374151"
-                              : "#e5e7eb",
+                                ? "#374151"
+                                : "#e5e7eb",
                           color:
                             selectedScheduleTab === scheduleName
                               ? "white"
                               : isDark
-                              ? "#d1d5db"
-                              : "#4b5563",
+                                ? "#d1d5db"
+                                : "#4b5563",
                           fontWeight:
                             selectedScheduleTab === scheduleName
                               ? "600"
@@ -660,7 +663,7 @@ const Index = () => {
                             <a
                               href={`/dashboard/employees/${get(
                                 employee,
-                                "employeeUuid"
+                                "employeeUuid",
                               )}`}
                               target="_blank"
                               className="px-4 py-2 rounded-md transition"
@@ -682,7 +685,7 @@ const Index = () => {
                               Страница сотрудника
                             </a>
                           </div>
-                        )
+                        ),
                       )
                     ) : (
                       <p
@@ -739,7 +742,7 @@ const Index = () => {
           {/* ✨ Selected Employees Badge - NEW */}
           <SelectedEmployeesBadge
             employees={filteredEmployees.filter((emp) =>
-              selectedEmployees.has(emp.id)
+              selectedEmployees.has(emp.id),
             )}
             onRemove={(id) => {
               const newSelected = new Set(selectedEmployees);
