@@ -179,6 +179,11 @@ const Index = () => {
           position_id: positionId,
           organizational_unit_id: orgUnitsId,
         },
+        config: {
+          headers: {
+            Authorization: `Bearer ${session?.accessToken}`,
+          },
+        },
       },
       {
         onSuccess: () => {
@@ -206,6 +211,7 @@ const Index = () => {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${session?.accessToken}`,
           },
           body: JSON.stringify({ workplace_id: id }),
         },
