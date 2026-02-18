@@ -1140,7 +1140,7 @@ const Index = () => {
                 className="block text-sm font-medium"
                 style={{ color: text("#374151", "#d1d5db") }}
               >
-                Сотрудник (необязательно)
+                Сотрудник
               </label>
               <Select
                 value={formData.employee_id}

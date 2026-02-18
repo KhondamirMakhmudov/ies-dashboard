@@ -95,7 +95,7 @@ const Index = () => {
     enabled: !!session?.accessToken && (createCameraModal || editCameraModal),
   });
 
-  const options = get(entrypoints, "data", []).map((entry) => ({
+  const options = get(entrypoints, "data.data", []).map((entry) => ({
     value: entry.id,
     label: entry.entryPointName,
   }));
@@ -435,7 +435,7 @@ const Index = () => {
             </div>
             {canReadCameras && (
               <CustomTable
-                data={get(allCameras, "data", [])}
+                data={get(allCameras, "data.data", [])}
                 columns={columns}
               />
             )}

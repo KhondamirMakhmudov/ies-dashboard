@@ -86,7 +86,7 @@ const Index = () => {
   });
 
   // options of the entrypoint
-  const options = get(entrypoints, "data", []).map((entry) => ({
+  const options = get(entrypoints, "data.data", []).map((entry) => ({
     value: entry.id,
     label: entry.entryPointName,
   }));
@@ -309,7 +309,10 @@ const Index = () => {
               </div>
             )}
             {canReadCheckpoints && (
-              <CustomTable data={get(checkpoints, "data")} columns={columns} />
+              <CustomTable
+                data={get(checkpoints, "data.data")}
+                columns={columns}
+              />
             )}
           </div>
         </motion.div>

@@ -81,7 +81,12 @@ export default function EmployeeBusinessTripSection({
         },
         onError: (error) => {
           console.error("Error creating job trip:", error);
-          toast.error(`Ошибка: ${error.message || "Неизвестная ошибка"}`, {
+          const apiMessage =
+            error?.response?.data?.message ||
+            error?.response?.data?.error ||
+            error?.message ||
+            "Неизвестная ошибка";
+          toast.error(`${apiMessage}`, {
             position: "top-right",
           });
         },

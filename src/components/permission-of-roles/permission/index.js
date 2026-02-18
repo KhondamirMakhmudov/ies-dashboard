@@ -19,6 +19,10 @@ import CustomSelect from "@/components/select";
 import DeleteModal from "@/components/modal/delete-modal";
 import { config } from "@/config";
 import dayjs from "dayjs";
+import CustomTable from "@/components/table";
+import { Button } from "@mui/material";
+import ViewModuleIcon from "@mui/icons-material/ViewModule";
+import TableRowsIcon from "@mui/icons-material/TableRows";
 
 const PermissionSection = () => {
   const { data: session } = useSession();
@@ -32,6 +36,7 @@ const PermissionSection = () => {
   const [selectedResourceId, setSelectedResourceId] = useState("");
   const [selectedActionId, setSelectedActionId] = useState("");
   const [name, setName] = useState("");
+  const [viewMode, setViewMode] = useState("card");
 
   // Get permissions
   const { data: permissions, isLoading: permissionsLoading } =
@@ -190,11 +195,85 @@ const PermissionSection = () => {
     }
   };
 
+  const columns = [
+    {
+      header: "№",
+      cell: ({ row }) => row.index + 1,
+    },
+    {
+      accessorKey: "resource",
+      header: "Ресурс",
+      cell: ({ row }) => row.original.resource?.name || "N/A",
+    },
+    {
+      accessorKey: "action",
+      header: "Действие",
+      cell: ({ row }) => row.original.action?.name || "N/A",
+    },
+    {
+      accessorKey: "created_at",
+      header: "Дата создания",
+      cell: ({ row }) => (
+        <p
+          className={`font-medium p-1 rounded-md  ${
+            isDark ? "text-blue-400 " : "text-blue-600"
+          }`}
+        >
+          {dayjs(row.original.created_at).format("DD.MM.YYYY")}{" "}
+          <span className="text-sm">
+            {dayjs(row.original.created_at).format("HH:mm")}
+          </span>
+        </p>
+      ),
+    },
+    {
+      accessorKey: "actions",
+      header: "Действия",
+      cell: ({ row }) => (
+        <div className="flex gap-2">
+          <Button
+            onClick={() => {
+              setEditModal(true);
+              setSelectedId(row.original.id);
+              setSelectedResourceId(row.original.resource_id);
+              setSelectedActionId(row.original.action_id);
+            }}
+            sx={{
+              width: "32px",
+              height: "32px",
+              minWidth: "32px",
+              background: "#F0D8C8",
+              color: "#FF6200",
+            }}
+          >
+            <EditIcon fontSize="small" />
+          </Button>
+          <Button
+            onClick={() => {
+              setDeleteModal(true);
+              setSelectedId(row.original.id);
+            }}
+            sx={{
+              width: "32px",
+              height: "32px",
+              minWidth: "32px",
+              background: "#FCD8D3",
+              color: "#FF1E00",
+            }}
+          >
+            <DeleteIcon fontSize="small" />
+          </Button>
+        </div>
+      ),
+      enableSorting: false,
+    },
+  ];
+
   return (
     <div className="">
       {/* Header */}
       <div
-        className="flex justify-between items-center p-4 rounded-lg my-2 border border-gray-200"
+        className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 p-4 rounded-lg my-2 border border-gray-200"
         style={{
           backgroundColor: bg("#ffffff", "#1e1e1e"),
           borderColor: border("#e5e7eb", "#333333"),
@@ -203,13 +282,62 @@ const PermissionSection = () => {
         <PrimaryButton onClick={() => setCreateModal(true)}>
           Создать разрешение
         </PrimaryButton>
-      </div>
 
-      {/* Permissions List */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setViewMode("card")}
+            className={`px-3 py-1.5 text-sm rounded-md border transition-colors ${
+              viewMode === "card"
+                ? "bg-blue-600 text-white"
+                : "bg-transparent"
+            }`}
+            style={{
+              borderColor: border("#e5e7eb", "#333333"),
+              color:
+                viewMode === "card"
+                  ? "#ffffff"
+                  : text("#374151", "#d1d5db"),
+            }}
+            aria-label="Карточки"
+            title="Карточки"
+          >
+            <ViewModuleIcon fontSize="small" />
+          </button>
+          <button
+            onClick={() => setViewMode("table")}
+            className={`px-3 py-1.5 text-sm rounded-md border transition-colors ${
+              viewMode === "table"
+                ? "bg-blue-600 text-white"
+                : "bg-transparent"
+            }`}
+            style={{
+              borderColor: border("#e5e7eb", "#333333"),
+              color:
+                viewMode === "table"
+                  ? "#ffffff"
+                  : text("#374151", "#d1d5db"),
+            }}
+            aria-label="Таблица"
+            title="Таблица"
+          >
+            <TableRowsIcon fontSize="small" />
+          </button>
+        </div>
+      </div>
       {permissionsLoading ? (
         <ContentLoader />
       ) : isEmpty(permissionsData) ? (
         <NoData onCreate={() => setCreateModal(true)} />
+      ) : viewMode === "table" ? (
+        <div
+          className="overflow-x-auto rounded-lg p-4 border"
+          style={{
+            backgroundColor: bg("#ffffff", "#1e1e1e"),
+            borderColor: border("#e5e7eb", "#333333"),
+          }}
+        >
+          <CustomTable columns={columns} data={permissionsData} />
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {permissionsData.map((permission, index) => (
@@ -326,7 +454,7 @@ const PermissionSection = () => {
                     className="text-xs"
                     style={{ color: text("#9ca3af", "#6b7280") }}
                   >
-                    Создано: {dayjs(permission.created_at).format("DD.MM.YYYY")}{" "}
+                    Создано: {dayjs(permission.created_at).format("DD.MM.YYYY")} {" "}
                     <span>{dayjs(permission.created_at).format("HH:mm")}</span>
                   </p>
                 </div>

@@ -301,7 +301,7 @@ const Index = () => {
         <div className={`${bg} rounded-xl mx-auto`}>
           <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
             <h1
-              className={`text-2xl font-bold ${text} border-b ${border} pb-3`}
+              className={`text-2xl font-bold ${text} border-b  ${isDark ? "border-gray-700" : "border-gray-300"} pb-3`}
             >
               Точка доступа №{id}
             </h1>

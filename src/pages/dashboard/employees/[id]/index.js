@@ -348,7 +348,15 @@ const Index = () => {
       );
 
       if (!response.ok) {
-        throw new Error("Ошибка при удалении");
+        let errorMessage = "Ошибка при удалении";
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData?.message || errorData?.error || errorMessage;
+        } catch (parseError) {
+          console.log("Failed to parse error response:", parseError);
+        }
+
+        throw new Error(errorMessage);
       }
 
       toast.success("Успешно удалено");
@@ -357,8 +365,8 @@ const Index = () => {
       queryClient.invalidateQueries(KEYS.jobTrips);
       console.log("Deleted successfully");
     } catch (error) {
-      console.error(error);
-      toast.error("Не удалось удалить");
+      console.log(error);
+      toast.error(error?.message || "Не удалось удалить");
     }
   };
 
@@ -1197,7 +1205,11 @@ const Index = () => {
                             employeeUuid={employee_id} // Pass the current employee UUID
                             isDark={isDark}
                             text={text}
-                            schedules={get(entrypointSchedules, "data", [])} // Pass available schedules
+                            schedules={get(
+                              entrypointSchedules,
+                              "data.data",
+                              [],
+                            )} // Pass available schedules
                           />
                         </div>
 
@@ -1252,30 +1264,6 @@ const Index = () => {
                                     </div>
 
                                     <div className="flex gap-2 items-center">
-                                      <Button
-                                        onClick={() => {
-                                          setDeleteJobTripModal(true);
-                                          setSelectedJobTrip(
-                                            get(item, "jobTripId"),
-                                          );
-                                        }}
-                                        sx={{
-                                          width: "32px",
-                                          height: "32px",
-                                          minWidth: "32px",
-                                          background: isDark
-                                            ? "#7f1d1d"
-                                            : "#FCD8D3",
-                                          color: isDark ? "#fca5a5" : "#FF1E00",
-                                          "&:hover": {
-                                            background: isDark
-                                              ? "#991b1b"
-                                              : "#FCA89D",
-                                          },
-                                        }}
-                                      >
-                                        <DeleteIcon fontSize="small" />
-                                      </Button>
                                       <Link
                                         href={`/dashboard/access-points/${
                                           get(item, "entryPointId") || ""
@@ -1306,6 +1294,31 @@ const Index = () => {
                                           sx={{ fontSize: 16 }}
                                         />
                                       </Link>
+
+                                      <Button
+                                        onClick={() => {
+                                          setDeleteJobTripModal(true);
+                                          setSelectedJobTrip(
+                                            get(item, "jobTripId"),
+                                          );
+                                        }}
+                                        sx={{
+                                          width: "32px",
+                                          height: "32px",
+                                          minWidth: "32px",
+                                          background: isDark
+                                            ? "#7f1d1d"
+                                            : "#FCD8D3",
+                                          color: isDark ? "#fca5a5" : "#FF1E00",
+                                          "&:hover": {
+                                            background: isDark
+                                              ? "#991b1b"
+                                              : "#FCA89D",
+                                          },
+                                        }}
+                                      >
+                                        <DeleteIcon fontSize="small" />
+                                      </Button>
                                     </div>
                                   </div>
                                 </div>

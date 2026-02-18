@@ -1,7 +1,6 @@
 import * as React from "react";
 import { useState, useEffect, useMemo } from "react";
 import { Hydrate, QueryClientProvider } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import ClientOnlyToaster from "@/components/toast";
 import { SessionProvider, useSession, signOut } from "next-auth/react";
 import reactQueryClient from "@/config/react-query";
@@ -109,7 +108,7 @@ export default function App({
                 <Component {...pageProps} />
               </MuiThemeSync>
             </NextThemeProvider>
-            <ReactQueryDevtools initialIsOpen={false} />
+
             <ClientOnlyToaster />
           </Hydrate>
         </QueryClientProvider>
