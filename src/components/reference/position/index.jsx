@@ -19,7 +19,6 @@ import DeleteModal from "@/components/modal/delete-modal";
 import CustomSelect from "@/components/select";
 import NoData from "@/components/no-data";
 import PrimaryButton from "@/components/button/primary-button";
-import ActiveStatusRadio from "@/components/activeStatusRadio";
 import useAppTheme from "@/hooks/useAppTheme";
 import { useSession } from "next-auth/react";
 
@@ -685,100 +684,203 @@ const Position = () => {
         }}
         title={"Изменить позицию"}
       >
-        <div className="space-y-[15px] my-[30px] ">
-          <Input
-            label="Имя"
-            type="text"
-            placeholder="Введите имя"
-            classNames="col-span-4"
-            inputClass={"!h-[45px] rounded-[8px] !border-gray-300 text-[15px]"}
-            labelClass={"text-sm"}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-          />
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            onSubmitEditPosition(selectedUnitType);
+          }}
+          className="space-y-5 my-6"
+        >
+          {/* Основная информация */}
+          <div className="space-y-4">
+            <Input
+              label="Название позиции"
+              type="text"
+              placeholder="Введите название позиции"
+              inputClass={"!h-[45px] rounded-lg !border-gray-300 text-[15px]"}
+              labelClass={"text-sm font-medium text-gray-700"}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
 
-          <CustomSelect
-            label={"Тип единицы"}
-            options={optionsPositionType}
-            value={positionTypeId}
-            placeholder="Выберите тип позиции"
-            onChange={(val) => setPositionTypeId(val)}
-          />
+            <CustomSelect
+              label={"Тип позиции"}
+              options={optionsPositionType}
+              value={positionTypeId}
+              onChange={(val) => setPositionTypeId(val)}
+              placeholder="Выберите тип позиции"
+              returnObject={false}
+            />
 
-          <div className="col-span-2">
-            <ActiveStatusRadio isActive={isActive} setIsActive={setIsActive} />
+            <Input
+              label="Уровень иерархии"
+              type="number"
+              placeholder="0"
+              inputClass={"!h-[45px] rounded-lg !border-gray-300 text-[15px]"}
+              labelClass={"text-sm font-medium text-gray-700"}
+              value={hierarchyLevel}
+              onChange={(e) => setHierarchyLevel(parseInt(e.target.value) || 0)}
+              min={0}
+            />
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Руководитель</label>
-            <div className="flex items-center gap-4">
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={isChief}
-                  onChange={(e) => setIsChief(e.target.checked)}
-                  className="w-4 h-4 rounded"
-                />
-                <span className="text-sm">Да</span>
-              </label>
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={!isChief}
-                  onChange={(e) => setIsChief(!e.target.checked)}
-                  className="w-4 h-4 rounded"
-                />
-                <span className="text-sm">Нет</span>
-              </label>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium">
-              Уникальность по единице
-            </label>
-            <div className="flex items-center gap-4">
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={isUniquePerUnit}
-                  onChange={(e) => setIsUniquePerUnit(e.target.checked)}
-                  className="w-4 h-4 rounded"
-                />
-                <span className="text-sm">Да</span>
-              </label>
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={!isUniquePerUnit}
-                  onChange={(e) => setIsUniquePerUnit(!e.target.checked)}
-                  className="w-4 h-4 rounded"
-                />
-                <span className="text-sm">Нет</span>
-              </label>
-            </div>
-          </div>
-
-          <Input
-            label="Уровень иерархии"
-            type="number"
-            placeholder="Введите уровень иерархии"
-            classNames="col-span-4"
-            inputClass={"!h-[45px] rounded-[8px] !border-gray-300 text-[15px]"}
-            labelClass={"text-sm"}
-            value={hierarchyLevel}
-            onChange={(e) => setHierarchyLevel(parseInt(e.target.value) || 0)}
-          />
-
-          <button
-            onClick={() => onSubmitEditPosition(selectedUnitType)}
-            type="submit"
-            className=" bg-orange-400 hover:bg-orange-500 text-white font-semibold py-2 w-1/4 rounded-xl transition-all duration-200"
+          {/* Настройки статуса и свойств */}
+          <div
+            className={`p-4 rounded-lg border ${
+              isDark
+                ? "bg-gray-800/50 border-gray-700"
+                : "bg-gray-50 border-gray-200"
+            }`}
           >
-            Изменить
-          </button>
-        </div>
+            <h3 className="text-sm font-semibold mb-4 text-gray-700 dark:text-gray-300">
+              Настройки
+            </h3>
+
+            <div className="space-y-4">
+              {/* Статус активности */}
+              <div>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                  Статус
+                </label>
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsActive(true)}
+                    className={`flex-1 py-2.5 px-4 rounded-lg border-2 text-sm font-medium transition-all ${
+                      isActive
+                        ? isDark
+                          ? "bg-green-900/30 border-green-600 text-green-400"
+                          : "bg-green-50 border-green-600 text-green-700"
+                        : isDark
+                          ? "bg-gray-800 border-gray-600 text-gray-400 hover:border-gray-500"
+                          : "bg-white border-gray-300 text-gray-600 hover:border-gray-400"
+                    }`}
+                  >
+                    Активный
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsActive(false)}
+                    className={`flex-1 py-2.5 px-4 rounded-lg border-2 text-sm font-medium transition-all ${
+                      !isActive
+                        ? isDark
+                          ? "bg-red-900/30 border-red-600 text-red-400"
+                          : "bg-red-50 border-red-600 text-red-700"
+                        : isDark
+                          ? "bg-gray-800 border-gray-600 text-gray-400 hover:border-gray-500"
+                          : "bg-white border-gray-300 text-gray-600 hover:border-gray-400"
+                    }`}
+                  >
+                    Неактивный
+                  </button>
+                </div>
+              </div>
+
+              {/* Руководитель */}
+              <div>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                  Руководящая должность
+                </label>
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsChief(true)}
+                    className={`flex-1 py-2.5 px-4 rounded-lg border-2 text-sm font-medium transition-all ${
+                      isChief
+                        ? isDark
+                          ? "bg-blue-900/30 border-blue-600 text-blue-400"
+                          : "bg-blue-50 border-blue-600 text-blue-700"
+                        : isDark
+                          ? "bg-gray-800 border-gray-600 text-gray-400 hover:border-gray-500"
+                          : "bg-white border-gray-300 text-gray-600 hover:border-gray-400"
+                    }`}
+                  >
+                    Да
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsChief(false)}
+                    className={`flex-1 py-2.5 px-4 rounded-lg border-2 text-sm font-medium transition-all ${
+                      !isChief
+                        ? isDark
+                          ? "bg-gray-700 border-gray-500 text-gray-300"
+                          : "bg-gray-100 border-gray-500 text-gray-700"
+                        : isDark
+                          ? "bg-gray-800 border-gray-600 text-gray-400 hover:border-gray-500"
+                          : "bg-white border-gray-300 text-gray-600 hover:border-gray-400"
+                    }`}
+                  >
+                    Нет
+                  </button>
+                </div>
+              </div>
+
+              {/* Уникальность */}
+              <div>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                  Уникальная позиция для единицы
+                </label>
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsUniquePerUnit(true)}
+                    className={`flex-1 py-2.5 px-4 rounded-lg border-2 text-sm font-medium transition-all ${
+                      isUniquePerUnit
+                        ? isDark
+                          ? "bg-purple-900/30 border-purple-600 text-purple-400"
+                          : "bg-purple-50 border-purple-600 text-purple-700"
+                        : isDark
+                          ? "bg-gray-800 border-gray-600 text-gray-400 hover:border-gray-500"
+                          : "bg-white border-gray-300 text-gray-600 hover:border-gray-400"
+                    }`}
+                  >
+                    Да
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsUniquePerUnit(false)}
+                    className={`flex-1 py-2.5 px-4 rounded-lg border-2 text-sm font-medium transition-all ${
+                      !isUniquePerUnit
+                        ? isDark
+                          ? "bg-gray-700 border-gray-500 text-gray-300"
+                          : "bg-gray-100 border-gray-500 text-gray-700"
+                        : isDark
+                          ? "bg-gray-800 border-gray-600 text-gray-400 hover:border-gray-500"
+                          : "bg-white border-gray-300 text-gray-600 hover:border-gray-400"
+                    }`}
+                  >
+                    Нет
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Кнопки действий */}
+          <div className="flex gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => {
+                setEditModal(false);
+                handleRemoveAll();
+              }}
+              className={`flex-1 py-2.5 px-4 rounded-lg border-2 font-medium transition-all ${
+                isDark
+                  ? "bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700"
+                  : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+              }`}
+            >
+              Отмена
+            </button>
+            <button
+              type="submit"
+              className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2.5 px-4 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
+            >
+              Изменить позицию
+            </button>
+          </div>
+        </form>
       </MethodModal>
 
       {/* Delete modal */}
