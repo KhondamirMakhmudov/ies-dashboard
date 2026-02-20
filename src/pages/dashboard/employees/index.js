@@ -162,6 +162,7 @@ const Index = () => {
       Authorization: `Bearer ${session?.accessToken}`,
     },
     params: { is_root: true, limit: 150 },
+    enabled: !!session?.accessToken,
   });
 
   // Workplace data
