@@ -21,6 +21,7 @@ import NoData from "@/components/no-data";
 import PrimaryButton from "@/components/button/primary-button";
 import useAppTheme from "@/hooks/useAppTheme";
 import { useSession } from "next-auth/react";
+import SearchIcon from "@mui/icons-material/Search";
 
 const Position = () => {
   const { data: session } = useSession();
@@ -43,6 +44,7 @@ const Position = () => {
   const [isChief, setIsChief] = useState(false);
   const [isUniquePerUnit, setIsUniquePerUnit] = useState(false);
   const [hierarchyLevel, setHierarchyLevel] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const {
     data: positions,
@@ -82,6 +84,14 @@ const Position = () => {
     value: entry.id,
     label: entry.name,
   }));
+
+  // Filter positions based on search query
+  const filteredPositions = get(positions, "data", []).filter((position) => {
+    if (!searchQuery.trim()) return true;
+    const query = searchQuery.toLowerCase();
+    const positionName = position.name?.toLowerCase() || "";
+    return positionName.includes(query);
+  });
 
   const handlePaginationChange = ({ page, offset, limit }) => {
     setCurrentPage(page);
@@ -389,8 +399,8 @@ const Position = () => {
   ];
 
   const totalCount =
-    get(positions, "data", [])?.length < limit
-      ? offset + get(positions, "data", []).length
+    filteredPositions.length < limit
+      ? offset + filteredPositions.length
       : offset + limit + 1;
   return (
     <>
@@ -401,9 +411,32 @@ const Position = () => {
           borderColor: border("#e5e7eb", "#333333"),
         }}
       >
-        <PrimaryButton onClick={() => setCreateModal(true)} variant="contained">
-          <p>Создать</p>
-        </PrimaryButton>
+        <div className="flex gap-3 items-center flex-1">
+          <PrimaryButton onClick={() => setCreateModal(true)} variant="contained">
+            <p>Создать</p>
+          </PrimaryButton>
+
+          {/* Search Input */}
+          <div className="relative flex-1 max-w-md">
+            <SearchIcon
+              className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+              fontSize="small"
+              style={{ color: text("#9ca3af", "#6b7280") }}
+            />
+            <input
+              type="text"
+              placeholder="Поиск по названию позиции..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 rounded-lg border outline-none transition-all duration-200 focus:ring-2 focus:ring-blue-500"
+              style={{
+                backgroundColor: bg("#ffffff", "#1e1e1e"),
+                borderColor: border("#d1d5db", "#4b5563"),
+                color: text("#111827", "#f9fafb"),
+              }}
+            />
+          </div>
+        </div>
 
         <div
           className={`inline-flex items-center ${
@@ -442,6 +475,31 @@ const Position = () => {
       </div>
       {isEmpty(get(positions, "data", [])) ? (
         <NoData onCreate={() => setCreateModal(true)} />
+      ) : isEmpty(filteredPositions) ? (
+        <div
+          className="text-center py-12 rounded-lg border"
+          style={{
+            backgroundColor: bg("#ffffff", "#1e1e1e"),
+            borderColor: border("#e5e7eb", "#333333"),
+          }}
+        >
+          <SearchIcon
+            fontSize="large"
+            style={{ color: text("#d1d5db", "#4b5563") }}
+          />
+          <p
+            className="mt-2 text-lg font-medium"
+            style={{ color: text("#6b7280", "#9ca3af") }}
+          >
+            Ничего не найдено
+          </p>
+          <p
+            className="mt-1 text-sm"
+            style={{ color: text("#9ca3af", "#6b7280") }}
+          >
+            Попробуйте изменить запрос поиска
+          </p>
+        </div>
       ) : (
         <motion.div
           initial={{ opacity: 0, translateY: "20px" }}
@@ -458,7 +516,7 @@ const Position = () => {
             ) : (
               <CustomTable
                 columns={columns}
-                data={get(positions, "data", [])}
+                data={filteredPositions}
                 pagination={{
                   currentPage,
                   totalCount,

@@ -73,12 +73,10 @@ const Index = () => {
     enabled: !!session?.accessToken,
   });
 
-  const optionsSchedules = get(allSchedules, "data.data", []).map(
-    (schedule) => ({
-      value: schedule.id,
-      label: schedule.name,
-    }),
-  );
+  const optionsSchedules = get(allSchedules, "data", []).map((schedule) => ({
+    value: schedule.id,
+    label: schedule.name,
+  }));
 
   // get entrypoints
   const {
@@ -319,7 +317,7 @@ const Index = () => {
 
   // Helper function to get schedule name by id
   const getScheduleNameById = (id) => {
-    const schedule = get(allSchedules, "data.data", []).find(
+    const schedule = get(allSchedules, "data", []).find(
       (item) => item.id === id,
     );
     return schedule?.name || `Schedule ${id}`;
@@ -558,7 +556,7 @@ const Index = () => {
           </PrimaryButton>
 
           <CustomTable
-            data={get(entrypoints, "data.data", [])}
+            data={get(entrypoints, "data", [])}
             columns={columns}
             tableClassName={"mt-[10px]"}
           />

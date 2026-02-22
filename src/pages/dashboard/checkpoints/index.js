@@ -86,7 +86,7 @@ const Index = () => {
   });
 
   // options of the entrypoint
-  const options = get(entrypoints, "data.data", []).map((entry) => ({
+  const options = get(entrypoints, "data", []).map((entry) => ({
     value: entry.id,
     label: entry.entryPointName,
   }));
@@ -310,7 +310,7 @@ const Index = () => {
             )}
             {canReadCheckpoints && (
               <CustomTable
-                data={get(checkpoints, "data.data")}
+                data={get(checkpoints, "data", [])}
                 columns={columns}
               />
             )}
