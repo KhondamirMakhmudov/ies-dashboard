@@ -19,6 +19,7 @@ import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import { config } from "@/config";
 import { exportToExcelStyled } from "@/utils/exportToExcelStyled";
 import useAppTheme from "@/hooks/useAppTheme";
+import ContentLoader from "@/components/loader";
 
 const Index = () => {
   const { bg, isDark, text, border } = useAppTheme();
@@ -39,10 +40,14 @@ const Index = () => {
   } = useGetPythonQuery({
     key: KEYS.employees,
     url: URLS.employees,
+    headers: {
+      Authorization: `Bearer ${session?.accessToken}`,
+    },
     params: {
       limit: 1000,
       offset: 0,
     },
+    enabled: !!session?.accessToken,
   });
 
   const employeeList = get(employees, "data.data", []);
@@ -116,24 +121,6 @@ const Index = () => {
     }
   };
 
-  const handleFetchAllData = async () => {
-    if (!startDateTime || !endDateTime || selectedEmployees.length === 0) {
-      toast.error("Выберите сотрудников и даты");
-      return;
-    }
-
-    toast.loading("Загрузка данных...", { id: "fetching" });
-    const dataMap = {};
-
-    for (const employee of selectedEmployees) {
-      const data = await fetchEmployeeData(employee.id);
-      dataMap[employee.id] = data;
-    }
-
-    setEmployeeDataMap(dataMap);
-    toast.success("Данные успешно загружены", { id: "fetching" });
-  };
-
   const token = session?.accessToken;
 
   const handleExport = async () => {
@@ -161,6 +148,14 @@ const Index = () => {
       toast.error("Ошибка при загрузке Excel файла.", { id: "exporting" });
     }
   };
+
+  if (isLoadingEmployee || isFetchingEmployee) {
+    return (
+      <DashboardLayout headerTitle={"Отчёт по сотрудникам"}>
+        <ContentLoader />
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout headerTitle={"Отчёт по сотрудникам"}>

@@ -1,11 +1,13 @@
 @import "tailwindcss";
 @import url("https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,100..900&display=swap");
 :root {
   --color-bg-light: #ffffff;
   --color-text-light: #000000;
   --color-bg-dark: #121212;
   --color-text-dark: #ffffff;
+  --app-font-family: "Nunito Sans", sans-serif;
+  --app-font-scale: 1;
 }
 
 .dark {
@@ -23,11 +25,15 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: "Nunito Sans", sans-serif;
+  font-family: var(--app-font-family);
 }
 
 * {
-  font-family: "Nunito Sans", sans-serif !important;
+  font-family: var(--app-font-family) !important;
+}
+
+html {
+  font-size: calc(16px * var(--app-font-scale));
 }
 
 .login {

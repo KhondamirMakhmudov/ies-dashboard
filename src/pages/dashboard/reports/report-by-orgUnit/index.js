@@ -16,6 +16,7 @@ import toast from "react-hot-toast";
 import Image from "next/image";
 import { config } from "@/config";
 import useAppTheme from "@/hooks/useAppTheme";
+import ContentLoader from "@/components/loader";
 
 const Index = () => {
   const { bg, isDark, text, border } = useAppTheme();
@@ -27,13 +28,18 @@ const Index = () => {
   const [startDateTime, setStartDateTime] = useState("");
   const [endDateTime, setEndDateTime] = useState("");
 
-  const { data: orgUnits } = useGetPythonQuery({
+  const {
+    data: orgUnits,
+    isLoading: isLoadingOrgUnits,
+    isFetching: isFetchingOrgUnits,
+  } = useGetPythonQuery({
     key: KEYS.organizationalUnits,
     url: URLS.organizationalUnits,
     headers: {
       Authorization: `Bearer ${session?.accessToken}`,
     },
     params: { limit: 150 },
+    enabled: !!session?.accessToken,
   });
 
   const optionsOrgUnits = get(orgUnits, "data", []).map((item) => ({
@@ -83,6 +89,14 @@ const Index = () => {
       toast.error("Ошибка при загрузке Excel файла.", { id: "exporting" });
     }
   };
+
+  if (isLoadingOrgUnits || isFetchingOrgUnits) {
+    return (
+      <DashboardLayout headerTitle="Отчёты по подразделениям">
+        <ContentLoader />
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout headerTitle="Отчёты по подразделениям">

@@ -2,20 +2,20 @@ import DashboardLayout from "@/layouts/dashboard/DashboardLayout";
 import { KEYS } from "@/constants/key";
 import { URLS } from "@/constants/url";
 import useGetQuery from "@/hooks/java/useGetQuery";
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { get } from "lodash";
 import CustomSelect from "@/components/select";
 import Input from "@/components/input";
 import DateRangeIcon from "@mui/icons-material/DateRange";
-import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import useGetPythonQuery from "@/hooks/python/useGetQuery";
 import { getEmployeesLogsByRange } from "@/utils/getEmployeesLogsByRange";
 import { exportToExcelStyled } from "@/utils/exportToExcelStyled";
 import toast from "react-hot-toast";
 import { config } from "@/config";
 import useAppTheme from "@/hooks/useAppTheme";
+import ContentLoader from "@/components/loader";
 
 const Index = () => {
   const { bg, isDark, text, border } = useAppTheme();
@@ -27,13 +27,18 @@ const Index = () => {
   const [startDateTime, setStartDateTime] = useState("");
   const [endDateTime, setEndDateTime] = useState("");
 
-  const { data: orgUnits } = useGetPythonQuery({
+  const {
+    data: orgUnits,
+    isLoading: isLoadingOrgUnits,
+    isFetching: isFetchingOrgUnits,
+  } = useGetPythonQuery({
     key: KEYS.organizationalUnits,
     url: URLS.organizationalUnits,
     headers: {
       Authorization: `Bearer ${session?.accessToken}`,
     },
     params: { limit: 150 },
+    enabled: !!session?.accessToken,
   });
 
   const optionsOrgUnits = get(orgUnits, "data", []).map((item) => ({
@@ -41,7 +46,11 @@ const Index = () => {
     label: item.name,
   }));
 
-  const { data: entrypoints } = useGetQuery({
+  const {
+    data: entrypoints,
+    isLoading: isLoadingEntrypoints,
+    isFetching: isFetchingEntrypoints,
+  } = useGetQuery({
     key: KEYS.entrypoints,
     url: URLS.newEntryPoints,
     headers: {
@@ -99,6 +108,19 @@ const Index = () => {
       toast.error("Ошибка при загрузке Excel файла.", { id: "exporting" });
     }
   };
+
+  if (
+    isLoadingOrgUnits ||
+    isFetchingOrgUnits ||
+    isLoadingEntrypoints ||
+    isFetchingEntrypoints
+  ) {
+    return (
+      <DashboardLayout headerTitle="Аналитика отчётов">
+        <ContentLoader />
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout headerTitle="Аналитика отчётов">

@@ -17,10 +17,25 @@ let store = (set) => ({
 let settingsStore = (set) => ({
   token: null,
   darkMode: false,
+  highContrast: false,
+  fontScale: 1,
+  fontFamily: '"Nunito Sans", sans-serif',
   lang: config.DEFAULT_APP_LANG,
   setToken: (token) => set((state) => ({ ...state, token })),
   setLang: (lang) => set((state) => ({ ...state, lang })),
-  setMode: () => set((state) => ({ ...state, darkMode: !state.darkMode })),
+  setMode: (value) =>
+    set((state) => ({
+      ...state,
+      darkMode: typeof value === "boolean" ? value : !state.darkMode,
+    })),
+  setHighContrast: (value) =>
+    set((state) => ({
+      ...state,
+      highContrast:
+        typeof value === "boolean" ? value : !state.highContrast,
+    })),
+  setFontScale: (fontScale) => set((state) => ({ ...state, fontScale })),
+  setFontFamily: (fontFamily) => set((state) => ({ ...state, fontFamily })),
 });
 
 export const useLangStore = create((set) => ({
