@@ -107,7 +107,7 @@ const Index = () => {
 
           <div className="my-[30px]">
             <CustomTable
-              data={get(allSchedules, "data.data", [])}
+              data={get(allSchedules, "data", [])}
               columns={columns}
             />
           </div>

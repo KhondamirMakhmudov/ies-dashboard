@@ -127,12 +127,10 @@ const Index = () => {
     enabled: !!session?.accessToken,
   });
 
-  const scheduleOptions = get(entrypointSchedules, "data.data", []).map(
-    (item) => ({
-      label: `${item.unitCode.nameLong} - ${item.entryPoint.entryPointName} - ${item.schedule.name}`,
-      value: item.id,
-    }),
-  );
+  const scheduleOptions = get(entrypointSchedules, "data", []).map((item) => ({
+    label: `${item.unitCode.nameLong} - ${item.entryPoint.entryPointName} - ${item.schedule.name}`,
+    value: item.id,
+  }));
   // create business-trip for employees
   const { mutate: createJobTrip } = usePostQuery({
     listKeyId: "create-job-trip",
@@ -389,7 +387,7 @@ const Index = () => {
   }
 
   // prepare filtered / paginated data for table when searching employees
-  const allJobTrips = get(jobTrips, "data.data.data", []) || [];
+  const allJobTrips = get(jobTrips, "data.data", []) || [];
   const displayedJobTrips = allJobTrips.filter((jt) => {
     const term = jobTripSearch.trim().toLowerCase();
     if (!term) return true;
@@ -448,7 +446,7 @@ const Index = () => {
                 pageSize,
                 total: jobTripSearch
                   ? displayedJobTrips.length
-                  : get(jobTrips, "data.data.totalCount", 0),
+                  : get(jobTrips, "data.totalCount", 0),
                 onPaginationChange: ({ page }) => setCurrentPage(page),
               }}
             />

@@ -43,10 +43,6 @@ const Index = () => {
       limit: 1000,
       offset: 0,
     },
-    headers: {
-      Authorization: `Bearer ${session?.accessToken}`,
-    },
-    enabled: !!session?.accessToken,
   });
 
   const employeeList = get(employees, "data.data", []);

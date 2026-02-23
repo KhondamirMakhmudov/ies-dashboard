@@ -95,7 +95,7 @@ const Index = () => {
     enabled: !!session?.accessToken && (createCameraModal || editCameraModal),
   });
 
-  const options = get(entrypoints, "data.data", []).map((entry) => ({
+  const options = get(entrypoints, "data", []).map((entry) => ({
     value: entry.id,
     label: entry.entryPointName,
   }));
@@ -435,7 +435,7 @@ const Index = () => {
             </div>
             {canReadCameras && (
               <CustomTable
-                data={get(allCameras, "data.data", [])}
+                data={get(allCameras, "data", [])}
                 columns={columns}
               />
             )}
@@ -452,11 +452,8 @@ const Index = () => {
             setCreateCameraModal(false);
             handleRemoveAll();
           }}
+          title="Добавить камеру"
         >
-          <Typography variant="h6" className="mb-2">
-            Добавить камеру
-          </Typography>
-
           <div className="my-[15px]">
             <div
               onSubmit={onSubmitCreateCamera}

@@ -23,6 +23,7 @@ import CustomTable from "@/components/table";
 import { Button } from "@mui/material";
 import ViewModuleIcon from "@mui/icons-material/ViewModule";
 import TableRowsIcon from "@mui/icons-material/TableRows";
+import SearchIcon from "@mui/icons-material/Search";
 
 const PermissionSection = () => {
   const { data: session } = useSession();
@@ -37,6 +38,7 @@ const PermissionSection = () => {
   const [selectedActionId, setSelectedActionId] = useState("");
   const [name, setName] = useState("");
   const [viewMode, setViewMode] = useState("card");
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Get permissions
   const { data: permissions, isLoading: permissionsLoading } =
@@ -85,6 +87,15 @@ const PermissionSection = () => {
   const permissionsData = get(permissions, "data.data", []);
   const resourcesData = get(resources, "data.data", []);
   const actionsData = get(actions, "data.data", []);
+
+  // Filter permissions based on search query
+  const filteredPermissions = permissionsData.filter((permission) => {
+    if (!searchQuery.trim()) return true;
+    const query = searchQuery.toLowerCase();
+    const resourceName = permission.resource?.name?.toLowerCase() || "";
+    const actionName = permission.action?.name?.toLowerCase() || "";
+    return resourceName.includes(query) || actionName.includes(query);
+  });
 
   const optionsResources = get(resources, "data.data", []).map((entry) => ({
     value: entry.id,
@@ -279,9 +290,32 @@ const PermissionSection = () => {
           borderColor: border("#e5e7eb", "#333333"),
         }}
       >
-        <PrimaryButton onClick={() => setCreateModal(true)}>
-          Создать разрешение
-        </PrimaryButton>
+        <div className="flex flex-col sm:flex-row gap-3 flex-1">
+          <PrimaryButton onClick={() => setCreateModal(true)}>
+            Создать разрешение
+          </PrimaryButton>
+
+          {/* Search Input */}
+          <div className="relative flex-1 max-w-md">
+            <SearchIcon
+              className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+              fontSize="small"
+              style={{ color: text("#9ca3af", "#6b7280") }}
+            />
+            <input
+              type="text"
+              placeholder="Поиск по ресурсу или действию..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 rounded-lg border outline-none transition-all duration-200 focus:ring-2 focus:ring-blue-500"
+              style={{
+                backgroundColor: bg("#ffffff", "#1e1e1e"),
+                borderColor: border("#d1d5db", "#4b5563"),
+                color: text("#111827", "#f9fafb"),
+              }}
+            />
+          </div>
+        </div>
 
         <div className="flex items-center gap-2">
           <button
@@ -328,6 +362,31 @@ const PermissionSection = () => {
         <ContentLoader />
       ) : isEmpty(permissionsData) ? (
         <NoData onCreate={() => setCreateModal(true)} />
+      ) : isEmpty(filteredPermissions) ? (
+        <div
+          className="text-center py-12 rounded-lg border"
+          style={{
+            backgroundColor: bg("#ffffff", "#1e1e1e"),
+            borderColor: border("#e5e7eb", "#333333"),
+          }}
+        >
+          <SearchIcon
+            fontSize="large"
+            style={{ color: text("#d1d5db", "#4b5563") }}
+          />
+          <p
+            className="mt-2 text-lg font-medium"
+            style={{ color: text("#6b7280", "#9ca3af") }}
+          >
+            Ничего не найдено
+          </p>
+          <p
+            className="mt-1 text-sm"
+            style={{ color: text("#9ca3af", "#6b7280") }}
+          >
+            Попробуйте изменить запрос поиска
+          </p>
+        </div>
       ) : viewMode === "table" ? (
         <div
           className="overflow-x-auto rounded-lg p-4 border"
@@ -336,11 +395,11 @@ const PermissionSection = () => {
             borderColor: border("#e5e7eb", "#333333"),
           }}
         >
-          <CustomTable columns={columns} data={permissionsData} />
+          <CustomTable columns={columns} data={filteredPermissions} />
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {permissionsData.map((permission, index) => (
+          {filteredPermissions.map((permission, index) => (
             <motion.div
               key={permission.id}
               initial={{ opacity: 0, y: 20 }}
