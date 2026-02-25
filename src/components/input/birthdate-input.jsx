@@ -19,12 +19,12 @@ export default function BirthDateInput({
     const max = new Date(
       today.getFullYear() - 16,
       today.getMonth(),
-      today.getDate()
+      today.getDate(),
     );
     const min = new Date(
       today.getFullYear() - 100,
       today.getMonth(),
-      today.getDate()
+      today.getDate(),
     );
 
     const toISO = (date) => date.toISOString().split("T")[0];

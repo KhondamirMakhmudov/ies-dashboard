@@ -6,6 +6,7 @@ import useAppTheme from "@/hooks/useAppTheme";
 import toast from "react-hot-toast";
 import ContentLoader from "../loader";
 import CustomTable from "../table";
+import DeleteModal from "@/components/modal/delete-modal";
 
 const DocsOfEmployee = ({ employeeId }) => {
   const { isDark, text, border, bg } = useAppTheme();
@@ -20,6 +21,7 @@ const DocsOfEmployee = ({ employeeId }) => {
     file: null,
   });
   const [uploading, setUploading] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const itemsPerPage = 10;
 
   const [params, setParams] = useState({
@@ -134,10 +136,6 @@ const DocsOfEmployee = ({ employeeId }) => {
   }
 
   async function deleteFile(fileId, fileName) {
-    if (!confirm(`Вы уверены, что хотите удалить "${fileName}"?`)) {
-      return;
-    }
-
     try {
       const response = await fetch(
         `http://10.20.6.60:8088/file-service/${fileId}`,
@@ -154,6 +152,20 @@ const DocsOfEmployee = ({ employeeId }) => {
       console.error("Delete error:", error);
       toast.error("Ошибка при удалении файла");
     }
+  }
+
+  function openDeleteModal(fileId, fileName) {
+    setDeleteTarget({ id: fileId, name: fileName });
+  }
+
+  function closeDeleteModal() {
+    setDeleteTarget(null);
+  }
+
+  async function confirmDelete() {
+    if (!deleteTarget) return;
+    await deleteFile(deleteTarget.id, deleteTarget.name);
+    closeDeleteModal();
   }
 
   useEffect(() => {
@@ -360,7 +372,9 @@ const DocsOfEmployee = ({ employeeId }) => {
             <VisibilityIcon fontSize="small" />
           </button>
           <Button
-            onClick={() => deleteFile(row.original.id, row.original.file_name)}
+            onClick={() =>
+              openDeleteModal(row.original.id, row.original.file_name)
+            }
             sx={{
               width: "32px",
               height: "32px",
@@ -900,6 +914,14 @@ const DocsOfEmployee = ({ employeeId }) => {
           </div>
         </div>
       )}
+
+      {/* Delete Modal */}
+      <DeleteModal
+        open={!!deleteTarget}
+        onClose={closeDeleteModal}
+        deleting={confirmDelete}
+        title={`Вы уверены, что хотите удалить файл "${deleteTarget?.name || ""}"?`}
+      />
 
       {/* Upload Modal */}
       {showUploadModal && (
