@@ -716,11 +716,8 @@ const Index = () => {
             setSelectedPosition(null);
             setSearchTerm("");
           }}
+          title={"Подключить сотрудников к расписанию"}
         >
-          <Typography variant="h6" className="mb-4">
-            Подключить сотрудников к расписанию
-          </Typography>
-
           <div className="mt-[10px]">
             <CustomSelect
               options={scheduleOptions}

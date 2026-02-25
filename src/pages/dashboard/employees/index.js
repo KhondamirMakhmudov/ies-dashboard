@@ -250,13 +250,13 @@ const Index = () => {
       if (!response.ok) {
         if (result?.detail && typeof result.detail === "object") {
           setErrors(result.detail);
-          toast.error("Iltimos, kiritilgan ma'lumotlarni tekshiring.");
+          toast.error("Пожалуйста, проверьте введённые данные.");
           return;
         }
-        toast.error("Xatolik yuz berdi.");
+        toast.error("Произошла ошибка.");
         return;
       }
-      toast.success("Xodim muvaffaqiyatli qo'shildi!");
+      toast.success("Сотрудник успешно добавлен!");
       setErrors({});
       setStep(1);
       setFormData({
@@ -279,8 +279,8 @@ const Index = () => {
       queryClient.invalidateQueries(KEYS.employees);
       setOpen(false);
     } catch (error) {
-      console.error("Xatolik:", error);
-      toast.error("Tarmoqda xatolik yuz berdi.");
+      console.error("Ошибка:", error);
+      toast.error("Ошибка сети.");
     }
   };
 

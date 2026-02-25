@@ -459,26 +459,14 @@ const Index = () => {
         open={createModal}
         closeClick={handleCloseCreateModal}
         width="min-w-2xl"
+        title={"Создание командировки"}
       >
         <div className="space-y-6 max-h-[80vh] overflow-y-auto overflow-x-hidden">
           {/* Header */}
-          <div
-            className="text-center sticky z-50 top-0 pt-2 pb-4 border-b -mx-6 px-6"
-            style={{
-              backgroundColor: bg("#ffffff", "#1e1e1e"),
-              borderColor: border("#e5e7eb", "#333333"),
-            }}
-          >
-            <h2
-              className="text-2xl font-bold"
-              style={{ color: text("#111827", "#f3f4f6") }}
-            >
-              Создание командировки
-            </h2>
-            <p style={{ color: text("#6b7280", "#9ca3af") }} className="mt-1">
-              Заполните информацию о командировке и выберите сотрудников
-            </p>
-          </div>
+
+          <p style={{ color: text("#6b7280", "#9ca3af") }} className="mt-1">
+            Заполните информацию о командировке и выберите сотрудников
+          </p>
 
           {/* Basic Information Card */}
           <div
@@ -642,7 +630,7 @@ const Index = () => {
 
             {/* Search and Filters */}
             <div className="space-y-4 mb-6">
-              <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex flex-col  gap-3">
                 <div className="flex-1">
                   <div className="relative">
                     <input
@@ -678,35 +666,15 @@ const Index = () => {
                   </div>
                 </div>
 
-                <select
+                <CustomSelect
+                  options={[
+                    { label: "Все должности", value: "" },
+                    ...positions.map((pos) => ({ label: pos, value: pos })),
+                  ]}
                   value={selectedPosition}
-                  onChange={(e) => setSelectedPosition(e.target.value)}
-                  className="h-12 rounded-lg border px-4 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-w-[180px]"
-                  style={{
-                    backgroundColor: bg("#ffffff", "#1e1e1e"),
-                    borderColor: border("#d1d5db", "#4b5563"),
-                    color: text("#111827", "#f3f4f6"),
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = border(
-                      "#9ca3af",
-                      "#6b7280",
-                    );
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = border(
-                      "#d1d5db",
-                      "#4b5563",
-                    );
-                  }}
-                >
-                  <option value="">Все должности</option>
-                  {positions.map((pos, i) => (
-                    <option key={i} value={pos}>
-                      {pos}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(val) => setSelectedPosition(val)}
+                  placeholder="Все должности"
+                />
               </div>
 
               {/* Selection Actions */}

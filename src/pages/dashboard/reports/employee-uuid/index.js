@@ -12,6 +12,7 @@ import Input from "@/components/input";
 import Image from "next/image";
 import { Search, Close, Delete } from "@mui/icons-material";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import CustomSelect from "@/components/select";
 import { getEmployeesLogsByRange } from "@/utils/getEmployeesLogsByRange";
 import toast from "react-hot-toast";
 import DateRangeIcon from "@mui/icons-material/DateRange";
@@ -192,23 +193,18 @@ const Index = () => {
           >
             Должность:
           </label>
-          <select
+          <CustomSelect
+            options={[
+              { label: "Все должности", value: "" },
+              ...uniquePositions.map((position) => ({
+                label: position,
+                value: position,
+              })),
+            ]}
             value={selectedPosition}
-            onChange={(e) => setSelectedPosition(e.target.value)}
-            className="w-full h-[48px] rounded-lg border-2 px-4 text-[15px] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-200 appearance-none cursor-pointer"
-            style={{
-              backgroundColor: bg("#ffffff", "#2d2d2d"),
-              borderColor: border("#e5e7eb", "#444444"),
-              color: text("#1f2937", "#f3f4f6"),
-            }}
-          >
-            <option value="">Все должности</option>
-            {uniquePositions.map((position, index) => (
-              <option key={index} value={position}>
-                {position}
-              </option>
-            ))}
-          </select>
+            onChange={(val) => setSelectedPosition(val)}
+            placeholder="Все должности"
+          />
         </div>
 
         {/* Employee Search */}

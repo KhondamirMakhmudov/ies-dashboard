@@ -1034,13 +1034,7 @@ const Index = () => {
               Отмена
             </PrimaryButton>
 
-            <PrimaryButton
-              backgroundColor="#10b981"
-              color="white"
-              variant="contained"
-              onClick={submitCreateEntryPoint}
-              className="hover:bg-green-700"
-            >
+            <PrimaryButton onClick={submitCreateEntryPoint}>
               Создать точку доступа
             </PrimaryButton>
           </div>

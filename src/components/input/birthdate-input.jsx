@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import useAppTheme from "@/hooks/useAppTheme";
 
 export default function BirthDateInput({
   label = "День рождения",
@@ -9,6 +10,7 @@ export default function BirthDateInput({
   className = "",
   inputClass = "",
 }) {
+  const { isDark } = useAppTheme();
   const [localError, setLocalError] = useState("");
 
   // ✅ Bugungi sanaga qarab min/max sana hisoblash
@@ -68,7 +70,13 @@ export default function BirthDateInput({
   return (
     <div className={`w-full ${className}`}>
       {label && (
-        <label className="block mb-1 text-sm text-gray-700">{label}</label>
+        <label
+          className={`block mb-1 text-sm ${
+            isDark ? "text-gray-300" : "text-gray-700"
+          }`}
+        >
+          {label}
+        </label>
       )}
       <input
         type="date"
@@ -80,7 +88,9 @@ export default function BirthDateInput({
         className={`w-full h-[55px] px-3 border rounded-md focus:outline-none focus:ring-2 ${
           localError || error
             ? "border-red-500 focus:ring-red-500"
-            : "border-gray-400 focus:ring-blue-500"
+            : isDark
+              ? "border-gray-700 focus:ring-blue-500"
+              : "border-gray-400 focus:ring-blue-500"
         } ${inputClass}`}
       />
       {(localError || error) && (

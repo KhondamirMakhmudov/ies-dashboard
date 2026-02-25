@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import useAppTheme from "@/hooks/useAppTheme";
+import toast from "react-hot-toast";
 
 const ScheduleModal = ({
   isOpen,
@@ -91,7 +92,7 @@ const ScheduleModal = ({
     setScheduleData((prev) => ({
       ...prev,
       [day]: prev[day].map((slot, i) =>
-        i === index ? { ...slot, [field]: value } : slot
+        i === index ? { ...slot, [field]: value } : slot,
       ),
     }));
   };
@@ -99,7 +100,7 @@ const ScheduleModal = ({
   const applyToAllDays = () => {
     const mondaySchedule = scheduleData["Понедельник"];
     if (mondaySchedule.length === 0) {
-      alert("Пожалуйста, сначала настройте расписание понедельника");
+      toast.error("Пожалуйста, сначала настройте расписание понедельника");
       return;
     }
 
@@ -417,7 +418,7 @@ const ScheduleModal = ({
                                 day,
                                 index,
                                 "start",
-                                e.target.value
+                                e.target.value,
                               )
                             }
                             className="flex-1 px-3 py-2 border rounded-lg focus:border-blue-500 focus:outline-none"
@@ -474,21 +475,21 @@ const ScheduleModal = ({
                     className="w-full py-2 text-white rounded-lg text-sm font-medium transition-all"
                     style={{
                       background: isDark
-                        ? "linear-gradient(to right, #047857, #059669)"
-                        : "linear-gradient(to right, #10b981, #14b8a6)",
+                        ? "linear-gradient(to right, #1e40af, #2563eb)"
+                        : "linear-gradient(to right, #3b82f6, #0ea5e9)",
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.background = isDark
-                        ? "linear-gradient(to right, #059669, #10b981)"
-                        : "linear-gradient(to right, #059669, #0d9488)";
+                        ? "linear-gradient(to right, #2563eb, #3b82f6)"
+                        : "linear-gradient(to right, #2563eb, #0284c7)";
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.background = isDark
-                        ? "linear-gradient(to right, #047857, #059669)"
-                        : "linear-gradient(to right, #10b981, #14b8a6)";
+                        ? "linear-gradient(to right, #1e40af, #2563eb)"
+                        : "linear-gradient(to right, #3b82f6, #0ea5e9)";
                     }}
                   >
-                    + Добавить временной интервал
+                    Добавить временной интервал
                   </button>
                 </div>
               ))}

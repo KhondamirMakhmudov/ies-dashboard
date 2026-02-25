@@ -330,7 +330,7 @@ const Index = () => {
             setCreateCheckpoints(false);
             handleRemoveAll();
           }}
-          title={"Добавить контрольно-пропускной пункт"}
+          title={"Добавить контрольнцую точку"}
         >
           <div className="my-[30px] space-y-[20px]">
             <Input
@@ -351,9 +351,9 @@ const Index = () => {
               options={options}
               value={selectedEntryPoint}
               onChange={(val) => setSelectedEntryPoint(val)}
-              label={"Точка входа"}
+              label={"Точки доступа"}
               required
-              placeholder="Выберите точку входа"
+              placeholder="Выберите точку доступа"
             />
             <PrimaryButton
               disabled={nameOfCheckpointName === "" || !selectedEntryPoint}
@@ -378,11 +378,12 @@ const Index = () => {
             setEditCheckpoints(false);
             handleRemoveAll();
           }}
-          title={"Изменить контрольно-пропускной пункт"}
+          title={"Изменить контрольную точку"}
         >
           <div className="my-[30px] space-y-[15px]">
             <Input
               name="login"
+              label="Имя чекпоинта"
               onChange={(e) => {
                 setNameOfCheckpointName(e.target.value);
               }}
@@ -400,6 +401,7 @@ const Index = () => {
               options={options}
               value={selectedEntryPoint}
               onChange={(val) => setSelectedEntryPoint(val)}
+              label={"Точки доступа"}
             />
             <PrimaryButton
               variant="contained"
