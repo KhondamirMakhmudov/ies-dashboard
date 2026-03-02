@@ -2,6 +2,7 @@ import { useState } from "react";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import useAppTheme from "@/hooks/useAppTheme";
+import { normalizeDateInputValue } from "@/utils/normalizeDateInput";
 
 const Input = ({
   label,
@@ -21,6 +22,25 @@ const Input = ({
   const [showPassword, setShowPassword] = useState(false);
   const isPassword = type === "password";
   const inputType = isPassword ? (showPassword ? "text" : "password") : type;
+
+  const handleChange = (e) => {
+    if (!onChange) return;
+
+    const normalizedValue = normalizeDateInputValue(e.target.value, inputType);
+
+    if (normalizedValue !== e.target.value) {
+      onChange({
+        ...e,
+        target: {
+          ...e.target,
+          value: normalizedValue,
+        },
+      });
+      return;
+    }
+
+    onChange(e);
+  };
 
   return (
     <div className={`relative ${classNames}`}>
@@ -42,7 +62,7 @@ const Input = ({
         type={inputType}
         placeholder={placeholder}
         value={value}
-        onChange={onChange}
+        onChange={handleChange}
         className={`w-full h-[55px] border ${!isDark ? "border-gray-200" : "border-gray-400"} rounded-[5px] p-2 pr-10 focus:outline-none focus:ring-2 ${
           error ? "focus:ring-red-500" : "focus:ring-blue-500"
         } ${inputClass}`}

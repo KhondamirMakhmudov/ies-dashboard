@@ -247,6 +247,7 @@ const Index = () => {
                     type="datetime-local"
                     value={startDateTime}
                     onChange={(e) => setStartDateTime(e.target.value)}
+                    max="9999-12-31T23:59"
                     inputClass="!h-[48px] !border-2 !rounded-lg transition-colors"
                   />
                 </div>
@@ -264,6 +265,7 @@ const Index = () => {
                     type="datetime-local"
                     value={endDateTime}
                     onChange={(e) => setEndDateTime(e.target.value)}
+                    max="9999-12-31T23:59"
                     inputClass="!h-[48px] !border-2 !rounded-lg transition-colors"
                   />
                 </div>

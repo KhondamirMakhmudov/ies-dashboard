@@ -32,6 +32,9 @@ const Index = () => {
   const { data: employee } = useGetPythonQuery({
     key: KEYS.employeePhoto,
     url: `${URLS.employees}${get(userProfile, "data.employee_id")}`,
+    headers: {
+      Authorization: `Bearer ${session?.accessToken}`,
+    },
     enabled: !!session?.accessToken && !!get(userProfile, "data.employee_id"),
   });
 

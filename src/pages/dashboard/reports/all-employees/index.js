@@ -11,6 +11,7 @@ import EmojiEmotionsIcon from "@mui/icons-material/EmojiEmotions";
 import dayjs from "dayjs";
 import ContentLoader from "@/components/loader";
 import useAppTheme from "@/hooks/useAppTheme";
+import { normalizeDateInputValue } from "@/utils/normalizeDateInput";
 
 const Index = () => {
   const { bg, isDark, text, border } = useAppTheme();
@@ -220,7 +221,12 @@ const Index = () => {
             <input
               type="datetime-local"
               value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
+              onChange={(e) =>
+                setStartDate(
+                  normalizeDateInputValue(e.target.value, "datetime-local"),
+                )
+              }
+              max="9999-12-31T23:59"
               className="!h-[44px] border px-2 rounded-md"
               style={{
                 backgroundColor: bg("#ffffff", "#2d2d2d"),
@@ -241,7 +247,12 @@ const Index = () => {
             <input
               type="datetime-local"
               value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
+              onChange={(e) =>
+                setEndDate(
+                  normalizeDateInputValue(e.target.value, "datetime-local"),
+                )
+              }
+              max="9999-12-31T23:59"
               className="!h-[44px] border px-2 rounded-md"
               style={{
                 backgroundColor: bg("#ffffff", "#2d2d2d"),

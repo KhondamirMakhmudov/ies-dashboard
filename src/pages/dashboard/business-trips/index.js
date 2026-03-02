@@ -15,6 +15,7 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import Link from "next/link";
 import PrimaryButton from "@/components/button/primary-button";
 import ContentLoader from "@/components/loader";
+import { normalizeDateInputValue } from "@/utils/normalizeDateInput";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { useQueryClient } from "@tanstack/react-query";
@@ -539,7 +540,12 @@ const Index = () => {
                 <input
                   type="date"
                   value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
+                  onChange={(e) =>
+                    setStartDate(
+                      normalizeDateInputValue(e.target.value, "date"),
+                    )
+                  }
+                  max="9999-12-31"
                   className="w-full h-12 rounded-lg border px-4 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   style={{
                     backgroundColor: bg("#ffffff", "#1e1e1e"),
@@ -571,7 +577,10 @@ const Index = () => {
                 <input
                   type="date"
                   value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
+                  onChange={(e) =>
+                    setEndDate(normalizeDateInputValue(e.target.value, "date"))
+                  }
+                  max="9999-12-31"
                   className="w-full h-12 rounded-lg border px-4 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   style={{
                     backgroundColor: bg("#ffffff", "#1e1e1e"),

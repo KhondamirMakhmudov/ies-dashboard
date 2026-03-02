@@ -34,6 +34,27 @@ const Index = () => {
   const [employeeDataMap, setEmployeeDataMap] = useState({});
   const wrapperRef = useRef();
 
+  const normalizeDateTimeInput = (value) => {
+    if (!value || typeof value !== "string") return value;
+    const [datePart, timePart] = value.split("T");
+    if (!datePart) return value;
+    const [year, month, day] = datePart.split("-");
+    if (!year || !month || !day) return value;
+    const normalizedYear = year.slice(0, 4);
+    const normalizedDate = `${normalizedYear}-${month}-${day}`;
+    return timePart ? `${normalizedDate}T${timePart}` : normalizedDate;
+  };
+
+  const handleStartDateTimeChange = (e) => {
+    const normalized = normalizeDateTimeInput(e.target.value);
+    setStartDateTime(normalized);
+  };
+
+  const handleEndDateTimeChange = (e) => {
+    const normalized = normalizeDateTimeInput(e.target.value);
+    setEndDateTime(normalized);
+  };
+
   const {
     data: employees,
     isLoading: isLoadingEmployee,
@@ -401,7 +422,8 @@ const Index = () => {
               <Input
                 type="datetime-local"
                 value={startDateTime}
-                onChange={(e) => setStartDateTime(e.target.value)}
+                onChange={handleStartDateTimeChange}
+                max="9999-12-31T23:59"
                 inputClass="!h-[48px] !border-2 !rounded-lg transition-colors"
               />
             </div>
@@ -418,7 +440,8 @@ const Index = () => {
               <Input
                 type="datetime-local"
                 value={endDateTime}
-                onChange={(e) => setEndDateTime(e.target.value)}
+                onChange={handleEndDateTimeChange}
+                max="9999-12-31T23:59"
                 inputClass="!h-[48px] !border-2 !rounded-lg transition-colors"
               />
             </div>

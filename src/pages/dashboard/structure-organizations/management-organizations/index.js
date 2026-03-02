@@ -169,6 +169,11 @@ const Index = () => {
           unit_type_id: unitTypeId,
           parent_id: createModalParentId,
         },
+        config: {
+          headers: {
+            Authorization: `Bearer ${session?.accessToken}`,
+          },
+        },
       },
       {
         onSuccess: () => {
@@ -206,6 +211,11 @@ const Index = () => {
           // unit_type_id: unitTypeId,
           // parent_id: createModalParentId,
         },
+        config: {
+          headers: {
+            Authorization: `Bearer ${session?.accessToken}`,
+          },
+        },
       },
       {
         onSuccess: () => {
@@ -236,6 +246,7 @@ const Index = () => {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${session?.accessToken}`,
           },
           body: JSON.stringify({ organizational_unit_id: id }),
         },
@@ -1416,7 +1427,7 @@ const Index = () => {
           <DeleteModal
             open={deleteModal}
             onClose={() => setDeleteModal(false)}
-            title={"Вы точно хотите удалить эту"}
+            title={"Вы точно хотите удалить эту организационную единицу?"}
             deleting={() => onSubmitDeleteOrg(selectEditId)}
           />
         )}

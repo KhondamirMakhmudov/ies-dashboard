@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import useAppTheme from "@/hooks/useAppTheme";
+import { normalizeDateInputValue } from "@/utils/normalizeDateInput";
 
 export default function BirthDateInput({
   label = "День рождения",
@@ -54,7 +55,7 @@ export default function BirthDateInput({
   };
 
   const handleChange = (e) => {
-    const newValue = e.target.value;
+    const newValue = normalizeDateInputValue(e.target.value, "date");
 
     const validationMsg = validateBirthDate(newValue);
     setLocalError(validationMsg);

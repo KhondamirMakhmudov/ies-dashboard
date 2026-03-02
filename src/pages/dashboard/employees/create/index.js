@@ -82,12 +82,17 @@ const Index = () => {
         {
           method: "POST",
           body: form,
-        }
+        },
       );
 
       const result = await response.json();
 
       if (!response.ok) {
+        if (response.status === 403 && result?.detail) {
+          toast.error(result.detail);
+          return;
+        }
+
         // server validation error
         if (result?.detail && typeof result.detail === "object") {
           setErrors(result.detail);
@@ -146,8 +151,8 @@ const Index = () => {
             isActive
               ? "bg-blue-600"
               : isCompleted
-              ? "bg-green-500 hover:bg-green-600"
-              : "bg-gray-300 hover:bg-gray-400"
+                ? "bg-green-500 hover:bg-green-600"
+                : "bg-gray-300 hover:bg-gray-400"
           }`}
                 >
                   {current}

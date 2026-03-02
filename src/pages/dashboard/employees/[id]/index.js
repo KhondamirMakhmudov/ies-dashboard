@@ -162,6 +162,14 @@ const Index = () => {
     redirectOn403: false,
   });
 
+  const isScheduleForbidden = statusOfScheduleAndEntrypointOfEmployee === 403;
+
+  useEffect(() => {
+    if (isScheduleForbidden && tab === "schedule") {
+      setTab("personal");
+    }
+  }, [isScheduleForbidden, tab]);
+
   const {
     data: schedulesOfEntrypoints,
     isLoading: isLoadingSchedules,
@@ -563,7 +571,10 @@ const Index = () => {
               >
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                   <div className="flex gap-3 px-3 py-1">
-                    {tabs.map((t) => (
+                    {(isScheduleForbidden
+                      ? tabs.filter((t) => t.key !== "schedule")
+                      : tabs
+                    ).map((t) => (
                       <button
                         key={t.key}
                         onClick={() => setTab(t.key)}
@@ -1205,11 +1216,7 @@ const Index = () => {
                             employeeUuid={employee_id} // Pass the current employee UUID
                             isDark={isDark}
                             text={text}
-                            schedules={get(
-                              entrypointSchedules,
-                              "data.data",
-                              [],
-                            )} // Pass available schedules
+                            schedules={get(entrypointSchedules, "data", [])} // Pass available schedules
                           />
                         </div>
 
@@ -1626,11 +1633,8 @@ const Index = () => {
             setSelectEntrypointId(null);
           }}
           showCloseIcon={true}
+          title={"Подключить расписание к сотруднику"}
         >
-          <Typography variant="h6" className="text-xl font-bold mb-4">
-            Подключить расписание к сотруднику
-          </Typography>
-
           <div className="space-y-4 my-[15px]">
             <CustomSelect
               label="Выберите расписание"

@@ -48,13 +48,24 @@ const Index = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
 
+  const fieldLabels = {
+    first_name: "Имя",
+    last_name: "Фамилия",
+    middle_name: "Отчество",
+    email: "Электронная почта",
+    phone_number: "Телефон",
+    date_of_birth: "Дата рождения",
+    tabel_number: "Табельный номер",
+    gender: "Пол",
+    address: "Адрес",
+    education_degree: "Степень образования",
+    education_place: "Место получения образования",
+    workplace_id: "Рабочее место",
+    hire_date: "Дата приема на работу",
+  };
+
   const canCreate = canUserDo(session?.user, "employee", "create");
   const canReadEmployee = canUserDo(session?.user, "employee", "all-read");
-  const canReadOrgUnit = canUserDo(
-    session?.user,
-    "organizational-unit",
-    "all-read",
-  );
 
   // Filter states
   const [filters, setFilters] = useState({
@@ -187,6 +198,39 @@ const Index = () => {
       ...prev,
       [name]: files ? files[0] : value,
     }));
+    setErrors((prev) => ({
+      ...prev,
+      [name]: undefined,
+    }));
+  };
+
+  const normalizeValidationErrors = (detail) => {
+    if (!Array.isArray(detail)) return { fieldErrors: {}, summary: "" };
+
+    const fieldErrors = {};
+    const missingFields = [];
+
+    detail.forEach((item) => {
+      const field = Array.isArray(item?.loc)
+        ? item.loc[item.loc.length - 1]
+        : item?.loc;
+      const rawMsg = item?.msg || "Некорректное значение";
+      const isRequired =
+        rawMsg === "Field required" || item?.type === "missing";
+      const label = fieldLabels[field] || field;
+
+      fieldErrors[field] = isRequired ? "Обязательное поле" : rawMsg;
+
+      if (isRequired && label) {
+        missingFields.push(label);
+      }
+    });
+
+    const summary = missingFields.length
+      ? `Заполните обязательные поля: ${missingFields.join(", ")}`
+      : "Проверьте корректность заполнения полей.";
+
+    return { fieldErrors, summary };
   };
 
   const handleSearchChange = (e) => {
@@ -248,9 +292,16 @@ const Index = () => {
       );
       const result = await response.json();
       if (!response.ok) {
+        if (response.status === 403 && result?.detail) {
+          toast.error(result.detail);
+          return;
+        }
         if (result?.detail && typeof result.detail === "object") {
-          setErrors(result.detail);
-          toast.error("Пожалуйста, проверьте введённые данные.");
+          const { fieldErrors, summary } = normalizeValidationErrors(
+            result.detail,
+          );
+          setErrors(fieldErrors);
+          toast.error(summary);
           return;
         }
         toast.error("Произошла ошибка.");
@@ -279,7 +330,7 @@ const Index = () => {
       queryClient.invalidateQueries(KEYS.employees);
       setOpen(false);
     } catch (error) {
-      console.error("Ошибка:", error);
+      console.log("Ошибка:", error);
       toast.error("Ошибка сети.");
     }
   };
@@ -766,6 +817,7 @@ const Index = () => {
               inputClass={`!h-[45px] border ${
                 isDark ? "!border-gray-800" : "!border-gray-300"
               }`}
+              error={errors.last_name}
             />
             <Input
               label={"Отчество сотрудника"}
@@ -928,14 +980,19 @@ const Index = () => {
               }))}
               value={formData.workplace_id}
               placeholder="Выберите рабочее место"
-              onChange={(val) =>
+              onChange={(val) => {
                 setFormData((prev) => ({
                   ...prev,
                   workplace_id: val,
-                }))
-              }
+                }));
+                setErrors((prev) => ({
+                  ...prev,
+                  workplace_id: undefined,
+                }));
+              }}
               isLoading={isLoadingWorkplace}
               returnObject={false}
+              error={errors.workplace_id}
             />
           </div>
         )}
