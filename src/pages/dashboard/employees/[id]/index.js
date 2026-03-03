@@ -142,7 +142,7 @@ const Index = () => {
       const fileUrl = get(employeePhoto, "data.file_url", null);
       setPhotoPreview(fileUrl || null);
     }
-  }, [employeePhoto?.data]);
+  }, [employeePhoto?.data, employeePhoto]);
 
   // GET schedule and entrypoint which are connected to employee
   const {

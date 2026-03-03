@@ -32,6 +32,9 @@ export const KEYS = {
   organizationalUnitsChildren: "organizationalUnitsChildren",
   organisation: "organisation",
 
+  // Current user
+  currentUserEmployee: "currentUserEmployee",
+
   // General Auth
   users: "users",
   roles: "roles",
