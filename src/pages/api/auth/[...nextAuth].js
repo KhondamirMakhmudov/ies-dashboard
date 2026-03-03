@@ -444,9 +444,9 @@ export const authOptions = {
 
   pages: {
     signIn: "/",
-    signOut: "localhost:3001",
+    signOut: `${process.env.NEXTAUTH_URL}/`, // yoki /logout route server URL bilan
     error: "/auth/error",
-  },
+  }
 
   secret: process.env.NEXTAUTH_SECRET,
 };
