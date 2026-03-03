@@ -63,7 +63,8 @@ function extractRoles(rolesArray) {
   return rolesArray.map((role) => role.name);
 }
 
-// Helper function to sanitize roles for storage in JWT/session (keeps only what UI needs)
+// Sanitize roles from /auth/me so JWT & cookies stay small
+// and still match what canUserDo() expects
 function sanitizeRoles(rolesArray) {
   if (!Array.isArray(rolesArray)) return [];
 
@@ -71,25 +72,31 @@ function sanitizeRoles(rolesArray) {
     name: role.name,
     permissions: Array.isArray(role.permissions)
       ? role.permissions.map((permission) => ({
-          resource: permission.resource?.name || null,
-          action: permission.action?.name || null,
+          // Keep only the "name" field in nested objects
+          resource: permission.resource?.name
+            ? { name: permission.resource.name }
+            : null,
+          action: permission.action?.name
+            ? { name: permission.action.name }
+            : null,
         }))
       : [],
   }));
 }
 
-// Helper function to flatten permissions (resource/action/role)
+// Helper function to extract all permissions from roles (flattened)
 function extractPermissions(rolesArray) {
-  if (!Array.isArray(rolesArray)) return [];
+  if (!Array.isArray(rolesArray)) {
+    return [];
+  }
 
   const allPermissions = [];
-
   rolesArray.forEach((role) => {
     if (Array.isArray(role.permissions)) {
       role.permissions.forEach((permission) => {
         allPermissions.push({
-          resource: permission.resource,
-          action: permission.action,
+          resource: permission.resource?.name || null,
+          action: permission.action?.name || null,
           role: role.name,
         });
       });
@@ -101,11 +108,14 @@ function extractPermissions(rolesArray) {
 
 // Helper function to check if user has admin privileges
 function isAdmin(rolesArray) {
-  if (!Array.isArray(rolesArray)) return false;
+  if (!Array.isArray(rolesArray)) {
+    return false;
+  }
 
-  return rolesArray.some((role) =>
-    ["admin", "super_admin"].includes(role.name),
-  );
+  return rolesArray.some((role) => {
+    const name = (role.name || "").toLowerCase();
+    return name === "admin" || name === "super_admin";
+  });
 }
 
 // Track ongoing refresh operations to prevent race conditions
@@ -171,6 +181,8 @@ async function refreshAccessToken(token) {
       console.log("Fetching updated user details after token refresh...");
       const userDetails = await fetchUserDetails(refreshedTokens.access_token);
 
+      const sanitizedRoles = sanitizeRoles(userDetails?.roles || []);
+
       return {
         ...token,
         accessToken: refreshedTokens.access_token,
@@ -178,7 +190,10 @@ async function refreshAccessToken(token) {
         tokenType: refreshedTokens.token_type || token.tokenType || "Bearer",
         accessTokenExpires: accessTokenExpires,
         userData: newDecoded,
-        userDetails: userDetails, // Store updated user details
+        rolesDetail: sanitizedRoles,
+        roles: extractRoles(sanitizedRoles),
+        permissions: extractPermissions(sanitizedRoles),
+        isAdmin: isAdmin(sanitizedRoles),
         error: undefined,
       };
     } catch (error) {
@@ -273,11 +288,8 @@ export const authOptions = {
           console.log("=== STEP 4: USER DETAILS FETCHED ===");
           console.log("Full user details retrieved with roles");
 
-          // Reduce roles data so JWT/cookies stay small in production
+          // Minify roles/permissions before putting into JWT
           const sanitizedRoles = sanitizeRoles(userDetails.roles || []);
-          const roleNames = extractRoles(sanitizedRoles);
-          const permissions = extractPermissions(sanitizedRoles);
-          const hasAdminAccess = isAdmin(sanitizedRoles);
 
           return {
             id: decoded.sub,
@@ -287,10 +299,10 @@ export const authOptions = {
             tokenType: data.token_type || "Bearer",
             accessTokenExpires: accessTokenExpires,
             userData: decoded, // Token payload
-            rolesDetail: sanitizedRoles, // Minified roles structure for permission checks
-            roles: roleNames, // Array of role names
-            permissions, // Flattened permissions
-            isAdmin: hasAdminAccess,
+            rolesDetail: sanitizedRoles,
+            roles: extractRoles(sanitizedRoles),
+            permissions: extractPermissions(sanitizedRoles),
+            isAdmin: isAdmin(sanitizedRoles),
           };
         } catch (error) {
           console.error("Authorize error:", error);
@@ -312,7 +324,7 @@ export const authOptions = {
           new Date(user.accessTokenExpires).toLocaleString(),
         );
 
-        // Only keep the fields we actually need in the JWT
+        // Only persist the fields we actually need in the JWT
         return {
           ...token,
           id: user.id,
@@ -403,7 +415,7 @@ export const authOptions = {
       session.tokenType = token.tokenType;
       session.accessTokenExpires = token.accessTokenExpires;
 
-      // Extract roles and permissions from userDetails (from API)
+      // Extract roles and permissions from token (already sanitized)
       const roles = token.rolesDetail || [];
       const roleNames = token.roles || extractRoles(roles);
       const permissions = token.permissions || extractPermissions(roles);
@@ -422,7 +434,7 @@ export const authOptions = {
         unit_code: token.userData?.unit_code,
         // Role structure from API
         roles: roleNames, // Array of role names: ["admin"]
-        rolesDetail: roles, // Sanitized roles with minimal permission info
+        rolesDetail: roles, // Full roles array with permissions
         permissions: permissions, // Flattened permissions array
         isAdmin: hasAdminAccess, // Boolean flag for easy access checking
       };
@@ -475,7 +487,7 @@ export const authOptions = {
 
   pages: {
     signIn: "/",
-    signOut: `${process.env.NEXTAUTH_URL}/` || "https://pacs.tpp.uz/", // yoki /logout route server URL bilan
+    signOut: `${process.env.NEXTAUTH_URL}/` || "/", // yoki /logout route server URL bilan
     error: "/auth/error",
   },
 
