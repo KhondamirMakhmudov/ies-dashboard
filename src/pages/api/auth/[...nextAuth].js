@@ -444,7 +444,7 @@ export const authOptions = {
 
   pages: {
     signIn: "/",
-    signOut: `${process.env.NEXTAUTH_URL}/`, // yoki /logout route server URL bilan
+    signOut: `${process.env.NEXTAUTH_URL}/` || "https://pacs.tpp.uz/", // yoki /logout route server URL bilan
     error: "/auth/error",
   },
 
