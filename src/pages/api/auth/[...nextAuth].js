@@ -63,20 +63,34 @@ function extractRoles(rolesArray) {
   return rolesArray.map((role) => role.name);
 }
 
-// Helper function to extract all permissions from roles
+// Helper function to sanitize roles for storage in JWT/session (keeps only what UI needs)
+function sanitizeRoles(rolesArray) {
+  if (!Array.isArray(rolesArray)) return [];
+
+  return rolesArray.map((role) => ({
+    name: role.name,
+    permissions: Array.isArray(role.permissions)
+      ? role.permissions.map((permission) => ({
+          resource: permission.resource?.name || null,
+          action: permission.action?.name || null,
+        }))
+      : [],
+  }));
+}
+
+// Helper function to flatten permissions (resource/action/role)
 function extractPermissions(rolesArray) {
-  if (!Array.isArray(rolesArray)) {
-    return [];
-  }
+  if (!Array.isArray(rolesArray)) return [];
 
   const allPermissions = [];
+
   rolesArray.forEach((role) => {
     if (Array.isArray(role.permissions)) {
       role.permissions.forEach((permission) => {
         allPermissions.push({
-          name: permission.name,
-          types: permission.types || [],
-          role: role.name, // Keep track of which role granted this permission
+          resource: permission.resource,
+          action: permission.action,
+          role: role.name,
         });
       });
     }
@@ -87,14 +101,10 @@ function extractPermissions(rolesArray) {
 
 // Helper function to check if user has admin privileges
 function isAdmin(rolesArray) {
-  if (!Array.isArray(rolesArray)) {
-    return false;
-  }
+  if (!Array.isArray(rolesArray)) return false;
 
-  return rolesArray.some(
-    (role) =>
-      role.name === "admin" ||
-      role.permissions?.some((p) => p.name === "*" && p.types?.includes("*")),
+  return rolesArray.some((role) =>
+    ["admin", "super_admin"].includes(role.name),
   );
 }
 
@@ -263,6 +273,12 @@ export const authOptions = {
           console.log("=== STEP 4: USER DETAILS FETCHED ===");
           console.log("Full user details retrieved with roles");
 
+          // Reduce roles data so JWT/cookies stay small in production
+          const sanitizedRoles = sanitizeRoles(userDetails.roles || []);
+          const roleNames = extractRoles(sanitizedRoles);
+          const permissions = extractPermissions(sanitizedRoles);
+          const hasAdminAccess = isAdmin(sanitizedRoles);
+
           return {
             id: decoded.sub,
             name: decoded.username || username,
@@ -271,7 +287,10 @@ export const authOptions = {
             tokenType: data.token_type || "Bearer",
             accessTokenExpires: accessTokenExpires,
             userData: decoded, // Token payload
-            userDetails: userDetails, // Full user details from API
+            rolesDetail: sanitizedRoles, // Minified roles structure for permission checks
+            roles: roleNames, // Array of role names
+            permissions, // Flattened permissions
+            isAdmin: hasAdminAccess,
           };
         } catch (error) {
           console.error("Authorize error:", error);
@@ -293,9 +312,20 @@ export const authOptions = {
           new Date(user.accessTokenExpires).toLocaleString(),
         );
 
+        // Only keep the fields we actually need in the JWT
         return {
           ...token,
-          ...user,
+          id: user.id,
+          name: user.name,
+          accessToken: user.accessToken,
+          refreshToken: user.refreshToken,
+          tokenType: user.tokenType,
+          accessTokenExpires: user.accessTokenExpires,
+          userData: user.userData,
+          rolesDetail: user.rolesDetail,
+          roles: user.roles,
+          permissions: user.permissions,
+          isAdmin: user.isAdmin,
         };
       }
 
@@ -374,10 +404,11 @@ export const authOptions = {
       session.accessTokenExpires = token.accessTokenExpires;
 
       // Extract roles and permissions from userDetails (from API)
-      const roles = token.userDetails?.roles || [];
-      const roleNames = extractRoles(roles);
-      const permissions = extractPermissions(roles);
-      const hasAdminAccess = isAdmin(roles);
+      const roles = token.rolesDetail || [];
+      const roleNames = token.roles || extractRoles(roles);
+      const permissions = token.permissions || extractPermissions(roles);
+      const hasAdminAccess =
+        typeof token.isAdmin === "boolean" ? token.isAdmin : isAdmin(roles);
 
       console.log("Session roles extracted:", roleNames);
       console.log("Session permissions count:", permissions.length);
@@ -391,7 +422,7 @@ export const authOptions = {
         unit_code: token.userData?.unit_code,
         // Role structure from API
         roles: roleNames, // Array of role names: ["admin"]
-        rolesDetail: roles, // Full roles array with permissions
+        rolesDetail: roles, // Sanitized roles with minimal permission info
         permissions: permissions, // Flattened permissions array
         isAdmin: hasAdminAccess, // Boolean flag for easy access checking
       };
