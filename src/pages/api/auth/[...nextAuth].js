@@ -433,10 +433,10 @@ export const authOptions = {
         employee_id: token.userData?.employee_id,
         unit_code: token.userData?.unit_code,
         // Role structure from API
-        roles: roleNames, // Array of role names: ["admin"]
-        rolesDetail: roles, // Full roles array with permissions
-        permissions: permissions, // Flattened permissions array
-        isAdmin: hasAdminAccess, // Boolean flag for easy access checking
+        roles: roleNames,
+        rolesDetail: roles,
+        permissions: permissions,
+        isAdmin: hasAdminAccess,
       };
 
       console.log("=== SESSION BUILT SUCCESSFULLY ===");
@@ -447,15 +447,14 @@ export const authOptions = {
 
   cookies: {
     sessionToken: {
-      name:
-        process.env.NODE_ENV === "production"
-          ? "__Secure-next-auth.session-token.project2"
-          : "next-auth.session-token.project2",
+      name: process.env.NEXTAUTH_URL?.startsWith("https")
+        ? "__Secure-next-auth.session-token.project2"
+        : "next-auth.session-token.project2",
       options: {
         httpOnly: true,
         sameSite: "lax",
         path: "/",
-        secure: process.env.NODE_ENV === "production",
+        secure: process.env.NEXTAUTH_URL?.startsWith("https"),
       },
     },
   },
