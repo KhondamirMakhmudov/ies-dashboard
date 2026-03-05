@@ -142,7 +142,33 @@ const Index = () => {
       const fileUrl = get(employeePhoto, "data.file_url", null);
       setPhotoPreview(fileUrl || null);
     }
-  }, []);
+  }, [employeePhoto]);
+
+  // Reset form data when edit modal opens
+  useEffect(() => {
+    if (editModal && employeePhoto?.data) {
+      setFormData({
+        first_name: get(employeePhoto, "data.first_name", ""),
+        last_name: get(employeePhoto, "data.last_name", ""),
+        middle_name: get(employeePhoto, "data.middle_name", ""),
+        date_of_birth: get(employeePhoto, "data.date_of_birth", ""),
+        gender: get(employeePhoto, "data.gender", ""),
+        tabel_number: get(employeePhoto, "data.tabel_number", ""),
+        address: get(employeePhoto, "data.address", ""),
+        email: get(employeePhoto, "data.email", ""),
+        phone_number: get(employeePhoto, "data.phone_number", ""),
+        education_degree: get(employeePhoto, "data.education_degree", ""),
+        education_place: get(employeePhoto, "data.education_place", ""),
+        level: get(employeePhoto, "data.level", ""),
+        hire_date: get(employeePhoto, "data.hire_date", ""),
+        workplace_id: get(employeePhoto, "data.workplace_id", ""),
+      });
+      
+      const fileUrl = get(employeePhoto, "data.file_url", null);
+      setPhotoPreview(fileUrl || null);
+      setPhotoFile(null);
+    }
+  }, [editModal]);
 
   // GET schedule and entrypoint which are connected to employee
   const {

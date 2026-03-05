@@ -38,9 +38,7 @@ const DocsOfEmployee = ({ employeeId }) => {
     try {
       setLoading(true);
       const query = new URLSearchParams(params).toString();
-      const response = await fetch(
-        `http://10.20.6.60:8088/file-service/?${query}`,
-      );
+      const response = await fetch(`https://app.tpp.uz/objects/files?${query}`);
       const json = await response.json();
       console.log(json, "json");
 
@@ -58,7 +56,7 @@ const DocsOfEmployee = ({ employeeId }) => {
       setLoadingFile(true);
       setSelectedFile({ file_name: fileName, file_type: fileType });
       const response = await fetch(
-        `http://10.20.6.60:8088/file-service/${fileId}`,
+        `https://app.tpp.uz/objects/files/${fileId}`,
         { method: "POST" },
       );
       const json = await response.json();
@@ -114,7 +112,7 @@ const DocsOfEmployee = ({ employeeId }) => {
       formData.append("description", uploadData.description);
       formData.append("file", uploadData.file);
 
-      const response = await fetch("http://10.20.6.60:8088/file-service/", {
+      const response = await fetch("https://app.tpp.uz/objects/files", {
         method: "POST",
         body: formData,
       });
@@ -138,7 +136,7 @@ const DocsOfEmployee = ({ employeeId }) => {
   async function deleteFile(fileId, fileName) {
     try {
       const response = await fetch(
-        `http://10.20.6.60:8088/file-service/${fileId}`,
+        `https://app.tpp.uz/objects/files/${fileId}`,
         { method: "DELETE" },
       );
 

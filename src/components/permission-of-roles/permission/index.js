@@ -321,16 +321,12 @@ const PermissionSection = () => {
           <button
             onClick={() => setViewMode("card")}
             className={`px-3 py-1.5 text-sm rounded-md border transition-colors ${
-              viewMode === "card"
-                ? "bg-blue-600 text-white"
-                : "bg-transparent"
+              viewMode === "card" ? "bg-blue-600 text-white" : "bg-transparent"
             }`}
             style={{
               borderColor: border("#e5e7eb", "#333333"),
               color:
-                viewMode === "card"
-                  ? "#ffffff"
-                  : text("#374151", "#d1d5db"),
+                viewMode === "card" ? "#ffffff" : text("#374151", "#d1d5db"),
             }}
             aria-label="Карточки"
             title="Карточки"
@@ -340,16 +336,12 @@ const PermissionSection = () => {
           <button
             onClick={() => setViewMode("table")}
             className={`px-3 py-1.5 text-sm rounded-md border transition-colors ${
-              viewMode === "table"
-                ? "bg-blue-600 text-white"
-                : "bg-transparent"
+              viewMode === "table" ? "bg-blue-600 text-white" : "bg-transparent"
             }`}
             style={{
               borderColor: border("#e5e7eb", "#333333"),
               color:
-                viewMode === "table"
-                  ? "#ffffff"
-                  : text("#374151", "#d1d5db"),
+                viewMode === "table" ? "#ffffff" : text("#374151", "#d1d5db"),
             }}
             aria-label="Таблица"
             title="Таблица"
@@ -513,7 +505,7 @@ const PermissionSection = () => {
                     className="text-xs"
                     style={{ color: text("#9ca3af", "#6b7280") }}
                   >
-                    Создано: {dayjs(permission.created_at).format("DD.MM.YYYY")} {" "}
+                    Создано: {dayjs(permission.created_at).format("DD.MM.YYYY")}{" "}
                     <span>{dayjs(permission.created_at).format("HH:mm")}</span>
                   </p>
                 </div>
