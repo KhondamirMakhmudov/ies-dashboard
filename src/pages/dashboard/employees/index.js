@@ -97,7 +97,7 @@ const EmployeeNameCell = ({ row }) => {
   return (
     <div className="flex items-center gap-3 px-1 py-1.5">
       {/* Avatar */}
-      <div className="relative w-11 h-11 flex-shrink-0 rounded-full ring-2 ring-offset-1 ring-blue-400/40 dark:ring-blue-500/30 overflow-hidden shadow-md">
+      <div className="relative w-14 h-14 flex-shrink-0 rounded-full ring-2 ring-offset-1 ring-blue-400/40 dark:ring-blue-500/30 overflow-hidden shadow-md">
         {isLoading ? (
           <div className="w-full h-full flex items-center justify-center bg-slate-100 dark:bg-slate-800">
             <div className="w-4 h-4 rounded-full border-2 border-slate-300 border-t-blue-500 animate-spin" />
@@ -209,7 +209,6 @@ const Index = () => {
     return () => clearTimeout(timeout);
   }, [searchTerm]);
 
-  // Build query params - NO SEARCH HERE, only filters
   const buildQueryParams = () => {
     const params = {
       limit: 10000,
@@ -267,16 +266,6 @@ const Index = () => {
     listKeyId: "employee-upload-face",
     apiClient: requestFILES,
   });
-
-  const handleFaceUpload = (photoId) => {
-    if (!photoId) {
-      toast.error("Фото не найдено");
-      return;
-    }
-    uploadFace({
-      url: `${URLS.employeeFaces}${photoId}`,
-    });
-  };
 
   // Client-side pagination
   const paginatedEmployees = useMemo(() => {

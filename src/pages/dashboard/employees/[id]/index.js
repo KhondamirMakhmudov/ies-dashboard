@@ -2,7 +2,7 @@ import { KEYS } from "@/constants/key";
 import { URLS } from "@/constants/url";
 import useGetPythonQuery from "@/hooks/python/useGetQuery";
 import DashboardLayout from "@/layouts/dashboard/DashboardLayout";
-import { Typography, Button } from "@mui/material";
+import { Typography, Button, Tooltip } from "@mui/material";
 import { useRouter } from "next/router";
 import { motion } from "framer-motion";
 import { useState, useRef, useEffect } from "react";
@@ -69,7 +69,6 @@ const Index = () => {
   const [deleteJobTripModal, setDeleteJobTripModal] = useState(false);
   const [transferModal, setTransferModal] = useState(false);
   const [isTransferring, setIsTransferring] = useState(false);
-  const [selectedWorkplace, setSelectedWorkplace] = useState(null);
 
   // Connect schedule states
   const [selectedEntryPoint, setSelectedEntryPoint] = useState(null);
@@ -691,56 +690,62 @@ const Index = () => {
 
                   <div className="flex gap-2 pr-4">
                     {canTransferEmployee && (
-                      <Button
-                        onClick={() => setTransferModal(true)}
-                        sx={{
-                          width: "32px",
-                          height: "32px",
-                          minWidth: "32px",
-                          background: isDark ? "#164e63" : "#CFFAFE",
-                          color: isDark ? "#06b6d4" : "#0891b2",
-                          "&:hover": {
-                            background: isDark ? "#0e7490" : "#A5F3FC",
-                          },
-                        }}
-                        title="Перевести сотрудника"
-                      >
-                        <SwapHorizIcon fontSize="small" />
-                      </Button>
+                      <Tooltip title="Перевести сотрудника" placement="top">
+                        <Button
+                          onClick={() => setTransferModal(true)}
+                          sx={{
+                            width: "32px",
+                            height: "32px",
+                            minWidth: "32px",
+                            background: isDark ? "#164e63" : "#CFFAFE",
+                            color: isDark ? "#06b6d4" : "#0891b2",
+                            "&:hover": {
+                              background: isDark ? "#0e7490" : "#A5F3FC",
+                            },
+                          }}
+                          title="Перевести сотрудника"
+                        >
+                          <SwapHorizIcon fontSize="small" />
+                        </Button>
+                      </Tooltip>
                     )}
                     {canUpdateEmployeeDetail && (
-                      <Button
-                        onClick={() => setEditModal(true)}
-                        sx={{
-                          width: "32px",
-                          height: "32px",
-                          minWidth: "32px",
-                          background: isDark ? "#7c2d12" : "#F0D8C8",
-                          color: isDark ? "#fb923c" : "#FF6200",
-                          "&:hover": {
-                            background: isDark ? "#9a3412" : "#F0B28B",
-                          },
-                        }}
-                      >
-                        <EditIcon fontSize="small" />
-                      </Button>
+                      <Tooltip title="Редактировать профиль" placement="top">
+                        <Button
+                          onClick={() => setEditModal(true)}
+                          sx={{
+                            width: "32px",
+                            height: "32px",
+                            minWidth: "32px",
+                            background: isDark ? "#7c2d12" : "#F0D8C8",
+                            color: isDark ? "#fb923c" : "#FF6200",
+                            "&:hover": {
+                              background: isDark ? "#9a3412" : "#F0B28B",
+                            },
+                          }}
+                        >
+                          <EditIcon fontSize="small" />
+                        </Button>
+                      </Tooltip>
                     )}
                     {canDeleteEmployeeDetail && (
-                      <Button
-                        onClick={() => setDeleteModal(true)}
-                        sx={{
-                          width: "32px",
-                          height: "32px",
-                          minWidth: "32px",
-                          background: isDark ? "#7f1d1d" : "#FCD8D3",
-                          color: isDark ? "#fca5a5" : "#FF1E00",
-                          "&:hover": {
-                            background: isDark ? "#991b1b" : "#FCA89D",
-                          },
-                        }}
-                      >
-                        <DeleteIcon fontSize="small" />
-                      </Button>
+                      <Tooltip title="Удалить профиль" placement="top">
+                        <Button
+                          onClick={() => setDeleteModal(true)}
+                          sx={{
+                            width: "32px",
+                            height: "32px",
+                            minWidth: "32px",
+                            background: isDark ? "#7f1d1d" : "#FCD8D3",
+                            color: isDark ? "#fca5a5" : "#FF1E00",
+                            "&:hover": {
+                              background: isDark ? "#991b1b" : "#FCA89D",
+                            },
+                          }}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </Button>
+                      </Tooltip>
                     )}
                   </div>
                 </div>
