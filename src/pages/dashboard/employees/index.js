@@ -1,5 +1,6 @@
 import DashboardLayout from "@/layouts/dashboard/DashboardLayout";
 import { useState, useEffect, useMemo } from "react";
+import Image from "next/image";
 import Input from "@/components/input";
 import { Typography } from "@mui/material";
 import ImageUploader from "@/components/image-uploader";
@@ -32,6 +33,110 @@ import { OpenInNew as OpenInNewIcon } from "@mui/icons-material";
 import PersonIcon from "@mui/icons-material/Person";
 import { canUserDo } from "@/utils/checkpermission";
 import { useSession } from "next-auth/react";
+import { requestFILES } from "@/services/api";
+import usePostQuery from "@/hooks/all/usePostQuery";
+
+const photoCache = new Map();
+
+const EmployeeNameCell = ({ row }) => {
+  const { data: cellSession } = useSession();
+  const {
+    first_name,
+    last_name,
+    middle_name,
+    photo_id_from_s3,
+    file_url: initialFileUrl,
+  } = row.original;
+  const [imageError, setImageError] = useState(false);
+  const [fileUrl, setFileUrl] = useState(
+    initialFileUrl || photoCache.get(photo_id_from_s3) || null,
+  );
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Fetch photo file_url using photo_id_from_s3
+  useEffect(() => {
+    if (!photo_id_from_s3 || initialFileUrl) return;
+
+    // Check cache first
+    if (photoCache.has(photo_id_from_s3)) {
+      setFileUrl(photoCache.get(photo_id_from_s3));
+      return;
+    }
+
+    // Only fetch if not already cached
+    if (!fileUrl && cellSession?.accessToken) {
+      const fetchPhotoUrl = async () => {
+        setIsLoading(true);
+        try {
+          const response = await fetch(
+            `${config.FILE_API_URL}${URLS.employeeFaces}${photo_id_from_s3}`,
+            {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${cellSession.accessToken}`,
+                "Content-Type": "application/json",
+              },
+            },
+          );
+          const data = await response.json();
+          if (data.file_url) {
+            // Store in cache
+            photoCache.set(photo_id_from_s3, data.file_url);
+            setFileUrl(data.file_url);
+          }
+        } catch (error) {
+          console.error("Error fetching photo URL:", error);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      fetchPhotoUrl();
+    }
+  }, [photo_id_from_s3, initialFileUrl, fileUrl, cellSession?.accessToken]);
+
+  return (
+    <div className="flex items-center gap-3 px-1 py-1.5">
+      {/* Avatar */}
+      <div className="relative w-11 h-11 flex-shrink-0 rounded-full ring-2 ring-offset-1 ring-blue-400/40 dark:ring-blue-500/30 overflow-hidden shadow-md">
+        {isLoading ? (
+          <div className="w-full h-full flex items-center justify-center bg-slate-100 dark:bg-slate-800">
+            <div className="w-4 h-4 rounded-full border-2 border-slate-300 border-t-blue-500 animate-spin" />
+          </div>
+        ) : fileUrl && !imageError ? (
+          <Image
+            src={fileUrl}
+            priority
+            alt={`${last_name} ${first_name}`}
+            fill
+            className="object-cover object-top"
+            onError={() => setImageError(true)}
+            quality={90}
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-50 to-slate-200 dark:from-slate-700 dark:to-slate-800">
+            <PersonIcon
+              sx={{ fontSize: 22 }}
+              className="text-slate-400 dark:text-slate-500"
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Name */}
+      <div className="flex flex-col min-w-0 gap-0.5">
+        <span className="text-sm font-semibold text-slate-800 dark:text-slate-400 truncate tracking-tight">
+          {last_name} {first_name}
+        </span>
+        {middle_name && (
+          <span className="text-sm text-slate-400 dark:text-slate-500 truncate">
+            {middle_name}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const Index = () => {
   const { data: session } = useSession();
   const { isDark, bg, text, border } = useAppTheme();
@@ -158,6 +263,21 @@ const Index = () => {
     return data;
   }, [employee, debouncedSearch]);
 
+  const { mutate: uploadFace, isLoading: isUploadingFace } = usePostQuery({
+    listKeyId: "employee-upload-face",
+    apiClient: requestFILES,
+  });
+
+  const handleFaceUpload = (photoId) => {
+    if (!photoId) {
+      toast.error("Фото не найдено");
+      return;
+    }
+    uploadFace({
+      url: `${URLS.employeeFaces}${photoId}`,
+    });
+  };
+
   // Client-side pagination
   const paginatedEmployees = useMemo(() => {
     const startIndex = (currentPage - 1) * pageSize;
@@ -231,6 +351,17 @@ const Index = () => {
       : "Проверьте корректность заполнения полей.";
 
     return { fieldErrors, summary };
+  };
+
+  const handlePhotoChange = (file) => {
+    setFormData((prev) => ({
+      ...prev,
+      photo: file,
+    }));
+    setErrors((prev) => ({
+      ...prev,
+      photo: undefined,
+    }));
   };
 
   const handleSearchChange = (e) => {
@@ -335,13 +466,6 @@ const Index = () => {
     }
   };
 
-  const handlePhotoChange = (file) => {
-    setFormData((prev) => ({
-      ...prev,
-      photo: file,
-    }));
-  };
-
   const handleNext = () => setStep((prev) => Math.min(prev + 1, 3));
   const handlePrev = () => setStep((prev) => Math.max(prev - 1, 1));
 
@@ -361,20 +485,7 @@ const Index = () => {
     {
       accessorKey: "last_name",
       header: "Имя сотрудника",
-      cell: ({ row }) => {
-        const { first_name, last_name, middle_name } = row.original;
-        return (
-          <div className="font-medium flex items-center gap-2">
-            <div className=" border rounded-full  p-0.5 text-sm">
-              <PersonIcon />
-            </div>
-            <p>
-              {" "}
-              {last_name} {first_name} {middle_name}
-            </p>
-          </div>
-        );
-      },
+      cell: (cellProps) => <EmployeeNameCell {...cellProps} />,
     },
     {
       accessorKey: "tabel_number",

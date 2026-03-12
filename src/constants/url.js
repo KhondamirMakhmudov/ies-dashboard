@@ -61,4 +61,7 @@ export const URLS = {
   typeOfPermissions: "/auth/permission-type",
   resources: "/auth/resource",
   actions: "/auth/action",
+
+  // file api
+  employeeFaces: "files/",
 };

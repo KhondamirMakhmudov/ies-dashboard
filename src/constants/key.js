@@ -43,4 +43,7 @@ export const KEYS = {
   typeOfPermissions: "typeOfPermissions",
   resources: "resources",
   actions: "actions",
+
+  // File API
+  employeeFaces: "employeeFaces",
 };

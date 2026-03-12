@@ -44,6 +44,8 @@ import EmployeeBusinessTripSection from "@/components/business-trip-section";
 import DocsOfEmployee from "@/components/docs-employee";
 import { canUserDo } from "@/utils/checkpermission";
 import StatusNotAllowed from "@/components/status/statusNotAllowed";
+import TransferModal from "@/components/modal/transfer-modal";
+import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 
 const Index = () => {
   const { bg, text, isDark, border } = useAppTheme();
@@ -65,6 +67,9 @@ const Index = () => {
   const [tab, setTab] = useState("personal");
   const [selectedJobTrip, setSelectedJobTrip] = useState(null);
   const [deleteJobTripModal, setDeleteJobTripModal] = useState(false);
+  const [transferModal, setTransferModal] = useState(false);
+  const [isTransferring, setIsTransferring] = useState(false);
+  const [selectedWorkplace, setSelectedWorkplace] = useState(null);
 
   // Connect schedule states
   const [selectedEntryPoint, setSelectedEntryPoint] = useState(null);
@@ -105,6 +110,7 @@ const Index = () => {
     "employee",
     "delete",
   );
+  const canTransferEmployee = canUserDo(session?.user, "workplace", "transfer");
 
   // GET employee all informations
   const {
@@ -163,7 +169,7 @@ const Index = () => {
         hire_date: get(employeePhoto, "data.hire_date", ""),
         workplace_id: get(employeePhoto, "data.workplace_id", ""),
       });
-      
+
       const fileUrl = get(employeePhoto, "data.file_url", null);
       setPhotoPreview(fileUrl || null);
       setPhotoFile(null);
@@ -187,6 +193,21 @@ const Index = () => {
     enabled: !!employee_id && !!session?.accessToken,
     redirectOn403: false,
   });
+
+  // GET workplace data for transfer
+  const { data: workplaceData, isLoading: isLoadingWorkplace } =
+    useGetPythonQuery({
+      key: [KEYS.workplace],
+      url: URLS.workplace,
+      params: {
+        limit: 1000,
+        is_vacant: true,
+      },
+      headers: {
+        Authorization: `Bearer ${session?.accessToken}`,
+      },
+      enabled: !!session?.accessToken && transferModal,
+    });
 
   const isScheduleForbidden = statusOfScheduleAndEntrypointOfEmployee === 403;
 
@@ -298,13 +319,54 @@ const Index = () => {
     }
   };
 
+  // Handle employee transfer
+  const handleTransferEmployee = async (transferData) => {
+    setIsTransferring(true);
+    try {
+      const queryParams = new URLSearchParams({
+        from_workplace_id: employeePhoto.data?.workplace?.id,
+        to_workplace_id: transferData.to_workplace_id,
+        employee_id: employeePhoto.data.id,
+      }).toString();
+
+      const response = await fetch(
+        `${config.PYTHON_API_URL}/workplace/transfer?${queryParams}`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${session?.accessToken}`,
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || `Ошибка при переводе сотрудника`);
+      }
+
+      toast.success("Сотрудник успешно переведен");
+      setTransferModal(false);
+      queryClient.invalidateQueries(KEYS.employeePhoto);
+    } catch (error) {
+      console.error("Transfer error:", error);
+      toast.error(`Ошибка при переводе: ${error.message}`);
+    } finally {
+      setIsTransferring(false);
+    }
+  };
+
   // edit(patch) Employee
   const onSubmitEditEmployee = async () => {
     const formDataToSend = new FormData();
 
     Object.keys(formData).forEach((key) => {
-      const newValue = formData[key];
+      let newValue = formData[key];
       const oldValue = get(employeePhoto, `data.${key}`, "");
+
+      if (key === "tabel_number" && newValue) {
+        newValue = newValue.split("-").pop();
+      }
 
       if (String(newValue) !== String(oldValue)) {
         formDataToSend.append(key, newValue);
@@ -628,6 +690,24 @@ const Index = () => {
                   </div>
 
                   <div className="flex gap-2 pr-4">
+                    {canTransferEmployee && (
+                      <Button
+                        onClick={() => setTransferModal(true)}
+                        sx={{
+                          width: "32px",
+                          height: "32px",
+                          minWidth: "32px",
+                          background: isDark ? "#164e63" : "#CFFAFE",
+                          color: isDark ? "#06b6d4" : "#0891b2",
+                          "&:hover": {
+                            background: isDark ? "#0e7490" : "#A5F3FC",
+                          },
+                        }}
+                        title="Перевести сотрудника"
+                      >
+                        <SwapHorizIcon fontSize="small" />
+                      </Button>
+                    )}
                     {canUpdateEmployeeDetail && (
                       <Button
                         onClick={() => setEditModal(true)}
@@ -1745,9 +1825,11 @@ const Index = () => {
                   } flex items-center justify-center overflow-hidden`}
                 >
                   {photoPreview ? (
-                    <img
+                    <Image
                       src={photoPreview}
                       alt="Employee"
+                      width={128}
+                      height={128}
                       className="w-full h-full object-cover rounded-full"
                     />
                   ) : (
@@ -2156,6 +2238,20 @@ const Index = () => {
           setSelectedJobTrip(null);
         }}
         title="Вы уверены, что хотите удалить эту назначенную командировку"
+      />
+
+      <TransferModal
+        open={transferModal}
+        onClose={() => setTransferModal(false)}
+        employee={get(employeePhoto, "data", null)}
+        workplaceOptions={
+          get(workplaceData, "data", [])?.map((w) => ({
+            value: w.id,
+            label: `${w.organizational_unit?.name} - ${w.position?.name}`,
+          })) || []
+        }
+        isLoading={isLoadingWorkplace || isTransferring}
+        onTransfer={handleTransferEmployee}
       />
     </DashboardLayout>
   );
