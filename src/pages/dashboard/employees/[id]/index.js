@@ -249,7 +249,6 @@ const Index = () => {
   });
 
   const scheduleOptions = get(schedulesOfEntrypoints, "data.schedules", [])
-    // Filter schedules where unitCode matches table number prefix
     .filter((item) => item.unitCode === tableNumberPrefix)
     .map((item) => ({
       label: `${item.scheduleName} - ${item.unitCodeName}`,
@@ -363,11 +362,10 @@ const Index = () => {
       let newValue = formData[key];
       const oldValue = get(employeePhoto, `data.${key}`, "");
 
-      if (key === "tabel_number" && newValue) {
-        newValue = newValue.split("-").pop();
-      }
-
       if (String(newValue) !== String(oldValue)) {
+        if (key === "tabel_number" && newValue) {
+          newValue = newValue.split("-").pop();
+        }
         formDataToSend.append(key, newValue);
       }
     });
