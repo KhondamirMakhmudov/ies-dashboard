@@ -35,10 +35,9 @@ const useGetQuery = ({
       onError: (error) => {
         const status = error?.response?.status;
 
-        // 🔴 401
+        // 🔴 401 - Let ErrorBoundary/component handle refresh attempt
         if (status === 401) {
-          router.replace("/401");
-          return;
+          return; // Don't redirect, let component decide
         }
 
         // 🔴 403

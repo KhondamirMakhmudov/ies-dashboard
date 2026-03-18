@@ -1,11 +1,65 @@
 import Image from "next/image";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
+import { useSession } from "next-auth/react";
 import DashboardLayout from "@/layouts/dashboard/DashboardLayout";
+import ContentLoader from "@/components/loader";
 
 const UnauthorizedPage = () => {
   const router = useRouter();
+  const { data: session, update } = useSession();
+  const [isRefreshing, setIsRefreshing] = useState(true);
+  const [refreshFailed, setRefreshFailed] = useState(false);
 
+  useEffect(() => {
+    // Attempt to refresh session when 401 page is loaded
+    const attemptRefresh = async () => {
+      try {
+        console.log("Attempting to refresh session on 401 page...");
+        const result = await update();
+
+        if (result && !result.error) {
+          console.log("Session refreshed successfully, redirecting back");
+          // Refresh successful, go back to previous page or dashboard
+          setTimeout(() => {
+            router.back();
+          }, 500);
+        } else {
+          console.log("Session refresh failed or has error");
+          setRefreshFailed(true);
+          setIsRefreshing(false);
+        }
+      } catch (error) {
+        console.error("Session refresh error:", error);
+        setRefreshFailed(true);
+        setIsRefreshing(false);
+      }
+    };
+
+    if (session) {
+      attemptRefresh();
+    } else {
+      setIsRefreshing(false);
+      setRefreshFailed(true);
+    }
+  }, [session, update, router]);
+
+  if (isRefreshing) {
+    return (
+      <DashboardLayout>
+        <div className="flex flex-col items-center justify-center min-h-screen">
+          <ContentLoader />
+          <p className="mt-4 text-gray-600">Обновление сессии...</p>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (!refreshFailed) {
+    return null; // Page is redirecting
+  }
+
+  // If refresh fails, show the 401 error page
   return (
     <DashboardLayout>
       <div className="flex flex-col items-center justify-center text-center min-h-screen px-4">
