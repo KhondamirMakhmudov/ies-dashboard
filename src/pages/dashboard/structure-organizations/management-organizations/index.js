@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { get } from "lodash";
 import HiveIcon from "@mui/icons-material/Hive";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import DetailsIcon from "@mui/icons-material/Details";
@@ -33,9 +34,11 @@ import useAppTheme from "@/hooks/useAppTheme";
 import { canUserDo } from "@/utils/checkpermission";
 import { useSession } from "next-auth/react";
 import WorkplaceEmployeeSection from "@/components/card/workPlaceOrgUnit";
+import { useRouter } from "next/router";
 
 const Index = () => {
   const { data: session } = useSession();
+  const router = useRouter();
   const { bg, isDark, border } = useAppTheme();
   const queryClient = useQueryClient();
   const [createModal, setCreateModal] = useState(false);
@@ -278,7 +281,7 @@ const Index = () => {
           borderColor: border("#e5e7eb", "#333333"),
         }}
       >
-        <div className="mb-[20px]">
+        <div className="mb-[20px] flex flex-wrap gap-3 items-end">
           {canCreateOrgUnit && (
             <PrimaryButton
               onClick={() => {
@@ -389,6 +392,28 @@ const Index = () => {
                           sx={{
                             background: "#ECF2FF",
                             color: "#1E5EFF",
+                            padding: "4px",
+                            width: "30px",
+                            height: "30px",
+                            borderRadius: "100%",
+                          }}
+                        />
+                      </IconButton>
+                    )}
+                    {canReadOrgUnit && level1.unit_code && (
+                      <IconButton
+                        title="Открыть иерархию"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          router.push(
+                            `/dashboard/structure-organizations/management-organizations/${encodeURIComponent(level1.unit_code)}`,
+                          );
+                        }}
+                      >
+                        <VisibilityIcon
+                          sx={{
+                            background: "#E6F4EA",
+                            color: "#2e7d32",
                             padding: "4px",
                             width: "30px",
                             height: "30px",
@@ -535,6 +560,28 @@ const Index = () => {
                                         sx={{
                                           background: "#FFF4C9",
                                           color: "#FFC700",
+                                          padding: "4px",
+                                          width: "30px",
+                                          height: "30px",
+                                          borderRadius: "100%",
+                                        }}
+                                      />
+                                    </IconButton>
+                                  )}
+                                  {canReadOrgUnit && level2.unit_code && (
+                                    <IconButton
+                                      title="Открыть иерархию"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        router.push(
+                                          `/dashboard/structure-organizations/management-organizations/${encodeURIComponent(level2.unit_code)}`,
+                                        );
+                                      }}
+                                    >
+                                      <VisibilityIcon
+                                        sx={{
+                                          background: "#E6F4EA",
+                                          color: "#2e7d32",
                                           padding: "4px",
                                           width: "30px",
                                           height: "30px",

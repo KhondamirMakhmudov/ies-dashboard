@@ -16,13 +16,15 @@ import BusinessIcon from "@mui/icons-material/Business";
 
 // 💡 CustomSelect bilan bir xil rang tizimi shu hookda
 import useAppTheme from "@/hooks/useAppTheme";
+import ContentLoader from "@/components/loader";
+import { Typography } from "@mui/material";
 
 const Index = () => {
   const router = useRouter();
   const { id } = router.query;
   const { data: session } = useSession();
 
-  const { isDark, bg, text, border } = useAppTheme();
+  const { bg, text, border } = useAppTheme();
 
   const {
     data: allCameras,
@@ -74,9 +76,7 @@ const Index = () => {
   if (isLoadingCamera || isFetchingCamera) {
     return (
       <DashboardLayout headerTitle={"Список расписаний доступа"}>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-        </div>
+        <ContentLoader />
       </DashboardLayout>
     );
   }
@@ -93,14 +93,12 @@ const Index = () => {
         }}
       >
         <div className="col-span-12 w-full">
-          <div className="mb-4 p-[12px]">
-            <h2
-              className="text-3xl font-bold"
-              style={{ color: text("#1f2937", "#f3f4f6") }}
-            >
-              Детали камеры
-            </h2>
-          </div>
+          <Typography
+            variant="h6"
+            style={{ color: text("#1f2937", "#f9fafb"), marginBottom: 16 }}
+          >
+            Детали камеры
+          </Typography>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {details.map((detail, index) => {

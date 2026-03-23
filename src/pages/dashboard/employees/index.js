@@ -1,148 +1,65 @@
 import DashboardLayout from "@/layouts/dashboard/DashboardLayout";
 import { useState, useEffect, useMemo } from "react";
-import Image from "next/image";
-import Input from "@/components/input";
 import { Typography } from "@mui/material";
-import ImageUploader from "@/components/image-uploader";
-import CustomSelect from "@/components/select";
-import MethodModal from "@/components/modal/method-modal";
 import useGetPythonQuery from "@/hooks/python/useGetQuery";
 import { URLS } from "@/constants/url";
 import { KEYS } from "@/constants/key";
 import { config } from "@/config";
-import { genderOptions } from "@/constants/static-data";
-import { educationLevelOptions } from "@/constants/static-data";
-import { razryadOptions } from "@/constants/static-data";
-import { get, isEmpty } from "lodash";
-import PhoneInputUz from "@/components/input/phone-input";
+import { get } from "lodash";
 import toast from "react-hot-toast";
-import CustomTable from "@/components/table";
-import dayjs from "dayjs";
 import { useQueryClient } from "@tanstack/react-query";
 import ContentLoader from "@/components/loader";
-import BirthDateInput from "@/components/input/birthdate-input";
-import NoData from "@/components/no-data";
 import ExcelButton from "@/components/button/excel-button";
 import { exportToExcel } from "@/utils/exportToExcelStyled";
-import ReportGmailerrorredIcon from "@mui/icons-material/ReportGmailerrorred";
 import PrimaryButton from "@/components/button/primary-button";
-import Link from "next/link";
-import { Search, FilterList, Close } from "@mui/icons-material";
 import useAppTheme from "@/hooks/useAppTheme";
-import { OpenInNew as OpenInNewIcon } from "@mui/icons-material";
-import PersonIcon from "@mui/icons-material/Person";
 import { canUserDo } from "@/utils/checkpermission";
 import { useSession } from "next-auth/react";
-import { requestFILES } from "@/services/api";
-import usePostQuery from "@/hooks/all/usePostQuery";
+import EmployeesTable from "@/components/employees/EmployeesTable";
+import EmployeesFilters from "@/components/employees/EmployeesFilters";
+import EmployeeCreateModal from "@/components/employees/EmployeeCreateModal";
 
-const photoCache = new Map();
+const initialFormData = {
+  first_name: "",
+  last_name: "",
+  middle_name: "",
+  email: "",
+  phone_number: "",
+  level: 1,
+  hire_date: "",
+  date_of_birth: "",
+  tabel_number: "",
+  gender: "",
+  address: "",
+  education_degree: "школа",
+  education_place: "",
+  workplace_id: "",
+  photo: null,
+};
 
-const EmployeeNameCell = ({ row }) => {
-  const { data: cellSession } = useSession();
-  const {
-    first_name,
-    last_name,
-    middle_name,
-    photo_id_from_s3,
-    file_url: initialFileUrl,
-  } = row.original;
-  const [imageError, setImageError] = useState(false);
-  const [fileUrl, setFileUrl] = useState(
-    initialFileUrl || photoCache.get(photo_id_from_s3) || null,
-  );
-  const [isLoading, setIsLoading] = useState(false);
-
-  // Fetch photo file_url using photo_id_from_s3
-  useEffect(() => {
-    if (!photo_id_from_s3 || initialFileUrl) return;
-
-    // Check cache first
-    if (photoCache.has(photo_id_from_s3)) {
-      setFileUrl(photoCache.get(photo_id_from_s3));
-      return;
-    }
-
-    // Only fetch if not already cached
-    if (!fileUrl && cellSession?.accessToken) {
-      const fetchPhotoUrl = async () => {
-        setIsLoading(true);
-        try {
-          const response = await fetch(
-            `${config.FILE_API_URL}${URLS.employeeFaces}${photo_id_from_s3}`,
-            {
-              method: "POST",
-              headers: {
-                Authorization: `Bearer ${cellSession.accessToken}`,
-                "Content-Type": "application/json",
-              },
-            },
-          );
-          const data = await response.json();
-          if (data.file_url) {
-            // Store in cache
-            photoCache.set(photo_id_from_s3, data.file_url);
-            setFileUrl(data.file_url);
-          }
-        } catch (error) {
-          console.error("Error fetching photo URL:", error);
-        } finally {
-          setIsLoading(false);
-        }
-      };
-      fetchPhotoUrl();
-    }
-  }, [photo_id_from_s3, initialFileUrl, fileUrl, cellSession?.accessToken]);
-
-  return (
-    <div className="flex items-center gap-3 px-1 py-1.5">
-      {/* Avatar */}
-      <div className="relative w-14 h-14 flex-shrink-0 rounded-full ring-2 ring-offset-1 ring-blue-400/40 dark:ring-blue-500/30 overflow-hidden shadow-md">
-        {isLoading ? (
-          <div className="w-full h-full flex items-center justify-center bg-slate-100 dark:bg-slate-800">
-            <div className="w-4 h-4 rounded-full border-2 border-slate-300 border-t-blue-500 animate-spin" />
-          </div>
-        ) : fileUrl && !imageError ? (
-          <Image
-            src={fileUrl}
-            priority
-            alt={`${last_name} ${first_name}`}
-            fill
-            className="object-cover object-top"
-            onError={() => setImageError(true)}
-            quality={90}
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-50 to-slate-200 dark:from-slate-700 dark:to-slate-800">
-            <PersonIcon
-              sx={{ fontSize: 22 }}
-              className="text-slate-400 dark:text-slate-500"
-            />
-          </div>
-        )}
-      </div>
-
-      {/* Name */}
-      <div className="flex flex-col min-w-0 gap-0.5">
-        <span className="text-sm font-semibold text-slate-800 dark:text-slate-400 truncate tracking-tight">
-          {last_name} {first_name}
-        </span>
-        {middle_name && (
-          <span className="text-sm text-slate-400 dark:text-slate-500 truncate">
-            {middle_name}
-          </span>
-        )}
-      </div>
-    </div>
-  );
+const fieldLabels = {
+  first_name: "Имя",
+  last_name: "Фамилия",
+  middle_name: "Отчество",
+  email: "Электронная почта",
+  phone_number: "Телефон",
+  date_of_birth: "Дата рождения",
+  tabel_number: "Табельный номер",
+  gender: "Пол",
+  address: "Адрес",
+  education_degree: "Степень образования",
+  education_place: "Место получения образования",
+  workplace_id: "Рабочее место",
+  hire_date: "Дата приема на работу",
 };
 
 const Index = () => {
   const { data: session } = useSession();
-  const { isDark, bg, text, border } = useAppTheme();
+  const { isDark, bg, border } = useAppTheme();
+  const queryClient = useQueryClient();
+
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(15);
-  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [level1Id, setLevel1Id] = useState(null);
   const [selectUnitCode, setSelectUnitCode] = useState(null);
@@ -153,26 +70,6 @@ const Index = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
 
-  const fieldLabels = {
-    first_name: "Имя",
-    last_name: "Фамилия",
-    middle_name: "Отчество",
-    email: "Электронная почта",
-    phone_number: "Телефон",
-    date_of_birth: "Дата рождения",
-    tabel_number: "Табельный номер",
-    gender: "Пол",
-    address: "Адрес",
-    education_degree: "Степень образования",
-    education_place: "Место получения образования",
-    workplace_id: "Рабочее место",
-    hire_date: "Дата приема на работу",
-  };
-
-  const canCreate = canUserDo(session?.user, "employee", "create");
-  const canReadEmployee = canUserDo(session?.user, "employee", "all-read");
-
-  // Filter states
   const [filters, setFilters] = useState({
     gender: "",
     level: "",
@@ -181,25 +78,11 @@ const Index = () => {
     hire_date_to: "",
   });
 
-  const [formData, setFormData] = useState({
-    first_name: "",
-    last_name: "",
-    middle_name: "",
-    email: "",
-    phone_number: "",
-    level: 1,
-    hire_date: "",
-    date_of_birth: "",
-    tabel_number: "",
-    gender: "",
-    address: "",
-    education_degree: "школа",
-    education_place: "",
-    workplace_id: "",
-    photo: null,
-  });
+  const [formData, setFormData] = useState(initialFormData);
 
-  // Debounce search with loading state
+  const canCreate = canUserDo(session?.user, "employee", "create");
+  const canReadEmployee = canUserDo(session?.user, "employee", "all-read");
+
   useEffect(() => {
     const timeout = setTimeout(() => {
       setDebouncedSearch(searchTerm);
@@ -215,7 +98,6 @@ const Index = () => {
       offset: 0,
     };
 
-    // Add filters only
     if (filters.gender) params.gender = filters.gender;
     if (filters.level) params.level = filters.level;
     if (filters.education_degree)
@@ -226,7 +108,6 @@ const Index = () => {
     return params;
   };
 
-  // Employee data query
   const {
     data: employee,
     isLoading,
@@ -244,17 +125,14 @@ const Index = () => {
     params: buildQueryParams(),
   });
 
-  // Client-side filtering with search
   const filteredEmployees = useMemo(() => {
     let data = get(employee, "data.data", []);
 
-    // Client-side search across all name fields
     if (debouncedSearch) {
       const searchLower = debouncedSearch.toLowerCase();
       data = data.filter((emp) => {
-        const fullName = `${emp.first_name || ""} ${emp.last_name || ""} ${
-          emp.middle_name || ""
-        }`.toLowerCase();
+        const fullName =
+          `${emp.first_name || ""} ${emp.last_name || ""} ${emp.middle_name || ""}`.toLowerCase();
         return fullName.includes(searchLower);
       });
     }
@@ -262,20 +140,13 @@ const Index = () => {
     return data;
   }, [employee, debouncedSearch]);
 
-  const { mutate: uploadFace, isLoading: isUploadingFace } = usePostQuery({
-    listKeyId: "employee-upload-face",
-    apiClient: requestFILES,
-  });
-
-  // Client-side pagination
   const paginatedEmployees = useMemo(() => {
     const startIndex = (currentPage - 1) * pageSize;
     const endIndex = startIndex + pageSize;
     return filteredEmployees.slice(startIndex, endIndex);
   }, [filteredEmployees, currentPage, pageSize]);
 
-  // Organization units
-  const { data: level1List, isLoading: isLoadingLevel1 } = useGetPythonQuery({
+  const { data: level1List } = useGetPythonQuery({
     key: KEYS.organizationalUnits,
     url: URLS.organizationalUnits,
     headers: {
@@ -285,7 +156,6 @@ const Index = () => {
     enabled: !!session?.accessToken,
   });
 
-  // Workplace data
   const { data: workplaceData, isLoading: isLoadingWorkplace } =
     useGetPythonQuery({
       key: [KEYS.workplace, selectUnitCode],
@@ -374,18 +244,19 @@ const Index = () => {
     setCurrentPage(1);
   };
 
-  const hasActiveFilters = () => {
-    return (
-      filters.gender ||
-      filters.level ||
-      filters.education_degree ||
-      filters.hire_date_from ||
-      filters.hire_date_to ||
-      searchTerm
-    );
+  const hasActiveFilters =
+    !!filters.gender ||
+    !!filters.level ||
+    !!filters.education_degree ||
+    !!filters.hire_date_from ||
+    !!filters.hire_date_to ||
+    !!searchTerm;
+
+  const resetForm = () => {
+    setFormData(initialFormData);
+    setErrors({});
   };
 
-  // Employee creation POST
   const onSubmitCreateEmployee = async () => {
     try {
       const form = new FormData();
@@ -428,25 +299,8 @@ const Index = () => {
         return;
       }
       toast.success("Сотрудник успешно добавлен!");
-      setErrors({});
       setStep(1);
-      setFormData({
-        first_name: "",
-        last_name: "",
-        middle_name: "",
-        email: "",
-        phone_number: "",
-        level: 1,
-        hire_date: "",
-        date_of_birth: "",
-        tabel_number: "",
-        gender: "",
-        address: "",
-        education_degree: "школа",
-        education_place: "",
-        workplace_id: "",
-        photo: null,
-      });
+      resetForm();
       queryClient.invalidateQueries(KEYS.employees);
       setOpen(false);
     } catch (error) {
@@ -455,78 +309,13 @@ const Index = () => {
     }
   };
 
-  const handleNext = () => setStep((prev) => Math.min(prev + 1, 3));
-  const handlePrev = () => setStep((prev) => Math.max(prev - 1, 1));
-
-  const steps = [
-    "Asosiy ma'lumotlar",
-    "Qo'shimcha ma'lumotlar",
-    "Rasm va yakun",
-  ];
-
-  const columns = [
-    {
-      header: "№",
-      cell: ({ row }) => {
-        return (currentPage - 1) * pageSize + (row.index + 1);
-      },
-    },
-    {
-      accessorKey: "last_name",
-      header: "Имя сотрудника",
-      cell: (cellProps) => <EmployeeNameCell {...cellProps} />,
-    },
-    {
-      accessorKey: "tabel_number",
-      header: "Табельный номер",
-      cell: ({ row }) => {
-        return (
-          <span className="font-medium">№{row?.original?.tabel_number}</span>
-        );
-      },
-    },
-    {
-      accessorKey: "workplace.position.name",
-      header: "Должность",
-    },
-    {
-      accessorKey: "hire_date",
-      header: "Дата приема на работу",
-      cell: ({ row }) => {
-        return (
-          <span className="font-medium">
-            {row?.original?.hire_date
-              ? dayjs(row.original.hire_date).format("DD.MM.YYYY")
-              : "Дата приема не указана"}
-          </span>
-        );
-      },
-    },
-    {
-      accessorKey: "actions",
-      header: "Действия",
-      cell: ({ row }) => (
-        <div className="my-2">
-          <Link
-            href={`employees/${row.original.id}`}
-            className={
-              bg("bg-blue-500", "bg-blue-600") +
-              " hover:bg-blue-600 dark:hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-all duration-200 flex items-center justify-center gap-2 shadow-sm hover:shadow-md px-4 py-2"
-            }
-          >
-            <span>Подробнее</span>
-            <OpenInNewIcon sx={{ fontSize: 16 }} />
-          </Link>
-        </div>
-      ),
-      enableSorting: false,
-    },
-  ];
-
   const fetchAllEmployeesForExport = async () => {
     try {
       const response = await fetch(
         `${config.PYTHON_API_URL}${URLS.employees}?limit=10000`,
+        {
+          headers: { Authorization: `Bearer ${session?.accessToken}` },
+        },
       );
       const result = await response.json();
       return result.data || [];
@@ -588,634 +377,55 @@ const Index = () => {
         </div>
       )}
 
-      {/* Search and Filter Section */}
-      {canReadEmployee && (
-        <div
-          className="bg-white p-4 mt-3 rounded-md border border-gray-200"
-          style={{
-            background: bg("white", "#1E1E1E"),
-            borderColor: border("#d1d5db", "#4b5563"),
-          }}
-        >
-          <div className="flex gap-3 items-center">
-            {/* Search Input */}
-            <div className="relative flex-1">
-              <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+      <EmployeesFilters
+        canReadEmployee={canReadEmployee}
+        bg={bg}
+        border={border}
+        isDark={isDark}
+        searchTerm={searchTerm}
+        onSearchChange={handleSearchChange}
+        isSearching={isSearching}
+        showFilters={showFilters}
+        setShowFilters={setShowFilters}
+        hasActiveFilters={hasActiveFilters}
+        clearAllFilters={clearAllFilters}
+        filters={filters}
+        setFilters={setFilters}
+      />
 
-              <input
-                type="text"
-                placeholder="Поиск по имени"
-                value={searchTerm}
-                onChange={handleSearchChange}
-                className={`w-full pl-10 pr-4 py-2.5 ${
-                  !isDark
-                    ? "border border-gray-300 text-gray-800"
-                    : "border border-gray-700 text-gray-400"
-                } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all placeholder:text-gray-400 `}
-              />
+      <EmployeesTable
+        paginatedEmployees={paginatedEmployees}
+        filteredEmployees={filteredEmployees}
+        currentPage={currentPage}
+        pageSize={pageSize}
+        setCurrentPage={setCurrentPage}
+        isSearching={isSearching}
+        isFetching={isFetching}
+        onCreate={() => setOpen(true)}
+        bg={bg}
+        border={border}
+      />
 
-              {isSearching && (
-                <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
-                </div>
-              )}
-            </div>
-
-            {/* Filter Toggle Button */}
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-all ${
-                showFilters || hasActiveFilters()
-                  ? "bg-blue-500 text-white hover:bg-blue-600"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}
-            >
-              <FilterList className="w-5 h-5" />
-              Фильтры
-              {hasActiveFilters() && (
-                <span className="bg-white text-blue-500 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
-                  !
-                </span>
-              )}
-            </button>
-          </div>
-
-          {/* Filters Panel */}
-          {showFilters && (
-            <div className="mt-4 pt-4 border-t border-gray-200">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {/* Gender Filter */}
-                <div>
-                  <CustomSelect
-                    label={"Пол"}
-                    options={genderOptions}
-                    value={filters.gender}
-                    placeholder="Выберите пол"
-                    onChange={(val) =>
-                      setFilters((prev) => ({
-                        ...prev,
-                        gender: val,
-                      }))
-                    }
-                    returnObject={false}
-                  />
-                </div>
-
-                {/* Level Filter */}
-                <CustomSelect
-                  label={"Выберите разряд"}
-                  options={razryadOptions}
-                  value={filters.level}
-                  placeholder="Выберите разряд"
-                  onChange={(val) =>
-                    setFilters((prev) => ({
-                      ...prev,
-                      level: val,
-                    }))
-                  }
-                  sortOptions={false}
-                  returnObject={false}
-                />
-
-                {/* Education Filter */}
-                <CustomSelect
-                  options={educationLevelOptions}
-                  value={filters.education_degree}
-                  label="Степень образования"
-                  placeholder="Выберите уровень образования"
-                  onChange={(val) =>
-                    setFilters((prev) => ({
-                      ...prev,
-                      education_degree: val,
-                    }))
-                  }
-                  returnObject={false}
-                />
-              </div>
-
-              {/* Clear Filters Button */}
-              {hasActiveFilters() && (
-                <div className="mt-4 flex justify-end">
-                  <button
-                    onClick={clearAllFilters}
-                    className={`flex items-center gap-2 px-4 py-2 ${
-                      !isDark
-                        ? "bg-red-50 text-red-600 hover:bg-red-100"
-                        : "bg-red-600 text-red-50 hover:bg-red-700"
-                    } rounded-lg  transition-all font-medium cursor-pointer`}
-                  >
-                    <Close className="w-4 h-4" />
-                    Очистить фильтры
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Active Filters Summary */}
-      {hasActiveFilters() && (
-        <div
-          className={`${
-            !isDark
-              ? "bg-blue-50 text-blue-700 border border-blue-200"
-              : "bg-blue-900 border border-blue-700"
-          } p-3 mt-3 rounded-md `}
-        >
-          <div className="flex flex-wrap gap-2 items-center">
-            <span className="text-sm font-medium ">Активные фильтры:</span>
-            {searchTerm && (
-              <span
-                className={`px-3 py-1 ${
-                  !isDark ? "bg-blue-100" : "bg-blue-500"
-                }  rounded-full text-sm`}
-              >
-                Поиск: {searchTerm}
-              </span>
-            )}
-            {filters.gender && (
-              <span
-                className={`px-3 py-1 ${
-                  !isDark ? "bg-blue-100" : "bg-blue-500"
-                }  rounded-full text-sm`}
-              >
-                Пол:{" "}
-                {genderOptions.find((o) => o.value === filters.gender)?.label ||
-                  filters.gender}
-              </span>
-            )}
-            {filters.level && (
-              <span
-                className={`px-3 py-1 ${
-                  !isDark ? "bg-blue-100" : "bg-blue-500"
-                }  rounded-full text-sm`}
-              >
-                Разряд:{" "}
-                {razryadOptions.find((o) => o.value === filters.level)?.label ||
-                  filters.level}
-              </span>
-            )}
-            {filters.education_degree && (
-              <span
-                className={`px-3 py-1 ${
-                  !isDark ? "bg-blue-100" : "bg-blue-500"
-                }  rounded-full text-sm`}
-              >
-                Образование:{" "}
-                {educationLevelOptions.find(
-                  (o) => o.value === filters.education_degree,
-                )?.label || filters.education_degree}
-              </span>
-            )}
-            {filters.hire_date_from && (
-              <span className="px-3 py-1 bg-blue-100 rounded-full text-sm">
-                От: {dayjs(filters.hire_date_from).format("DD.MM.YYYY")}
-              </span>
-            )}
-            {filters.hire_date_to && (
-              <span className="px-3 py-1 bg-blue-100 rounded-full text-sm">
-                До: {dayjs(filters.hire_date_to).format("DD.MM.YYYY")}
-              </span>
-            )}
-          </div>
-        </div>
-      )}
-
-      {isSearching && isFetching ? (
-        <div className="bg-white p-4 mt-3 rounded-md border border-gray-200">
-          <ContentLoader />
-        </div>
-      ) : isEmpty(paginatedEmployees) ? (
-        <NoData onCreate={() => setOpen(true)} />
-      ) : (
-        <div
-          className="p-[12px] mt-[10px] mb-[50px] rounded-md border border-[#E9E9E9]"
-          style={{
-            backgroundColor: bg("#ffffff", "#1e1e1e"),
-            borderColor: border("#e5e7eb", "#333333"),
-          }}
-        >
-          <div className="grid grid-cols-12 gap-[12px] p-2">
-            <div className="col-span-12">
-              <CustomTable
-                data={paginatedEmployees}
-                columns={columns}
-                pagination={{
-                  currentPage,
-                  pageSize,
-                  total: filteredEmployees.length,
-                  onPaginationChange: ({ page }) => setCurrentPage(page),
-                }}
-              />
-
-              {isFetching && (
-                <div className="flex justify-center py-2 mt-2">
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
-                    Обновление данных...
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-      <MethodModal
+      <EmployeeCreateModal
         open={open}
-        closeClick={() => {
-          setOpen(false);
-          setStep(1);
-          setFormData({
-            first_name: "",
-            last_name: "",
-            middle_name: "",
-            email: "",
-            phone_number: "",
-            level: 1,
-            hire_date: "",
-            date_of_birth: "",
-            tabel_number: "",
-            gender: "",
-            address: "",
-            education_degree: "школа",
-            education_place: "",
-            workplace_id: "",
-            photo: null,
-          });
-        }}
-        title={"Добавить нового сотрудника"}
-        showCloseIcon={true}
-      >
-        <div className="flex items-center justify-between my-6">
-          {steps.map((_, index) => {
-            const current = index + 1;
-            const isActive = step === current;
-            const isCompleted = step > current;
-
-            return (
-              <div
-                key={index}
-                className="flex items-center w-full cursor-pointer"
-                onClick={() => setStep(current)}
-              >
-                <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center text-white text-[15px] font-bold transition-colors
-                    ${
-                      isActive
-                        ? "bg-blue-600"
-                        : isCompleted
-                          ? "bg-green-500 hover:bg-green-600"
-                          : `${
-                              isDark
-                                ? "bg-gray-600 hover:bg-gray-500"
-                                : "bg-gray-300 hover:bg-gray-400"
-                            }`
-                    }`}
-                >
-                  {current}
-                </div>
-
-                {index !== steps.length - 1 && (
-                  <div
-                    className={`flex-1 h-[2px] ${
-                      isDark ? "bg-gray-600" : "bg-gray-300"
-                    } mx-2 relative`}
-                  >
-                    <div
-                      className={`absolute top-0 left-0 h-full transition-all ${
-                        step > current ? "bg-green-500 w-full" : "w-0"
-                      }`}
-                    ></div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Step 1 */}
-        {step === 1 && (
-          <div className="space-y-3">
-            <Input
-              label={"Имя сотрудника"}
-              name="first_name"
-              value={formData.first_name}
-              onChange={handleChange}
-              placeholder="Имя"
-              inputClass={`!h-[45px] border ${
-                isDark ? "!border-gray-800" : "!border-gray-300"
-              }`}
-              error={errors.first_name}
-            />
-            <Input
-              label={"Фамилия сотрудника"}
-              name="last_name"
-              value={formData.last_name}
-              onChange={handleChange}
-              placeholder="Фамилия"
-              inputClass={`!h-[45px] border ${
-                isDark ? "!border-gray-800" : "!border-gray-300"
-              }`}
-              error={errors.last_name}
-            />
-            <Input
-              label={"Отчество сотрудника"}
-              name="middle_name"
-              value={formData.middle_name}
-              onChange={handleChange}
-              placeholder="Отчество"
-              inputClass={`!h-[45px] border ${
-                isDark ? "!border-gray-800" : "!border-gray-300"
-              }`}
-            />
-
-            <Input
-              label={"Электронная почта"}
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="Электронная почта"
-              inputClass={`!h-[45px] border ${
-                isDark ? "!border-gray-800" : "!border-gray-300"
-              }`}
-              error={errors.email}
-            />
-            <PhoneInputUz
-              label={"Телефон номер сотрудника"}
-              name="phone_number"
-              value={formData.phone_number}
-              onChange={handleChange}
-              placeholder="Телефонный номер"
-              inputClass={`!h-[45px] border ${
-                isDark ? "!border-gray-800" : "!border-gray-300"
-              }`}
-              error={errors.phone_number}
-            />
-
-            <div className="flex gap-2">
-              <BirthDateInput
-                value={formData.date_of_birth}
-                onChange={handleChange}
-                error={errors.date_of_birth}
-                inputClass={`!h-[45px] border ${
-                  isDark ? "!border-gray-800" : "!border-gray-300"
-                }`}
-              />
-
-              <CustomSelect
-                label={"Пол"}
-                options={genderOptions}
-                value={formData.gender}
-                placeholder="Выберите пол"
-                onChange={(val) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    gender: val,
-                  }))
-                }
-                returnObject={false}
-              />
-            </div>
-
-            <Input
-              name="address"
-              value={formData.address}
-              label={"Адрес проживания"}
-              onChange={handleChange}
-              placeholder="Введите адрес"
-              inputClass={`!h-[45px] border ${
-                isDark ? "!border-gray-800" : "!border-gray-300"
-              }`}
-            />
-          </div>
-        )}
-
-        {/* Step 2 */}
-        {step === 2 && (
-          <div className="space-y-3">
-            <CustomSelect
-              options={educationLevelOptions}
-              value={formData.education_degree}
-              label="Степень образования"
-              placeholder="Выберите уровень образования"
-              onChange={(val) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  education_degree: val,
-                }))
-              }
-              returnObject={false}
-            />
-
-            <Input
-              name="education_place"
-              value={formData.education_place}
-              onChange={handleChange}
-              placeholder={"Введите"}
-              label="Место получения образования"
-              inputClass={`!h-[45px] border ${
-                isDark ? "!border-gray-800" : "!border-gray-300"
-              }`}
-            />
-            <div className="flex gap-2 ">
-              <Input
-                name="tabel_number"
-                label={"Табельный номер"}
-                value={formData.tabel_number}
-                onChange={handleChange}
-                placeholder="Введите"
-                inputClass={`!h-[45px] border ${
-                  isDark ? "!border-gray-800" : "!border-gray-300"
-                }`}
-                error={errors.tabel_number}
-              />
-
-              <CustomSelect
-                label={"Выберите разряд"}
-                options={razryadOptions}
-                value={formData.level}
-                placeholder="Выберите разряд"
-                onChange={(val) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    level: val,
-                  }))
-                }
-                sortOptions={false}
-                returnObject={false}
-              />
-            </div>
-            <Input
-              name="hire_date"
-              type="date"
-              label={"Дата приема на работу"}
-              value={formData.hire_date}
-              onChange={handleChange}
-              inputClass={`!h-[45px] border ${
-                isDark ? "!border-gray-800" : "!border-gray-300"
-              }`}
-              error={errors.hire_date}
-            />
-
-            {/* LEVEL 1 */}
-            <CustomSelect
-              options={get(level1List, "data", []).map((i) => ({
-                value: i.unit_code,
-                label: i.name,
-              }))}
-              value={level1Id}
-              placeholder="Выберите"
-              onChange={(val) => {
-                setLevel1Id(val);
-                setSelectUnitCode(val);
-              }}
-              returnObject={false}
-            />
-
-            <CustomSelect
-              options={get(workplaceData, "data", []).map((w) => ({
-                value: w.id,
-                label: `${w.organizational_unit.name} - ${w.position.name}`,
-              }))}
-              value={formData.workplace_id}
-              placeholder="Выберите рабочее место"
-              onChange={(val) => {
-                setFormData((prev) => ({
-                  ...prev,
-                  workplace_id: val,
-                }));
-                setErrors((prev) => ({
-                  ...prev,
-                  workplace_id: undefined,
-                }));
-              }}
-              isLoading={isLoadingWorkplace}
-              returnObject={false}
-              error={errors.workplace_id}
-            />
-          </div>
-        )}
-
-        {/* Step 3 */}
-        {step === 3 && (
-          <div className="space-y-3">
-            <div
-              className={`${
-                isDark
-                  ? "bg-blue-900/30 border-blue-500"
-                  : "bg-blue-50 border-blue-400"
-              } border-l-4 p-3 mb-8 rounded-r-lg`}
-            >
-              <div
-                className={`text-[16px] font-semibold ${
-                  isDark ? "text-blue-300" : "text-blue-800"
-                } mb-4 items-center flex gap-1`}
-              >
-                <ReportGmailerrorredIcon />
-                <h2>Требования к фотографии</h2>
-              </div>
-              <div className="space-y-3 text-sm">
-                <div className="flex items-start">
-                  <div
-                    className={`w-2 h-2 ${
-                      isDark ? "bg-blue-500" : "bg-blue-400"
-                    } rounded-full mt-2 mr-3 flex-shrink-0`}
-                  ></div>
-                  <div>
-                    <span
-                      className={`font-medium ${
-                        isDark ? "text-blue-300" : "text-blue-800"
-                      }`}
-                    >
-                      Размер файла:
-                    </span>
-                    <span
-                      className={isDark ? "text-blue-200" : "text-blue-700"}
-                    >
-                      {" "}
-                      Максимум 10МБ
-                    </span>
-                  </div>
-                </div>
-                <div className="flex items-start">
-                  <div
-                    className={`w-2 h-2 ${
-                      isDark ? "bg-blue-500" : "bg-blue-400"
-                    } rounded-full mt-2 mr-3 flex-shrink-0`}
-                  ></div>
-                  <div>
-                    <span
-                      className={`font-medium ${
-                        isDark ? "text-blue-300" : "text-blue-800"
-                      }`}
-                    >
-                      Положение лица:
-                    </span>
-                    <span
-                      className={isDark ? "text-blue-200" : "text-blue-700"}
-                    >
-                      {" "}
-                      Ваше лицо должно быть в центре фотографии
-                    </span>
-                  </div>
-                </div>
-                <div className="flex items-start">
-                  <div
-                    className={`w-2 h-2 ${
-                      isDark ? "bg-blue-500" : "bg-blue-400"
-                    } rounded-full mt-2 mr-3 flex-shrink-0`}
-                  ></div>
-                  <div>
-                    <span
-                      className={`font-medium ${
-                        isDark ? "text-blue-300" : "text-blue-800"
-                      }`}
-                    >
-                      Качество изображения:
-                    </span>
-                    <span
-                      className={isDark ? "text-blue-200" : "text-blue-700"}
-                    >
-                      {" "}
-                      Четкое, хорошо освещенное фото с резким фокусом
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <ImageUploader
-                image={formData.photo}
-                onFileChange={handlePhotoChange}
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Navigation */}
-        <div className="flex justify-between pt-4">
-          {step > 1 ? (
-            <PrimaryButton
-              onClick={handlePrev}
-              backgroundColor={isDark ? "#374151" : "#EDEDF2"}
-              color={isDark ? "white" : "black"}
-            >
-              Назад
-            </PrimaryButton>
-          ) : (
-            <div />
-          )}
-          {step < 3 ? (
-            <PrimaryButton onClick={handleNext}>Вперёд</PrimaryButton>
-          ) : (
-            <PrimaryButton onClick={onSubmitCreateEmployee}>
-              Закончить
-            </PrimaryButton>
-          )}
-        </div>
-      </MethodModal>
+        setOpen={setOpen}
+        step={step}
+        setStep={setStep}
+        isDark={isDark}
+        formData={formData}
+        setFormData={setFormData}
+        errors={errors}
+        setErrors={setErrors}
+        handleChange={handleChange}
+        handlePhotoChange={handlePhotoChange}
+        onSubmitCreateEmployee={onSubmitCreateEmployee}
+        level1List={level1List}
+        workplaceData={workplaceData}
+        isLoadingWorkplace={isLoadingWorkplace}
+        setLevel1Id={setLevel1Id}
+        setSelectUnitCode={setSelectUnitCode}
+        resetForm={resetForm}
+      />
     </DashboardLayout>
   );
 };

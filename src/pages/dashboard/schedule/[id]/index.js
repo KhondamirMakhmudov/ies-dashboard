@@ -19,6 +19,7 @@ import ScheduleModal from "@/components/modal/schedule-modal";
 import { useQueryClient } from "@tanstack/react-query";
 import useAppTheme from "@/hooks/useAppTheme";
 import { canUserDo } from "@/utils/checkpermission";
+import Breadcrumb from "@/components/breadcrumb";
 const Index = () => {
   const { bg, border, isDark } = useAppTheme();
   const queryClient = useQueryClient();
@@ -89,6 +90,22 @@ const Index = () => {
   }
   return (
     <DashboardLayout headerTitle={"Расписание"}>
+      <div
+        className="bg-white p-[15px] mt-[10px] rounded-md border border-[#E9E9E9]"
+        style={{
+          backgroundColor: bg("#ffffff", "#1e1e1e"),
+          borderColor: border("#e5e7eb", "#333333"),
+        }}
+      >
+        <Breadcrumb
+          paths={[
+            { label: "Главная", href: "/dashboard" },
+            { label: "Расписания", href: "/dashboard/schedule" },
+            { label: get(schedule, "data.name", "Подробности"), href: "#" },
+          ]}
+        />
+      </div>
+
       {canReadSchedule && (
         <motion.div
           initial={{ opacity: 0, scale: 0 }}

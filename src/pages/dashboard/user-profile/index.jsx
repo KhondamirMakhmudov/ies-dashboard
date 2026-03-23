@@ -49,11 +49,6 @@ const Index = () => {
     ? `+998 ${employeeData.phone_number}`
     : "";
 
-  const handleSave = () => {
-    // TODO: Implement save logic
-    setIsEditing(false);
-  };
-
   const InfoRow = ({ label, value }) => (
     <div
       className="py-4 border-b last:border-b-0"

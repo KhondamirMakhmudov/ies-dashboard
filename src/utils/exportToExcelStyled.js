@@ -1,14 +1,15 @@
 import * as XLSX from "xlsx-js-style";
 import dayjs from "dayjs";
 import { toast } from "react-hot-toast";
+import { saveAs } from "file-saver";
 
 export const exportToExcelStyled = (data) => {
   // 1. Tekislash (flatten)
   const flatData = Array.isArray(data)
     ? data.flat()
     : Array.isArray(data?.data)
-    ? data.data.flat()
-    : [];
+      ? data.data.flat()
+      : [];
 
   // 2. Bo'sh yoki noto'g'ri bo'lsa
   if (!Array.isArray(flatData) || flatData.length === 0) {
@@ -118,8 +119,8 @@ export const exportToExcelStyled = (data) => {
             item.errorCode === 0
               ? "доступ разрешен"
               : item.errorCode === 32
-              ? "отказ в доступе"
-              : "",
+                ? "отказ в доступе"
+                : "",
           s: { alignment: { horizontal: "left" } },
         },
         {
@@ -245,7 +246,7 @@ export const exportToExcel = (data, filename = "Сотрудники.xlsx") => {
 
   // 7️⃣ — Workbook yaratish va yuklab berish
   const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Сотрудники");
+  XLSX.utils.book_append_sheet(workbook, worksheet, "все сотрудники");
 
   const excelBuffer = XLSX.write(workbook, {
     bookType: "xlsx",

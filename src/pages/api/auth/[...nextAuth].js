@@ -101,13 +101,13 @@ const refreshPromises = new Map();
 async function refreshAccessToken(token) {
   const refreshKey = token.refreshToken;
   if (refreshPromises.has(refreshKey)) {
-    console.log("Refresh already in progress, waiting...");
+    // console.log("Refresh already in progress, waiting...");
     return refreshPromises.get(refreshKey);
   }
 
   const refreshPromise = (async () => {
     try {
-      console.log("=== STARTING TOKEN REFRESH ===");
+      // console.log("=== STARTING TOKEN REFRESH ===");
 
       if (!token.refreshToken) {
         throw new Error("No refresh token available");
@@ -141,9 +141,9 @@ async function refreshAccessToken(token) {
       }
 
       const accessTokenExpires = newDecoded.exp * 1000;
-      console.log(
-        `New token expires in ${Math.floor((accessTokenExpires - Date.now()) / 1000)} seconds`,
-      );
+      // console.log(
+      //   `New token expires in ${Math.floor((accessTokenExpires - Date.now()) / 1000)} seconds`,
+      // );
 
       const userDetails = await fetchUserDetails(refreshedTokens.access_token);
       const sanitizedRoles = sanitizeRoles(userDetails?.roles || []);
@@ -192,8 +192,8 @@ export const authOptions = {
       async authorize(credentials) {
         try {
           const { username, password } = credentials;
-          console.log("=== STARTING LOGIN PROCESS ===");
-          console.log("Attempting login for user:", username);
+          // console.log("=== STARTING LOGIN PROCESS ===");
+          // console.log("Attempting login for user:", username);
 
           const params = new URLSearchParams();
           params.append("username", username);
@@ -205,7 +205,7 @@ export const authOptions = {
             body: params,
           });
 
-          console.log("Login response status:", res.status);
+          // console.log("Login response status:", res.status);
 
           if (!res.ok) {
             console.error("Login failed:", res.status);
@@ -226,8 +226,8 @@ export const authOptions = {
             return null;
           }
 
-          console.log("=== TOKEN DECODED ===");
-          console.log("Username:", decoded.username);
+          // console.log("=== TOKEN DECODED ===");
+          // console.log("Username:", decoded.username);
 
           const accessTokenExpires = decoded.exp * 1000;
 
@@ -240,16 +240,16 @@ export const authOptions = {
 
           const sanitizedRoles = sanitizeRoles(userDetails.roles || []);
 
-          console.log("=== LOGIN COMPLETE ===");
-          console.log(
-            "Token size (bytes):",
-            JSON.stringify({
-              id: decoded.sub,
-              accessToken: data.access_token,
-              refreshToken: data.refresh_token,
-              rolesDetail: sanitizedRoles,
-            }).length,
-          );
+          // console.log("=== LOGIN COMPLETE ===");
+          // console.log(
+          //   "Token size (bytes):",
+          //   JSON.stringify({
+          //     id: decoded.sub,
+          //     accessToken: data.access_token,
+          //     refreshToken: data.refresh_token,
+          //     rolesDetail: sanitizedRoles,
+          //   }).length,
+          // );
 
           return {
             id: decoded.sub,
@@ -278,8 +278,8 @@ export const authOptions = {
     async jwt({ token, user }) {
       // Initial sign in — store only essential fields
       if (user) {
-        console.log("=== INITIAL JWT CREATION ===");
-        console.log("User:", user.name);
+        // console.log("=== INITIAL JWT CREATION ===");
+        // console.log("User:", user.name);
         return {
           id: user.id,
           name: user.name,
@@ -304,20 +304,20 @@ export const authOptions = {
       const secondsUntilExpiry = Math.floor(
         (token.accessTokenExpires - now) / 1000,
       );
-      console.log(
-        `JWT callback: Token expires in ${secondsUntilExpiry} seconds`,
-      );
+      // console.log(
+      //   `JWT callback: Token expires in ${secondsUntilExpiry} seconds`,
+      // );
 
       if (secondsUntilExpiry >= 300) {
         return token;
       }
 
-      console.log("=== TOKEN REFRESH NEEDED ===");
+      // console.log("=== TOKEN REFRESH NEEDED ===");
       return await refreshAccessToken(token);
     },
 
     async session({ session, token }) {
-      console.log("=== BUILDING SESSION ===");
+      // console.log("=== BUILDING SESSION ===");
 
       if (token.error === "RefreshTokenExpired") {
         return { ...session, error: "RefreshTokenExpired", user: null };
@@ -347,12 +347,12 @@ export const authOptions = {
         isAdmin: isAdmin(roles),
       };
 
-      console.log("Session roles:", session.user.roles);
-      console.log(
-        "Session permissions count:",
-        session.user.permissions.length,
-      );
-      console.log("=== SESSION BUILT SUCCESSFULLY ===");
+      // console.log("Session roles:", session.user.roles);
+      // console.log(
+      //   "Session permissions count:",
+      //   session.user.permissions.length,
+      // );
+      // console.log("=== SESSION BUILT SUCCESSFULLY ===");
 
       return session;
     },
@@ -372,7 +372,7 @@ export const authOptions = {
 
   events: {
     async signOut({ token }) {
-      console.log("=== USER SIGNED OUT ===");
+      // console.log("=== USER SIGNED OUT ===");
       try {
         await fetch(`${config.GENERAL_AUTH_URL}/auth/logout`, {
           method: "POST",
@@ -380,7 +380,7 @@ export const authOptions = {
             Authorization: `${token.tokenType || "Bearer"} ${token.accessToken}`,
           },
         });
-        console.log("Logout API called successfully");
+        // console.log("Logout API called successfully");
       } catch (error) {
         console.error("Logout error:", error);
       }
@@ -403,6 +403,6 @@ export const authOptions = {
 
 export default NextAuth(authOptions);
 
-console.log("=== NEXTAUTH CONFIGURATION LOADED ===");
-console.log("NEXTAUTH_SECRET loaded:", !!process.env.NEXTAUTH_SECRET);
-console.log("Auth API URL:", config.GENERAL_AUTH_URL);
+// console.log("=== NEXTAUTH CONFIGURATION LOADED ===");
+// console.log("NEXTAUTH_SECRET loaded:", !!process.env.NEXTAUTH_SECRET);
+// console.log("Auth API URL:", config.GENERAL_AUTH_URL);
