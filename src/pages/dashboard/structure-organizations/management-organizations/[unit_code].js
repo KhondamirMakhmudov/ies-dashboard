@@ -355,7 +355,7 @@ const UnitTreePage = () => {
         }`}
       >
         <div className="flex flex-col gap-2.5">
-          <div className="flex flex-wrap items-start gap-2.5">
+          <div className="flex flex-wrap justify-between items-start gap-2.5">
             <div>
               <span
                 className={`mb-1.5 inline-flex items-center gap-2 rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.06em] ${
@@ -381,22 +381,22 @@ const UnitTreePage = () => {
                 Полноэкранный режим для навигации по структуре и сотрудникам
               </div>
             </div>
-            <Link
-              href="/dashboard/structure-organizations/management-organizations"
-              className="ml-auto inline-flex h-[38px] items-center justify-center rounded-[10px] border border-slate-300 bg-slate-200 px-4 text-sm font-bold no-underline text-slate-900 transition-colors hover:bg-slate-300 dark:border-slate-600 dark:bg-slate-700/40 dark:text-slate-100 dark:hover:bg-slate-700"
-            >
-              Закрыть ×
-            </Link>
-          </div>
 
-          <div className="flex flex-wrap items-center gap-2.5">
-            <button
-              type="button"
-              onClick={() => setTreeKey((k) => k + 1)}
-              className="inline-flex h-[38px] items-center justify-center rounded-[10px] bg-blue-700 px-4 text-sm font-bold text-white transition-colors hover:bg-blue-800"
-            >
-              Сбросить вид
-            </button>
+            <div className="flex flex-wrap items-center gap-2.5">
+              <button
+                type="button"
+                onClick={() => setTreeKey((k) => k + 1)}
+                className="inline-flex h-[38px] items-center justify-center rounded-[10px] bg-blue-700 px-4 text-sm font-bold text-white transition-colors hover:bg-blue-800"
+              >
+                Сбросить вид
+              </button>
+              <Link
+                href="/dashboard/structure-organizations/management-organizations"
+                className="ml-auto inline-flex h-[38px] items-center justify-center rounded-[10px] border border-slate-300 bg-slate-200 px-4 text-sm font-bold no-underline text-slate-900 transition-colors hover:bg-slate-300 dark:border-slate-600 dark:bg-slate-700/40 dark:text-slate-100 dark:hover:bg-slate-700"
+              >
+                Закрыть ×
+              </Link>
+            </div>
           </div>
         </div>
 

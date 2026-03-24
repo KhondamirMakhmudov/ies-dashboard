@@ -328,7 +328,7 @@ const Index = () => {
       }).toString();
 
       const response = await fetch(
-        `${config.PYTHON_API_URL}/workplace/transfer?${queryParams}`,
+        `${config.PYTHON_API_URL}workplace/transfer?${queryParams}`,
         {
           method: "POST",
           headers: {
