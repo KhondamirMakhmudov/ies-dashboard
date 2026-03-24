@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { get } from "lodash";
 import { useSession } from "next-auth/react";
+import PeopleIcon from "@mui/icons-material/People";
+import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import ContentLoader from "@/components/loader";
 import { KEYS } from "@/constants/key";
 import { URLS } from "@/constants/url";
@@ -266,25 +268,27 @@ const UnitTreePage = () => {
 
               {nodeDatum.totalWorkplaces > 0 && (
                 <span
-                  className={`rounded px-1.5 py-0.5 text-[10px] ${
+                  className={`rounded px-1.5 py-0.5 text-[10px] flex items-center gap-1 ${
                     isDark
                       ? "bg-sky-950 text-sky-300"
                       : "bg-blue-50 text-blue-700"
                   }`}
                 >
-                  {`👥 ${occupied}/${nodeDatum.totalWorkplaces}`}
+                  <PeopleIcon sx={{ fontSize: 14 }} />
+                  {`${occupied}/${nodeDatum.totalWorkplaces}`}
                 </span>
               )}
 
               {nodeDatum.vacantCount > 0 && (
                 <span
-                  className={`rounded px-1.5 py-0.5 text-[10px] ${
+                  className={`rounded px-1.5 py-0.5 text-[10px] flex items-center gap-1 ${
                     isDark
                       ? "bg-orange-950 text-orange-300"
                       : "bg-orange-50 text-orange-700"
                   }`}
                 >
-                  {`⬜ ${nodeDatum.vacantCount} vacant`}
+                  <CheckBoxOutlineBlankIcon sx={{ fontSize: 14 }} />
+                  {`${nodeDatum.vacantCount} свободно`}
                 </span>
               )}
             </div>
@@ -323,7 +327,7 @@ const UnitTreePage = () => {
           isDark ? "bg-slate-900 text-slate-100" : "bg-slate-50 text-slate-900"
         }`}
       >
-        <div>You do not have access to view organizational units.</div>
+        <div>У вас нет доступа для просмотра организационных единиц.</div>
       </div>
     );
   }
@@ -406,7 +410,7 @@ const UnitTreePage = () => {
         >
           {unitCode && !selectedUnit ? (
             <span className={isDark ? "text-rose-300" : "text-rose-600"}>
-              No organisation unit found for code: <strong>{unitCode}</strong>
+              Организационная единица не найдена по коду: <strong>{unitCode}</strong>
             </span>
           ) : rootUnit ? (
             <>
@@ -423,7 +427,7 @@ const UnitTreePage = () => {
               )}
             </>
           ) : (
-            "Showing all root units"
+            "Отображение всех корневых единиц"
           )}
         </div>
 
