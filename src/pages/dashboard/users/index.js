@@ -32,7 +32,7 @@ import {
   Select,
   Tooltip,
 } from "@mui/material";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import usePostGeneralAuthQuery from "@/hooks/general-auth/usePostQuery";
 import MethodModal from "@/components/modal/method-modal";
 import Input from "@/components/input";
@@ -58,6 +58,9 @@ import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import StarIcon from "@mui/icons-material/Star";
 import SecurityIcon from "@mui/icons-material/Security";
 import Link from "next/link";
+import ViewWeekIcon from "@mui/icons-material/ViewWeek";
+import ViewAgendaIcon from "@mui/icons-material/ViewAgenda";
+import CustomTable from "@/components/table";
 
 const Index = () => {
   const queryClient = useQueryClient();
@@ -93,6 +96,23 @@ const Index = () => {
   const [employeeSearch, setEmployeeSearch] = useState("");
   const [editEmployeeSearch, setEditEmployeeSearch] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
+  const [viewMode, setViewMode] = useState("card"); // 'card' or 'table'
+
+  // Load view preference from localStorage on mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedViewMode = localStorage.getItem("usersViewMode") || "card";
+      setViewMode(savedViewMode);
+    }
+  }, []);
+
+  // Save view preference to localStorage
+  const handleViewModeChange = (mode) => {
+    setViewMode(mode);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("usersViewMode", mode);
+    }
+  };
 
   const { data: session } = useSession();
 
@@ -534,6 +554,70 @@ const Index = () => {
             >
               Создать пользователя
             </PrimaryButton>
+
+            {/* View Mode Toggle */}
+            <div className="flex gap-2">
+              <Tooltip title="Таблица" placement="top">
+                <IconButton
+                  onClick={() => handleViewModeChange("table")}
+                  sx={{
+                    borderRadius: "8px",
+                    width: 40,
+                    height: 40,
+                    background:
+                      viewMode === "table"
+                        ? bg(
+                            "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
+                            "linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%)",
+                          )
+                        : bg(
+                            "linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)",
+                            "linear-gradient(135deg, #374151 0%, #4b5563 100%)",
+                          ),
+                    color:
+                      viewMode === "table"
+                        ? "white"
+                        : text("#6b7280", "#d1d5db"),
+                    transition: "all 0.2s",
+                    "&:hover": {
+                      transform: "scale(1.05)",
+                    },
+                  }}
+                >
+                  <ViewWeekIcon />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Карточки" placement="top">
+                <IconButton
+                  onClick={() => handleViewModeChange("card")}
+                  sx={{
+                    borderRadius: "8px",
+                    width: 40,
+                    height: 40,
+                    background:
+                      viewMode === "card"
+                        ? bg(
+                            "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
+                            "linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%)",
+                          )
+                        : bg(
+                            "linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)",
+                            "linear-gradient(135deg, #374151 0%, #4b5563 100%)",
+                          ),
+                    color:
+                      viewMode === "card"
+                        ? "white"
+                        : text("#6b7280", "#d1d5db"),
+                    transition: "all 0.2s",
+                    "&:hover": {
+                      transform: "scale(1.05)",
+                    },
+                  }}
+                >
+                  <ViewAgendaIcon />
+                </IconButton>
+              </Tooltip>
+            </div>
           </div>
 
           {/* Statistics */}
@@ -564,156 +648,712 @@ const Index = () => {
             />
           </div>
 
-          {/* Users Cards Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {usersData.map((user, index) => {
-              const isSuperAdmin = user.username === "admin";
-              const adminUser = hasAdminRole(user);
-              const userPermissions = getUserPermissions(user);
-              const hasAllPermissions = userPermissions.some(
-                (p) => p.name === "*",
-              );
+          {/* Users Grid - Card View */}
+          {viewMode === "card" && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {usersData.map((user, index) => {
+                const isSuperAdmin = user.username === "admin";
+                const adminUser = hasAdminRole(user);
+                const userPermissions = getUserPermissions(user);
+                const hasAllPermissions = userPermissions.some(
+                  (p) => p.name === "*",
+                );
 
-              return (
-                <motion.div
-                  key={user.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                >
-                  <Card
-                    sx={{
-                      background: bg(
-                        "linear-gradient(to bottom, #ffffff, #fafbfc)",
-                        "linear-gradient(to bottom, #1e1e1e, #1a1a1a)",
-                      ),
-
-                      borderRadius: "16px",
-                      transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                      overflow: "hidden",
-                      "&:hover": {
-                        boxShadow: isDark
-                          ? "0 8px 24px rgba(0,0,0,0.4)"
-                          : "0 8px 24px rgba(0,0,0,0.12)",
-                        transform: "translateY(-4px)",
-                        borderColor: isDark ? "#4b5563" : "#d1d5db",
-                      },
-                    }}
+                return (
+                  <motion.div
+                    key={user.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
                   >
-                    <CardContent sx={{ padding: "24px !important" }}>
-                      {/* Header Section with Enhanced Avatar */}
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex items-center gap-4 flex-1">
-                          <div className="relative">
-                            <Badge
-                              color={adminUser ? "warning" : "success"}
-                              badgeContent={
-                                adminUser ? (
-                                  <StarIcon sx={{ fontSize: 12 }} />
-                                ) : (
-                                  ""
-                                )
-                              }
-                              overlap="circular"
-                              anchorOrigin={{
-                                vertical: "bottom",
-                                horizontal: "right",
-                              }}
-                              sx={{
-                                "& .MuiBadge-badge": {
-                                  width: 24,
-                                  height: 24,
-                                  borderRadius: "50%",
-                                  border: `2px solid ${bg("#ffffff", "#1e1e1e")}`,
-                                },
-                              }}
-                            >
-                              <Avatar
+                    <Card
+                      sx={{
+                        background: bg(
+                          "linear-gradient(to bottom, #ffffff, #fafbfc)",
+                          "linear-gradient(to bottom, #1e1e1e, #1a1a1a)",
+                        ),
+
+                        borderRadius: "16px",
+                        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                        overflow: "hidden",
+                        "&:hover": {
+                          boxShadow: isDark
+                            ? "0 8px 24px rgba(0,0,0,0.4)"
+                            : "0 8px 24px rgba(0,0,0,0.12)",
+                          transform: "translateY(-4px)",
+                          borderColor: isDark ? "#4b5563" : "#d1d5db",
+                        },
+                      }}
+                    >
+                      <CardContent sx={{ padding: "24px !important" }}>
+                        {/* Header Section with Enhanced Avatar */}
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex items-center gap-4 flex-1">
+                            <div className="relative">
+                              <Badge
+                                color={adminUser ? "warning" : "success"}
+                                badgeContent={
+                                  adminUser ? (
+                                    <StarIcon sx={{ fontSize: 12 }} />
+                                  ) : (
+                                    ""
+                                  )
+                                }
+                                overlap="circular"
+                                anchorOrigin={{
+                                  vertical: "bottom",
+                                  horizontal: "right",
+                                }}
                                 sx={{
-                                  bgcolor: adminUser
-                                    ? "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)"
-                                    : "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
-                                  width: 56,
-                                  height: 56,
-                                  fontSize: 20,
-                                  fontWeight: 700,
-                                  boxShadow: isDark
-                                    ? "0 4px 12px rgba(0,0,0,0.3)"
-                                    : "0 4px 12px rgba(0,0,0,0.15)",
+                                  "& .MuiBadge-badge": {
+                                    width: 24,
+                                    height: 24,
+                                    borderRadius: "50%",
+                                    border: `2px solid ${bg("#ffffff", "#1e1e1e")}`,
+                                  },
                                 }}
                               >
-                                {user.name?.charAt(0).toUpperCase() ||
-                                  user.username?.charAt(0).toUpperCase() ||
-                                  "U"}
-                              </Avatar>
-                            </Badge>
-                            {/* Online Status Indicator */}
-                            <div
-                              style={{
-                                position: "absolute",
-                                bottom: 2,
-                                right: 2,
-                                width: 14,
-                                height: 14,
-                                borderRadius: "50%",
-                                background: "#10b981",
-                                border: `3px solid ${bg("#ffffff", "#1e1e1e")}`,
-                                boxShadow: "0 0 0 2px rgba(16, 185, 129, 0.2)",
-                              }}
-                            />
+                                <Avatar
+                                  sx={{
+                                    bgcolor: adminUser
+                                      ? "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)"
+                                      : "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
+                                    width: 56,
+                                    height: 56,
+                                    fontSize: 20,
+                                    fontWeight: 700,
+                                    boxShadow: isDark
+                                      ? "0 4px 12px rgba(0,0,0,0.3)"
+                                      : "0 4px 12px rgba(0,0,0,0.15)",
+                                  }}
+                                >
+                                  {user.name?.charAt(0).toUpperCase() ||
+                                    user.username?.charAt(0).toUpperCase() ||
+                                    "U"}
+                                </Avatar>
+                              </Badge>
+                              {/* Online Status Indicator */}
+                              <div
+                                style={{
+                                  position: "absolute",
+                                  bottom: 2,
+                                  right: 2,
+                                  width: 14,
+                                  height: 14,
+                                  borderRadius: "50%",
+                                  background: "#10b981",
+                                  border: `3px solid ${bg("#ffffff", "#1e1e1e")}`,
+                                  boxShadow:
+                                    "0 0 0 2px rgba(16, 185, 129, 0.2)",
+                                }}
+                              />
+                            </div>
+
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <Typography
+                                  variant="h6"
+                                  style={{
+                                    color: text("#111827", "#f9fafb"),
+                                    fontWeight: 700,
+                                    fontSize: "18px",
+                                    lineHeight: 1.2,
+                                  }}
+                                >
+                                  {user.name || user.username}
+                                </Typography>
+                                {isSuperAdmin && (
+                                  <Chip
+                                    icon={
+                                      <AdminPanelSettingsIcon
+                                        sx={{ fontSize: 14 }}
+                                      />
+                                    }
+                                    label="SUPER ADMIN"
+                                    size="small"
+                                    sx={{
+                                      background:
+                                        "linear-gradient(135deg, #dc2626 0%, #991b1b 100%)",
+                                      color: "#ffffff",
+                                      fontWeight: 700,
+                                      fontSize: "10px",
+                                      height: 22,
+                                      letterSpacing: "0.5px",
+                                      boxShadow:
+                                        "0 2px 8px rgba(220, 38, 38, 0.3)",
+                                    }}
+                                  />
+                                )}
+                              </div>
+                              <Typography
+                                variant="body2"
+                                style={{
+                                  color: text("#6b7280", "#9ca3af"),
+                                  fontSize: "14px",
+                                  fontWeight: 500,
+                                }}
+                              >
+                                @{user.username}
+                              </Typography>
+                            </div>
                           </div>
 
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <Typography
-                                variant="h6"
-                                style={{
-                                  color: text("#111827", "#f9fafb"),
-                                  fontWeight: 700,
-                                  fontSize: "18px",
-                                  lineHeight: 1.2,
-                                }}
-                              >
-                                {user.name || user.username}
-                              </Typography>
-                              {isSuperAdmin && (
-                                <Chip
-                                  icon={
-                                    <AdminPanelSettingsIcon
-                                      sx={{ fontSize: 14 }}
-                                    />
-                                  }
-                                  label="SUPER ADMIN"
+                          {/* Action Buttons with Better Styling */}
+                          <div className="flex gap-2">
+                            <Tooltip title="Редактировать" placement="top">
+                              <span>
+                                <IconButton
                                   size="small"
+                                  onClick={() => handleEditClick(user)}
+                                  disabled={isSuperAdmin}
                                   sx={{
-                                    background:
-                                      "linear-gradient(135deg, #dc2626 0%, #991b1b 100%)",
-                                    color: "#ffffff",
-                                    fontWeight: 700,
-                                    fontSize: "10px",
-                                    height: 22,
-                                    letterSpacing: "0.5px",
-                                    boxShadow:
-                                      "0 2px 8px rgba(220, 38, 38, 0.3)",
+                                    width: 36,
+                                    height: 36,
+                                    background: isDark
+                                      ? "linear-gradient(135deg, #7c2d12 0%, #92400e 100%)"
+                                      : "linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)",
+                                    color: isDark ? "#fbbf24" : "#d97706",
+                                    transition: "all 0.2s",
+                                    "&:hover": {
+                                      background: isDark
+                                        ? "linear-gradient(135deg, #92400e 0%, #78350f 100%)"
+                                        : "linear-gradient(135deg, #fde68a 0%, #fcd34d 100%)",
+                                      transform: "scale(1.1)",
+                                    },
+                                    "&:disabled": {
+                                      background: isDark
+                                        ? "#374151"
+                                        : "#f3f4f6",
+                                      color: "#9ca3af",
+                                    },
                                   }}
-                                />
-                              )}
-                            </div>
-                            <Typography
-                              variant="body2"
-                              style={{
-                                color: text("#6b7280", "#9ca3af"),
-                                fontSize: "14px",
-                                fontWeight: 500,
-                              }}
-                            >
-                              @{user.username}
-                            </Typography>
+                                >
+                                  <EditIcon fontSize="small" />
+                                </IconButton>
+                              </span>
+                            </Tooltip>
+
+                            <Tooltip title="Удалить" placement="top">
+                              <span>
+                                <IconButton
+                                  size="small"
+                                  onClick={() => {
+                                    setDeleteModal(true);
+                                    setSelectedId(user.id);
+                                  }}
+                                  disabled={isSuperAdmin}
+                                  sx={{
+                                    width: 36,
+                                    height: 36,
+                                    background: isDark
+                                      ? "linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%)"
+                                      : "linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)",
+                                    color: isDark ? "#fca5a5" : "#dc2626",
+                                    transition: "all 0.2s",
+                                    "&:hover": {
+                                      background: isDark
+                                        ? "linear-gradient(135deg, #991b1b 0%, #7f1d1d 100%)"
+                                        : "linear-gradient(135deg, #fecaca 0%, #fca5a5 100%)",
+                                      transform: "scale(1.1)",
+                                    },
+                                    "&:disabled": {
+                                      background: isDark
+                                        ? "#374151"
+                                        : "#f3f4f6",
+                                      color: "#9ca3af",
+                                    },
+                                  }}
+                                >
+                                  <DeleteIcon fontSize="small" />
+                                </IconButton>
+                              </span>
+                            </Tooltip>
                           </div>
                         </div>
 
-                        {/* Action Buttons with Better Styling */}
-                        <div className="flex gap-2">
+                        <Divider sx={{ my: 2.5, opacity: 0.6 }} />
+
+                        {/* Info Grid with Better Layout */}
+                        <Box className="mb-4">
+                          <div className="flex items-center justify-between gap-1.5 mb-2">
+                            <div>
+                              <DescriptionOutlinedIcon
+                                sx={{
+                                  fontSize: 16,
+                                  color: text("#6b7280", "#9ca3af"),
+                                }}
+                              />
+                              <Typography
+                                variant="caption"
+                                style={{
+                                  color: text("#6b7280", "#9ca3af"),
+                                  fontWeight: 700,
+                                  textTransform: "uppercase",
+                                  fontSize: "11px",
+                                  letterSpacing: "1px",
+                                }}
+                              >
+                                Основная информация
+                              </Typography>
+                            </div>
+
+                            <div className="flex justify-between items-center">
+                              <Link
+                                href={
+                                  user.employee_id
+                                    ? `/dashboard/employees/${user.employee_id}`
+                                    : "#"
+                                }
+                              >
+                                <Chip
+                                  label={
+                                    user.employee_id
+                                      ? "Страница сотрудника"
+                                      : "Не указан"
+                                  }
+                                  size="small"
+                                  sx={{
+                                    backgroundColor: user.employee_id
+                                      ? bg("#dbeafe", "#1e3a8a")
+                                      : bg("#f3f4f6", "#374151"),
+                                    color: user.employee_id
+                                      ? text("#1e40af", "#93c5fd")
+                                      : text("#6b7280", "#9ca3af"),
+                                    fontWeight: 600,
+                                    fontSize: "12px",
+                                  }}
+                                />
+                              </Link>
+                            </div>
+                          </div>
+                          <Box
+                            className="mt-2"
+                            sx={{
+                              display: "grid",
+                              gap: 1.5,
+                              padding: 2,
+                              borderRadius: 2,
+                              background: bg(
+                                "rgba(243, 244, 246, 0.5)",
+                                "rgba(55, 65, 81, 0.2)",
+                              ),
+                            }}
+                          >
+                            <div className="flex justify-between items-center">
+                              <div className="flex items-center gap-1.5">
+                                <BusinessOutlinedIcon
+                                  sx={{
+                                    fontSize: 14,
+                                    color: text("#6b7280", "#9ca3af"),
+                                  }}
+                                />
+                                <Typography
+                                  variant="body2"
+                                  style={{
+                                    color: text("#6b7280", "#9ca3af"),
+                                    fontWeight: 500,
+                                  }}
+                                >
+                                  Код подразделения:
+                                </Typography>
+                              </div>
+                              <Chip
+                                label={user.unit_code || "Не указан"}
+                                size="small"
+                                sx={{
+                                  backgroundColor: user.unit_code
+                                    ? bg("#dcfce7", "#14532d")
+                                    : bg("#f3f4f6", "#374151"),
+                                  color: user.unit_code
+                                    ? text("#15803d", "#86efac")
+                                    : text("#6b7280", "#9ca3af"),
+                                  fontWeight: 600,
+                                  fontSize: "12px",
+                                }}
+                              />
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <div className="flex items-center gap-1.5">
+                                <CalendarTodayOutlinedIcon
+                                  sx={{
+                                    fontSize: 14,
+                                    color: text("#6b7280", "#9ca3af"),
+                                  }}
+                                />
+                                <Typography
+                                  variant="body2"
+                                  style={{
+                                    color: text("#6b7280", "#9ca3af"),
+                                    fontWeight: 500,
+                                  }}
+                                >
+                                  Дата создания:
+                                </Typography>
+                              </div>
+                              <Typography
+                                variant="body2"
+                                style={{
+                                  color: text("#111827", "#f9fafb"),
+                                  fontWeight: 600,
+                                }}
+                              >
+                                {new Date(user.created_at).toLocaleDateString(
+                                  "ru-RU",
+                                  {
+                                    day: "2-digit",
+                                    month: "short",
+                                    year: "numeric",
+                                  },
+                                )}
+                              </Typography>
+                            </div>
+                          </Box>
+                        </Box>
+
+                        {/* Roles Section with Enhanced Design */}
+                        <Box className="mb-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <Typography
+                              variant="caption"
+                              style={{
+                                color: text("#6b7280", "#9ca3af"),
+                                fontWeight: 700,
+                                textTransform: "uppercase",
+                                fontSize: "11px",
+                                letterSpacing: "1px",
+                              }}
+                            >
+                              Роли ({user.roles?.length || 0})
+                            </Typography>
+                            <div className="flex gap-1.5">
+                              <Tooltip title="Добавить роль" placement="top">
+                                <IconButton
+                                  size="small"
+                                  onClick={() => {
+                                    setAddRoleModal(true);
+                                    setSelectedId(user.id);
+                                  }}
+                                  sx={{
+                                    width: 32,
+                                    height: 32,
+                                    background: isDark
+                                      ? "linear-gradient(135deg, #064e3b 0%, #065f46 100%)"
+                                      : "linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)",
+                                    color: isDark ? "#6ee7b7" : "#047857",
+                                    transition: "all 0.2s",
+                                    "&:hover": {
+                                      background: isDark
+                                        ? "linear-gradient(135deg, #065f46 0%, #047857 100%)"
+                                        : "linear-gradient(135deg, #a7f3d0 0%, #6ee7b7 100%)",
+                                      transform: "scale(1.1)",
+                                    },
+                                  }}
+                                >
+                                  <AddIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+
+                              {user.roles?.length > 0 && (
+                                <Tooltip title="Удалить роль" placement="top">
+                                  <IconButton
+                                    size="small"
+                                    onClick={() => {
+                                      setRemoveRoleModal(true);
+                                      setSelectedId(user.id);
+                                    }}
+                                    sx={{
+                                      width: 32,
+                                      height: 32,
+                                      background: isDark
+                                        ? "linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%)"
+                                        : "linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)",
+                                      color: isDark ? "#fca5a5" : "#dc2626",
+                                      transition: "all 0.2s",
+                                      "&:hover": {
+                                        background: isDark
+                                          ? "linear-gradient(135deg, #991b1b 0%, #b91c1c 100%)"
+                                          : "linear-gradient(135deg, #fecaca 0%, #fca5a5 100%)",
+                                        transform: "scale(1.1)",
+                                      },
+                                    }}
+                                  >
+                                    <RemoveIcon fontSize="small" />
+                                  </IconButton>
+                                </Tooltip>
+                              )}
+                            </div>
+                          </div>
+                          <Stack
+                            direction="row"
+                            spacing={1}
+                            flexWrap="wrap"
+                            useFlexGap
+                          >
+                            {user.roles?.length > 0 ? (
+                              user.roles.map((role) => (
+                                <Chip
+                                  key={role.id || role.name}
+                                  label={role.name}
+                                  size="small"
+                                  sx={{
+                                    background: `linear-gradient(135deg, ${getRoleColor(role.name).bg} 0%, ${getRoleColor(role.name).bg}dd 100%)`,
+                                    color: getRoleColor(role.name).text,
+                                    fontWeight: 600,
+                                    textTransform: "uppercase",
+                                    letterSpacing: "0.8px",
+                                    fontSize: "11px",
+                                    height: 26,
+                                    boxShadow: `0 2px 8px ${getRoleColor(role.name).bg}40`,
+                                    transition: "all 0.2s",
+                                    "&:hover": {
+                                      transform: "translateY(-2px)",
+                                      boxShadow: `0 4px 12px ${getRoleColor(role.name).bg}60`,
+                                    },
+                                  }}
+                                />
+                              ))
+                            ) : (
+                              <Typography
+                                variant="body2"
+                                style={{
+                                  color: text("#9ca3af", "#6b7280"),
+                                  fontStyle: "italic",
+                                  padding: "8px 0",
+                                }}
+                              >
+                                Нет назначенных ролей
+                              </Typography>
+                            )}
+                          </Stack>
+                        </Box>
+
+                        {/* Permissions Section */}
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Users Table - Table View */}
+          {viewMode === "table" && (
+            <>
+              {(() => {
+                const columns = [
+                  {
+                    header: "Пользователь",
+                    cell: ({ row }) => {
+                      const user = row.original;
+                      const isSuperAdmin = user.username === "admin";
+                      const adminUser = hasAdminRole(user);
+
+                      return (
+                        <div className="flex items-center gap-3">
+                          <Avatar
+                            sx={{
+                              bgcolor: adminUser
+                                ? "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)"
+                                : "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
+                              width: 36,
+                              height: 36,
+                              fontSize: 14,
+                              fontWeight: 700,
+                            }}
+                          >
+                            {user.name?.charAt(0).toUpperCase() ||
+                              user.username?.charAt(0).toUpperCase() ||
+                              "U"}
+                          </Avatar>
+                          <div>
+                            <div className="font-semibold">
+                              {user.name || user.username}
+                            </div>
+                            {isSuperAdmin && (
+                              <Chip
+                                label="SUPER ADMIN"
+                                size="small"
+                                sx={{
+                                  background:
+                                    "linear-gradient(135deg, #dc2626 0%, #991b1b 100%)",
+                                  color: "#ffffff",
+                                  fontWeight: 700,
+                                  fontSize: "9px",
+                                  height: 18,
+                                  marginTop: "4px",
+                                }}
+                              />
+                            )}
+                          </div>
+                        </div>
+                      );
+                    },
+                  },
+                  {
+                    accessorKey: "username",
+                    header: "Имя пользователя",
+                    cell: ({ row }) => `@${row.original.username}`,
+                  },
+                  {
+                    header: "Роли",
+                    cell: ({ row }) => {
+                      const user = row.original;
+                      return (
+                        <Stack direction="row" spacing={0.5} flexWrap="wrap">
+                          {user.roles?.length > 0 ? (
+                            user.roles.slice(0, 2).map((role) => (
+                              <Chip
+                                key={role.id}
+                                label={role.name}
+                                size="small"
+                                sx={{
+                                  background: `linear-gradient(135deg, ${getRoleColor(role.name).bg} 0%, ${getRoleColor(role.name).bg}dd 100%)`,
+                                  color: getRoleColor(role.name).text,
+                                  fontWeight: 600,
+                                  fontSize: "11px",
+                                  height: 24,
+                                }}
+                              />
+                            ))
+                          ) : (
+                            <Typography
+                              variant="body2"
+                              style={{
+                                color: text("#9ca3af", "#6b7280"),
+                                fontStyle: "italic",
+                                fontSize: "12px",
+                              }}
+                            >
+                              Нет ролей
+                            </Typography>
+                          )}
+                          {user.roles?.length > 2 && (
+                            <Chip
+                              label={`+${user.roles.length - 2}`}
+                              size="small"
+                              sx={{
+                                background: bg("#e5e7eb", "#4b5563"),
+                                color: text("#6b7280", "#d1d5db"),
+                                fontWeight: 600,
+                                fontSize: "11px",
+                                height: 24,
+                              }}
+                            />
+                          )}
+                        </Stack>
+                      );
+                    },
+                  },
+                  {
+                    header: "Сотрудник",
+                    cell: ({ row }) => {
+                      const user = row.original;
+                      return user.employee_id ? (
+                        <Link href={`/dashboard/employees/${user.employee_id}`}>
+                          <Chip
+                            label="Профиль"
+                            size="small"
+                            sx={{
+                              backgroundColor: bg("#dbeafe", "#1e3a8a"),
+                              color: text("#1e40af", "#93c5fd"),
+                              fontWeight: 600,
+                              fontSize: "12px",
+                              cursor: "pointer",
+                            }}
+                          />
+                        </Link>
+                      ) : (
+                        <Typography
+                          variant="body2"
+                          style={{
+                            color: text("#9ca3af", "#6b7280"),
+                            fontSize: "12px",
+                          }}
+                        >
+                          —
+                        </Typography>
+                      );
+                    },
+                  },
+                  {
+                    header: "Подразделение",
+                    cell: ({ row }) => row.original.unit_code || "—",
+                  },
+                  {
+                    header: "Управление ролями",
+                    cell: ({ row }) => {
+                      const user = row.original;
+                      const isSuperAdmin = user.username === "admin";
+
+                      return (
+                        <div className="flex gap-1">
+                          <Tooltip title="Добавить роль" placement="top">
+                            <IconButton
+                              size="small"
+                              onClick={() => {
+                                setAddRoleModal(true);
+                                setSelectedId(user.id);
+                              }}
+                              disabled={isSuperAdmin}
+                              sx={{
+                                width: 32,
+                                height: 32,
+                                background: isSuperAdmin
+                                  ? "#ccc"
+                                  : isDark
+                                    ? "linear-gradient(135deg, #064e3b 0%, #065f46 100%)"
+                                    : "linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)",
+                                color: isSuperAdmin
+                                  ? "#999"
+                                  : isDark
+                                    ? "#6ee7b7"
+                                    : "#047857",
+                              }}
+                            >
+                              <AddIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+
+                          {user.roles?.length > 0 && (
+                            <Tooltip title="Удалить роль" placement="top">
+                              <IconButton
+                                size="small"
+                                onClick={() => {
+                                  setRemoveRoleModal(true);
+                                  setSelectedId(user.id);
+                                }}
+                                disabled={isSuperAdmin}
+                                sx={{
+                                  width: 32,
+                                  height: 32,
+                                  background: isSuperAdmin
+                                    ? "#ccc"
+                                    : isDark
+                                      ? "linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%)"
+                                      : "linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)",
+                                  color: isSuperAdmin
+                                    ? "#999"
+                                    : isDark
+                                      ? "#fca5a5"
+                                      : "#dc2626",
+                                }}
+                              >
+                                <RemoveIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          )}
+                        </div>
+                      );
+                    },
+                  },
+                  {
+                    header: "Действия",
+                    cell: ({ row }) => {
+                      const user = row.original;
+                      const isSuperAdmin = user.username === "admin";
+
+                      return (
+                        <div className="flex gap-1">
                           <Tooltip title="Редактировать" placement="top">
                             <span>
                               <IconButton
@@ -721,19 +1361,12 @@ const Index = () => {
                                 onClick={() => handleEditClick(user)}
                                 disabled={isSuperAdmin}
                                 sx={{
-                                  width: 36,
-                                  height: 36,
+                                  width: 32,
+                                  height: 32,
                                   background: isDark
                                     ? "linear-gradient(135deg, #7c2d12 0%, #92400e 100%)"
                                     : "linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)",
                                   color: isDark ? "#fbbf24" : "#d97706",
-                                  transition: "all 0.2s",
-                                  "&:hover": {
-                                    background: isDark
-                                      ? "linear-gradient(135deg, #92400e 0%, #78350f 100%)"
-                                      : "linear-gradient(135deg, #fde68a 0%, #fcd34d 100%)",
-                                    transform: "scale(1.1)",
-                                  },
                                   "&:disabled": {
                                     background: isDark ? "#374151" : "#f3f4f6",
                                     color: "#9ca3af",
@@ -744,7 +1377,6 @@ const Index = () => {
                               </IconButton>
                             </span>
                           </Tooltip>
-
                           <Tooltip title="Удалить" placement="top">
                             <span>
                               <IconButton
@@ -755,19 +1387,12 @@ const Index = () => {
                                 }}
                                 disabled={isSuperAdmin}
                                 sx={{
-                                  width: 36,
-                                  height: 36,
+                                  width: 32,
+                                  height: 32,
                                   background: isDark
                                     ? "linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%)"
                                     : "linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)",
                                   color: isDark ? "#fca5a5" : "#dc2626",
-                                  transition: "all 0.2s",
-                                  "&:hover": {
-                                    background: isDark
-                                      ? "linear-gradient(135deg, #991b1b 0%, #7f1d1d 100%)"
-                                      : "linear-gradient(135deg, #fecaca 0%, #fca5a5 100%)",
-                                    transform: "scale(1.1)",
-                                  },
                                   "&:disabled": {
                                     background: isDark ? "#374151" : "#f3f4f6",
                                     color: "#9ca3af",
@@ -779,271 +1404,21 @@ const Index = () => {
                             </span>
                           </Tooltip>
                         </div>
-                      </div>
+                      );
+                    },
+                  },
+                ];
 
-                      <Divider sx={{ my: 2.5, opacity: 0.6 }} />
-
-                      {/* Info Grid with Better Layout */}
-                      <Box className="mb-4">
-                        <div className="flex items-center justify-between gap-1.5 mb-2">
-                          <div>
-                            <DescriptionOutlinedIcon
-                              sx={{
-                                fontSize: 16,
-                                color: text("#6b7280", "#9ca3af"),
-                              }}
-                            />
-                            <Typography
-                              variant="caption"
-                              style={{
-                                color: text("#6b7280", "#9ca3af"),
-                                fontWeight: 700,
-                                textTransform: "uppercase",
-                                fontSize: "11px",
-                                letterSpacing: "1px",
-                              }}
-                            >
-                              Основная информация
-                            </Typography>
-                          </div>
-
-                          <div className="flex justify-between items-center">
-                            <Link
-                              href={
-                                user.employee_id
-                                  ? `/dashboard/employees/${user.employee_id}`
-                                  : "#"
-                              }
-                            >
-                              <Chip
-                                label={
-                                  user.employee_id
-                                    ? "Страница сотрудника"
-                                    : "Не указан"
-                                }
-                                size="small"
-                                sx={{
-                                  backgroundColor: user.employee_id
-                                    ? bg("#dbeafe", "#1e3a8a")
-                                    : bg("#f3f4f6", "#374151"),
-                                  color: user.employee_id
-                                    ? text("#1e40af", "#93c5fd")
-                                    : text("#6b7280", "#9ca3af"),
-                                  fontWeight: 600,
-                                  fontSize: "12px",
-                                }}
-                              />
-                            </Link>
-                          </div>
-                        </div>
-                        <Box
-                          className="mt-2"
-                          sx={{
-                            display: "grid",
-                            gap: 1.5,
-                            padding: 2,
-                            borderRadius: 2,
-                            background: bg(
-                              "rgba(243, 244, 246, 0.5)",
-                              "rgba(55, 65, 81, 0.2)",
-                            ),
-                          }}
-                        >
-                          <div className="flex justify-between items-center">
-                            <div className="flex items-center gap-1.5">
-                              <BusinessOutlinedIcon
-                                sx={{
-                                  fontSize: 14,
-                                  color: text("#6b7280", "#9ca3af"),
-                                }}
-                              />
-                              <Typography
-                                variant="body2"
-                                style={{
-                                  color: text("#6b7280", "#9ca3af"),
-                                  fontWeight: 500,
-                                }}
-                              >
-                                Код подразделения:
-                              </Typography>
-                            </div>
-                            <Chip
-                              label={user.unit_code || "Не указан"}
-                              size="small"
-                              sx={{
-                                backgroundColor: user.unit_code
-                                  ? bg("#dcfce7", "#14532d")
-                                  : bg("#f3f4f6", "#374151"),
-                                color: user.unit_code
-                                  ? text("#15803d", "#86efac")
-                                  : text("#6b7280", "#9ca3af"),
-                                fontWeight: 600,
-                                fontSize: "12px",
-                              }}
-                            />
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <div className="flex items-center gap-1.5">
-                              <CalendarTodayOutlinedIcon
-                                sx={{
-                                  fontSize: 14,
-                                  color: text("#6b7280", "#9ca3af"),
-                                }}
-                              />
-                              <Typography
-                                variant="body2"
-                                style={{
-                                  color: text("#6b7280", "#9ca3af"),
-                                  fontWeight: 500,
-                                }}
-                              >
-                                Дата создания:
-                              </Typography>
-                            </div>
-                            <Typography
-                              variant="body2"
-                              style={{
-                                color: text("#111827", "#f9fafb"),
-                                fontWeight: 600,
-                              }}
-                            >
-                              {new Date(user.created_at).toLocaleDateString(
-                                "ru-RU",
-                                {
-                                  day: "2-digit",
-                                  month: "short",
-                                  year: "numeric",
-                                },
-                              )}
-                            </Typography>
-                          </div>
-                        </Box>
-                      </Box>
-
-                      {/* Roles Section with Enhanced Design */}
-                      <Box className="mb-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <Typography
-                            variant="caption"
-                            style={{
-                              color: text("#6b7280", "#9ca3af"),
-                              fontWeight: 700,
-                              textTransform: "uppercase",
-                              fontSize: "11px",
-                              letterSpacing: "1px",
-                            }}
-                          >
-                            Роли ({user.roles?.length || 0})
-                          </Typography>
-                          <div className="flex gap-1.5">
-                            <Tooltip title="Добавить роль" placement="top">
-                              <IconButton
-                                size="small"
-                                onClick={() => {
-                                  setAddRoleModal(true);
-                                  setSelectedId(user.id);
-                                }}
-                                sx={{
-                                  width: 32,
-                                  height: 32,
-                                  background: isDark
-                                    ? "linear-gradient(135deg, #064e3b 0%, #065f46 100%)"
-                                    : "linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)",
-                                  color: isDark ? "#6ee7b7" : "#047857",
-                                  transition: "all 0.2s",
-                                  "&:hover": {
-                                    background: isDark
-                                      ? "linear-gradient(135deg, #065f46 0%, #047857 100%)"
-                                      : "linear-gradient(135deg, #a7f3d0 0%, #6ee7b7 100%)",
-                                    transform: "scale(1.1)",
-                                  },
-                                }}
-                              >
-                                <AddIcon fontSize="small" />
-                              </IconButton>
-                            </Tooltip>
-
-                            {user.roles?.length > 0 && (
-                              <Tooltip title="Удалить роль" placement="top">
-                                <IconButton
-                                  size="small"
-                                  onClick={() => {
-                                    setRemoveRoleModal(true);
-                                    setSelectedId(user.id);
-                                  }}
-                                  sx={{
-                                    width: 32,
-                                    height: 32,
-                                    background: isDark
-                                      ? "linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%)"
-                                      : "linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)",
-                                    color: isDark ? "#fca5a5" : "#dc2626",
-                                    transition: "all 0.2s",
-                                    "&:hover": {
-                                      background: isDark
-                                        ? "linear-gradient(135deg, #991b1b 0%, #b91c1c 100%)"
-                                        : "linear-gradient(135deg, #fecaca 0%, #fca5a5 100%)",
-                                      transform: "scale(1.1)",
-                                    },
-                                  }}
-                                >
-                                  <RemoveIcon fontSize="small" />
-                                </IconButton>
-                              </Tooltip>
-                            )}
-                          </div>
-                        </div>
-                        <Stack
-                          direction="row"
-                          spacing={1}
-                          flexWrap="wrap"
-                          useFlexGap
-                        >
-                          {user.roles?.length > 0 ? (
-                            user.roles.map((role) => (
-                              <Chip
-                                key={role.id || role.name}
-                                label={role.name}
-                                size="small"
-                                sx={{
-                                  background: `linear-gradient(135deg, ${getRoleColor(role.name).bg} 0%, ${getRoleColor(role.name).bg}dd 100%)`,
-                                  color: getRoleColor(role.name).text,
-                                  fontWeight: 600,
-                                  textTransform: "uppercase",
-                                  letterSpacing: "0.8px",
-                                  fontSize: "11px",
-                                  height: 26,
-                                  boxShadow: `0 2px 8px ${getRoleColor(role.name).bg}40`,
-                                  transition: "all 0.2s",
-                                  "&:hover": {
-                                    transform: "translateY(-2px)",
-                                    boxShadow: `0 4px 12px ${getRoleColor(role.name).bg}60`,
-                                  },
-                                }}
-                              />
-                            ))
-                          ) : (
-                            <Typography
-                              variant="body2"
-                              style={{
-                                color: text("#9ca3af", "#6b7280"),
-                                fontStyle: "italic",
-                                padding: "8px 0",
-                              }}
-                            >
-                              Нет назначенных ролей
-                            </Typography>
-                          )}
-                        </Stack>
-                      </Box>
-
-                      {/* Permissions Section */}
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              );
-            })}
-          </div>
+                return (
+                  <CustomTable
+                    data={usersData}
+                    columns={columns}
+                    tableClassName="w-full"
+                  />
+                );
+              })()}
+            </>
+          )}
         </motion.div>
       )}
 

@@ -41,7 +41,7 @@ const allMenuItems = [
       "hr-admin",
       "hr-moderator",
       "acs-admin",
-      "hr-tash-iem",
+      "hr-main-tash-iem",
     ],
   },
   {
@@ -56,15 +56,15 @@ const allMenuItems = [
       {
         text: "Руководства управлении",
         path: "/dashboard/structure-organizations/management-organizations",
-        roles: ["admin", "hr-admin", "hr-tash-iem"],
+        roles: ["admin", "hr-admin", "hr-main-tash-iem"],
       },
       {
         text: "Место работы",
         path: "/dashboard/structure-organizations/workplace",
-        roles: ["admin", "hr-admin", "hr-tash-iem"],
+        roles: ["admin", "hr-admin", "hr-main-tash-iem"],
       },
     ],
-    roles: ["admin", "hr-admin", "hr-tash-iem"],
+    roles: ["admin", "hr-admin", "hr-main-tash-iem"],
   },
   {
     text: "Точки контроля",
@@ -103,20 +103,20 @@ const allMenuItems = [
       {
         text: "по подразделениям",
         path: "/dashboard/reports/report-by-orgUnit",
-        roles: ["admin", "hr-admin", "hr-tash-iem"],
+        roles: ["admin", "hr-admin", "hr-main-tash-iem"],
       },
       {
         text: "по подразделениям и точкам доступа",
         path: "/dashboard/reports/report-by-entrypointid-orgUnit",
-        roles: ["admin", "hr-admin", "hr-tash-iem"],
+        roles: ["admin", "hr-admin", "hr-main-tash-iem"],
       },
       {
         text: "отчёты всех сотрудников",
         path: "/dashboard/reports/all-employees",
-        roles: ["admin", "hr-admin", "hr-moderator", "hr-tash-iem"],
+        roles: ["admin", "hr-admin", "hr-moderator", "hr-main-tash-iem"],
       },
     ],
-    roles: ["admin", "hr-admin", "hr-moderator", "hr-tash-iem"],
+    roles: ["admin", "hr-admin", "hr-moderator", "hr-main-tash-iem"],
   },
   {
     text: "Расписание",
