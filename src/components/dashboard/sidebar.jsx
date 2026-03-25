@@ -35,7 +35,14 @@ const allMenuItems = [
     text: "Сотрудники",
     icon: <ContactPageIcon />,
     path: "/dashboard/employees",
-    roles: ["admin", "main-hr-tpp", "hr-admin", "hr-moderator", "acs-admin"],
+    roles: [
+      "admin",
+      "main-hr-tpp",
+      "hr-admin",
+      "hr-moderator",
+      "acs-admin",
+      "hr-tash-iem",
+    ],
   },
   {
     text: "Структура организации",
@@ -49,15 +56,15 @@ const allMenuItems = [
       {
         text: "Руководства управлении",
         path: "/dashboard/structure-organizations/management-organizations",
-        roles: ["admin", "hr-admin"],
+        roles: ["admin", "hr-admin", "hr-tash-iem"],
       },
       {
         text: "Место работы",
         path: "/dashboard/structure-organizations/workplace",
-        roles: ["admin", "hr-admin"],
+        roles: ["admin", "hr-admin", "hr-tash-iem"],
       },
     ],
-    roles: ["admin", "hr-admin"],
+    roles: ["admin", "hr-admin", "hr-tash-iem"],
   },
   {
     text: "Точки контроля",
@@ -91,25 +98,25 @@ const allMenuItems = [
       {
         text: "по сотрудникам",
         path: "/dashboard/reports/employee-uuid",
-        roles: ["admin", "hr-admin", "hr-moderator"],
+        roles: ["admin", "hr-admin", "hr-moderator", "hr-tash-iem"],
       },
       {
         text: "по подразделениям",
         path: "/dashboard/reports/report-by-orgUnit",
-        roles: ["admin", "hr-admin"],
+        roles: ["admin", "hr-admin", "hr-tash-iem"],
       },
       {
         text: "по подразделениям и точкам доступа",
         path: "/dashboard/reports/report-by-entrypointid-orgUnit",
-        roles: ["admin", "hr-admin"],
+        roles: ["admin", "hr-admin", "hr-tash-iem"],
       },
       {
         text: "отчёты всех сотрудников",
         path: "/dashboard/reports/all-employees",
-        roles: ["admin", "hr-admin", "hr-moderator"],
+        roles: ["admin", "hr-admin", "hr-moderator", "hr-tash-iem"],
       },
     ],
-    roles: ["admin", "hr-admin", "hr-moderator"],
+    roles: ["admin", "hr-admin", "hr-moderator", "hr-tash-iem"],
   },
   {
     text: "Расписание",
