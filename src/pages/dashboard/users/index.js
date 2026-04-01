@@ -224,11 +224,16 @@ const Index = () => {
       return;
     }
 
+    const normalizedUnitCode = formData.unit_code?.trim()
+      ? formData.unit_code.trim()
+      : null;
+
     createUser(
       {
         url: URLS.register,
         attributes: {
           ...formData,
+          unit_code: normalizedUnitCode,
           role_ids: [formData.role_id], // Send as array
         },
         config: {
