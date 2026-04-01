@@ -12,10 +12,8 @@ import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import DetailsIcon from "@mui/icons-material/Details";
 import HexagonIcon from "@mui/icons-material/Hexagon";
 import StarIcon from "@mui/icons-material/Star";
-
 import WorkIcon from "@mui/icons-material/Work";
-
-import { Button, IconButton } from "@mui/material";
+import { Button, IconButton, Checkbox } from "@mui/material";
 import { useState } from "react";
 import MethodModal from "@/components/modal/method-modal";
 import Input from "@/components/input";
@@ -35,17 +33,20 @@ import { canUserDo } from "@/utils/checkpermission";
 import { useSession } from "next-auth/react";
 import WorkplaceEmployeeSection from "@/components/card/workPlaceOrgUnit";
 import { useRouter } from "next/router";
+import SendIcon from "@mui/icons-material/Send";
+import TransferWorkplacesModal from "@/components/modal/transfer-workplaces-modal";
 
 const Index = () => {
   const { data: session } = useSession();
   const router = useRouter();
-  const { bg, isDark, border } = useAppTheme();
+  const { bg, isDark, border, text } = useAppTheme();
   const queryClient = useQueryClient();
   const [createModal, setCreateModal] = useState(false);
   const [createModalParentId, setCreateModalParentId] = useState(null);
   const [selectEditId, setSelectEditId] = useState(null);
   const [editModal, setEditModal] = useState(false);
   const [deleteModal, setDeleteModal] = useState(false);
+  const [transferModal, setTransferModal] = useState(false);
   const [name, setName] = useState("");
   const [unitCode, setUnitCode] = useState("");
   const [unitTypeId, setUnitTypeId] = useState(null);
@@ -55,6 +56,9 @@ const Index = () => {
   const [openLevel3Id, setOpenLevel3Id] = useState(null);
   const [openLevel4Id, setOpenLevel4Id] = useState(null);
   const [openLevel5Id, setOpenLevel5Id] = useState(null);
+  const [selectedWorkplaces, setSelectedWorkplaces] = useState([]);
+  const [destinationUnitId, setDestinationUnitId] = useState(null);
+  const [sourceUnitId, setSourceUnitId] = useState(null);
 
   const canCreateOrgUnit = canUserDo(
     session?.user,
@@ -269,6 +273,92 @@ const Index = () => {
     }
   };
 
+  // Transfer workplaces between units
+  const onToggleWorkplaceSelection = (workplaceId) => {
+    setSelectedWorkplaces((prev) =>
+      prev.includes(workplaceId)
+        ? prev.filter((id) => id !== workplaceId)
+        : [...prev, workplaceId],
+    );
+  };
+
+  const onOpenTransferModal = (unitId) => {
+    setSourceUnitId(unitId);
+    setDestinationUnitId(null);
+    setSelectedWorkplaces([]);
+    setTransferModal(true);
+  };
+
+  const onSubmitTransferWorkplaces = async () => {
+    if (!destinationUnitId) {
+      toast.error("Выберите целевую единицу", { position: "top-center" });
+      return;
+    }
+
+    if (selectedWorkplaces.length === 0) {
+      toast.error("Выберите рабочие места", { position: "top-center" });
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `${config.GENERAL_AUTH_URL}/staffio/api/v2/workplaces:bulk-update`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session?.accessToken}`,
+          },
+          body: JSON.stringify({
+            workplaceIds: selectedWorkplaces,
+            organizationalUnitId: destinationUnitId,
+          }),
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("Ошибка при переводе рабочих мест");
+      }
+
+      toast.success(
+        `${selectedWorkplaces.length} рабочих мест успешно перемещено`,
+        {
+          position: "top-center",
+        },
+      );
+      setTransferModal(false);
+      setSelectedWorkplaces([]);
+      setSourceUnitId(null);
+      setDestinationUnitId(null);
+      queryClient.invalidateQueries(KEYS.organizationalUnits);
+    } catch (error) {
+      console.error(error);
+      toast.error("Ошибка при перемещении рабочих мест");
+    }
+  };
+
+  // Helper function to collect all org units for destination select
+  const collectAllUnits = (units, collected = []) => {
+    if (!units) return collected;
+    units.forEach((unit) => {
+      if (unit.id !== sourceUnitId) {
+        collected.push(unit);
+      }
+      if (unit.children && unit.children.length > 0) {
+        collectAllUnits(unit.children, collected);
+      }
+    });
+    return collected;
+  };
+
+  // Helper to get source unit name for display
+  const getSourceUnitName = () => {
+    if (!sourceUnitId) return "";
+    const allUnits = collectAllUnits(get(level1List, "data", []), []);
+    const sourceUnit = allUnits.find((u) => u.id === sourceUnitId);
+    return sourceUnit?.name || "";
+  };
+
   return (
     <DashboardLayout headerTitle="Руководства управлении">
       <motion.div
@@ -281,7 +371,7 @@ const Index = () => {
           borderColor: border("#e5e7eb", "#333333"),
         }}
       >
-        <div className="mb-[20px] flex flex-wrap gap-3 items-end">
+        <div className="mb-[20px] flex flex-col sm:flex-row gap-3 items-start sm:items-center">
           {canCreateOrgUnit && (
             <PrimaryButton
               onClick={() => {
@@ -291,6 +381,106 @@ const Index = () => {
             >
               Создать
             </PrimaryButton>
+          )}
+          {selectedWorkplaces.length > 0 && sourceUnitId && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+              className="w-full sm:w-auto ml-0 sm:ml-auto"
+            >
+              <div className="flex flex-col sm:flex-row gap-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 px-4 py-4 rounded-xl border-2 border-blue-200 dark:border-blue-700 shadow-lg"
+                style={{
+                  borderColor: border("#bfdbfe", "#1e40af"),
+                  backgroundColor: bg(
+                    "linear-gradient(to right, rgb(239, 246, 255), rgb(239, 245, 254))",
+                    "linear-gradient(to right, rgba(30, 58, 138, 0.2), rgba(49, 46, 129, 0.2))"
+                  ),
+                }}
+              >
+                <div className="flex-1 flex flex-col justify-center">
+                  <div className="flex items-center gap-2 mb-1">
+                    <motion.div
+                      animate={{ scale: [1, 1.1, 1] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                      className="flex-shrink-0"
+                    >
+                      <div
+                        className="w-3 h-3 rounded-full"
+                        style={{ backgroundColor: "#1E5EFF" }}
+                      ></div>
+                    </motion.div>
+                    <span className="text-xs font-semibold text-blue-600 dark:text-blue-300 uppercase tracking-wider">
+                      Готово к переводу
+                    </span>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                        Источник:
+                      </span>
+                      <span className="text-sm font-semibold text-blue-700 dark:text-blue-200 bg-white dark:bg-blue-900/50 px-3 py-1 rounded-full border border-blue-300 dark:border-blue-600">
+                        {getSourceUnitName()}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                        Выбрано рабочих мест:
+                      </span>
+                      <span className="text-lg font-bold text-blue-700 dark:text-blue-200 bg-blue-200 dark:bg-blue-700 px-3 py-1 rounded-full">
+                        {selectedWorkplaces.length}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex flex-col gap-2 sm:gap-3">
+                  <Button
+                    variant="contained"
+                    fullWidth
+                    startIcon={<SendIcon />}
+                    onClick={() => onOpenTransferModal(sourceUnitId)}
+                    sx={{
+                      backgroundColor: "#10b981",
+                      textTransform: "none",
+                      fontFamily: "DM Sans, sans-serif",
+                      fontWeight: 600,
+                      fontSize: "14px",
+                      padding: "10px 16px",
+                      borderRadius: "8px",
+                      "&:hover": {
+                        backgroundColor: "#059669",
+                      },
+                    }}
+                  >
+                    Переместить
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    fullWidth
+                    onClick={() => {
+                      setSelectedWorkplaces([]);
+                      setSourceUnitId(null);
+                    }}
+                    sx={{
+                      textTransform: "none",
+                      fontFamily: "DM Sans, sans-serif",
+                      fontWeight: 600,
+                      fontSize: "14px",
+                      padding: "10px 16px",
+                      borderRadius: "8px",
+                      borderColor: border("#d1d5db", "#4b5563"),
+                      color: text("#374151", "#d1d5db"),
+                      "&:hover": {
+                        backgroundColor: bg("#f3f4f6", "#374151"),
+                      },
+                    }}
+                  >
+                    Отменить
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
           )}
         </div>
 
@@ -442,6 +632,11 @@ const Index = () => {
                       <WorkplaceEmployeeSection
                         workplace={level1.workplace}
                         levelColor="#1E5EFF"
+                        selectedWorkplaces={selectedWorkplaces}
+                        onToggleWorkplace={(id) => {
+                          setSourceUnitId(level1.id);
+                          onToggleWorkplaceSelection(id);
+                        }}
                       />
                     </motion.div>
                   )}
@@ -610,12 +805,15 @@ const Index = () => {
                                     <WorkplaceEmployeeSection
                                       workplace={level2.workplace}
                                       levelColor="#FFC700"
+                                      selectedWorkplaces={selectedWorkplaces}
+                                      onToggleWorkplace={(id) => {
+                                        setSourceUnitId(level2.id);
+                                        onToggleWorkplaceSelection(id);
+                                      }}
                                     />
                                   </motion.div>
                                 )}
                               </AnimatePresence>
-
-                              {/* Continue with LEVEL 3, 4, 5 following the same pattern... */}
 
                               {/* LEVEL 3 */}
                               <AnimatePresence>
@@ -788,12 +986,23 @@ const Index = () => {
                                                         level3.workplace
                                                       }
                                                       levelColor="#1FD286"
+                                                      selectedWorkplaces={
+                                                        selectedWorkplaces
+                                                      }
+                                                      onToggleWorkplace={(
+                                                        id,
+                                                      ) => {
+                                                        setSourceUnitId(
+                                                          level3.id,
+                                                        );
+                                                        onToggleWorkplaceSelection(
+                                                          id,
+                                                        );
+                                                      }}
                                                     />
                                                   </motion.div>
                                                 )}
                                               </AnimatePresence>
-
-                                              {/* Continue with Level 4 and 5 following the same pattern... */}
 
                                               {/* LEVEL 4 */}
                                               <AnimatePresence>
@@ -1023,6 +1232,19 @@ const Index = () => {
                                                                       level4.workplace
                                                                     }
                                                                     levelColor="#8A2BE2"
+                                                                    selectedWorkplaces={
+                                                                      selectedWorkplaces
+                                                                    }
+                                                                    onToggleWorkplace={(
+                                                                      id,
+                                                                    ) => {
+                                                                      setSourceUnitId(
+                                                                        level4.id,
+                                                                      );
+                                                                      onToggleWorkplaceSelection(
+                                                                        id,
+                                                                      );
+                                                                    }}
                                                                   />
                                                                 </motion.div>
                                                               )}
@@ -1268,6 +1490,19 @@ const Index = () => {
                                                                                       level5.workplace
                                                                                     }
                                                                                     levelColor="#FF4D4D"
+                                                                                    selectedWorkplaces={
+                                                                                      selectedWorkplaces
+                                                                                    }
+                                                                                    onToggleWorkplace={(
+                                                                                      id,
+                                                                                    ) => {
+                                                                                      setSourceUnitId(
+                                                                                        level5.id,
+                                                                                      );
+                                                                                      onToggleWorkplaceSelection(
+                                                                                        id,
+                                                                                      );
+                                                                                    }}
                                                                                   />
                                                                                 </motion.div>
                                                                               )}
@@ -1365,11 +1600,11 @@ const Index = () => {
               <CustomSelect
                 options={optionsUnitType}
                 value={unitTypeId}
-                label={"Тип единицы"} // faqat id (number/string)
-                onChange={(val) => setUnitTypeId(val)} // object emas
+                label={"Тип единицы"}
+                onChange={(val) => setUnitTypeId(val)}
                 placeholder={"Выберите тип единицы"}
                 returnObject={false}
-                required // ixtiyoriy, default ham false
+                required
               />
 
               <div className="col-span-2 flex items-center gap-4">
@@ -1468,6 +1703,25 @@ const Index = () => {
               </Button>
             </div>
           </MethodModal>
+        )}
+        {/* transfer modal */}
+        {transferModal && (
+          <TransferWorkplacesModal
+            open={transferModal}
+            onClose={() => {
+              setTransferModal(false);
+              setDestinationUnitId(null);
+              setSelectedWorkplaces([]);
+              setSourceUnitId(null);
+            }}
+            onSubmit={onSubmitTransferWorkplaces}
+            selectedWorkplaces={selectedWorkplaces}
+            sourceUnitName={getSourceUnitName()}
+            destinationUnitId={destinationUnitId}
+            onDestinationChange={(val) => setDestinationUnitId(val)}
+            allUnits={collectAllUnits(get(level1List, "data", []))}
+            sourceUnitId={sourceUnitId}
+          />
         )}
         {/* delete modal */}
         {deleteModal && (
