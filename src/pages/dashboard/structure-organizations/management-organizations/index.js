@@ -390,12 +390,13 @@ const Index = () => {
               transition={{ duration: 0.3 }}
               className="w-full sm:w-auto ml-0 sm:ml-auto"
             >
-              <div className="flex flex-col sm:flex-row gap-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 px-4 py-4 rounded-xl border-2 border-blue-200 dark:border-blue-700 shadow-lg"
+              <div
+                className="flex flex-col sm:flex-row gap-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 px-4 py-4 rounded-xl border-2 border-blue-200 dark:border-blue-700 shadow-lg"
                 style={{
                   borderColor: border("#bfdbfe", "#1e40af"),
                   backgroundColor: bg(
                     "linear-gradient(to right, rgb(239, 246, 255), rgb(239, 245, 254))",
-                    "linear-gradient(to right, rgba(30, 58, 138, 0.2), rgba(49, 46, 129, 0.2))"
+                    "linear-gradient(to right, rgba(30, 58, 138, 0.2), rgba(49, 46, 129, 0.2))",
                   ),
                 }}
               >
