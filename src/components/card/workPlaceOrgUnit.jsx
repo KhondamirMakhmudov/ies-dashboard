@@ -8,14 +8,29 @@ import EmailIcon from "@mui/icons-material/Email";
 import PhoneIcon from "@mui/icons-material/Phone";
 import BadgeIcon from "@mui/icons-material/Badge";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
-import { Chip, Avatar } from "@mui/material";
+import { Chip, Avatar, Checkbox, Button } from "@mui/material";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import useAppTheme from "@/hooks/useAppTheme";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-const WorkplaceEmployeeSection = ({ workplace = [], levelColor }) => {
+
+const WorkplaceEmployeeSection = ({
+  workplace = [],
+  levelColor,
+  selectedWorkplaces = [],
+  onToggleWorkplace = null,
+  onSelectAll = null,
+}) => {
   const { bg, isDark, text, border } = useAppTheme();
   const [showEmployees, setShowEmployees] = useState(false);
+
+  const blue = {
+    50: "#E6F1FB",
+    100: "#B5D4F4",
+    200: "#85B7EB",
+    600: "#185FA5",
+    800: "#0C447C",
+  };
 
   if (!workplace || workplace.length === 0) {
     return (
@@ -30,7 +45,7 @@ const WorkplaceEmployeeSection = ({ workplace = [], levelColor }) => {
         }
       >
         <ErrorOutlineIcon sx={{ fontSize: 18, opacity: 0.6 }} />
-        <span className="text-sm italic">Рабочие места не назначены</span>
+        <span className="text-sm">Рабочие места не назначены</span>
       </div>
     );
   }
@@ -78,15 +93,42 @@ const WorkplaceEmployeeSection = ({ workplace = [], levelColor }) => {
           </div>
         </div>
 
-        <motion.div
-          animate={{ rotate: showEmployees ? 180 : 0 }}
-          transition={{ duration: 0.3 }}
-          className={bg("bg-white", "bg-gray-900") + " p-1.5 rounded-full"}
-        >
-          <KeyboardArrowDownIcon
-            sx={{ fontSize: 20, color: isDark ? "#9ca3af" : "#6b7280" }}
-          />
-        </motion.div>
+        <div className="flex items-center gap-2">
+          {onSelectAll && (
+            <Button
+              variant="contained"
+              onClick={(e) => {
+                e.stopPropagation();
+                onSelectAll();
+              }}
+              sx={{
+                background: blue[200],
+                color: blue[600],
+                border: `0.5px solid ${blue[200]}`,
+                borderRadius: "var(--border-radius-md)",
+                textTransform: "none",
+                fontWeight: 500,
+                fontSize: 12,
+                px: 1.5,
+                py: 0.75,
+                whiteSpace: "nowrap",
+                boxShadow: "none",
+                "&:hover": { background: blue[100], boxShadow: "none" },
+              }}
+            >
+              Выбрать всё
+            </Button>
+          )}
+          <motion.div
+            animate={{ rotate: showEmployees ? 180 : 0 }}
+            transition={{ duration: 0.3 }}
+            className={bg("bg-white", "bg-gray-900") + " p-1.5 rounded-full"}
+          >
+            <KeyboardArrowDownIcon
+              sx={{ fontSize: 20, color: isDark ? "#9ca3af" : "#6b7280" }}
+            />
+          </motion.div>
+        </div>
       </motion.div>
 
       {/* Workplace Cards */}
@@ -105,16 +147,40 @@ const WorkplaceEmployeeSection = ({ workplace = [], levelColor }) => {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.05 }}
+                onClick={() => onToggleWorkplace && onToggleWorkplace(wp.id)}
                 className={
-                  bg("bg-white", "bg-gray-800") +
+                  (selectedWorkplaces.includes(wp.id)
+                    ? isDark
+                      ? "bg-blue-900/40 border-blue-600"
+                      : "bg-blue-50 border-blue-400"
+                    : bg("bg-white", "bg-gray-800") +
+                      " " +
+                      border("border-gray-200", "border-gray-700")) +
                   " " +
-                  border("border-gray-200", "border-gray-700") +
-                  " ml-6 p-4 rounded-xl border shadow-sm hover:shadow-lg transition-all duration-200"
+                  "ml-6 p-4 rounded-xl border shadow-sm hover:shadow-lg transition-all duration-200 cursor-pointer"
                 }
               >
                 {/* Position Header */}
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-2 flex-1">
+                    {onToggleWorkplace && (
+                      <Checkbox
+                        checked={selectedWorkplaces.includes(wp.id)}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          onToggleWorkplace(wp.id);
+                        }}
+                        sx={{
+                          color: selectedWorkplaces.includes(wp.id)
+                            ? levelColor || "#3b82f6"
+                            : "default",
+                          "&.Mui-checked": {
+                            color: levelColor || "#3b82f6",
+                          },
+                          mt: "-4px",
+                        }}
+                      />
+                    )}
                     <div
                       className={
                         bg("bg-blue-50", "bg-blue-900/30") + " p-2 rounded-lg"
@@ -145,6 +211,15 @@ const WorkplaceEmployeeSection = ({ workplace = [], levelColor }) => {
                   </div>
 
                   <div className="flex flex-wrap gap-2 justify-end">
+                    {selectedWorkplaces.includes(wp.id) && (
+                      <Chip
+                        label="Выбрано"
+                        size="small"
+                        color="primary"
+                        variant="filled"
+                        sx={{ fontSize: "0.7rem", height: "24px" }}
+                      />
+                    )}
                     <Chip
                       label={wp.is_vacant ? "Вакантно" : "Занято"}
                       size="small"
