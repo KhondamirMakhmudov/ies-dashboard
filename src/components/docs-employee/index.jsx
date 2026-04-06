@@ -7,9 +7,11 @@ import toast from "react-hot-toast";
 import ContentLoader from "../loader";
 import CustomTable from "../table";
 import DeleteModal from "@/components/modal/delete-modal";
+import { useSession } from "next-auth/react";
 
 const DocsOfEmployee = ({ employeeId }) => {
   const { isDark, text, border, bg } = useAppTheme();
+  const { data: session } = useSession();
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedFile, setSelectedFile] = useState(null);
@@ -38,7 +40,15 @@ const DocsOfEmployee = ({ employeeId }) => {
     try {
       setLoading(true);
       const query = new URLSearchParams(params).toString();
-      const response = await fetch(`https://app.tpp.uz/objects/files?${query}`);
+      const response = await fetch(
+        `https://app.tpp.uz/objects/files?${query}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session?.accessToken}`,
+          },
+        },
+      );
       const json = await response.json();
       console.log(json, "json");
 
@@ -57,7 +67,13 @@ const DocsOfEmployee = ({ employeeId }) => {
       setSelectedFile({ file_name: fileName, file_type: fileType });
       const response = await fetch(
         `https://app.tpp.uz/objects/files/${fileId}`,
-        { method: "POST" },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session?.accessToken}`,
+          },
+          method: "POST",
+        },
       );
       const json = await response.json();
 
@@ -113,6 +129,9 @@ const DocsOfEmployee = ({ employeeId }) => {
       formData.append("file", uploadData.file);
 
       const response = await fetch("https://app.tpp.uz/objects/files", {
+        headers: {
+          Authorization: `Bearer ${session?.accessToken}`,
+        },
         method: "POST",
         body: formData,
       });
@@ -137,7 +156,10 @@ const DocsOfEmployee = ({ employeeId }) => {
     try {
       const response = await fetch(
         `https://app.tpp.uz/objects/files/${fileId}`,
-        { method: "DELETE" },
+        {
+          headers: { Authorization: `Bearer ${session?.accessToken}` },
+          method: "DELETE",
+        },
       );
 
       if (response.ok) {
