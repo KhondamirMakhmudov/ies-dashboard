@@ -8,7 +8,6 @@ import { motion } from "framer-motion";
 import CustomTable from "@/components/table";
 import { get } from "lodash";
 import { Button } from "@mui/material";
-import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import dayjs from "dayjs";
 import VisibilityIcon from "@mui/icons-material/Visibility";
@@ -31,6 +30,10 @@ import {
   Group,
   Cancel,
   Delete,
+  FileUpload,
+  CheckCircle,
+  Cancel as CancelIcon,
+  Download,
 } from "@mui/icons-material";
 import DeleteModal from "@/components/modal/delete-modal";
 import useAppTheme from "@/hooks/useAppTheme";
@@ -44,6 +47,16 @@ const Index = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [createModal, setCreateModal] = useState(false);
   const [deleteModal, setDeleteModal] = useState(false);
+  const [detailsModal, setDetailsModal] = useState(false);
+  const [selectedJobTripForDetails, setSelectedJobTripForDetails] =
+    useState(null);
+  const [rejectionModal, setRejectionModal] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState("");
+  const [fileForReplacement, setFileForReplacement] = useState(null);
+  const [isApproving, setIsApproving] = useState(false);
+  const [isRejecting, setIsRejecting] = useState(false);
+  const [isUploadingFile, setIsUploadingFile] = useState(false);
+  const [isDownloadingFile, setIsDownloadingFile] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedPosition, setSelectedPosition] = useState("");
   const [selectedJobTrip, setSelectedJobTrip] = useState(null);
@@ -55,6 +68,7 @@ const Index = () => {
   const [endDate, setEndDate] = useState("");
   const [selectedSchedule, setSelectedSchedule] = useState(null);
   const [jobTripSearch, setJobTripSearch] = useState("");
+  const [selectedFile, setSelectedFile] = useState(null);
 
   const canCreateJobTrip = canUserDo(session?.user, "job-trips", "create");
   const canDeleteJobTrip = canUserDo(session?.user, "job-trips", "delete");
@@ -150,20 +164,32 @@ const Index = () => {
     // Convert Set to Array of UUIDs
     const selectedEmployeeList = Array.from(selectedEmployeesForJobTrip);
 
+    // Create FormData
+    const formData = new FormData();
+    formData.append(
+      "data",
+      JSON.stringify({
+        employeeUuids: selectedEmployeeList,
+        numOrder: numOrder,
+        startDate: startDate,
+        endDate: endDate,
+        entryPointScheduleId: selectedSchedule,
+      }),
+    );
+
+    // Append file if selected
+    if (selectedFile) {
+      formData.append("file", selectedFile);
+    }
+
     createJobTrip(
       {
         url: URLS.createJobTripsForEmployee,
-        attributes: {
-          employeeUuids: selectedEmployeeList,
-          numOrder: numOrder,
-          startDate: startDate,
-          endDate: endDate,
-          entryPointScheduleId: selectedSchedule, // ✅ Convert to number
-        },
+        attributes: formData,
         config: {
           headers: {
+            "Content-Type": "multipart/form-data",
             Authorization: `Bearer ${session?.accessToken}`,
-            Accept: "application/json",
           },
         },
       },
@@ -216,6 +242,161 @@ const Index = () => {
     }
   };
 
+  // Approve job trip
+  const handleApproveJobTrip = async () => {
+    if (!selectedJobTripForDetails?.jobTripID) return;
+
+    setIsApproving(true);
+    try {
+      const response = await fetch(
+        `${config.JAVA_API_URL}/api/job-trips/${selectedJobTripForDetails.jobTripID}/approve`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session?.accessToken}`,
+          },
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("Ошибка при подтверждении");
+      }
+
+      toast.success("Командировка успешно подтверждена");
+      setDetailsModal(false);
+      setSelectedJobTripForDetails(null);
+      queryClient.invalidateQueries(KEYS.jobTrips);
+    } catch (error) {
+      console.error(error);
+      toast.error("Не удалось подтвердить командировку");
+    } finally {
+      setIsApproving(false);
+    }
+  };
+
+  // Reject job trip
+  const handleRejectJobTrip = async () => {
+    if (!selectedJobTripForDetails?.jobTripID || !rejectionReason.trim()) {
+      toast.warning("Пожалуйста, укажите причину отклонения");
+      return;
+    }
+
+    setIsRejecting(true);
+    try {
+      const response = await fetch(
+        `${config.JAVA_API_URL}/api/job-trips/${selectedJobTripForDetails.jobTripID}/reject`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session?.accessToken}`,
+          },
+          body: JSON.stringify({ rejectionReason: rejectionReason }),
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("Ошибка при отклонении");
+      }
+
+      toast.success("Командировка отклонена");
+      setRejectionModal(false);
+      setRejectionReason("");
+      setDetailsModal(false);
+      setSelectedJobTripForDetails(null);
+      queryClient.invalidateQueries(KEYS.jobTrips);
+    } catch (error) {
+      console.error(error);
+      toast.error("Не удалось отклонить командировку");
+    } finally {
+      setIsRejecting(false);
+    }
+  };
+
+  // Update order file
+  const handleReplaceOrderFile = async () => {
+    if (!selectedJobTripForDetails?.jobTripID || !fileForReplacement) {
+      toast.warning("Пожалуйста, выберите файл");
+      return;
+    }
+
+    setIsUploadingFile(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", fileForReplacement);
+
+      const response = await fetch(
+        `${config.JAVA_API_URL}api/job-trips/${selectedJobTripForDetails.jobTripID}/order-file`,
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${session?.accessToken}`,
+          },
+          body: formData,
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("Ошибка при загрузке файла");
+      }
+
+      toast.success("Файл успешно заменён");
+      setFileForReplacement(null);
+      queryClient.invalidateQueries(KEYS.jobTrips);
+      // Refresh details
+      if (selectedJobTripForDetails) {
+        const updatedData = {
+          ...selectedJobTripForDetails,
+          hasOrderFile: true,
+        };
+        setSelectedJobTripForDetails(updatedData);
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Не удалось загрузить файл");
+    } finally {
+      setIsUploadingFile(false);
+    }
+  };
+
+  // Download order file
+  const handleDownloadOrderFile = async () => {
+    if (!selectedJobTripForDetails?.jobTripID) return;
+
+    setIsDownloadingFile(true);
+    try {
+      const response = await fetch(
+        `${config.JAVA_API_URL}/api/job-trips/${selectedJobTripForDetails.jobTripID}/order-file-url`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${session?.accessToken}`,
+          },
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("Ошибка при получении ссылки на файл");
+      }
+
+      const data = await response.json();
+      const fileUrl = data.url || data.fileUrl;
+
+      if (fileUrl) {
+        // Open file in new tab or download
+        window.open(fileUrl, "_blank");
+      } else {
+        throw new Error("URL файла не получен");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Не удалось скачать файл");
+    } finally {
+      setIsDownloadingFile(false);
+    }
+  };
+
   const handleToggleEmployee = (employeeId) => {
     const updated = new Set(selectedEmployeesForJobTrip);
     if (updated.has(employeeId)) {
@@ -244,6 +425,24 @@ const Index = () => {
     setSelectedSchedule(null);
     setSearchTerm("");
     setSelectedPosition("");
+    setSelectedFile(null);
+  };
+
+  // File size validation (50MB limit)
+  const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB in bytes
+
+  const handleFileSelect = (file, setFileState, context = "") => {
+    if (!file) return;
+
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error(
+        `Файл слишком большой! Максимальный размер: 50MB (текущий размер: ${(file.size / (1024 * 1024)).toFixed(2)}MB)`,
+        { position: "top-right" },
+      );
+      return;
+    }
+
+    setFileState(file);
   };
 
   const SelectedEmployeesBadge = ({ employees, onRemove }) => {
@@ -285,10 +484,13 @@ const Index = () => {
       header: "Имя",
       cell: ({ row }) => {
         return (
-          <span>
+          <Link
+            href={`/dashboard/employees/${row.original.uuidSus}`}
+            className="hover:underline text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+          >
             {row.original.lastName} {row.original.firstName}{" "}
             {row.original.fatherName}
-          </span>
+          </Link>
         );
       },
     },
@@ -339,20 +541,73 @@ const Index = () => {
       },
     },
     {
+      accessorKey: "status",
+      header: "Статус",
+      cell: ({ row }) => {
+        const status = row.original.status;
+        let statusColor = "";
+        let statusBg = "";
+        let statusText = "";
+
+        switch (status) {
+          case "PENDING_APPROVAL":
+            statusText = "Ожидает";
+            statusColor = isDark ? "#fbbf24" : "#f59e0b";
+            statusBg = isDark ? "#78350f" : "#fef3c7";
+            break;
+          case "APPROVED":
+            statusText = "Подтверждена";
+            statusColor = isDark ? "#86efac" : "#22c55e";
+            statusBg = isDark ? "#166534" : "#dcfce7";
+            break;
+          case "REJECTED":
+            statusText = "Отклонена";
+            statusColor = isDark ? "#f87171" : "#ef4444";
+            statusBg = isDark ? "#7f1d1d" : "#fee2e2";
+            break;
+          default:
+            statusText = status;
+            statusColor = text("#6b7280", "#9ca3af");
+            statusBg = bg("#f3f4f6", "#2a2a2a");
+        }
+
+        return (
+          <span
+            className="font-medium text-sm px-2 py-1 rounded-md border"
+            style={{
+              color: statusColor,
+              backgroundColor: statusBg,
+              borderColor: statusColor,
+            }}
+          >
+            {statusText}
+          </span>
+        );
+      },
+    },
+    {
       accessorKey: "actions",
       header: "Действия",
       cell: ({ row }) => (
         <div className="flex gap-2">
-          <Link
-            className={`${
-              isDark
-                ? "bg-blue-900/30 text-blue-600 border border-blue-600"
-                : "bg-[#bfd2f5] text-[#4182F9]"
-            } h-[32px] px-2 flex justify-center items-center rounded-md`}
-            href={`/dashboard/employees/${row.original.uuidSus}`}
+          <Button
+            onClick={() => {
+              setSelectedJobTripForDetails(row.original);
+              setDetailsModal(true);
+            }}
+            sx={{
+              width: "32px",
+              height: "32px",
+              minWidth: "32px",
+              background: isDark ? "#1e3a8a" : "#bfd2f5",
+              color: isDark ? "#60a5fa" : "#4182F9",
+              "&:hover": {
+                background: isDark ? "#1e40af" : "#93c5fd",
+              },
+            }}
           >
             <VisibilityIcon fontSize="small" />
-          </Link>
+          </Button>
           {canDeleteJobTrip && (
             <Button
               onClick={() => {
@@ -600,6 +855,124 @@ const Index = () => {
                     );
                   }}
                 />
+              </div>
+
+              <div>
+                <label
+                  className="block text-sm font-medium mb-2"
+                  style={{ color: text("#374151", "#d1d5db") }}
+                >
+                  Файл документа
+                </label>
+                <div
+                  className="relative border-2 border-dashed rounded-lg p-6 transition-all duration-200 cursor-pointer hover:border-blue-400"
+                  style={{
+                    backgroundColor: selectedFile
+                      ? bg("#f0fdf4", "#1a3a1a")
+                      : bg("#f9fafb", "#1e1e1e"),
+                    borderColor: selectedFile
+                      ? "#10b981"
+                      : border("#d1d5db", "#4b5563"),
+                  }}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    e.currentTarget.style.borderColor = "#3b82f6";
+                    e.currentTarget.style.backgroundColor = bg(
+                      "#eff6ff",
+                      "#1e3a8a",
+                    );
+                  }}
+                  onDragLeave={(e) => {
+                    e.currentTarget.style.borderColor = selectedFile
+                      ? "#10b981"
+                      : border("#d1d5db", "#4b5563");
+                    e.currentTarget.style.backgroundColor = selectedFile
+                      ? bg("#f0fdf4", "#1a3a1a")
+                      : bg("#f9fafb", "#1e1e1e");
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    e.currentTarget.style.borderColor = selectedFile
+                      ? "#10b981"
+                      : border("#d1d5db", "#4b5563");
+                    const file = e.dataTransfer.files?.[0];
+                    if (file) {
+                      handleFileSelect(file, setSelectedFile, "create");
+                    }
+                  }}
+                >
+                  <input
+                    type="file"
+                    onChange={(e) =>
+                      handleFileSelect(
+                        e.target.files?.[0] || null,
+                        setSelectedFile,
+                        "create",
+                      )
+                    }
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  />
+                  <div className="flex flex-col items-center justify-center gap-2 text-center">
+                    {selectedFile ? (
+                      <>
+                        <div className="text-2xl" style={{ color: "#10b981" }}>
+                          ✓
+                        </div>
+                        <p
+                          className="font-medium text-sm"
+                          style={{ color: text("#111827", "#f3f4f6") }}
+                        >
+                          {selectedFile.name}
+                        </p>
+                        <p
+                          className="text-xs"
+                          style={{ color: text("#6b7280", "#9ca3af") }}
+                        >
+                          {(selectedFile.size / 1024).toFixed(2)} KB
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <div
+                          className="text-2xl"
+                          style={{ color: text("#9ca3af", "#6b7280") }}
+                        >
+                          📎
+                        </div>
+                        <p
+                          className="font-medium text-sm"
+                          style={{ color: text("#374151", "#d1d5db") }}
+                        >
+                          Перетащите файл сюда
+                        </p>
+                        <p
+                          className="text-xs"
+                          style={{ color: text("#6b7280", "#9ca3af") }}
+                        >
+                          или нажмите для выбора
+                        </p>
+                      </>
+                    )}
+                  </div>
+                </div>
+                {selectedFile && (
+                  <div className="mt-2 space-y-2">
+                    <p
+                      className="text-xs"
+                      style={{ color: text("#059669", "#10b981") }}
+                    >
+                      ✓ Размер файла:{" "}
+                      {(selectedFile.size / (1024 * 1024)).toFixed(2)}MB (макс.
+                      50MB)
+                    </p>
+                    <button
+                      onClick={() => setSelectedFile(null)}
+                      className="text-sm text-red-500 hover:text-red-700 font-medium transition-colors duration-200"
+                    >
+                      ✕ Удалить файл
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -984,6 +1357,513 @@ const Index = () => {
         }}
         title="Вы уверены, что хотите удалить эту назначенную командировку"
       />
+
+      <MethodModal
+        showCloseIcon={true}
+        open={detailsModal}
+        closeClick={() => {
+          setDetailsModal(false);
+          setSelectedJobTripForDetails(null);
+        }}
+        width="min-w-2xl"
+        title={"Детали командировки"}
+      >
+        {selectedJobTripForDetails && (
+          <div className="flex flex-col max-h-[70vh]">
+            {/* Scrollable Content */}
+            <div className="overflow-y-auto flex-1 space-y-4 pr-2">
+              {/* Employee Information */}
+              <div
+                className="rounded-lg p-4 border"
+                style={{
+                  backgroundColor: bg("#f9fafb", "#2a2a2a"),
+                  borderColor: border("#e5e7eb", "#333333"),
+                }}
+              >
+                <h3
+                  className="text-base font-semibold mb-3 flex items-center gap-2"
+                  style={{ color: text("#111827", "#f3f4f6") }}
+                >
+                  <Person fontSize="small" />
+                  Сотрудник
+                </h3>
+                <p
+                  className="text-sm font-medium"
+                  style={{ color: text("#111827", "#f3f4f6") }}
+                >
+                  {selectedJobTripForDetails.lastName}{" "}
+                  {selectedJobTripForDetails.firstName}{" "}
+                  {selectedJobTripForDetails.fatherName}
+                </p>
+              </div>
+
+              {/* Trip Details */}
+              <div
+                className="rounded-lg p-4 border"
+                style={{
+                  backgroundColor: bg("#f9fafb", "#2a2a2a"),
+                  borderColor: border("#e5e7eb", "#333333"),
+                }}
+              >
+                <h3
+                  className="text-base font-semibold mb-3 flex items-center gap-2"
+                  style={{ color: text("#111827", "#f3f4f6") }}
+                >
+                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  Командировка
+                </h3>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <span
+                      className="text-xs"
+                      style={{ color: text("#6b7280", "#9ca3af") }}
+                    >
+                      Номер приказа
+                    </span>
+                    <p
+                      className="font-medium"
+                      style={{ color: text("#111827", "#f3f4f6") }}
+                    >
+                      {selectedJobTripForDetails.numOrder}
+                    </p>
+                  </div>
+
+                  <div>
+                    <span
+                      className="text-xs"
+                      style={{ color: text("#6b7280", "#9ca3af") }}
+                    >
+                      Статус
+                    </span>
+                    <div className="mt-1">
+                      {(() => {
+                        const status = selectedJobTripForDetails.status;
+                        let statusColor = "";
+                        let statusBg = "";
+                        let statusText = "";
+
+                        switch (status) {
+                          case "PENDING_APPROVAL":
+                            statusText = "Ожидает";
+                            statusColor = isDark ? "#fbbf24" : "#f59e0b";
+                            statusBg = isDark ? "#78350f" : "#fef3c7";
+                            break;
+                          case "APPROVED":
+                            statusText = "Подтверждена";
+                            statusColor = isDark ? "#86efac" : "#22c55e";
+                            statusBg = isDark ? "#166534" : "#dcfce7";
+                            break;
+                          case "REJECTED":
+                            statusText = "Отклонена";
+                            statusColor = isDark ? "#f87171" : "#ef4444";
+                            statusBg = isDark ? "#7f1d1d" : "#fee2e2";
+                            break;
+                          default:
+                            statusText = status;
+                            statusColor = text("#6b7280", "#9ca3af");
+                            statusBg = bg("#f3f4f6", "#2a2a2a");
+                        }
+
+                        return (
+                          <span
+                            className="text-xs px-2 py-1 rounded border inline-block font-medium"
+                            style={{
+                              color: statusColor,
+                              backgroundColor: statusBg,
+                              borderColor: statusColor,
+                            }}
+                          >
+                            {statusText}
+                          </span>
+                        );
+                      })()}
+                    </div>
+                  </div>
+
+                  <div>
+                    <span
+                      className="text-xs"
+                      style={{ color: text("#6b7280", "#9ca3af") }}
+                    >
+                      Начало
+                    </span>
+                    <p
+                      className="font-medium"
+                      style={{ color: text("#111827", "#f3f4f6") }}
+                    >
+                      {dayjs(selectedJobTripForDetails.startDate).format(
+                        "DD.MM.YYYY",
+                      )}
+                    </p>
+                  </div>
+
+                  <div>
+                    <span
+                      className="text-xs"
+                      style={{ color: text("#6b7280", "#9ca3af") }}
+                    >
+                      Окончание
+                    </span>
+                    <p
+                      className="font-medium"
+                      style={{ color: text("#111827", "#f3f4f6") }}
+                    >
+                      {dayjs(selectedJobTripForDetails.endDate).format(
+                        "DD.MM.YYYY",
+                      )}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Location Details */}
+              <div
+                className="rounded-lg p-4 border"
+                style={{
+                  backgroundColor: bg("#f9fafb", "#2a2a2a"),
+                  borderColor: border("#e5e7eb", "#333333"),
+                }}
+              >
+                <h3
+                  className="text-base font-semibold mb-3 flex items-center gap-2"
+                  style={{ color: text("#111827", "#f3f4f6") }}
+                >
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  Место
+                </h3>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <span
+                      className="text-xs"
+                      style={{ color: text("#6b7280", "#9ca3af") }}
+                    >
+                      Откуда
+                    </span>
+                    <p
+                      className="font-medium"
+                      style={{ color: text("#111827", "#f3f4f6") }}
+                    >
+                      {selectedJobTripForDetails.unitCodeNameLong}
+                    </p>
+                  </div>
+
+                  <div>
+                    <span
+                      className="text-xs"
+                      style={{ color: text("#6b7280", "#9ca3af") }}
+                    >
+                      Куда
+                    </span>
+                    <p
+                      className="font-medium"
+                      style={{ color: text("#111827", "#f3f4f6") }}
+                    >
+                      {selectedJobTripForDetails.destinationUnitCodeNameLong}
+                    </p>
+                  </div>
+
+                  <div className="col-span-2">
+                    <span
+                      className="text-xs"
+                      style={{ color: text("#6b7280", "#9ca3af") }}
+                    >
+                      Точка входа
+                    </span>
+                    <p
+                      className="font-medium"
+                      style={{ color: text("#111827", "#f3f4f6") }}
+                    >
+                      {selectedJobTripForDetails.entryPointName}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* File Section */}
+              {selectedJobTripForDetails.hasOrderFile && (
+                <div
+                  className="rounded-lg p-4 border"
+                  style={{
+                    backgroundColor: bg("#f9fafb", "#2a2a2a"),
+                    borderColor: border("#e5e7eb", "#333333"),
+                  }}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3
+                        className="text-base font-semibold mb-1"
+                        style={{ color: text("#111827", "#f3f4f6") }}
+                      >
+                        📄 Файл приказа
+                      </h3>
+                      <p
+                        className="text-xs"
+                        style={{ color: text("#6b7280", "#9ca3af") }}
+                      >
+                        Нажмите для загрузки
+                      </p>
+                    </div>
+                    <button
+                      onClick={handleDownloadOrderFile}
+                      disabled={isDownloadingFile}
+                      className="px-3 py-2 bg-blue-500 text-white font-medium text-sm rounded-lg hover:bg-blue-600 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                    >
+                      <Download fontSize="small" />
+                      {isDownloadingFile ? "Загрузка..." : "Скачать"}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Action Buttons - Based on Status */}
+              {selectedJobTripForDetails.status === "PENDING_APPROVAL" && (
+                <div
+                  className="rounded-lg p-4 border space-y-2"
+                  style={{
+                    backgroundColor: bg("#f9fafb", "#2a2a2a"),
+                    borderColor: border("#e5e7eb", "#333333"),
+                  }}
+                >
+                  <button
+                    onClick={handleApproveJobTrip}
+                    disabled={isApproving}
+                    className="w-full px-3 py-2 bg-green-500 text-white font-medium text-sm rounded-lg hover:bg-green-600 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    <CheckCircle fontSize="small" />
+                    {isApproving ? "Подтверждение..." : "Подтвердить"}
+                  </button>
+
+                  <button
+                    onClick={() => setRejectionModal(true)}
+                    className="w-full px-3 py-2 bg-red-500 text-white font-medium text-sm rounded-lg hover:bg-red-600 transition-colors duration-200 flex items-center justify-center gap-2"
+                  >
+                    <CancelIcon fontSize="small" />
+                    Отклонить
+                  </button>
+                </div>
+              )}
+
+              {/* File Replacement */}
+              {selectedJobTripForDetails.status === "APPROVED" && (
+                <div
+                  className="rounded-lg p-4 border"
+                  style={{
+                    backgroundColor: bg("#f9fafb", "#2a2a2a"),
+                    borderColor: border("#e5e7eb", "#333333"),
+                  }}
+                >
+                  <label
+                    className="block text-xs font-medium mb-2"
+                    style={{ color: text("#374151", "#d1d5db") }}
+                  >
+                    Заменить файл приказа
+                  </label>
+                  <div
+                    className="relative border-2 border-dashed rounded-lg p-3 transition-all duration-200 cursor-pointer text-center"
+                    style={{
+                      backgroundColor: fileForReplacement
+                        ? bg("#f0fdf4", "#1a3a1a")
+                        : bg("#f9fafb", "#1e1e1e"),
+                      borderColor: fileForReplacement
+                        ? "#10b981"
+                        : border("#d1d5db", "#4b5563"),
+                    }}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      e.currentTarget.style.borderColor = "#3b82f6";
+                    }}
+                    onDragLeave={(e) => {
+                      e.currentTarget.style.borderColor = fileForReplacement
+                        ? "#10b981"
+                        : border("#d1d5db", "#4b5563");
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      const file = e.dataTransfer.files?.[0];
+                      if (file) {
+                        handleFileSelect(
+                          file,
+                          setFileForReplacement,
+                          "replace",
+                        );
+                      }
+                    }}
+                  >
+                    <input
+                      type="file"
+                      onChange={(e) =>
+                        handleFileSelect(
+                          e.target.files?.[0] || null,
+                          setFileForReplacement,
+                          "replace",
+                        )
+                      }
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    />
+                    {fileForReplacement ? (
+                      <div className="text-xs">
+                        <div style={{ color: "#10b981" }}>✓</div>
+                        <p
+                          className="font-medium mt-1 truncate"
+                          style={{ color: text("#111827", "#f3f4f6") }}
+                        >
+                          {fileForReplacement.name}
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="text-xs">
+                        <FileUpload
+                          fontSize="small"
+                          style={{
+                            color: text("#9ca3af", "#6b7280"),
+                            margin: "0 auto 4px",
+                          }}
+                        />
+                        <p style={{ color: text("#374151", "#d1d5db") }}>
+                          Перетащите или нажмите
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {fileForReplacement && (
+                    <>
+                      <p
+                        className="text-xs mt-2"
+                        style={{ color: text("#059669", "#10b981") }}
+                      >
+                        ✓ Размер файла:{" "}
+                        {(fileForReplacement.size / (1024 * 1024)).toFixed(2)}MB
+                        (макс. 50MB)
+                      </p>
+                      <div className="flex gap-2 mt-2">
+                        <button
+                          onClick={handleReplaceOrderFile}
+                          disabled={isUploadingFile}
+                          className="flex-1 px-3 py-1 bg-blue-500 text-white font-medium text-xs rounded-lg hover:bg-blue-600 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isUploadingFile ? "Загрузка..." : "Загрузить"}
+                        </button>
+                        <button
+                          onClick={() => setFileForReplacement(null)}
+                          className="px-3 py-1 border text-xs font-medium rounded-lg transition-colors duration-200"
+                          style={{
+                            borderColor: border("#d1d5db", "#4b5563"),
+                            color: text("#374151", "#d1d5db"),
+                          }}
+                        >
+                          Отмена
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Sticky Action Button */}
+            <div
+              className="flex items-center justify-end gap-3 pt-3 border-t mt-4"
+              style={{ borderColor: border("#e5e7eb", "#333333") }}
+            >
+              <button
+                onClick={() => {
+                  setDetailsModal(false);
+                  setSelectedJobTripForDetails(null);
+                }}
+                className="px-6 py-2 font-medium rounded-lg border transition-colors duration-200"
+                style={{
+                  color: text("#374151", "#d1d5db"),
+                  borderColor: border("#d1d5db", "#4b5563"),
+                  backgroundColor: "transparent",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = bg(
+                    "#f9fafb",
+                    "#2a2a2a",
+                  );
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "transparent";
+                }}
+              >
+                Закрыть
+              </button>
+            </div>
+          </div>
+        )}
+      </MethodModal>
+
+      <MethodModal
+        showCloseIcon={true}
+        open={rejectionModal}
+        closeClick={() => {
+          setRejectionModal(false);
+          setRejectionReason("");
+        }}
+        width="min-w-xl"
+        title={"Отклонить командировку"}
+      >
+        <div className="space-y-4">
+          <div>
+            <label
+              className="block text-sm font-medium mb-2"
+              style={{ color: text("#374151", "#d1d5db") }}
+            >
+              Причина отклонения *
+            </label>
+            <textarea
+              value={rejectionReason}
+              onChange={(e) => setRejectionReason(e.target.value)}
+              placeholder="Укажите причину отклонения командировки..."
+              rows={4}
+              className="w-full rounded-lg border px-4 py-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+              style={{
+                backgroundColor: bg("#ffffff", "#1e1e1e"),
+                borderColor: border("#d1d5db", "#4b5563"),
+                color: text("#111827", "#f3f4f6"),
+              }}
+            />
+          </div>
+
+          <div
+            className="flex items-center justify-end gap-3 pt-4 border-t"
+            style={{ borderColor: border("#e5e7eb", "#333333") }}
+          >
+            <button
+              onClick={() => {
+                setRejectionModal(false);
+                setRejectionReason("");
+              }}
+              className="px-6 py-2 font-medium rounded-lg border transition-colors duration-200"
+              style={{
+                color: text("#374151", "#d1d5db"),
+                borderColor: border("#d1d5db", "#4b5563"),
+                backgroundColor: "transparent",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = bg(
+                  "#f9fafb",
+                  "#2a2a2a",
+                );
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "transparent";
+              }}
+            >
+              Отмена
+            </button>
+
+            <button
+              onClick={handleRejectJobTrip}
+              disabled={isRejecting || !rejectionReason.trim()}
+              className="px-6 py-2 bg-red-500 text-white font-medium rounded-lg hover:bg-red-600 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isRejecting ? "Отклонение..." : "Отклонить"}
+            </button>
+          </div>
+        </div>
+      </MethodModal>
     </DashboardLayout>
   );
 };

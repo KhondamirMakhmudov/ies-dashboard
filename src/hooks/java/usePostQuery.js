@@ -8,7 +8,6 @@ import { isArray, get, forEach, isObject, values } from "lodash";
 const postRequest = (url, attributes, config = {}) =>
   request.post(url, attributes, {
     headers: {
-      "Content-Type": "application/json",
       ...(config.headers || {}),
     },
     ...config,
