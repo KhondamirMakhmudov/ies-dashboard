@@ -98,6 +98,76 @@ const Index = () => {
     photo: null,
   });
 
+  const [errors, setErrors] = useState({});
+
+  const fieldLabels = {
+    first_name: "Имя сотрудника",
+    last_name: "Фамилия сотрудника",
+    middle_name: "Отчество сотрудника",
+    email: "Электронная почта",
+    phone_number: "Телефон номер сотрудника",
+    level: "Разряд",
+    hire_date: "Дата приема на работу",
+    date_of_birth: "Дата рождения",
+    tabel_number: "Табельный номер",
+    gender: "Пол",
+    address: "Адрес",
+    education_degree: "Степень образования",
+    education_place: "Место получения образования",
+    workplace_id: "Рабочее место",
+  };
+
+  const normalizeValidationErrors = (errorResponse) => {
+    // Handle new error format: {code, message, status, errors: [{field, code, message}]}
+    if (errorResponse?.errors && Array.isArray(errorResponse.errors)) {
+      const fieldErrors = {};
+      const failedFields = [];
+
+      errorResponse.errors.forEach((err) => {
+        const field = err.field || "unknown";
+        const label = fieldLabels[field] || field;
+        fieldErrors[field] = err.message || "Некорректное значение";
+        failedFields.push(label);
+      });
+
+      const summary = failedFields.length
+        ? `Ошибка в полях: ${failedFields.join(", ")}`
+        : "Проверьте корректность заполнения полей.";
+
+      return { fieldErrors, summary };
+    }
+
+    // Handle old error format (array of validation errors)
+    if (Array.isArray(errorResponse)) {
+      const fieldErrors = {};
+      const missingFields = [];
+
+      errorResponse.forEach((item) => {
+        const field = Array.isArray(item?.loc)
+          ? item.loc[item.loc.length - 1]
+          : item?.loc;
+        const rawMsg = item?.msg || "Некорректное значение";
+        const isRequired =
+          rawMsg === "Field required" || item?.type === "missing";
+        const label = fieldLabels[field] || field;
+
+        fieldErrors[field] = isRequired ? "Обязательное поле" : rawMsg;
+
+        if (isRequired && label) {
+          missingFields.push(label);
+        }
+      });
+
+      const summary = missingFields.length
+        ? `Заполните обязательные поля: ${missingFields.join(", ")}`
+        : "Проверьте корректность заполнения полей.";
+
+      return { fieldErrors, summary };
+    }
+
+    return { fieldErrors: {}, summary: "Проверьте корректность заполнения полей." };
+  };
+
   const canReadEmployeeDetail = canUserDo(session?.user, "employee", "read");
   const canUpdateEmployeeDetail = canUserDo(
     session?.user,
@@ -384,15 +454,36 @@ const Index = () => {
         },
       );
 
+      const result = await res.json();
+
       if (!res.ok) {
-        throw new Error(`Ошибка ${res.status}`);
+        // Handle validation errors from backend
+        if (result?.errors && Array.isArray(result.errors)) {
+          const { fieldErrors, summary } = normalizeValidationErrors(result);
+          setErrors(fieldErrors);
+          toast.error(summary, { position: "top-right" });
+          return;
+        }
+
+        // Handle other error formats
+        if (result?.detail && typeof result.detail === "object") {
+          const { fieldErrors, summary } = normalizeValidationErrors(result.detail);
+          setErrors(fieldErrors);
+          toast.error(summary, { position: "top-right" });
+          return;
+        }
+
+        toast.error(result?.message || `Ошибка ${res.status}`, { position: "top-right" });
+        return;
       }
 
       toast.success("Успешно редактировано", { position: "top-center" });
       setEditModal(false);
+      setErrors({});
       queryClient.invalidateQueries(KEYS.employeePhoto);
     } catch (error) {
-      toast.error(`Error is ${error}`, { position: "top-right" });
+      console.error("Edit employee error:", error);
+      toast.error(`Ошибка: ${error.message}`, { position: "top-right" });
     }
   };
 
@@ -468,6 +559,11 @@ const Index = () => {
     setFormData((prev) => ({
       ...prev,
       [name]: value,
+    }));
+    // Clear error for this field when user starts typing
+    setErrors((prev) => ({
+      ...prev,
+      [name]: undefined,
     }));
   };
 
@@ -1947,6 +2043,7 @@ const Index = () => {
                   placeholder="Имя"
                   inputClass={`!h-[45px] `}
                   required
+                  error={errors.first_name}
                 />
 
                 <Input
@@ -1957,6 +2054,7 @@ const Index = () => {
                   placeholder="Фамилия"
                   inputClass={`!h-[45px]`}
                   required={true}
+                  error={errors.last_name}
                 />
                 <Input
                   label={"Отчество сотрудника"}
@@ -1965,6 +2063,7 @@ const Index = () => {
                   onChange={handleChange}
                   placeholder="Отчество"
                   inputClass={`!h-[45px]`}
+                  error={errors.middle_name}
                 />
 
                 <BirthDateInput
@@ -1998,6 +2097,7 @@ const Index = () => {
                   placeholder="Введите"
                   inputClass={`!h-[45px]`}
                   required
+                  error={errors.tabel_number}
                 />
               </div>
 
@@ -2010,6 +2110,7 @@ const Index = () => {
                   placeholder="Введите"
                   inputClass={`!h-[45px]`}
                   required={true}
+                  error={errors.address}
                 />
               </div>
             </div>
@@ -2050,6 +2151,7 @@ const Index = () => {
                   placeholder="Электронная почта"
                   inputClass={`!h-[45px]`}
                   classNames="col-span-2 md:col-span-1"
+                  error={errors.email}
                 />
 
                 <PhoneInputUz
@@ -2060,6 +2162,7 @@ const Index = () => {
                   placeholder="Телефонный номер"
                   inputClass={`!h-[45px]`}
                   classNames="col-span-2 md:col-span-1"
+                  error={errors.phone_number}
                 />
               </div>
             </div>
@@ -2115,6 +2218,7 @@ const Index = () => {
                   label="Место получения образования"
                   inputClass={`!h-[45px]`}
                   required={true}
+                  error={errors.education_place}
                 />
               </div>
             </div>
@@ -2169,6 +2273,7 @@ const Index = () => {
                   onChange={handleChange}
                   inputClass={`!h-[45px]`}
                   required
+                  error={errors.hire_date}
                 />
               </div>
             </div>
