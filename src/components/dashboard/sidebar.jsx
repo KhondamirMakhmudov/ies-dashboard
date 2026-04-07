@@ -98,12 +98,12 @@ const allMenuItems = [
       {
         text: "по сотрудникам",
         path: "/dashboard/reports/employee-uuid",
-        roles: ["admin", "hr-admin", "hr-moderator", "hr-tash-iem"],
+        roles: ["admin", "hr-admin", "hr-moderator", "hr-main-tash-iem"],
       },
       {
         text: "по подразделениям",
         path: "/dashboard/reports/report-by-orgUnit",
-        roles: ["admin", "hr-admin", "hr-main-tash-iem"],
+        roles: ["admin", "hr-admin", "hr-moderator", "hr-main-tash-iem"],
       },
       {
         text: "по подразделениям и точкам доступа",

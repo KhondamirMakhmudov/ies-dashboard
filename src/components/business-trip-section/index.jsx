@@ -9,6 +9,8 @@ import MethodModal from "../modal/method-modal";
 import Input from "../input";
 import CustomSelect from "../select";
 import PrimaryButton from "../button/primary-button";
+import { FileUpload } from "@mui/icons-material";
+import useAppTheme from "@/hooks/useAppTheme";
 
 export default function EmployeeBusinessTripSection({
   employeeUuid,
@@ -17,6 +19,7 @@ export default function EmployeeBusinessTripSection({
 }) {
   const { data: session } = useSession();
   const queryClient = useQueryClient();
+  const { bg, border, text } = useAppTheme();
 
   // Modal state
   const [openModal, setOpenModal] = useState(false);
@@ -26,11 +29,29 @@ export default function EmployeeBusinessTripSection({
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [selectedSchedule, setSelectedSchedule] = useState("");
+  const [selectedFile, setSelectedFile] = useState(null);
 
   // Mutation
   const { mutate: createJobTrip, isLoading } = usePostQuery({
     listKeyId: "create-job-trip-single",
   });
+
+  // File size validation (50MB limit)
+  const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB in bytes
+
+  const handleFileSelect = (file) => {
+    if (!file) return;
+
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error(
+        `Файл слишком большой! Максимальный размер: 50MB (текущий размер: ${(file.size / (1024 * 1024)).toFixed(2)}MB)`,
+        { position: "top-right" }
+      );
+      return;
+    }
+
+    setSelectedFile(file);
+  };
 
   const handleCloseModal = () => {
     setOpenModal(false);
@@ -39,6 +60,7 @@ export default function EmployeeBusinessTripSection({
     setStartDate("");
     setEndDate("");
     setSelectedSchedule("");
+    setSelectedFile(null);
   };
 
   const submitCreateJobTrip = () => {
@@ -53,20 +75,31 @@ export default function EmployeeBusinessTripSection({
       return;
     }
 
+    // Create FormData
+    const formData = new FormData();
+    formData.append(
+      "data",
+      JSON.stringify({
+        employeeUuids: [employeeUuid], // Single employee
+        numOrder: numOrder,
+        startDate: startDate,
+        endDate: endDate,
+        entryPointScheduleId: selectedSchedule,
+      })
+    );
+
+    // Append file if selected
+    if (selectedFile) {
+      formData.append("file", selectedFile);
+    }
+
     createJobTrip(
       {
         url: URLS.createJobTripsForEmployee,
-        attributes: {
-          employeeUuids: [employeeUuid], // Single employee
-          numOrder: numOrder,
-          startDate: startDate,
-          endDate: endDate,
-          entryPointScheduleId: selectedSchedule,
-        },
+        attributes: formData,
         config: {
           headers: {
             Authorization: `Bearer ${session?.accessToken}`,
-            Accept: "application/json",
           },
         },
       },
@@ -167,6 +200,106 @@ export default function EmployeeBusinessTripSection({
               onChange={(val) => setSelectedSchedule(val)}
               placeholder="Выберите расписание точки доступа"
             />
+
+            {/* File Upload Section */}
+            <div>
+              <label
+                className="block text-sm font-medium mb-2"
+                style={{ color: text("#374151", "#d1d5db") }}
+              >
+                Файл документа
+              </label>
+              <div
+                className="relative border-2 border-dashed rounded-lg p-4 transition-all duration-200 cursor-pointer"
+                style={{
+                  backgroundColor: selectedFile
+                    ? bg("#f0fdf4", "#1a3a1a")
+                    : bg("#f9fafb", "#1e1e1e"),
+                  borderColor: selectedFile
+                    ? "#10b981"
+                    : border("#d1d5db", "#4b5563"),
+                }}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.currentTarget.style.borderColor = "#3b82f6";
+                  e.currentTarget.style.backgroundColor = bg(
+                    "#eff6ff",
+                    "#1e3a8a"
+                  );
+                }}
+                onDragLeave={(e) => {
+                  e.currentTarget.style.borderColor = selectedFile
+                    ? "#10b981"
+                    : border("#d1d5db", "#4b5563");
+                  e.currentTarget.style.backgroundColor = selectedFile
+                    ? bg("#f0fdf4", "#1a3a1a")
+                    : bg("#f9fafb", "#1e1e1e");
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  e.currentTarget.style.borderColor = selectedFile
+                    ? "#10b981"
+                    : border("#d1d5db", "#4b5563");
+                  const file = e.dataTransfer.files?.[0];
+                  if (file) {
+                    handleFileSelect(file);
+                  }
+                }}
+              >
+                <input
+                  type="file"
+                  onChange={(e) =>
+                    handleFileSelect(e.target.files?.[0] || null)
+                  }
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                />
+                <div className="flex flex-col items-center justify-center gap-2 text-center">
+                  {selectedFile ? (
+                    <>
+                      <div className="text-xl" style={{ color: "#10b981" }}>
+                        ✓
+                      </div>
+                      <p
+                        className="font-medium text-sm"
+                        style={{ color: text("#111827", "#f3f4f6") }}
+                      >
+                        {selectedFile.name}
+                      </p>
+                      <p
+                        className="text-xs"
+                        style={{ color: text("#059669", "#10b981") }}
+                      >
+                        Размер: {(selectedFile.size / (1024 * 1024)).toFixed(2)}MB (макс. 50MB)
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <FileUpload
+                        fontSize="small"
+                        style={{
+                          color: text("#9ca3af", "#6b7280"),
+                          fontSize: 24,
+                        }}
+                      />
+                      <p
+                        className="font-medium text-sm"
+                        style={{ color: text("#374151", "#d1d5db") }}
+                      >
+                        Перетащите файл или нажмите
+                      </p>
+                    </>
+                  )}
+                </div>
+              </div>
+              {selectedFile && (
+                <button
+                  onClick={() => setSelectedFile(null)}
+                  className="mt-2 text-sm text-red-500 hover:text-red-700 font-medium transition-colors duration-200"
+                >
+                  ✕ Удалить файл
+                </button>
+              )}
+            </div>
 
             <PrimaryButton
               variant="contained"
