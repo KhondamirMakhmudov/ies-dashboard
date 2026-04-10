@@ -22,6 +22,7 @@ import MethodModal from "@/components/modal/method-modal";
 import Input from "@/components/input";
 import BirthDateInput from "@/components/input/birthdate-input";
 import PhoneInputUz from "@/components/input/phone-input";
+import TabelNumberInput from "@/components/input/tabel-number-input";
 import CustomSelect from "@/components/select";
 import Breadcrumb from "@/components/breadcrumb";
 import { genderOptions } from "@/constants/static-data";
@@ -165,7 +166,10 @@ const Index = () => {
       return { fieldErrors, summary };
     }
 
-    return { fieldErrors: {}, summary: "Проверьте корректность заполнения полей." };
+    return {
+      fieldErrors: {},
+      summary: "Проверьте корректность заполнения полей.",
+    };
   };
 
   const canReadEmployeeDetail = canUserDo(session?.user, "employee", "read");
@@ -467,13 +471,17 @@ const Index = () => {
 
         // Handle other error formats
         if (result?.detail && typeof result.detail === "object") {
-          const { fieldErrors, summary } = normalizeValidationErrors(result.detail);
+          const { fieldErrors, summary } = normalizeValidationErrors(
+            result.detail,
+          );
           setErrors(fieldErrors);
           toast.error(summary, { position: "top-right" });
           return;
         }
 
-        toast.error(result?.message || `Ошибка ${res.status}`, { position: "top-right" });
+        toast.error(result?.message || `Ошибка ${res.status}`, {
+          position: "top-right",
+        });
         return;
       }
 
@@ -2089,13 +2097,11 @@ const Index = () => {
                   returnObject={false}
                 />
 
-                <Input
-                  name="tabel_number"
-                  label={"Табельный номер" || ""}
+                <TabelNumberInput
+                  label={"Табельный номер"}
                   value={formData.tabel_number}
                   onChange={handleChange}
                   placeholder="Введите"
-                  inputClass={`!h-[45px]`}
                   required
                   error={errors.tabel_number}
                 />

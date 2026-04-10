@@ -18,11 +18,11 @@ export default function PhoneInputUz({
     if (digits.length < 6) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
     if (digits.length < 8)
       return `(${digits.slice(0, 2)}) ${digits.slice(2, 5)} - ${digits.slice(
-        5
+        5,
       )}`;
     return `(${digits.slice(0, 2)}) ${digits.slice(2, 5)} - ${digits.slice(
       5,
-      7
+      7,
     )} - ${digits.slice(7, 9)}`;
   };
 

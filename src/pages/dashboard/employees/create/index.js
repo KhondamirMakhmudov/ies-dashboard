@@ -99,9 +99,10 @@ const Index = () => {
           const errorMap = {};
           result.errors.forEach((error) => {
             // Translate "Field required" to Russian
-            const message = error.message === "Field required" 
-              ? "Обязательное поле" 
-              : error.message;
+            const message =
+              error.message === "Field required"
+                ? "Обязательное поле"
+                : error.message;
             errorMap[error.field] = message;
           });
           setErrors(errorMap);
