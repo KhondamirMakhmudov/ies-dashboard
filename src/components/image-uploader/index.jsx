@@ -14,7 +14,7 @@ export default function ImageUploader({ image, onFileChange }) {
     if (!file) return;
 
     if (file.size > 10 * 1024 * 1024) {
-      toast.error("Файл 10MB dan kichik bo'lishi kerak!");
+      toast.error("Файл должен быть меньше 10МБ!");
       return;
     }
 
@@ -27,7 +27,7 @@ export default function ImageUploader({ image, onFileChange }) {
     if (!file) return;
 
     if (file.size > 2 * 1024 * 1024) {
-      toast.error("Файл 2MB dan kichik bo'lishi kerak!");
+      toast.error("Файл должен быть меньше 2МБ!");
       return;
     }
 
@@ -42,6 +42,8 @@ export default function ImageUploader({ image, onFileChange }) {
             type: image.type,
           });
           onFileChange(croppedFile);
+          setScale(1.0); // Reset scale after saving
+          toast.success("Фото сохранено!");
         }
       }, image.type);
     }

@@ -1,7 +1,7 @@
 import React from "react";
 import useAppTheme from "@/hooks/useAppTheme";
 export default function PhoneInputUz({
-  label = "Telefon raqami",
+  label = "Номер телефона",
   name,
   value,
   onChange,

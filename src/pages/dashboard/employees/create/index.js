@@ -42,14 +42,14 @@ const Index = () => {
     photo: null,
   });
 
-  // postda datalarga bosqichma bosqich o'tish uchun buttonlar
+  // Кнопки для пошагового перемещения по данным
   const handleNext = () => setStep((prev) => Math.min(prev + 1, 3));
   const handlePrev = () => setStep((prev) => Math.max(prev - 1, 1));
 
   const steps = [
-    "Asosiy ma'lumotlar",
-    "Qo‘shimcha ma'lumotlar",
-    "Rasm va yakun",
+    "Основная информация",
+    "Дополнительная информация",
+    "Фото и завершение",
   ];
 
   const { data: level1List, isLoading: isLoadingLevel1 } = useGetPythonQuery({
@@ -94,23 +94,39 @@ const Index = () => {
         }
 
         // server validation error
-        if (result?.detail && typeof result.detail === "object") {
-          setErrors(result.detail);
-          toast.error("Iltimos, kiritilgan ma'lumotlarni tekshiring.");
+        if (result?.errors && Array.isArray(result.errors)) {
+          // Map errors by field name
+          const errorMap = {};
+          result.errors.forEach((error) => {
+            // Translate "Field required" to Russian
+            const message = error.message === "Field required" 
+              ? "Обязательное поле" 
+              : error.message;
+            errorMap[error.field] = message;
+          });
+          setErrors(errorMap);
+          setStep(1); // Go back to step 1 to show errors
+          toast.error("Пожалуйста, проверьте введённые данные.");
           return;
         }
 
-        toast.error("Xatolik yuz berdi.");
+        if (result?.detail && typeof result.detail === "object") {
+          setErrors(result.detail);
+          toast.error("Пожалуйста, проверьте введённые данные.");
+          return;
+        }
+
+        toast.error("Произошла ошибка.");
         return;
       }
 
-      toast.success("Xodim muvaffaqiyatli qo'shildi!");
+      toast.success("Сотрудник успешно создан!");
       setErrors({});
       setStep(1);
       queryClient.invalidateQueries(KEYS.employees);
     } catch (error) {
-      console.error("Xatolik:", error);
-      toast.error("Tarmoqda xatolik yuz berdi.");
+      console.error("Ошибка:", error);
+      toast.error("Ошибка сети.");
     }
   };
 
@@ -194,6 +210,7 @@ const Index = () => {
               placeholder="Фамилия"
               inputClass="!h-[45px] border !border-gray-200"
               required={true}
+              error={errors.last_name}
             />
             <Input
               label={"Отчество сотрудника"}
@@ -256,6 +273,7 @@ const Index = () => {
               placeholder="Введите"
               inputClass="!h-[45px] border !border-gray-200"
               required={true}
+              error={errors.address}
             />
           </div>
         )}
@@ -276,6 +294,7 @@ const Index = () => {
               }
               required
               returnObject={false} // ⚡ faqat value qaytarish uchun
+              error={errors.education_degree}
             />
 
             <Input
@@ -286,6 +305,7 @@ const Index = () => {
               label="Место получения образования"
               inputClass="!h-[45px] border !border-gray-200"
               required={true}
+              error={errors.education_place}
             />
             <div className="flex gap-2 ">
               <Input
@@ -355,6 +375,7 @@ const Index = () => {
               }
               isLoading={isLoadingWorkplace}
               returnObject={false} // ✅ faqat value qaytarish uchun
+              error={errors.workplace_id}
             />
           </div>
         )}

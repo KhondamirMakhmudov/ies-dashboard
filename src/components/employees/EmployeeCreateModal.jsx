@@ -29,14 +29,15 @@ const EmployeeCreateModal = ({
   level1List,
   workplaceData,
   isLoadingWorkplace,
+  level1Id,
   setLevel1Id,
   setSelectUnitCode,
   resetForm,
 }) => {
   const steps = [
-    "Asosiy ma'lumotlar",
-    "Qo'shimcha ma'lumotlar",
-    "Rasm va yakun",
+    "Основная информация",
+    "Дополнительная информация",
+    "Фото и завершение",
   ];
 
   const handleNext = () => setStep((prev) => Math.min(prev + 1, 3));
@@ -192,6 +193,7 @@ const EmployeeCreateModal = ({
             inputClass={`!h-[45px] border ${
               isDark ? "!border-gray-800" : "!border-gray-300"
             }`}
+            error={errors.address}
           />
         </div>
       )}
@@ -210,6 +212,7 @@ const EmployeeCreateModal = ({
               }))
             }
             returnObject={false}
+            error={errors.education_degree}
           />
 
           <Input
@@ -221,6 +224,7 @@ const EmployeeCreateModal = ({
             inputClass={`!h-[45px] border ${
               isDark ? "!border-gray-800" : "!border-gray-300"
             }`}
+            error={errors.education_place}
           />
           <div className="flex gap-2 ">
             <Input
@@ -263,10 +267,12 @@ const EmployeeCreateModal = ({
           />
 
           <CustomSelect
+            label={"Выберите организационную единицу"}
             options={get(level1List, "data", []).map((i) => ({
               value: i.unit_code,
               label: i.name,
             }))}
+            value={level1Id}
             placeholder="Выберите"
             onChange={(val) => {
               setLevel1Id(val);

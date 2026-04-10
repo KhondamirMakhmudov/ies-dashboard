@@ -255,6 +255,8 @@ const Index = () => {
   const resetForm = () => {
     setFormData(initialFormData);
     setErrors({});
+    setLevel1Id(null);
+    setSelectUnitCode(null);
   };
 
   const onSubmitCreateEmployee = async () => {
@@ -287,6 +289,22 @@ const Index = () => {
           toast.error(result.detail);
           return;
         }
+
+        // Handle new error format with errors array
+        if (result?.errors && Array.isArray(result.errors)) {
+          const errorMap = {};
+          result.errors.forEach((error) => {
+            // Translate "Field required" to Russian
+            const message = error.message === "Field required" 
+              ? "Обязательное поле" 
+              : error.message;
+            errorMap[error.field] = message;
+          });
+          setErrors(errorMap);
+          toast.error("Пожалуйста, проверьте введённые данные.");
+          return;
+        }
+
         if (result?.detail && typeof result.detail === "object") {
           const { fieldErrors, summary } = normalizeValidationErrors(
             result.detail,
@@ -422,6 +440,7 @@ const Index = () => {
         level1List={level1List}
         workplaceData={workplaceData}
         isLoadingWorkplace={isLoadingWorkplace}
+        level1Id={level1Id}
         setLevel1Id={setLevel1Id}
         setSelectUnitCode={setSelectUnitCode}
         resetForm={resetForm}

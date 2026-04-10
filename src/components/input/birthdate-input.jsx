@@ -40,7 +40,7 @@ export default function BirthDateInput({
     const birth = new Date(inputDate);
     const today = new Date();
 
-    if (birth > today) return "Tug‘ilgan sana kelajakda bo'lishi mumkin emas";
+    if (birth > today) return "Дата рождения не может быть в будущем";
 
     const age = today.getFullYear() - birth.getFullYear();
     const monthDiff = today.getMonth() - birth.getMonth();
@@ -49,8 +49,8 @@ export default function BirthDateInput({
     const realAge =
       monthDiff < 0 || (monthDiff === 0 && dayDiff < 0) ? age - 1 : age;
 
-    if (realAge < 16) return "Xodim kamida 16 yoshda bo'lishi kerak";
-    if (realAge > 100) return "Xodim 100 yoshdan katta bo'lmasligi kerak";
+    if (realAge < 16) return "Сотрудник должен быть не моложе 16 лет";
+    if (realAge > 100) return "Сотрудник не может быть старше 100 лет";
     return "";
   };
 
