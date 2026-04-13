@@ -24,6 +24,7 @@ import { Button } from "@mui/material";
 import ViewModuleIcon from "@mui/icons-material/ViewModule";
 import TableRowsIcon from "@mui/icons-material/TableRows";
 import SearchIcon from "@mui/icons-material/Search";
+import { ChevronLeft, ChevronRight } from "@mui/icons-material";
 
 const PermissionSection = () => {
   const { data: session } = useSession();
@@ -37,20 +38,22 @@ const PermissionSection = () => {
   const [selectedResourceId, setSelectedResourceId] = useState("");
   const [selectedActionId, setSelectedActionId] = useState("");
   const [name, setName] = useState("");
-  const [viewMode, setViewMode] = useState("card");
+  const [viewMode, setViewMode] = useState("table");
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPagePermissions, setCurrentPagePermissions] = useState(1);
 
   // Get permissions
   const { data: permissions, isLoading: permissionsLoading } =
     useGetGeneralAuthQuery({
-      key: KEYS.permissions,
+      key: [KEYS.permissions, currentPagePermissions],
       url: URLS.permissions,
+      params: {
+        limit: 10,
+        offset: (currentPagePermissions - 1) * 10,
+      },
       headers: {
         Authorization: `Bearer ${session?.accessToken}`,
         Accept: "application/json",
-      },
-      params: {
-        limit: 1000,
       },
       enabled: !!session?.accessToken,
     });
@@ -85,8 +88,6 @@ const PermissionSection = () => {
     });
 
   const permissionsData = get(permissions, "data.data", []);
-  const resourcesData = get(resources, "data.data", []);
-  const actionsData = get(actions, "data.data", []);
 
   // Filter permissions based on search query
   const filteredPermissions = permissionsData.filter((permission) => {
@@ -119,8 +120,8 @@ const PermissionSection = () => {
       {
         url: URLS.permissions,
         attributes: {
-          resource_id: selectedResourceId,
-          action_id: selectedActionId,
+          resourceId: selectedResourceId,
+          actionId: selectedActionId,
         },
         config: {
           headers: { Authorization: `Bearer ${session?.accessToken}` },
@@ -145,45 +146,11 @@ const PermissionSection = () => {
     );
   };
 
-  // Edit permission
-  const submitEditPermission = async () => {
-    if (!name.trim()) {
-      toast.error("Пожалуйста, введите имя", { position: "top-center" });
-      return;
-    }
-
-    try {
-      const response = await fetch(
-        `${config.GENERAL_AUTH_URL}/${URLS.permissions}/${selectedId}`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session?.accessToken}`,
-          },
-          body: JSON.stringify({ name: name }),
-        },
-      );
-
-      if (!response.ok) throw new Error("Ошибка при обновлении");
-
-      toast.success("Права успешно обновлены", { position: "top-center" });
-      setEditModal(false);
-      setSelectedId(null);
-      setName("");
-      queryClient.invalidateQueries(KEYS.permissions);
-    } catch (error) {
-      toast.error(`Ошибка: ${error?.message || error}`, {
-        position: "top-right",
-      });
-    }
-  };
-
   // Delete permission
   const submitDeletePermission = async () => {
     try {
       const response = await fetch(
-        `${config.GENERAL_AUTH_URL}/${URLS.permissions}/${selectedId}`,
+        `${config.GENERAL_AUTH_URL}${URLS.permissions}/${selectedId}`,
         {
           method: "DELETE",
           headers: {
@@ -209,7 +176,10 @@ const PermissionSection = () => {
   const columns = [
     {
       header: "№",
-      cell: ({ row }) => row.index + 1,
+      cell: ({ row }) => {
+        const pageSize = get(permissions, "data.pagination.pageSize", 10);
+        return (currentPagePermissions - 1) * pageSize + row.index + 1;
+      },
     },
     {
       accessorKey: "resource",
@@ -222,7 +192,7 @@ const PermissionSection = () => {
       cell: ({ row }) => row.original.action?.name || "N/A",
     },
     {
-      accessorKey: "created_at",
+      accessorKey: "createdAt",
       header: "Дата создания",
       cell: ({ row }) => (
         <p
@@ -242,23 +212,6 @@ const PermissionSection = () => {
       header: "Действия",
       cell: ({ row }) => (
         <div className="flex gap-2">
-          <Button
-            onClick={() => {
-              setEditModal(true);
-              setSelectedId(row.original.id);
-              setSelectedResourceId(row.original.resource_id);
-              setSelectedActionId(row.original.action_id);
-            }}
-            sx={{
-              width: "32px",
-              height: "32px",
-              minWidth: "32px",
-              background: "#F0D8C8",
-              color: "#FF6200",
-            }}
-          >
-            <EditIcon fontSize="small" />
-          </Button>
           <Button
             onClick={() => {
               setDeleteModal(true);
@@ -387,135 +340,248 @@ const PermissionSection = () => {
             borderColor: border("#e5e7eb", "#333333"),
           }}
         >
-          <CustomTable columns={columns} data={filteredPermissions} />
+          <CustomTable
+            columns={columns}
+            data={filteredPermissions}
+            pagination={{
+              currentPage: currentPagePermissions,
+              pageSize: get(permissions, "data.pagination.pageSize", 10),
+              total: get(permissions, "data.pagination.total", 0),
+              onPaginationChange: (paginationState) => {
+                setCurrentPagePermissions(paginationState.page);
+              },
+            }}
+          />
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredPermissions.map((permission, index) => (
-            <motion.div
-              key={permission.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
-              className="rounded-xl border transition-all duration-200 hover:shadow-lg hover:-translate-y-1"
-              style={{
-                backgroundColor: bg("#ffffff", "#1e1e1e"),
-                borderColor: border("#e5e7eb", "#374151"),
-              }}
-            >
-              <div className="p-5">
-                {/* Header */}
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                      <h3
-                        className="text-sm font-semibold uppercase tracking-wide"
-                        style={{ color: text("#6b7280", "#9ca3af") }}
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+            {filteredPermissions.map((permission, index) => (
+              <motion.div
+                key={permission.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
+                className="rounded-xl border transition-all duration-200 hover:shadow-lg hover:-translate-y-1"
+                style={{
+                  backgroundColor: bg("#ffffff", "#1e1e1e"),
+                  borderColor: border("#e5e7eb", "#374151"),
+                }}
+              >
+                <div className="p-5">
+                  {/* Header */}
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                        <h3
+                          className="text-sm font-semibold uppercase tracking-wide"
+                          style={{ color: text("#6b7280", "#9ca3af") }}
+                        >
+                          Разрешение
+                        </h3>
+                      </div>
+                    </div>
+                    <div className="flex gap-1">
+                      <button
+                        onClick={() => {
+                          setDeleteModal(true);
+                          setSelectedId(permission.id);
+                        }}
+                        className={`w-8 h-8 rounded flex items-center justify-center transition-colors ${
+                          isDark
+                            ? "bg-red-900 text-red-400 hover:bg-red-800"
+                            : "bg-red-100 text-red-600 hover:bg-red-200"
+                        }`}
                       >
-                        Разрешение
-                      </h3>
+                        <DeleteIcon fontSize="small" />
+                      </button>
                     </div>
                   </div>
-                  <div className="flex gap-1">
-                    <button
-                      onClick={() => {
-                        setEditModal(true);
-                        setSelectedId(permission.id);
-                        setSelectedResourceId(permission.resource_id);
-                        setSelectedActionId(permission.action_id);
-                      }}
-                      className={`w-8 h-8 rounded flex items-center justify-center transition-colors ${
-                        isDark
-                          ? "bg-orange-900 text-orange-400 hover:bg-orange-800"
-                          : "bg-orange-100 text-orange-600 hover:bg-orange-200"
-                      }`}
-                    >
-                      <EditIcon fontSize="small" />
-                    </button>
-                    <button
-                      onClick={() => {
-                        setDeleteModal(true);
-                        setSelectedId(permission.id);
-                      }}
-                      className={`w-8 h-8 rounded flex items-center justify-center transition-colors ${
-                        isDark
-                          ? "bg-red-900 text-red-400 hover:bg-red-800"
-                          : "bg-red-100 text-red-600 hover:bg-red-200"
-                      }`}
-                    >
-                      <DeleteIcon fontSize="small" />
-                    </button>
-                  </div>
-                </div>
 
-                {/* Content */}
-                <div className="space-y-3">
-                  <div>
-                    <p
-                      className="text-xs font-medium mb-1"
-                      style={{ color: text("#9ca3af", "#6b7280") }}
-                    >
-                      Ресурс
-                    </p>
-                    <div
-                      className="px-3 py-2 rounded-lg"
-                      style={{
-                        backgroundColor: isDark ? "#374151" : "#f3f4f6",
-                      }}
-                    >
+                  {/* Content */}
+                  <div className="space-y-3">
+                    <div>
                       <p
-                        className="text-sm font-semibold"
-                        style={{ color: text("#111827", "#f9fafb") }}
+                        className="text-xs font-medium mb-1"
+                        style={{ color: text("#9ca3af", "#6b7280") }}
                       >
-                        {permission.resource?.name || "N/A"}
+                        Ресурс
                       </p>
+                      <div
+                        className="px-3 py-2 rounded-lg"
+                        style={{
+                          backgroundColor: isDark ? "#374151" : "#f3f4f6",
+                        }}
+                      >
+                        <p
+                          className="text-sm font-semibold"
+                          style={{ color: text("#111827", "#f9fafb") }}
+                        >
+                          {permission.resource?.name || "N/A"}
+                        </p>
+                      </div>
                     </div>
-                  </div>
 
-                  <div>
-                    <p
-                      className="text-xs font-medium mb-1"
-                      style={{ color: text("#9ca3af", "#6b7280") }}
-                    >
-                      Действие
-                    </p>
-                    <div
-                      className="px-3 py-2 rounded-lg"
-                      style={{
-                        backgroundColor: isDark ? "#374151" : "#f3f4f6",
-                      }}
-                    >
+                    <div>
                       <p
-                        className="text-sm font-semibold"
-                        style={{ color: text("#111827", "#f9fafb") }}
+                        className="text-xs font-medium mb-1"
+                        style={{ color: text("#9ca3af", "#6b7280") }}
                       >
-                        {permission.action?.name || "N/A"}
+                        Действие
                       </p>
+                      <div
+                        className="px-3 py-2 rounded-lg"
+                        style={{
+                          backgroundColor: isDark ? "#374151" : "#f3f4f6",
+                        }}
+                      >
+                        <p
+                          className="text-sm font-semibold"
+                          style={{ color: text("#111827", "#f9fafb") }}
+                        >
+                          {permission.action?.name || "N/A"}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Footer */}
-                <div
-                  className="mt-4 pt-3 border-t"
-                  style={{ borderColor: border("#e5e7eb", "#374151") }}
-                >
-                  <p
-                    className="text-xs"
-                    style={{ color: text("#9ca3af", "#6b7280") }}
+                  {/* Footer */}
+                  <div
+                    className="mt-4 pt-3 border-t"
+                    style={{ borderColor: border("#e5e7eb", "#374151") }}
                   >
-                    Создано: {dayjs(permission.created_at).format("DD.MM.YYYY")}{" "}
-                    <span>{dayjs(permission.created_at).format("HH:mm")}</span>
-                  </p>
+                    <p
+                      className="text-xs"
+                      style={{ color: text("#9ca3af", "#6b7280") }}
+                    >
+                      Создано:{" "}
+                      {dayjs(permission.created_at).format("DD.MM.YYYY")}{" "}
+                      <span>
+                        {dayjs(permission.created_at).format("HH:mm")}
+                      </span>
+                    </p>
+                  </div>
                 </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      )}
+              </motion.div>
+            ))}
+          </div>
 
-      {/* Create Modal */}
+          {/* Pagination for Card View */}
+          <div
+            className="flex flex-col sm:flex-row items-center justify-between px-6 py-4 border-t rounded-lg"
+            style={{
+              borderColor: border("#e5e7eb", "#333333"),
+              backgroundColor: bg("rgba(249, 250, 251, 0.5)", "#262626"),
+            }}
+          >
+            <div
+              className="text-sm mb-4 sm:mb-0"
+              style={{ color: text("#6b7280", "#9ca3af") }}
+            >
+              Показано{" "}
+              <span
+                className="font-semibold"
+                style={{ color: text("#1f2937", "#f3f4f6") }}
+              >
+                {Math.min(
+                  (currentPagePermissions - 1) *
+                    get(permissions, "data.pagination.pageSize", 10) +
+                    1,
+                  get(permissions, "data.pagination.total", 0),
+                )}
+                -
+                {Math.min(
+                  currentPagePermissions *
+                    get(permissions, "data.pagination.pageSize", 10),
+                  get(permissions, "data.pagination.total", 0),
+                )}
+              </span>{" "}
+              из{" "}
+              <span
+                className="font-semibold"
+                style={{ color: text("#1f2937", "#f3f4f6") }}
+              >
+                {get(permissions, "data.pagination.total", 0)}
+              </span>{" "}
+              записей
+            </div>
+
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() =>
+                  currentPagePermissions > 1 &&
+                  setCurrentPagePermissions(currentPagePermissions - 1)
+                }
+                disabled={currentPagePermissions === 1}
+                className="flex items-center justify-center w-9 h-9 rounded-lg border transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
+                style={{
+                  borderColor: border("#d1d5db", "#4b5563"),
+                  color: text("#6b7280", "#9ca3af"),
+                  backgroundColor: bg("#ffffff", "#2a2a2a"),
+                }}
+              >
+                <ChevronLeft sx={{ fontSize: 20 }} />
+              </button>
+
+              {[
+                ...Array(
+                  Math.ceil(
+                    get(permissions, "data.pagination.total", 0) /
+                      get(permissions, "data.pagination.pageSize", 10),
+                  ),
+                ).keys(),
+              ].map((i) => (
+                <button
+                  key={i + 1}
+                  onClick={() => setCurrentPagePermissions(i + 1)}
+                  className={`flex items-center justify-center min-w-9 h-9 rounded-lg border text-sm font-medium transition-all duration-200 ${
+                    currentPagePermissions === i + 1
+                      ? "bg-blue-600 text-white border-blue-600"
+                      : ""
+                  }`}
+                  style={
+                    currentPagePermissions === i + 1
+                      ? {}
+                      : {
+                          borderColor: border("#d1d5db", "#4b5563"),
+                          color: text("#6b7280", "#9ca3af"),
+                          backgroundColor: bg("#ffffff", "#2a2a2a"),
+                        }
+                  }
+                >
+                  {i + 1}
+                </button>
+              ))}
+
+              <button
+                onClick={() =>
+                  currentPagePermissions <
+                    Math.ceil(
+                      get(permissions, "data.pagination.total", 0) /
+                        get(permissions, "data.pagination.pageSize", 10),
+                    ) && setCurrentPagePermissions(currentPagePermissions + 1)
+                }
+                disabled={
+                  currentPagePermissions >=
+                  Math.ceil(
+                    get(permissions, "data.pagination.total", 0) /
+                      get(permissions, "data.pagination.pageSize", 10),
+                  )
+                }
+                className="flex items-center justify-center w-9 h-9 rounded-lg border transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
+                style={{
+                  borderColor: border("#d1d5db", "#4b5563"),
+                  color: text("#6b7280", "#9ca3af"),
+                  backgroundColor: bg("#ffffff", "#2a2a2a"),
+                }}
+              >
+                <ChevronRight sx={{ fontSize: 20 }} />
+              </button>
+            </div>
+          </div>
+        </>
+      )}
       {createModal && (
         <MethodModal
           open={createModal}
@@ -559,52 +625,6 @@ const PermissionSection = () => {
             >
               {createLoading ? "Создание..." : "Создать"}
             </PrimaryButton>
-          </div>
-        </MethodModal>
-      )}
-
-      {/* Edit Modal */}
-      {editModal && (
-        <MethodModal
-          open={editModal}
-          showCloseIcon={true}
-          closeClick={() => {
-            setEditModal(false);
-            setSelectedId(null);
-            setSelectedResourceId("");
-            setSelectedActionId("");
-          }}
-          title="Редактировать разрешение"
-        >
-          <div className="my-4 space-y-4">
-            {/* Resource Select */}
-            <div>
-              <CustomSelect
-                options={optionsResources}
-                label={"Ресурс"}
-                value={selectedResourceId}
-                onChange={(val) => setSelectedResourceId(val)}
-                returnObject={false}
-                placeholder="Выберите ресурс"
-              />
-            </div>
-
-            {/* Action Select */}
-            <div>
-              <CustomSelect
-                options={optionsActions}
-                label={"Действие"}
-                value={selectedActionId}
-                onChange={(val) => setSelectedActionId(val)}
-                returnObject={false}
-                placeholder="Выберите действие"
-              />
-            </div>
-
-            <PrimaryButton
-              onClick={submitEditPermission}
-              className="w-full"
-            ></PrimaryButton>
           </div>
         </MethodModal>
       )}

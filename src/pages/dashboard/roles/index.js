@@ -93,7 +93,7 @@ const Index = () => {
   const [selectedUserToRemove, setSelectedUserToRemove] = useState(null);
   const [name, setName] = useState("");
   const [employeeDataMap, setEmployeeDataMap] = useState({});
-  const [viewMode, setViewMode] = useState("card"); // 'card' or 'table'
+  const [viewMode, setViewMode] = useState("card");
 
   // Load view preference from localStorage on mount
   useEffect(() => {
@@ -159,8 +159,8 @@ const Index = () => {
       const employeeIds = [];
       roles.data.data.forEach((role) => {
         role.users?.forEach((user) => {
-          if (user.employee_id && !employeeIds.includes(user.employee_id)) {
-            employeeIds.push(user.employee_id);
+          if (user.employeeId && !employeeIds.includes(user.employeeId)) {
+            employeeIds.push(user.employeeId);
           }
         });
       });
@@ -169,9 +169,9 @@ const Index = () => {
         const mockEmployeeData = {};
         employeeIds.forEach((id) => {
           mockEmployeeData[id] = {
-            first_name: "Ism",
-            last_name: "Familiya",
-            middle_name: "Sharif",
+            firstName: "Ism",
+            lastName: "Familiya",
+            middleName: "Sharif",
             position: "Lavozim",
           };
         });
@@ -233,7 +233,7 @@ const Index = () => {
 
     try {
       const response = await fetch(
-        `${config.GENERAL_AUTH_URL}/${URLS.roles}/${selectedId}`,
+        `${config.GENERAL_AUTH_URL}${URLS.roles}/${selectedId}`,
         {
           method: "PATCH",
           headers: {
@@ -262,7 +262,7 @@ const Index = () => {
   const submitDeleteRole = async () => {
     try {
       const response = await fetch(
-        `${config.GENERAL_AUTH_URL}/${URLS.roles}/${selectedId}`,
+        `${config.GENERAL_AUTH_URL}${URLS.roles}/${selectedId}`,
         {
           method: "DELETE",
           headers: {
@@ -298,9 +298,12 @@ const Index = () => {
 
     addPermission(
       {
-        url: `${URLS.roles}/add_permission?role_id=${selectedId}&permission_id=${selectedPermissionId}`,
+        url: `${URLS.roles}/${selectedId}:add-permission`,
         config: {
           headers: { Authorization: `Bearer ${session?.accessToken}` },
+        },
+        attributes: {
+          permissionId: selectedPermissionId,
         },
       },
       {
@@ -330,10 +333,11 @@ const Index = () => {
   const submitRemovePermission = () => {
     removePermission(
       {
-        url: `${URLS.roles}/remove_permission?role_id=${selectedId}&permission_id=${selectedPermissionToRemove}`,
+        url: `${URLS.roles}/${selectedId}:remove-permission`,
         config: {
           headers: { Authorization: `Bearer ${session?.accessToken}` },
         },
+        attributes: { permissionId: selectedPermissionToRemove },
       },
       {
         onSuccess: () => {
@@ -343,75 +347,6 @@ const Index = () => {
           setRemovePermissionModal(false);
           setSelectedId(null);
           setSelectedPermissionToRemove(null);
-          queryClient.invalidateQueries(KEYS.roles);
-        },
-        onError: (error) => {
-          toast.error(`Ошибка: ${error?.message || error}`, {
-            position: "top-right",
-          });
-        },
-      },
-    );
-  };
-
-  // Add user to role
-  const { mutate: addUser } = usePostGeneralAuthQuery({
-    listKeyId: "add-user-to-role",
-  });
-
-  const submitAddUser = () => {
-    if (!selectedUserId) {
-      toast.error("Выберите пользователя", { position: "top-center" });
-      return;
-    }
-
-    addUser(
-      {
-        url: `${URLS.roles}/add_user?role_id=${selectedId}&user_id=${selectedUserId}`,
-        config: {
-          headers: { Authorization: `Bearer ${session?.accessToken}` },
-        },
-      },
-      {
-        onSuccess: () => {
-          toast.success("Пользователь успешно добавлен", {
-            position: "top-center",
-          });
-          setAddUserModal(false);
-          setSelectedId(null);
-          setSelectedUserId("");
-          queryClient.invalidateQueries(KEYS.roles);
-        },
-        onError: (error) => {
-          toast.error(`Ошибка: ${error?.message || error}`, {
-            position: "top-right",
-          });
-        },
-      },
-    );
-  };
-
-  // Remove user from role
-  const { mutate: removeUser } = usePostGeneralAuthQuery({
-    listKeyId: "remove-user-from-role",
-  });
-
-  const submitRemoveUser = () => {
-    removeUser(
-      {
-        url: `${URLS.roles}/remove_user?role_id=${selectedId}&user_id=${selectedUserToRemove}`,
-        config: {
-          headers: { Authorization: `Bearer ${session?.accessToken}` },
-        },
-      },
-      {
-        onSuccess: () => {
-          toast.success("Пользователь успешно удален", {
-            position: "top-center",
-          });
-          setRemoveUserModal(false);
-          setSelectedId(null);
-          setSelectedUserToRemove(null);
           queryClient.invalidateQueries(KEYS.roles);
         },
         onError: (error) => {

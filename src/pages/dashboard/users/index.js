@@ -50,13 +50,9 @@ import BadgeIcon from "@mui/icons-material/Badge";
 import LinkIcon from "@mui/icons-material/Link";
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
-import BadgeOutlinedIcon from "@mui/icons-material/BadgeOutlined";
 import BusinessOutlinedIcon from "@mui/icons-material/BusinessOutlined";
 import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined";
-import TheaterComedyOutlinedIcon from "@mui/icons-material/TheaterComedyOutlined";
-import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import StarIcon from "@mui/icons-material/Star";
-import SecurityIcon from "@mui/icons-material/Security";
 import Link from "next/link";
 import ViewWeekIcon from "@mui/icons-material/ViewWeek";
 import ViewAgendaIcon from "@mui/icons-material/ViewAgenda";
@@ -79,17 +75,16 @@ const Index = () => {
 
   // Form states
   const [formData, setFormData] = useState({
-    employee_id: "",
-    role_id: "",
-    unit_code: "",
+    employeeId: "",
+    unitCode: "",
     name: "",
     username: "",
     password: "",
   });
   const [editFormData, setEditFormData] = useState({
-    employee_id: "",
-    role_ids: [],
-    unit_code: "",
+    employeeId: "",
+    roleIds: [],
+    unitCode: "",
     name: "",
     password: "",
   });
@@ -187,7 +182,7 @@ const Index = () => {
       (option) =>
         option.label.toLowerCase().includes(searchTerm) ||
         option.employeeData?.id?.toString().includes(searchTerm) ||
-        option.employeeData?.employee_id?.toLowerCase().includes(searchTerm),
+        option.employeeData?.employeeId?.toLowerCase().includes(searchTerm),
     );
   }, [employeeOptions, employeeSearch]);
 
@@ -200,11 +195,10 @@ const Index = () => {
       (option) =>
         option.label.toLowerCase().includes(searchTerm) ||
         option.employeeData?.id?.toString().includes(searchTerm) ||
-        option.employeeData?.employee_id?.toLowerCase().includes(searchTerm),
+        option.employeeData?.employeeId?.toLowerCase().includes(searchTerm),
     );
   }, [employeeOptions, editEmployeeSearch]);
 
-  // Create user - note: role_id changed to role_ids array
   const { mutate: createUser, isLoading: isCreating } = usePostGeneralAuthQuery(
     {
       listKeyId: "create-user",
@@ -216,7 +210,7 @@ const Index = () => {
       !formData.name ||
       !formData.username ||
       !formData.password ||
-      !formData.role_id
+      !formData.roleId
     ) {
       toast.error("Пожалуйста, заполните все обязательные поля", {
         position: "top-center",
@@ -224,17 +218,16 @@ const Index = () => {
       return;
     }
 
-    const normalizedUnitCode = formData.unit_code?.trim()
-      ? formData.unit_code.trim()
+    const normalizedUnitCode = formData.unitCode?.trim()
+      ? formData.unitCode.trim()
       : null;
 
     createUser(
       {
-        url: URLS.register,
+        url: URLS.users,
         attributes: {
           ...formData,
-          unit_code: normalizedUnitCode,
-          role_ids: [formData.role_id], // Send as array
+          unitCode: normalizedUnitCode,
         },
         config: {
           headers: { Authorization: `Bearer ${session?.accessToken}` },
@@ -247,9 +240,8 @@ const Index = () => {
           });
           setCreateModal(false);
           setFormData({
-            employee_id: "",
-            role_id: "",
-            unit_code: "",
+            employeeId: "",
+            unitCode: "",
             name: "",
             username: "",
             password: "",
@@ -274,24 +266,15 @@ const Index = () => {
     if (editFormData.name && editFormData.name !== selectedUser.name) {
       updateData.name = editFormData.name;
     }
-    if (editFormData.employee_id !== selectedUser.employee_id) {
-      updateData.employee_id = editFormData.employee_id || null;
+    if (editFormData.employeeId !== selectedUser.employeeId) {
+      updateData.employeeId = editFormData.employeeId || null;
     }
     if (editFormData.username !== selectedUser.username) {
       updateData.username = editFormData.username || null;
     }
-    if (editFormData.role_ids && editFormData.role_ids.length > 0) {
-      // Compare with existing roles
-      const existingRoleIds = selectedUser.roles?.map((r) => r.id) || [];
-      if (
-        JSON.stringify(editFormData.role_ids.sort()) !==
-        JSON.stringify(existingRoleIds.sort())
-      ) {
-        updateData.role_ids = editFormData.role_ids;
-      }
-    }
-    if (editFormData.unit_code !== selectedUser.unit_code) {
-      updateData.unit_code = editFormData.unit_code || null;
+
+    if (editFormData.unitCode !== selectedUser.unitCode) {
+      updateData.unitCode = editFormData.unitCode || null;
     }
     if (editFormData.password) {
       updateData.password = editFormData.password;
@@ -323,9 +306,9 @@ const Index = () => {
       setEditModal(false);
       setSelectedUser(null);
       setEditFormData({
-        employee_id: "",
-        role_ids: [],
-        unit_code: "",
+        employeeId: "",
+        roleIds: [],
+        unitCode: "",
         name: "",
         password: "",
       });
@@ -384,7 +367,10 @@ const Index = () => {
 
     addRoleToUser(
       {
-        url: `${URLS.users}/add_role?user_id=${selectedId}&role_id=${selectedRoleId}`,
+        url: `${URLS.users}/${selectedId}:assign-role`,
+        attributes: {
+          roleId: selectedRoleId,
+        },
         config: {
           headers: { Authorization: `Bearer ${session?.accessToken}` },
         },
@@ -422,8 +408,10 @@ const Index = () => {
 
     removeRoleFromUser(
       {
-        // URL tekshiring - query parameter format
-        url: `${URLS.users}/remove_role?user_id=${selectedId}&role_id=${selectedRoleToRemove}`,
+        url: `${URLS.users}/${selectedId}:remove-role`,
+        attributes: {
+          roleId: selectedRoleToRemove,
+        },
         config: {
           headers: {
             Authorization: `Bearer ${session?.accessToken}`,
@@ -494,30 +482,14 @@ const Index = () => {
     return user.roles?.some((role) => role.name?.toLowerCase() === "admin");
   };
 
-  // Get unique permissions from all roles
-  const getUserPermissions = (user) => {
-    if (!user.roles) return [];
-    const allPermissions = [];
-    user.roles.forEach((role) => {
-      if (role.permissions) {
-        role.permissions.forEach((permission) => {
-          if (!allPermissions.some((p) => p.name === permission.name)) {
-            allPermissions.push(permission);
-          }
-        });
-      }
-    });
-    return allPermissions;
-  };
-
   // Handle edit user
   const handleEditClick = (user) => {
     setSelectedUser(user);
     setSelectedId(user.id);
     setEditFormData({
-      employee_id: user.employee_id || "",
-      role_ids: user.roles?.map((role) => role.id) || [],
-      unit_code: user.unit_code || "",
+      employeeId: user.employeeId || "",
+      roleIds: user.roles?.map((role) => role.id) || [],
+      unitCode: user.unitCode || "",
       name: user.name || "",
       username: user.username || "",
       password: "",
@@ -640,7 +612,7 @@ const Index = () => {
               iconColor={"black"}
             />
             <StatCard
-              value={usersData.filter((u) => u.employee_id).length}
+              value={usersData.filter((u) => u.employeeId).length}
               title={"С привязанным сотрудником"}
               icon={LinkIcon}
               iconColor={"black"}
@@ -659,11 +631,6 @@ const Index = () => {
               {usersData.map((user, index) => {
                 const isSuperAdmin = user.username === "admin";
                 const adminUser = hasAdminRole(user);
-                const userPermissions = getUserPermissions(user);
-                const hasAllPermissions = userPermissions.some(
-                  (p) => p.name === "*",
-                );
-
                 return (
                   <motion.div
                     key={user.id}
@@ -733,7 +700,7 @@ const Index = () => {
                                   }}
                                 >
                                   {user.name?.charAt(0).toUpperCase() ||
-                                    user.username?.charAt(0).toUpperCase() ||
+                                    user.userName?.charAt(0).toUpperCase() ||
                                     "U"}
                                 </Avatar>
                               </Badge>
@@ -905,23 +872,23 @@ const Index = () => {
                             <div className="flex justify-between items-center">
                               <Link
                                 href={
-                                  user.employee_id
-                                    ? `/dashboard/employees/${user.employee_id}`
+                                  user.employeeId
+                                    ? `/dashboard/employees/${user.employeeId}`
                                     : "#"
                                 }
                               >
                                 <Chip
                                   label={
-                                    user.employee_id
+                                    user.employeeId
                                       ? "Страница сотрудника"
                                       : "Не указан"
                                   }
                                   size="small"
                                   sx={{
-                                    backgroundColor: user.employee_id
+                                    backgroundColor: user.employeeId
                                       ? bg("#dbeafe", "#1e3a8a")
                                       : bg("#f3f4f6", "#374151"),
-                                    color: user.employee_id
+                                    color: user.employeeId
                                       ? text("#1e40af", "#93c5fd")
                                       : text("#6b7280", "#9ca3af"),
                                     fontWeight: 600,
@@ -963,13 +930,13 @@ const Index = () => {
                                 </Typography>
                               </div>
                               <Chip
-                                label={user.unit_code || "Не указан"}
+                                label={user.unitCode || "Не указан"}
                                 size="small"
                                 sx={{
-                                  backgroundColor: user.unit_code
+                                  backgroundColor: user.unitCode
                                     ? bg("#dcfce7", "#14532d")
                                     : bg("#f3f4f6", "#374151"),
-                                  color: user.unit_code
+                                  color: user.unitCode
                                     ? text("#15803d", "#86efac")
                                     : text("#6b7280", "#9ca3af"),
                                   fontWeight: 600,
@@ -1002,7 +969,7 @@ const Index = () => {
                                   fontWeight: 600,
                                 }}
                               >
-                                {new Date(user.created_at).toLocaleDateString(
+                                {new Date(user.createdAt).toLocaleDateString(
                                   "ru-RU",
                                   {
                                     day: "2-digit",
@@ -1253,8 +1220,8 @@ const Index = () => {
                     header: "Сотрудник",
                     cell: ({ row }) => {
                       const user = row.original;
-                      return user.employee_id ? (
-                        <Link href={`/dashboard/employees/${user.employee_id}`}>
+                      return user.employeeId ? (
+                        <Link href={`/dashboard/employees/${user.employeeId}`}>
                           <Chip
                             label="Профиль"
                             size="small"
@@ -1282,7 +1249,7 @@ const Index = () => {
                   },
                   {
                     header: "Подразделение",
-                    cell: ({ row }) => row.original.unit_code || "—",
+                    cell: ({ row }) => row.original.unitCode || "—",
                   },
                   {
                     header: "Управление ролями",
@@ -1435,9 +1402,8 @@ const Index = () => {
           closeClick={() => {
             setCreateModal(false);
             setFormData({
-              employee_id: "",
-              role_id: "",
-              unit_code: "",
+              employeeId: "",
+              unitCode: "",
               name: "",
               username: "",
               password: "",
@@ -1505,15 +1471,6 @@ const Index = () => {
               required
             />
 
-            <CustomSelect
-              label="Основная роль"
-              options={roleOptions}
-              value={formData.role_id}
-              onChange={(val) => setFormData({ ...formData, role_id: val })}
-              placeholder="Выберите роль"
-              required
-            />
-
             {/* Employee select with search */}
             <div className="space-y-2">
               <label
@@ -1523,9 +1480,9 @@ const Index = () => {
                 Сотрудник
               </label>
               <Select
-                value={formData.employee_id}
+                value={formData.employeeId}
                 onChange={(e) =>
-                  setFormData({ ...formData, employee_id: e.target.value })
+                  setFormData({ ...formData, employeeId: e.target.value })
                 }
                 displayEmpty
                 fullWidth
@@ -1627,7 +1584,7 @@ const Index = () => {
             <Input
               label="Код подразделения"
               type="text"
-              value={formData.unit_code}
+              value={formData.unitCode}
               inputClass={
                 bg("bg-white", "bg-[#262626]") +
                 " " +
@@ -1637,7 +1594,7 @@ const Index = () => {
                 " !h-[48px] rounded-[8px] text-[15px]"
               }
               onChange={(e) =>
-                setFormData({ ...formData, unit_code: e.target.value })
+                setFormData({ ...formData, unitCode: e.target.value })
               }
               placeholder="Введите код подразделения"
             />
@@ -1659,9 +1616,8 @@ const Index = () => {
             setSelectedUser(null);
             setSelectedId(null);
             setEditFormData({
-              employee_id: "",
-              role_ids: [],
-              unit_code: "",
+              employeeId: "",
+              unitCode: "",
               name: "",
               password: "",
               username: "",
@@ -1728,32 +1684,20 @@ const Index = () => {
               placeholder="Введите новый пароль (оставьте пустым, чтобы не менять)"
             />
 
-            <CustomSelect
-              label="Роли"
-              options={roleOptions}
-              value={editFormData.role_ids}
-              onChange={(val) =>
-                setEditFormData({ ...editFormData, role_ids: val })
-              }
-              placeholder="Выберите роли"
-              multiple
-              required
-            />
-
             {/* Employee select with search for edit */}
             <div className="space-y-2">
               <label
                 className="block text-sm font-medium"
                 style={{ color: text("#374151", "#d1d5db") }}
               >
-                Сотрудник (необязательно)
+                Сотрудник
               </label>
               <Select
-                value={editFormData.employee_id}
+                value={editFormData.employeeId}
                 onChange={(e) =>
                   setEditFormData({
                     ...editFormData,
-                    employee_id: e.target.value,
+                    employeeId: e.target.value,
                   })
                 }
                 displayEmpty
@@ -1856,7 +1800,7 @@ const Index = () => {
             <Input
               label="Код подразделения"
               type="text"
-              value={editFormData.unit_code}
+              value={editFormData.unitCode}
               inputClass={
                 bg("bg-white", "bg-[#262626]") +
                 " " +
@@ -1866,7 +1810,7 @@ const Index = () => {
                 " !h-[48px] rounded-[8px] text-[15px]"
               }
               onChange={(e) =>
-                setEditFormData({ ...editFormData, unit_code: e.target.value })
+                setEditFormData({ ...editFormData, unitCode: e.target.value })
               }
               placeholder="Введите код подразделения"
             />

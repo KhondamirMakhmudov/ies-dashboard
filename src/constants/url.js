@@ -53,14 +53,14 @@ export const URLS = {
   employeePhoto: "employee/photo/",
 
   // general auth
-  users: "/auth/user",
+  users: "/auth/api/v2/users",
   register: "/auth/signup",
-  roles: "/auth/role",
+  roles: "/auth/api/v2/roles",
   me: "/auth/me",
-  permissions: "/auth/permission",
+  permissions: "/auth/api/v2/permissions",
   typeOfPermissions: "/auth/permission-type",
-  resources: "/auth/resource",
-  actions: "/auth/action",
+  resources: "/auth/api/v2/resources",
+  actions: "/auth/api/v2/actions",
 
   // file api
   employeeFaces: "files/",

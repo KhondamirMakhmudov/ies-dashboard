@@ -30,14 +30,19 @@ const ResourceSection = () => {
   const [editModal, setEditModal] = useState(false);
   const [deleteModal, setDeleteModal] = useState(false);
   const [selectResourceId, setSelectResourceId] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const {
     data: resources,
     isLoading: resourceLoading,
     isFetching: resourceFetching,
   } = useGetGeneralAuthQuery({
-    key: KEYS.resources,
+    key: [KEYS.resources, currentPage],
     url: URLS.resources,
+    params: {
+      limit: 10,
+      offset: (currentPage - 1) * 10,
+    },
     headers: {
       Authorization: `Bearer ${session?.accessToken}`,
       Accept: "application/json",
@@ -143,7 +148,10 @@ const ResourceSection = () => {
   const columns = [
     {
       header: "№",
-      cell: ({ row }) => row.index + 1,
+      cell: ({ row }) => {
+        const pageSize = get(resources, "data.pagination.pageSize", 10);
+        return (currentPage - 1) * pageSize + row.index + 1;
+      },
     },
     { accessorKey: "name", header: "Название ресурса" },
     {
@@ -239,7 +247,18 @@ const ResourceSection = () => {
           borderColor: border("#e5e7eb", "#333333"),
         }}
       >
-        <CustomTable columns={columns} data={get(resources, "data.data", [])} />
+        <CustomTable
+          columns={columns}
+          data={get(resources, "data.data", [])}
+          pagination={{
+            currentPage: currentPage,
+            pageSize: get(resources, "data.pagination.pageSize", 10),
+            total: get(resources, "data.pagination.total", 0),
+            onPaginationChange: (paginationState) => {
+              setCurrentPage(paginationState.page);
+            },
+          }}
+        />
       </div>
 
       {/* Create Modal */}
