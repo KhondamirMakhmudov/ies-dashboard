@@ -29,13 +29,26 @@ const Index = () => {
     enabled: !!session?.accessToken,
   });
 
-  const { data: employee } = useGetPythonQuery({
-    key: KEYS.currentUserEmployee,
-    url: `${URLS.employees}${get(userProfile, "data.employee_id")}`,
+  const {
+    data: userSessions,
+    isLoading: userSessionsLoading,
+    isFetching: userSessionsFetching,
+  } = useGetGeneralAuthQuery({
+    key: KEYS.mySessions,
+    url: URLS.mySessions,
     headers: {
       Authorization: `Bearer ${session?.accessToken}`,
     },
-    enabled: !!session?.accessToken && !!get(userProfile, "data.employee_id"),
+    enabled: !!session?.accessToken,
+  });
+
+  const { data: employee } = useGetPythonQuery({
+    key: KEYS.currentUserEmployee,
+    url: `${URLS.employees}${get(userProfile, "data.employeeId")}`,
+    headers: {
+      Authorization: `Bearer ${session?.accessToken}`,
+    },
+    enabled: !!session?.accessToken && !!get(userProfile, "data.employeeId"),
   });
 
   const employeeData = get(employee, "data", {});
@@ -78,7 +91,6 @@ const Index = () => {
 
   return (
     <DashboardLayout headerTitle={"Профиль пользователя"}>
-      {/* Profile Header Card */}
       <div
         className="rounded-lg overflow-hidden my-5 shadow-sm"
         style={{ backgroundColor: bg("#ffffff", "#1e1e1e") }}
@@ -267,6 +279,210 @@ const Index = () => {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Active Sessions */}
+      <div
+        className="rounded-lg p-6 shadow-sm"
+        style={{ backgroundColor: bg("#ffffff", "#1e1e1e") }}
+      >
+        <h3
+          className={`text-lg font-semibold mb-6 ${text(
+            "text-[#1A1A1A]",
+            "text-gray-100",
+          )}`}
+        >
+          Активные сеансы
+        </h3>
+
+        {userSessionsLoading || userSessionsFetching ? (
+          <ContentLoader />
+        ) : userSessions?.data?.data && userSessions.data?.data.length > 0 ? (
+          <div className="space-y-4">
+            {userSessions.data?.data.map((session) => (
+              <div
+                key={session.id}
+                className={`p-4 rounded-lg border-2 transition-all ${
+                  session.isCurrent
+                    ? isDark
+                      ? "border-blue-500 bg-blue-500/10"
+                      : "border-blue-300 bg-blue-50"
+                    : isDark
+                      ? "border-gray-700"
+                      : "border-gray-200"
+                }`}
+              >
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div>
+                        <p
+                          className={`font-semibold ${text(
+                            "text-[#1A1A1A]",
+                            "text-gray-100",
+                          )}`}
+                        >
+                          {session.deviceName || "Неизвестное устройство"}
+                        </p>
+                        <p
+                          className={`text-sm ${text(
+                            "text-[#808080]",
+                            "text-gray-400",
+                          )}`}
+                        >
+                          {session.deviceType || "Тип устройства не определен"}
+                        </p>
+                      </div>
+                      <div className="ml-auto flex items-center gap-2">
+                        {session.isCurrent && (
+                          <span
+                            className={`px-3 py-1 text-xs rounded-full font-medium ${
+                              isDark
+                                ? "bg-green-900/30 text-green-400"
+                                : "bg-green-50 text-green-700"
+                            }`}
+                          >
+                            Текущий сеанс
+                          </span>
+                        )}
+                        {session.isActive ? (
+                          <span
+                            className={`px-3 py-1 text-xs rounded-full font-medium ${
+                              isDark
+                                ? "bg-green-900/30 text-green-400"
+                                : "bg-green-50 text-green-700"
+                            }`}
+                          >
+                            Активен
+                          </span>
+                        ) : (
+                          <span
+                            className={`px-3 py-1 text-xs rounded-full font-medium ${
+                              isDark
+                                ? "bg-gray-900/30 text-gray-400"
+                                : "bg-gray-100 text-gray-600"
+                            }`}
+                          >
+                            Неактивен
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <p
+                          className={`text-xs mb-1 ${text(
+                            "text-[#808080]",
+                            "text-gray-400",
+                          )}`}
+                        >
+                          IP адрес
+                        </p>
+                        <p
+                          className={`font-medium ${text(
+                            "text-[#1A1A1A]",
+                            "text-gray-200",
+                          )}`}
+                        >
+                          {session.ipAddress || "-"}
+                        </p>
+                      </div>
+                      <div>
+                        <p
+                          className={`text-xs mb-1 ${text(
+                            "text-[#808080]",
+                            "text-gray-400",
+                          )}`}
+                        >
+                          Последнее использование
+                        </p>
+                        <p
+                          className={`font-medium ${text(
+                            "text-[#1A1A1A]",
+                            "text-gray-200",
+                          )}`}
+                        >
+                          {session.lastUsedAt
+                            ? new Date(session.lastUsedAt).toLocaleString(
+                                "ru-RU",
+                              )
+                            : "-"}
+                        </p>
+                      </div>
+                      <div>
+                        <p
+                          className={`text-xs mb-1 ${text(
+                            "text-[#808080]",
+                            "text-gray-400",
+                          )}`}
+                        >
+                          Создан
+                        </p>
+                        <p
+                          className={`font-medium ${text(
+                            "text-[#1A1A1A]",
+                            "text-gray-200",
+                          )}`}
+                        >
+                          {session.createdAt
+                            ? new Date(session.createdAt).toLocaleDateString(
+                                "ru-RU",
+                              )
+                            : "-"}
+                        </p>
+                      </div>
+                      <div>
+                        <p
+                          className={`text-xs mb-1 ${text(
+                            "text-[#808080]",
+                            "text-gray-400",
+                          )}`}
+                        >
+                          Истекает
+                        </p>
+                        <p
+                          className={`font-medium ${
+                            new Date(session.expiresAt) < new Date()
+                              ? "text-red-500"
+                              : text("text-[#1A1A1A]", "text-gray-200")
+                          }`}
+                        >
+                          {session.expiresAt
+                            ? new Date(session.expiresAt).toLocaleDateString(
+                                "ru-RU",
+                              )
+                            : "-"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {!session.isCurrent && (
+                    <button
+                      className={`ml-4 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                        isDark
+                          ? "bg-red-900/20 text-red-400 hover:bg-red-900/40"
+                          : "bg-red-50 text-red-600 hover:bg-red-100"
+                      }`}
+                    >
+                      Выход
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p
+            className={`text-center py-8 ${text(
+              "text-[#808080]",
+              "text-gray-400",
+            )}`}
+          >
+            Нет активных сеансов
+          </p>
+        )}
       </div>
     </DashboardLayout>
   );
