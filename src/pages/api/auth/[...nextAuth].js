@@ -1,4 +1,3 @@
-// /pages/api/auth/[...nextauth].js
 import { config } from "@/config";
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
@@ -48,31 +47,6 @@ async function fetchUserDetails(accessToken) {
   }
 }
 
-const PERMISSION_SEPARATOR = "::";
-
-function buildPermissionKey(permission) {
-  const resourceName = permission.resource?.name || "";
-  const actionName = permission.action?.name || "";
-
-  if (!resourceName && !actionName) return null;
-
-  return `${resourceName}${PERMISSION_SEPARATOR}${actionName}`;
-}
-
-function parsePermissionKey(permissionKey) {
-  if (typeof permissionKey !== "string") {
-    return { resource: null, action: null };
-  }
-
-  const [resourceName = "", actionName = ""] =
-    permissionKey.split(PERMISSION_SEPARATOR);
-
-  return {
-    resource: resourceName ? { name: resourceName } : null,
-    action: actionName ? { name: actionName } : null,
-  };
-}
-
 // Keep only essential role/permission fields to minimize JWT size
 function sanitizeRoles(rolesArray) {
   if (!Array.isArray(rolesArray)) return [];
@@ -80,18 +54,14 @@ function sanitizeRoles(rolesArray) {
   return rolesArray.map((role) => ({
     name: role.name,
     permissions: Array.isArray(role.permissions)
-      ? role.permissions.map(buildPermissionKey).filter(Boolean)
-      : [],
-  }));
-}
-
-function expandRolesDetail(rolesArray) {
-  if (!Array.isArray(rolesArray)) return [];
-
-  return rolesArray.map((role) => ({
-    name: role.name,
-    permissions: Array.isArray(role.permissions)
-      ? role.permissions.map(parsePermissionKey)
+      ? role.permissions.map((permission) => ({
+          resource: permission.resource?.name
+            ? { name: permission.resource.name }
+            : null,
+          action: permission.action?.name
+            ? { name: permission.action.name }
+            : null,
+        }))
       : [],
   }));
 }
@@ -99,25 +69,6 @@ function expandRolesDetail(rolesArray) {
 function extractRoles(rolesArray) {
   if (!Array.isArray(rolesArray)) return [];
   return rolesArray.map((role) => role.name);
-}
-
-function extractPermissions(rolesArray) {
-  if (!Array.isArray(rolesArray)) return [];
-
-  const allPermissions = [];
-  rolesArray.forEach((role) => {
-    if (Array.isArray(role.permissions)) {
-      role.permissions.forEach((permission) => {
-        allPermissions.push({
-          resource: permission.resource?.name || null,
-          action: permission.action?.name || null,
-          role: role.name,
-        });
-      });
-    }
-  });
-
-  return allPermissions;
 }
 
 function isAdmin(rolesArray) {
@@ -185,9 +136,6 @@ async function refreshAccessToken(token) {
         `New token expires in ${Math.floor((accessTokenExpires - Date.now()) / 1000)} seconds`,
       );
 
-      const userDetails = await fetchUserDetails(tokens.accessToken);
-      const sanitizedRoles = sanitizeRoles(userDetails?.roles || []);
-
       return {
         ...token,
         accessToken: tokens.accessToken,
@@ -199,7 +147,6 @@ async function refreshAccessToken(token) {
           employee_id: newDecoded.employeeId,
           unit_code: newDecoded.unitCode,
         },
-        rolesDetail: sanitizedRoles,
         error: undefined,
       };
     } catch (error) {
@@ -282,8 +229,6 @@ export const authOptions = {
             return null;
           }
 
-          const sanitizedRoles = sanitizeRoles(userDetails.roles || []);
-
           console.log("=== LOGIN COMPLETE ===");
           console.log(
             "Token size (bytes):",
@@ -291,7 +236,6 @@ export const authOptions = {
               id: decoded.sub,
               accessToken: tokens.accessToken,
               refreshToken: tokens.refreshToken,
-              rolesDetail: sanitizedRoles,
             }).length,
           );
 
@@ -308,7 +252,6 @@ export const authOptions = {
               employee_id: decoded.employeeId,
               unit_code: decoded.unitCode,
             },
-            rolesDetail: sanitizedRoles,
           };
         } catch (error) {
           console.error("Authorize error:", error);
@@ -332,7 +275,6 @@ export const authOptions = {
           tokenType: user.tokenType,
           accessTokenExpires: user.accessTokenExpires,
           userData: user.userData,
-          rolesDetail: user.rolesDetail,
         };
       }
 
@@ -376,8 +318,8 @@ export const authOptions = {
       session.tokenType = token.tokenType;
       session.accessTokenExpires = token.accessTokenExpires;
 
-      // Expand compact JWT roles into the original structure for the app
-      const roles = expandRolesDetail(token.rolesDetail || []);
+      const userDetails = await fetchUserDetails(token.accessToken);
+      const roles = sanitizeRoles(userDetails?.roles || []);
 
       session.user = {
         id: token.id,
@@ -386,16 +328,10 @@ export const authOptions = {
         employee_id: token.userData?.employee_id,
         unit_code: token.userData?.unit_code,
         roles: extractRoles(roles),
-        rolesDetail: roles,
-        permissions: extractPermissions(roles),
         isAdmin: isAdmin(roles),
       };
 
       console.log("Session roles:", session.user.roles);
-      console.log(
-        "Session permissions count:",
-        session.user.permissions.length,
-      );
       console.log("=== SESSION BUILT SUCCESSFULLY ===");
 
       return session;
@@ -404,12 +340,15 @@ export const authOptions = {
 
   cookies: {
     sessionToken: {
-      name: "next-auth.session-token.project2",
+      name:
+        process.env.NODE_ENV === "production"
+          ? "__Secure-next-auth.session-token.project2"
+          : "next-auth.session-token.project2",
       options: {
         httpOnly: true,
         sameSite: "lax",
         path: "/",
-        secure: false, // set to true only if you add HTTPS
+        secure: process.env.NODE_ENV === "production",
       },
     },
   },
@@ -438,7 +377,7 @@ export const authOptions = {
 
   pages: {
     signIn: "/",
-    signOut: `${process.env.NEXTAUTH_URL}/` || "/",
+    signOut: "/",
     error: "/auth/error",
   },
 
