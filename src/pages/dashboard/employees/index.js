@@ -129,11 +129,21 @@ const Index = () => {
     let data = get(employee, "data.data", []);
 
     if (debouncedSearch) {
-      const searchLower = debouncedSearch.toLowerCase();
+      const normalizedSearch = debouncedSearch
+        .toLowerCase()
+        .replace(/[№\s#-]/g, "");
+
       data = data.filter((emp) => {
         const fullName =
           `${emp.first_name || ""} ${emp.last_name || ""} ${emp.middle_name || ""}`.toLowerCase();
-        return fullName.includes(searchLower);
+        const tabelNumber = String(emp.tabel_number ?? "")
+          .toLowerCase()
+          .replace(/[№\s#-]/g, "");
+
+        return (
+          fullName.includes(debouncedSearch.toLowerCase()) ||
+          tabelNumber.includes(normalizedSearch)
+        );
       });
     }
 

@@ -39,7 +39,7 @@ const EmployeesFilters = ({
 
             <input
               type="text"
-              placeholder="Поиск по имени"
+              placeholder="Поиск по имени или табельному номеру"
               value={searchTerm}
               onChange={onSearchChange}
               className={`w-full pl-10 pr-4 py-2.5 ${
@@ -158,7 +158,7 @@ const EmployeesFilters = ({
                   !isDark ? "bg-blue-100" : "bg-blue-500"
                 }  rounded-full text-sm`}
               >
-                Поиск: {searchTerm}
+                Поиск (имя/таб. №): {searchTerm}
               </span>
             )}
             {filters.gender && (

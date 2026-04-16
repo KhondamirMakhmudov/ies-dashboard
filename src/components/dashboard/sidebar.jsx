@@ -51,7 +51,7 @@ const allMenuItems = [
       {
         text: "Справочник",
         path: "/dashboard/structure-organizations/reference",
-        roles: ["admin"],
+        roles: ["admin", "hr-main-tash-iem"],
       },
       {
         text: "Руководства управлении",
