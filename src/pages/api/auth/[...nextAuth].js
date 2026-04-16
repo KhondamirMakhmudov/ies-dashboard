@@ -48,6 +48,31 @@ async function fetchUserDetails(accessToken) {
   }
 }
 
+const PERMISSION_SEPARATOR = "::";
+
+function buildPermissionKey(permission) {
+  const resourceName = permission.resource?.name || "";
+  const actionName = permission.action?.name || "";
+
+  if (!resourceName && !actionName) return null;
+
+  return `${resourceName}${PERMISSION_SEPARATOR}${actionName}`;
+}
+
+function parsePermissionKey(permissionKey) {
+  if (typeof permissionKey !== "string") {
+    return { resource: null, action: null };
+  }
+
+  const [resourceName = "", actionName = ""] =
+    permissionKey.split(PERMISSION_SEPARATOR);
+
+  return {
+    resource: resourceName ? { name: resourceName } : null,
+    action: actionName ? { name: actionName } : null,
+  };
+}
+
 // Keep only essential role/permission fields to minimize JWT size
 function sanitizeRoles(rolesArray) {
   if (!Array.isArray(rolesArray)) return [];
@@ -55,14 +80,18 @@ function sanitizeRoles(rolesArray) {
   return rolesArray.map((role) => ({
     name: role.name,
     permissions: Array.isArray(role.permissions)
-      ? role.permissions.map((permission) => ({
-          resource: permission.resource?.name
-            ? { name: permission.resource.name }
-            : null,
-          action: permission.action?.name
-            ? { name: permission.action.name }
-            : null,
-        }))
+      ? role.permissions.map(buildPermissionKey).filter(Boolean)
+      : [],
+  }));
+}
+
+function expandRolesDetail(rolesArray) {
+  if (!Array.isArray(rolesArray)) return [];
+
+  return rolesArray.map((role) => ({
+    name: role.name,
+    permissions: Array.isArray(role.permissions)
+      ? role.permissions.map(parsePermissionKey)
       : [],
   }));
 }
@@ -347,8 +376,8 @@ export const authOptions = {
       session.tokenType = token.tokenType;
       session.accessTokenExpires = token.accessTokenExpires;
 
-      // Compute roles/permissions fresh from rolesDetail (not stored in JWT)
-      const roles = token.rolesDetail || [];
+      // Expand compact JWT roles into the original structure for the app
+      const roles = expandRolesDetail(token.rolesDetail || []);
 
       session.user = {
         id: token.id,

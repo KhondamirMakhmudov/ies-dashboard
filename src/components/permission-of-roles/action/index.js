@@ -30,18 +30,16 @@ const ActionSection = () => {
   const [editModal, setEditModal] = useState(false);
   const [deleteModal, setDeleteModal] = useState(false);
   const [selectActionId, setSelectActionId] = useState(null);
-  const [currentPageActions, setCurrentPageActions] = useState(1);
 
   const {
     data: actions,
     isLoading: actionsLoading,
     isFetching: actionsFetching,
   } = useGetGeneralAuthQuery({
-    key: [KEYS.actions, currentPageActions],
+    key: KEYS.actions,
     url: URLS.actions,
     params: {
-      limit: 10,
-      offset: (currentPageActions - 1) * 10,
+      pageSize: 100,
     },
     headers: {
       Authorization: `Bearer ${session?.accessToken}`,
@@ -148,10 +146,7 @@ const ActionSection = () => {
   const columns = [
     {
       header: "№",
-      cell: ({ row }) => {
-        const pageSize = get(actions, "data.data.pagination.pageSize", 10);
-        return (currentPageActions - 1) * pageSize + row.index + 1;
-      },
+      cell: ({ row }) => row.index + 1,
     },
     { accessorKey: "name", header: "Название действия" },
     {
@@ -251,18 +246,7 @@ const ActionSection = () => {
           borderColor: border("#e5e7eb", "#333333"),
         }}
       >
-        <CustomTable
-          columns={columns}
-          data={get(actions, "data.data", [])}
-          pagination={{
-            currentPage: currentPageActions,
-            pageSize: get(actions, "data.data.pagination.pageSize", 10),
-            total: get(actions, "data.data.pagination.total", 0),
-            onPaginationChange: (paginationState) => {
-              setCurrentPageActions(paginationState.page);
-            },
-          }}
-        />
+        <CustomTable columns={columns} data={get(actions, "data.data", [])} />
       </div>
 
       {/* Create Modal */}

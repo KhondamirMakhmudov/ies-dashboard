@@ -40,16 +40,14 @@ const PermissionSection = () => {
   const [name, setName] = useState("");
   const [viewMode, setViewMode] = useState("table");
   const [searchQuery, setSearchQuery] = useState("");
-  const [currentPagePermissions, setCurrentPagePermissions] = useState(1);
 
   // Get permissions
   const { data: permissions, isLoading: permissionsLoading } =
     useGetGeneralAuthQuery({
-      key: [KEYS.permissions, currentPagePermissions],
+      key: KEYS.permissions,
       url: URLS.permissions,
       params: {
-        limit: 10,
-        offset: (currentPagePermissions - 1) * 10,
+        pageSize: 100,
       },
       headers: {
         Authorization: `Bearer ${session?.accessToken}`,
@@ -63,6 +61,9 @@ const PermissionSection = () => {
     useGetGeneralAuthQuery({
       key: KEYS.resources,
       url: URLS.resources,
+      params: {
+        pageSize: 100,
+      },
       headers: {
         Authorization: `Bearer ${session?.accessToken}`,
         Accept: "application/json",
@@ -74,6 +75,9 @@ const PermissionSection = () => {
   const { data: actions, isLoading: actionsLoading } = useGetGeneralAuthQuery({
     key: KEYS.actions,
     url: URLS.actions,
+    params: {
+      pageSize: 100,
+    },
     headers: {
       Authorization: `Bearer ${session?.accessToken}`,
       Accept: "application/json",
@@ -176,10 +180,7 @@ const PermissionSection = () => {
   const columns = [
     {
       header: "№",
-      cell: ({ row }) => {
-        const pageSize = get(permissions, "data.pagination.pageSize", 10);
-        return (currentPagePermissions - 1) * pageSize + row.index + 1;
-      },
+      cell: ({ row }) => row.index + 1,
     },
     {
       accessorKey: "resource",
@@ -340,18 +341,7 @@ const PermissionSection = () => {
             borderColor: border("#e5e7eb", "#333333"),
           }}
         >
-          <CustomTable
-            columns={columns}
-            data={filteredPermissions}
-            pagination={{
-              currentPage: currentPagePermissions,
-              pageSize: get(permissions, "data.pagination.pageSize", 10),
-              total: get(permissions, "data.pagination.total", 0),
-              onPaginationChange: (paginationState) => {
-                setCurrentPagePermissions(paginationState.page);
-              },
-            }}
-          />
+          <CustomTable columns={columns} data={filteredPermissions} />
         </div>
       ) : (
         <>

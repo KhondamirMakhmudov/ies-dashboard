@@ -137,7 +137,7 @@ const Index = () => {
         Accept: "application/json",
       },
       params: {
-        limit: 1000,
+        pageSize: 100,
       },
       enabled: !!session?.accessToken,
     });
