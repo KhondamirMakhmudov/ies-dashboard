@@ -412,7 +412,10 @@ const Position = () => {
         }}
       >
         <div className="flex gap-3 items-center flex-1">
-          <PrimaryButton onClick={() => setCreateModal(true)} variant="contained">
+          <PrimaryButton
+            onClick={() => setCreateModal(true)}
+            variant="contained"
+          >
             <p>Создать</p>
           </PrimaryButton>
 
