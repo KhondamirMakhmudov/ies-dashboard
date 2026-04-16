@@ -1,17 +1,18 @@
 export function canUserDo(user, resourceName, actionName) {
-  if (user?.isAdmin) return true;
+  if (!user?.rolesDetail) return false;
 
-  if (!Array.isArray(user?.permissions)) return false;
+  // Loop through all roles
+  for (let role of user.rolesDetail) {
+    for (let permission of role.permissions) {
+      const resource = permission.resource?.name;
+      const action = permission.action?.name;
 
-  for (let permission of user.permissions) {
-    const resource = permission.resource;
-    const action = permission.action;
+      const matchesResource = resource === resourceName || resource === "*";
+      const matchesAction = action === actionName || action === "*";
 
-    const matchesResource = resource === resourceName || resource === "*";
-    const matchesAction = action === actionName || action === "*";
-
-    if (matchesResource && matchesAction) {
-      return true;
+      if (matchesResource && matchesAction) {
+        return true;
+      }
     }
   }
 
