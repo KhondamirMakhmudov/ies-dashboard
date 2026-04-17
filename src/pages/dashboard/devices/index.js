@@ -10,66 +10,113 @@ import { URLS } from "@/constants/url";
 import { motion } from "framer-motion";
 import { get, isEmpty } from "lodash";
 import ContentLoader from "@/components/loader";
-import { Typography, Button } from "@mui/material";
-import Input from "@/components/input";
+import { Drawer, Box, IconButton, Typography } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 import toast from "react-hot-toast";
-import MethodModal from "@/components/modal/method-modal";
 import usePostQuery from "@/hooks/java/usePostQuery";
 import { config } from "@/config";
 import { useSession } from "next-auth/react";
-import CustomSelect from "@/components/select";
 import { useQueryClient } from "@tanstack/react-query";
-import ActiveStatusRadio from "@/components/activeStatusRadio";
 import NoData from "@/components/no-data";
 import PrimaryButton from "@/components/button/primary-button";
 import Link from "next/link";
 import useAppTheme from "@/hooks/useAppTheme";
 import { canUserDo } from "@/utils/checkpermission";
+import Input from "@/components/input";
+import CustomSelect from "@/components/select";
+import ActiveStatusRadio from "@/components/activeStatusRadio";
 
 const ipRegex =
   /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+
+const FormSection = ({ title, description, isDark, children }) => (
+  <div
+    className="rounded-2xl p-5 space-y-4"
+    style={{
+      background: isDark ? "rgba(17, 24, 39, 0.55)" : "#FFFFFF",
+      border: `1px solid ${
+        isDark ? "rgba(75, 85, 99, 0.45)" : "rgba(226, 232, 240, 1)"
+      }`,
+      boxShadow: isDark
+        ? "0 10px 30px rgba(0, 0, 0, 0.18)"
+        : "0 10px 30px rgba(15, 23, 42, 0.06)",
+    }}
+  >
+    <div className="space-y-1">
+      <div className="flex items-center gap-3">
+        <div
+          className="h-[2px] w-8 rounded-full"
+          style={{ background: isDark ? "#60A5FA" : "#2563EB" }}
+        />
+        <Typography
+          variant="subtitle2"
+          className="text-xs font-semibold uppercase tracking-[0.22em]"
+          style={{ color: isDark ? "#D1D5DB" : "#64748B" }}
+        >
+          {title}
+        </Typography>
+      </div>
+
+      {description && (
+        <Typography
+          variant="body2"
+          className="text-sm leading-5"
+          style={{ color: isDark ? "#9CA3AF" : "#94A3B8" }}
+        >
+          {description}
+        </Typography>
+      )}
+    </div>
+
+    <div className="space-y-4">{children}</div>
+  </div>
+);
+
+const FormGroup = ({ children, cols = 1 }) => (
+  <div
+    className={`grid gap-4 [&>*]:min-w-0 ${
+      cols === 2 ? "grid-cols-1 md:grid-cols-2" : "grid-cols-1"
+    }`}
+  >
+    {children}
+  </div>
+);
 
 const Index = () => {
   const { bg, border, isDark } = useAppTheme();
   const { data: session } = useSession();
   const queryClient = useQueryClient();
-  const [createCameraModal, setCreateCameraModal] = useState(false);
-  const [editCameraModal, setEditCameraModal] = useState(false);
+
+  // Drawer & form state
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
   const [deleteCameraModal, setDeleteCameraModal] = useState(false);
-  const [ipAddress, setIpAddress] = useState("");
-  const [building, setBuilding] = useState("");
-  const [login, setLogin] = useState("");
-  const [password, setPassword] = useState("");
-  const [doorType, setDoorType] = useState("");
-  const [isActive, setIsActive] = useState(true);
-  const [selectCameraType, setSelectCameraType] = useState(null);
-  const [selectedEntryPoint, setSelectedEntryPoint] = useState("");
-  const [selectedCheckPoint, setSelectedCheckPoint] = useState(null);
   const [selectedCamera, setSelectedCamera] = useState(null);
   const [editingCameraId, setEditingCameraId] = useState(null);
 
-  const canReadCameras = canUserDo(
-    session?.user,
-    "devices and entrypoints",
-    "read",
-  );
-  const canCreateCameras = canUserDo(
-    session?.user,
-    "devices and entrypoints",
-    "create",
-  );
-  const canUpdateCameras = canUserDo(
-    session?.user,
-    "devices and entrypoints",
-    "update",
-  );
+  const [formData, setFormData] = useState({
+    ipAddress: "",
+    building: "",
+    login: "",
+    password: "",
+    doorType: "",
+    isActive: true,
+    selectCameraType: null,
+    selectedEntryPoint: "",
+    selectedCheckPoint: null,
+    subnetMask: "",
+    defaultGateway: "",
+    dns: "",
+  });
 
-  const canDeleteCameras = canUserDo(
-    session?.user,
-    "devices and entrypoints",
-    "delete",
-  );
+  const permissions = {
+    read: canUserDo(session?.user, "devices and entrypoints", "read"),
+    create: canUserDo(session?.user, "devices and entrypoints", "create"),
+    update: canUserDo(session?.user, "devices and entrypoints", "update"),
+    delete: canUserDo(session?.user, "devices and entrypoints", "delete"),
+  };
 
+  // Fetch cameras
   const {
     data: allCameras,
     isLoading,
@@ -84,73 +131,109 @@ const Index = () => {
     enabled: !!session?.accessToken,
   });
 
-  // entrypoint get
+  // Fetch entrypoints
   const { data: entrypoints } = useGetQuery({
-    key: [KEYS.entrypoints, createCameraModal || editCameraModal],
+    key: [KEYS.entrypoints, drawerOpen],
     url: URLS.entrypoints,
     headers: {
       Authorization: `Bearer ${session?.accessToken}`,
       Accept: "application/json",
     },
-    enabled: !!session?.accessToken && (createCameraModal || editCameraModal),
+    enabled: !!session?.accessToken && drawerOpen,
   });
 
-  const options = get(entrypoints, "data", []).map((entry) => ({
-    value: entry.id,
-    label: entry.entryPointName,
-  }));
-
-  // checkpoint get
+  // Fetch checkpoints
   const { data: checkpoints } = useGetQuery({
-    key: [KEYS.checkpoints, createCameraModal || editCameraModal],
+    key: [KEYS.checkpoints, drawerOpen],
     url: URLS.checkpoints,
     headers: {
       Authorization: `Bearer ${session?.accessToken}`,
       Accept: "application/json",
     },
-    enabled: !!session?.accessToken && (createCameraModal || editCameraModal),
+    enabled: !!session?.accessToken && drawerOpen,
   });
 
-  const optionsCheckpoints = get(checkpoints, "data", []).map((entry) => ({
+  const entryPointOptions = get(entrypoints, "data", []).map((entry) => ({
+    value: entry.id,
+    label: entry.entryPointName,
+  }));
+
+  const checkpointOptions = get(checkpoints, "data", []).map((entry) => ({
     value: entry.id,
     label: entry.checkPointName,
   }));
 
-  const handleRemoveAll = () => {
-    setCreateCameraModal(false);
-    setEditCameraModal(false);
-    setIpAddress("");
-    setBuilding("");
-    setLogin("");
-    setPassword("");
-    setSelectedEntryPoint(null);
-    setSelectedCheckPoint(null);
-    setDoorType("");
-    setIsActive(true);
+  // Reset form
+  const resetForm = () => {
+    setFormData({
+      ipAddress: "",
+      building: "",
+      login: "",
+      password: "",
+      doorType: "",
+      isActive: true,
+      selectCameraType: null,
+      selectedEntryPoint: "",
+      selectedCheckPoint: null,
+      subnetMask: "",
+      defaultGateway: "",
+      dns: "",
+    });
     setEditingCameraId(null);
-    setSelectCameraType(null);
+    setIsEditMode(false);
+    setDrawerOpen(false);
   };
 
-  // create camera
+  // Open drawer for create
+  const handleOpenCreateDrawer = () => {
+    resetForm();
+    setIsEditMode(false);
+    setDrawerOpen(true);
+  };
+
+  // Open drawer for edit
+  const handleOpenEditDrawer = (camera) => {
+    setEditingCameraId(camera.id);
+    setIsEditMode(true);
+    setFormData({
+      ipAddress: camera.ipAddress,
+      building: camera.building,
+      login: camera.login,
+      password: camera.password,
+      doorType: camera.doorType === "Выход" ? "out" : "in",
+      isActive: camera.isActive,
+      selectCameraType: camera.vendor,
+      selectedEntryPoint: camera.entryPointId,
+      selectedCheckPoint: camera.checkPointId,
+      subnetMask: camera.subnetMask || "",
+      defaultGateway: camera.defaultGateway || "",
+      dns: camera.dns || "",
+    });
+    setDrawerOpen(true);
+  };
+
+  // Create mutation
   const { mutate: createCamera } = usePostQuery({
     listKeyId: "create-camera",
   });
 
-  const onSubmitCreateCamera = (e) => {
-    e.preventDefault();
-
+  // Submit create
+  const handleSubmitCreate = () => {
     createCamera(
       {
         url: URLS.createCamera,
         attributes: {
-          ipAddress,
-          building,
-          login,
-          password,
-          checkPointId: selectedCheckPoint,
-          vendor: selectCameraType,
-          doorTypeId: doorType === "in" ? 1 : 2,
-          isActive: isActive === true ? 1 : 0,
+          ipAddress: formData.ipAddress,
+          building: formData.building,
+          login: formData.login,
+          password: formData.password,
+          checkPointId: formData.selectedCheckPoint,
+          vendor: formData.selectCameraType,
+          doorTypeId: formData.doorType === "in" ? 1 : 2,
+          isActive: formData.isActive === true ? 1 : 0,
+          subnetMask: formData.subnetMask,
+          defaultGateway: formData.defaultGateway,
+          dns: formData.dns,
         },
         config: {
           headers: {
@@ -163,7 +246,7 @@ const Index = () => {
           toast.success("Камера успешно установлена", {
             position: "top-center",
           });
-          handleRemoveAll();
+          resetForm();
           queryClient.invalidateQueries(KEYS.allCameras);
         },
         onError: (error) => {
@@ -172,17 +255,17 @@ const Index = () => {
             resData?.message && resData?.details
               ? `${resData.message}: ${resData.details}`
               : resData?.message || resData?.details || "Непредвиденная ошибка";
-
           toast.error(message, { position: "top-right" });
         },
       },
     );
   };
 
-  const onSubmitEditCamera = async (id) => {
+  // Submit edit
+  const handleSubmitEdit = async () => {
     try {
       const currentCamera = get(allCameras, "data", []).find(
-        (cam) => cam.id === id,
+        (cam) => cam.id === editingCameraId,
       );
 
       if (!currentCamera) {
@@ -192,49 +275,39 @@ const Index = () => {
 
       const patchData = {};
 
-      if (ipAddress !== currentCamera.ipAddress) {
-        patchData.ipAddress = ipAddress;
-      }
-
-      if (selectCameraType !== currentCamera.vendor) {
-        patchData.vendor = selectCameraType;
-      }
-
-      if (building !== currentCamera.building) {
-        patchData.building = building;
-      }
-
-      if (login !== currentCamera.login) {
-        patchData.login = login;
-      }
-
-      if (password !== currentCamera.password) {
-        patchData.password = password;
-      }
-
-      if (selectedCheckPoint !== currentCamera.checkPointId) {
-        patchData.checkPointId = selectedCheckPoint;
-      }
+      if (formData.ipAddress !== currentCamera.ipAddress)
+        patchData.ipAddress = formData.ipAddress;
+      if (formData.selectCameraType !== currentCamera.vendor)
+        patchData.vendor = formData.selectCameraType;
+      if (formData.building !== currentCamera.building)
+        patchData.building = formData.building;
+      if (formData.login !== currentCamera.login)
+        patchData.login = formData.login;
+      if (formData.password !== currentCamera.password)
+        patchData.password = formData.password;
+      if (formData.selectedCheckPoint !== currentCamera.checkPointId)
+        patchData.checkPointId = formData.selectedCheckPoint;
+      if (formData.subnetMask !== currentCamera.subnetMask)
+        patchData.subnetMask = formData.subnetMask;
+      if (formData.defaultGateway !== currentCamera.defaultGateway)
+        patchData.defaultGateway = formData.defaultGateway;
+      if (formData.dns !== currentCamera.dns) patchData.dns = formData.dns;
 
       const currentDoorTypeValue =
         currentCamera.doorType === "Выход" ? "out" : "in";
-      if (doorType !== currentDoorTypeValue) {
-        patchData.doorTypeId = doorType === "in" ? 1 : 2;
-      }
+      if (formData.doorType !== currentDoorTypeValue)
+        patchData.doorTypeId = formData.doorType === "in" ? 1 : 2;
 
-      if (isActive !== currentCamera.isActive) {
-        patchData.isActive = isActive === true ? 1 : 0;
-      }
+      if (formData.isActive !== currentCamera.isActive)
+        patchData.isActive = formData.isActive === true ? 1 : 0;
 
       if (Object.keys(patchData).length === 0) {
         toast.info("Нет изменений для сохранения");
         return;
       }
 
-      console.log("PATCH data to send:", patchData); // Debug log
-
       const response = await fetch(
-        `${config.JAVA_API_URL}${URLS.allCameras}/${id}`,
+        `${config.JAVA_API_URL}${URLS.allCameras}/${editingCameraId}`,
         {
           method: "PATCH",
           headers: {
@@ -253,8 +326,7 @@ const Index = () => {
       toast.success("Данные камеры успешно отредактированы.", {
         position: "top-center",
       });
-      setEditCameraModal(false);
-      handleRemoveAll();
+      resetForm();
       queryClient.invalidateQueries(KEYS.allCameras);
     } catch (error) {
       console.error(error);
@@ -264,8 +336,8 @@ const Index = () => {
     }
   };
 
-  // delete modal - using fetch (simplified)
-  const onSubmitDeleteCamera = async (id) => {
+  // Delete camera
+  const handleSubmitDeleteCamera = async (id) => {
     try {
       const response = await fetch(
         `${config.JAVA_API_URL}${URLS.allCameras}/${id}`,
@@ -292,6 +364,34 @@ const Index = () => {
     }
   };
 
+  // Form validation
+  const isFormValid = () => {
+    const requiredFields = [
+      "ipAddress",
+      "building",
+      "login",
+      "password",
+      "subnetMask",
+      "defaultGateway",
+      "dns",
+      "selectedCheckPoint",
+      "doorType",
+      "selectCameraType",
+    ];
+    return requiredFields.every((field) => {
+      const value = formData[field];
+      return value !== null && value !== undefined && value !== "";
+    });
+  };
+
+  const handleFormChange = (field, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  // Form Section Component
   const columns = [
     {
       header: "№",
@@ -304,19 +404,16 @@ const Index = () => {
     {
       accessorKey: "ipAddress",
       header: "IP-адрес",
-      cell: ({ row }) => {
-        return (
-          <Link
-            href={`/dashboard/devices/${row.original.id}`}
-            className="text-blue-600 hover:underline cursor-pointer"
-          >
-            {row.original.ipAddress}
-          </Link>
-        );
-      },
+      cell: ({ row }) => (
+        <Link
+          href={`/dashboard/devices/${row.original.id}`}
+          className="text-blue-600 hover:underline cursor-pointer"
+        >
+          {row.original.ipAddress}
+        </Link>
+      ),
     },
     { accessorKey: "doorType", header: "Тип двери" },
-
     { accessorKey: "checkPointName", header: "Контрольная точка" },
     { accessorKey: "entryPointName", header: "Входная точка" },
     {
@@ -341,61 +438,57 @@ const Index = () => {
         );
       },
     },
-
     {
       accessorKey: "actions",
       header: "Действия",
       cell: ({ row }) => (
         <div className="flex gap-2">
-          {canUpdateCameras && (
-            <Button
-              onClick={() => {
-                const camera = row.original;
-                setEditingCameraId(camera.id);
-                setEditCameraModal(true);
-                setLogin(camera.login);
-                setBuilding(camera.building);
-                setPassword(camera.password);
-                setIpAddress(camera.ipAddress);
-                setSelectCameraType(camera.vendor);
-                setSelectedCheckPoint(camera.checkPointId);
-                setSelectedEntryPoint(camera.entryPointId);
-                setDoorType(camera.doorType === "Выход" ? "out" : "in");
-                setIsActive(camera.isActive);
-              }}
-              sx={{
-                width: "32px",
-                height: "32px",
-                minWidth: "32px",
+          {permissions.update && (
+            <button
+              onClick={() => handleOpenEditDrawer(row.original)}
+              className="p-2 rounded-md transition-colors"
+              style={{
                 background: isDark ? "#7c2d12" : "#F0D8C8",
                 color: isDark ? "#fb923c" : "#FF6200",
-                "&:hover": {
-                  background: isDark ? "#9a3412" : "#F0B28B",
-                },
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = isDark
+                  ? "#9a3412"
+                  : "#F0B28B";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = isDark
+                  ? "#7c2d12"
+                  : "#F0D8C8";
               }}
             >
               <EditIcon fontSize="small" />
-            </Button>
+            </button>
           )}
-          {canDeleteCameras && (
-            <Button
+          {permissions.delete && (
+            <button
               onClick={() => {
                 setSelectedCamera(row.original.id);
                 setDeleteCameraModal(true);
               }}
-              sx={{
-                width: "32px",
-                height: "32px",
-                minWidth: "32px",
+              className="p-2 rounded-md transition-colors"
+              style={{
                 background: isDark ? "#7f1d1d" : "#FCD8D3",
                 color: isDark ? "#fca5a5" : "#FF1E00",
-                "&:hover": {
-                  background: isDark ? "#991b1b" : "#FCA89D",
-                },
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = isDark
+                  ? "#991b1b"
+                  : "#FCA89D";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = isDark
+                  ? "#7f1d1d"
+                  : "#FCD8D3";
               }}
             >
               <DeleteIcon fontSize="small" />
-            </Button>
+            </button>
           )}
         </div>
       ),
@@ -414,7 +507,7 @@ const Index = () => {
   return (
     <DashboardLayout headerTitle={"Устройства"}>
       {isEmpty(get(allCameras, "data", [])) ? (
-        <NoData onCreate={() => setCreateCameraModal(true)} />
+        <NoData onCreate={handleOpenCreateDrawer} />
       ) : (
         <motion.div
           initial={{ opacity: 0, scale: 0 }}
@@ -427,13 +520,13 @@ const Index = () => {
         >
           <div className="col-span-12 space-y-[15px]">
             <div className="flex justify-between items-center">
-              {canCreateCameras && (
-                <PrimaryButton onClick={() => setCreateCameraModal(true)}>
+              {permissions.create && (
+                <PrimaryButton onClick={handleOpenCreateDrawer}>
                   <p>Создать</p>
                 </PrimaryButton>
               )}
             </div>
-            {canReadCameras && (
+            {permissions.read && (
               <CustomTable
                 data={get(allCameras, "data", [])}
                 columns={columns}
@@ -443,274 +536,300 @@ const Index = () => {
         </motion.div>
       )}
 
-      {/* create camera modal */}
-      {createCameraModal && (
-        <MethodModal
-          open={createCameraModal}
-          showCloseIcon={true}
-          closeClick={() => {
-            setCreateCameraModal(false);
-            handleRemoveAll();
+      {/* Form Drawer */}
+      <Drawer
+        anchor="right"
+        open={drawerOpen}
+        onClose={() => resetForm()}
+        PaperProps={{
+          sx: {
+            width: { xs: "100%", sm: 560 },
+            background: isDark ? "#0f172a" : "#F8FAFC",
+            borderLeft: `1px solid ${
+              isDark ? "rgba(75, 85, 99, 0.5)" : "rgba(226, 232, 240, 1)"
+            }`,
+          },
+        }}
+      >
+        {/* Drawer Header */}
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            px: 3,
+            py: 2.5,
+            borderBottom: `1px solid ${
+              isDark ? "rgba(75, 85, 99, 0.5)" : "rgba(226, 232, 240, 1)"
+            }`,
+            background: isDark
+              ? "rgba(15, 23, 42, 0.94)"
+              : "rgba(248, 250, 252, 0.96)",
+            backdropFilter: "blur(10px)",
           }}
-          title="Добавить камеру"
         >
-          <div className="my-[15px]">
-            <div
-              onSubmit={onSubmitCreateCamera}
-              className="grid grid-cols-4 my-[30px] gap-[15px]"
+          <div>
+            <Typography
+              variant="h6"
+              className="font-semibold"
+              style={{ color: isDark ? "#F8FAFC" : "#0F172A" }}
             >
-              <CustomSelect
-                label={"Тип камеры"}
-                options={[
-                  { label: "DAHUA", value: "DAHUA" },
-                  { label: "HIKVISION", value: "HIKVISION" },
-                ]}
-                value={selectCameraType}
-                onChange={(val) => setSelectCameraType(val)}
-                placeholder="Выберите тип камеры"
-                className="col-span-4"
-                required
-              />
-              <Input
-                label="IP адрес"
-                type="text"
-                name="ipAddress"
-                placeholder="Введите IP адрес"
-                classNames="col-span-4"
-                inputClass={
-                  "!h-[45px] rounded-[8px] !border-gray-300 text-[15px]"
-                }
-                value={ipAddress}
-                labelClass={"text-sm"}
-                onChange={(e) => setIpAddress(e.target.value)}
-                pattern={ipRegex.source}
-                required
-              />
+              {isEditMode ? "Редактировать камеру" : "Новая камера"}
+            </Typography>
+            <Typography
+              variant="body2"
+              style={{ color: isDark ? "#94A3B8" : "#64748B" }}
+            >
+              Заполните основные и сетевые параметры устройства.
+            </Typography>
+          </div>
+          <IconButton
+            onClick={() => resetForm()}
+            size="small"
+            sx={{
+              color: isDark ? "#9CA3AF" : "#6B7280",
+              "&:hover": {
+                background: isDark
+                  ? "rgba(255,255,255,0.1)"
+                  : "rgba(0,0,0,0.05)",
+              },
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </Box>
 
-              <Input
-                label="Здание"
-                name="building"
-                placeholder="Введите название здания"
-                classNames="col-span-4"
-                labelClass={"text-sm"}
-                inputClass={
-                  "!h-[45px] rounded-[8px] !border-gray-300 text-[15px]"
-                }
-                value={building}
-                onChange={(e) => setBuilding(e.target.value)}
-              />
-
-              <Input
-                label="Имя пользователя"
-                name="login"
-                placeholder="Введите имя пользователя"
-                value={login}
-                onChange={(e) => setLogin(e.target.value)}
-                classNames="col-span-2"
-                inputClass={
-                  "!h-[45px] rounded-[8px] !border-gray-300 text-[15px]"
-                }
-                labelClass={"text-sm"}
-                required
-              />
-
-              <Input
-                label="Пароль"
-                name="password"
-                type="text"
-                placeholder="Введите пароль"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                inputClass={
-                  "!h-[45px] rounded-[8px] !border-gray-300 text-[15px]"
-                }
-                labelClass={"text-sm"}
-                classNames="col-span-2"
-                required
-              />
-
-              <CustomSelect
-                options={options}
-                value={selectedEntryPoint}
-                onChange={(val) => setSelectedEntryPoint(val)}
-                placeholder="Выберите точки входа"
-                className="col-span-4"
-              />
-
-              <CustomSelect
-                options={optionsCheckpoints}
-                value={selectedCheckPoint}
-                onChange={(val) => setSelectedCheckPoint(val)}
-                className="col-span-4"
-              />
-
-              <CustomSelect
-                options={[
-                  { label: "Вход", value: "in" },
-                  { label: "Выход", value: "out" },
-                ]}
-                value={doorType}
-                onChange={(val) => setDoorType(val)}
-                placeholder="Выберите тип двери"
-                className="col-span-2"
-              />
-
-              <div className="col-span-2 flex items-center">
-                <ActiveStatusRadio
-                  isActive={isActive == 1 ? true : false}
-                  setIsActive={setIsActive}
+        {/* Drawer Content */}
+        <Box sx={{ p: 3, overflow: "auto", height: "calc(100% - 81px)" }}>
+          <div
+            className="space-y-4"
+            style={{
+              minWidth: 0,
+            }}
+          >
+            {/* Camera Identification */}
+            <FormSection
+              title="Идентификация камеры"
+              description="Основные сведения для распознавания и отображения устройства."
+              isDark={isDark}
+            >
+              <FormGroup cols={2}>
+                <CustomSelect
+                  label="Тип камеры"
+                  options={[
+                    { label: "DAHUA", value: "DAHUA" },
+                    { label: "HIKVISION", value: "HIKVISION" },
+                  ]}
+                  value={formData.selectCameraType}
+                  onChange={(val) => handleFormChange("selectCameraType", val)}
+                  placeholder="Выберите тип"
+                  required
                 />
-              </div>
-              <PrimaryButton
-                onClick={onSubmitCreateCamera}
-                disabled={
-                  !ipAddress?.trim() ||
-                  !building?.trim() ||
-                  !login?.trim() ||
-                  !password?.trim() ||
-                  !selectedCheckPoint ||
-                  !doorType
-                }
+                <Input
+                  label="Здание"
+                  placeholder="Название здания"
+                  value={formData.building}
+                  onChange={(e) => handleFormChange("building", e.target.value)}
+                  inputClass="!h-[40px] rounded-[6px] !border-gray-300 text-[14px]"
+                  labelClass="text-xs"
+                />
+              </FormGroup>
+            </FormSection>
+
+            {/* Network Configuration */}
+            <FormSection
+              title="Сетевые параметры"
+              description="Параметры подключения устройства к локальной сети."
+              isDark={isDark}
+            >
+              <FormGroup cols={2}>
+                <Input
+                  label="IP-адрес"
+                  type="text"
+                  placeholder="192.168.1.100"
+                  value={formData.ipAddress}
+                  onChange={(e) =>
+                    handleFormChange("ipAddress", e.target.value)
+                  }
+                  pattern={ipRegex.source}
+                  inputClass="!h-[40px] rounded-[6px] !border-gray-300 text-[14px]"
+                  labelClass="text-xs"
+                  required
+                />
+                <Input
+                  label="Маска подсети"
+                  type="text"
+                  placeholder="255.255.255.0"
+                  value={formData.subnetMask}
+                  onChange={(e) =>
+                    handleFormChange("subnetMask", e.target.value)
+                  }
+                  pattern={ipRegex.source}
+                  inputClass="!h-[40px] rounded-[6px] !border-gray-300 text-[14px]"
+                  labelClass="text-xs"
+                  required
+                />
+                <Input
+                  label="Основной шлюз"
+                  type="text"
+                  placeholder="192.168.1.1"
+                  value={formData.defaultGateway}
+                  onChange={(e) =>
+                    handleFormChange("defaultGateway", e.target.value)
+                  }
+                  pattern={ipRegex.source}
+                  inputClass="!h-[40px] rounded-[6px] !border-gray-300 text-[14px]"
+                  labelClass="text-xs"
+                  required
+                />
+                <Input
+                  label="DNS сервер"
+                  type="text"
+                  placeholder="8.8.8.8"
+                  value={formData.dns}
+                  onChange={(e) => handleFormChange("dns", e.target.value)}
+                  pattern={ipRegex.source}
+                  inputClass="!h-[40px] rounded-[6px] !border-gray-300 text-[14px]"
+                  labelClass="text-xs"
+                  required
+                />
+              </FormGroup>
+            </FormSection>
+
+            {/* Credentials */}
+            <FormSection
+              title="Учетные данные"
+              description="Данные для авторизации на устройстве."
+              isDark={isDark}
+            >
+              <FormGroup cols={2}>
+                <Input
+                  label="Имя пользователя"
+                  placeholder="admin"
+                  value={formData.login}
+                  onChange={(e) => handleFormChange("login", e.target.value)}
+                  inputClass="!h-[40px] rounded-[6px] !border-gray-300 text-[14px]"
+                  labelClass="text-xs"
+                  required
+                />
+                <Input
+                  label="Пароль"
+                  type="password"
+                  placeholder="••••••••"
+                  value={formData.password}
+                  onChange={(e) => handleFormChange("password", e.target.value)}
+                  inputClass="!h-[40px] rounded-[6px] !border-gray-300 text-[14px]"
+                  labelClass="text-xs"
+                  required
+                />
+              </FormGroup>
+            </FormSection>
+
+            {/* Location & Access Points */}
+            <FormSection
+              title="Местоположение и точки доступа"
+              description="Связь камеры с точками входа и контрольными точками."
+              isDark={isDark}
+            >
+              <FormGroup cols={2}>
+                <CustomSelect
+                  label="Входная точка"
+                  options={entryPointOptions}
+                  value={formData.selectedEntryPoint}
+                  onChange={(val) =>
+                    handleFormChange("selectedEntryPoint", val)
+                  }
+                  placeholder="Выберите точку входа"
+                />
+                <CustomSelect
+                  label="Контрольная точка"
+                  options={checkpointOptions}
+                  value={formData.selectedCheckPoint}
+                  onChange={(val) =>
+                    handleFormChange("selectedCheckPoint", val)
+                  }
+                  placeholder="Выберите контрольную точку"
+                  required
+                />
+              </FormGroup>
+            </FormSection>
+
+            {/* Door Settings & Status */}
+            <FormSection
+              title="Параметры двери"
+              description="Тип двери и текущий статус активности устройства."
+              isDark={isDark}
+            >
+              <FormGroup cols={2}>
+                <CustomSelect
+                  label="Тип двери"
+                  options={[
+                    { label: "Вход", value: "in" },
+                    { label: "Выход", value: "out" },
+                  ]}
+                  value={formData.doorType}
+                  onChange={(val) => handleFormChange("doorType", val)}
+                  placeholder="Выберите тип"
+                  required
+                />
+                <div className="flex items-center">
+                  <ActiveStatusRadio
+                    isActive={formData.isActive}
+                    setIsActive={(val) => handleFormChange("isActive", val)}
+                  />
+                </div>
+              </FormGroup>
+            </FormSection>
+
+            {/* Submit Button */}
+            <div
+              className="sticky bottom-0 pt-4"
+              style={{
+                background: isDark
+                  ? "linear-gradient(180deg, rgba(15, 23, 42, 0) 0%, rgba(15, 23, 42, 0.98) 35%)"
+                  : "linear-gradient(180deg, rgba(248, 250, 252, 0) 0%, rgba(248, 250, 252, 0.98) 35%)",
+              }}
+            >
+              <div
+                className="rounded-2xl p-4"
+                style={{
+                  background: isDark
+                    ? "rgba(15, 23, 42, 0.96)"
+                    : "rgba(255, 255, 255, 0.92)",
+                  border: `1px solid ${
+                    isDark ? "rgba(75, 85, 99, 0.45)" : "rgba(226, 232, 240, 1)"
+                  }`,
+                  boxShadow: isDark
+                    ? "0 10px 25px rgba(0, 0, 0, 0.2)"
+                    : "0 10px 25px rgba(15, 23, 42, 0.08)",
+                }}
               >
-                Создать
-              </PrimaryButton>
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <Typography
+                      variant="body2"
+                      style={{ color: isDark ? "#CBD5E1" : "#475569" }}
+                    >
+                      {isEditMode
+                        ? "Изменения будут применены только к обновленным полям."
+                        : "Проверьте параметры перед созданием устройства."}
+                    </Typography>
+                  </div>
+                  <PrimaryButton
+                    onClick={isEditMode ? handleSubmitEdit : handleSubmitCreate}
+                    disabled={!isFormValid()}
+                    className="!py-3 !px-6 font-medium whitespace-nowrap"
+                  >
+                    {isEditMode ? "Сохранить" : "Создать"}
+                  </PrimaryButton>
+                </div>
+              </div>
             </div>
           </div>
-        </MethodModal>
-      )}
+        </Box>
+      </Drawer>
 
-      {/* edit camera modal */}
-      {editCameraModal && (
-        <MethodModal
-          open={editCameraModal}
-          showCloseIcon={true}
-          closeClick={() => {
-            setEditCameraModal(false);
-            handleRemoveAll();
-          }}
-        >
-          <Typography variant="h6" className="mb-2">
-            Изменить камеру
-          </Typography>
-
-          <div className="my-[15px]">
-            <form className="grid grid-cols-4 my-[30px] gap-[15px]">
-              <CustomSelect
-                label={"Тип камеры"}
-                options={[
-                  { label: "DAHUA", value: "DAHUA" },
-                  { label: "HIKVISION", value: "HIKVISION" },
-                ]}
-                value={selectCameraType}
-                onChange={(val) => setSelectCameraType(val)}
-                placeholder="Выберите тип камеры"
-                className="col-span-4"
-                required
-              />
-              <Input
-                label="IP адрес"
-                type="text"
-                name="ipAddress"
-                placeholder="Введите IP адрес"
-                classNames="col-span-4"
-                inputClass={
-                  "!h-[45px] rounded-[8px] !border-gray-300 text-[15px]"
-                }
-                value={ipAddress}
-                labelClass={"text-sm"}
-                onChange={(e) => setIpAddress(e.target.value)}
-                pattern={ipRegex.source}
-              />
-
-              <Input
-                label="Здание"
-                name="building"
-                placeholder="Введите название здания"
-                classNames="col-span-4"
-                labelClass={"text-sm"}
-                inputClass={
-                  "!h-[45px] rounded-[8px] !border-gray-300 text-[15px]"
-                }
-                value={building}
-                onChange={(e) => setBuilding(e.target.value)}
-              />
-
-              <Input
-                label="Имя пользователя"
-                name="login"
-                placeholder="Введите имя пользователя"
-                value={login}
-                onChange={(e) => setLogin(e.target.value)}
-                classNames="col-span-2"
-                inputClass={
-                  "!h-[45px] rounded-[8px] !border-gray-300 text-[15px]"
-                }
-                labelClass={"text-sm"}
-              />
-
-              <Input
-                label="Пароль"
-                name="password"
-                type="text"
-                placeholder="Введите пароль"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                inputClass={
-                  "!h-[45px] rounded-[8px] !border-gray-300 text-[15px]"
-                }
-                labelClass={"text-sm"}
-                classNames="col-span-2"
-              />
-
-              <CustomSelect
-                options={options}
-                value={selectedEntryPoint}
-                onChange={(val) => setSelectedEntryPoint(val)}
-                placeholder="Выберите точки входа"
-                className="col-span-4"
-              />
-
-              <CustomSelect
-                options={optionsCheckpoints}
-                value={selectedCheckPoint}
-                onChange={(val) => setSelectedCheckPoint(val)}
-                className="col-span-4"
-              />
-
-              <CustomSelect
-                options={[
-                  { label: "Вход", value: "in" },
-                  { label: "Выход", value: "out" },
-                ]}
-                value={doorType}
-                onChange={(val) => setDoorType(val)}
-                placeholder="Выберите тип двери"
-                className="col-span-2"
-              />
-
-              <div className="col-span-2 flex items-center">
-                <ActiveStatusRadio
-                  isActive={isActive}
-                  setIsActive={setIsActive}
-                />
-              </div>
-
-              <div className="col-span-4">
-                <PrimaryButton
-                  backgroundColor="#F07427"
-                  color="white"
-                  variant="contained"
-                  onClick={() => onSubmitEditCamera(editingCameraId)}
-                >
-                  Сохранить изменения
-                </PrimaryButton>
-              </div>
-            </form>
-          </div>
-        </MethodModal>
-      )}
-
-      {/* delete camera modal */}
+      {/* Delete Modal */}
       {deleteCameraModal && (
         <DeleteModal
           open={deleteCameraModal}
@@ -718,9 +837,7 @@ const Index = () => {
             setDeleteCameraModal(false);
             setSelectedCamera(null);
           }}
-          deleting={() => {
-            onSubmitDeleteCamera(selectedCamera);
-          }}
+          deleting={() => handleSubmitDeleteCamera(selectedCamera)}
           title="Вы уверены, что хотите удалить эту камеру?"
         />
       )}

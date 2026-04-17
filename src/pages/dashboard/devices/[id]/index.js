@@ -13,6 +13,9 @@ import PersonIcon from "@mui/icons-material/Person";
 import LockIcon from "@mui/icons-material/Lock";
 import MeetingRoomIcon from "@mui/icons-material/MeetingRoom";
 import BusinessIcon from "@mui/icons-material/Business";
+import SettingsEthernetIcon from "@mui/icons-material/SettingsEthernet";
+import RouterIcon from "@mui/icons-material/Router";
+import DnsIcon from "@mui/icons-material/Dns";
 
 // 💡 CustomSelect bilan bir xil rang tizimi shu hookda
 import useAppTheme from "@/hooks/useAppTheme";
@@ -70,6 +73,21 @@ const Index = () => {
       icon: BusinessIcon,
       label: "Название контрольной точки",
       value: get(allCameras, "data.checkPointName"),
+    },
+    {
+      icon: SettingsEthernetIcon,
+      label: "Маска подсети",
+      value: get(allCameras, "data.subnetMask"),
+    },
+    {
+      icon: RouterIcon,
+      label: "Основной шлюз IP",
+      value: get(allCameras, "data.defaultGateway"),
+    },
+    {
+      icon: DnsIcon,
+      label: "DNS-сервер IP",
+      value: get(allCameras, "data.dns"),
     },
   ];
 

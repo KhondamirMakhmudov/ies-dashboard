@@ -86,10 +86,10 @@ const allMenuItems = [
         text: "Точки доступа",
         icon: <WifiIcon />,
         path: "/dashboard/access-points",
-        roles: ["admin", "acs-admin"],
+        roles: ["admin", "acs-admin", "hr-main-tash-iem"],
       },
     ],
-    roles: ["admin", "acs-admin"],
+    roles: ["admin", "acs-admin", "hr-main-tash-iem"],
   },
   {
     text: "Отчёты",
