@@ -28,6 +28,7 @@ import ClearIcon from "@mui/icons-material/Clear";
 import Link from "next/link";
 import useAppTheme from "@/hooks/useAppTheme";
 import DeleteModal from "@/components/modal/delete-modal";
+import { canUserDo } from "@/utils/checkpermission";
 const Index = () => {
   const { data: session } = useSession();
   const { bg, text, border, isDark } = useAppTheme();
@@ -44,6 +45,23 @@ const Index = () => {
   const [selectedEntryPointId, setSelectedEntryPointId] = useState(null);
   const [selectedEntryPoint, setselectedEntryPoint] = useState(null);
   const queryClient = useQueryClient();
+
+  const canCreateAccessPoint = canUserDo(
+    session?.user,
+    "entry-point",
+    "create",
+  );
+  const canReadAccessPoint = canUserDo(session?.user, "entry-point", "read");
+  const canUpdateAccessPoint = canUserDo(
+    session?.user,
+    "entry-point",
+    "update",
+  );
+  const canDeleteAccessPoint = canUserDo(
+    session?.user,
+    "entry-point",
+    "delete",
+  );
 
   // org units
   const { data: enterprises } = useGetPythonQuery({
@@ -419,49 +437,53 @@ const Index = () => {
           >
             <p>Подробнее</p>
           </Link>
-          <Button
-            onClick={() => {
-              const original = row.original;
-              setselectedEntryPoint(row);
-              setSelectedEntryPointId(row.original.id);
-              setEntryPointName(original.entryPointName);
-              setEntryPointShortName(original.entryPointShortName);
-              setBuildingDescription(original.buildingDescription);
-              setUnitCodes(original.unitCodes || []);
-              setOriginalData(original);
-              setEditEntryPoint(true);
-            }}
-            sx={{
-              width: "32px",
-              height: "32px",
-              minWidth: "32px",
-              background: isDark ? "#78350f" : "#F0D8C8",
-              color: isDark ? "#fdba74" : "#FF6200",
-              "&:hover": {
-                background: isDark ? "#92400e" : "#e8cbb8",
-              },
-            }}
-          >
-            <EditIcon fontSize="small" />
-          </Button>
-          <Button
-            onClick={() => {
-              setSelectedEntryPointId(row.original.id);
-              setDeleteAccessPoint(true);
-            }}
-            sx={{
-              width: "32px",
-              height: "32px",
-              minWidth: "32px",
-              background: isDark ? "#7f1d1d" : "#FCD8D3",
-              color: isDark ? "#fca5a5" : "#FF1E00",
-              "&:hover": {
-                background: isDark ? "#991b1b" : "#fac8c3",
-              },
-            }}
-          >
-            <DeleteIcon fontSize="small" />
-          </Button>
+          {canUpdateAccessPoint && (
+            <Button
+              onClick={() => {
+                const original = row.original;
+                setselectedEntryPoint(row);
+                setSelectedEntryPointId(row.original.id);
+                setEntryPointName(original.entryPointName);
+                setEntryPointShortName(original.entryPointShortName);
+                setBuildingDescription(original.buildingDescription);
+                setUnitCodes(original.unitCodes || []);
+                setOriginalData(original);
+                setEditEntryPoint(true);
+              }}
+              sx={{
+                width: "32px",
+                height: "32px",
+                minWidth: "32px",
+                background: isDark ? "#78350f" : "#F0D8C8",
+                color: isDark ? "#fdba74" : "#FF6200",
+                "&:hover": {
+                  background: isDark ? "#92400e" : "#e8cbb8",
+                },
+              }}
+            >
+              <EditIcon fontSize="small" />
+            </Button>
+          )}
+          {canDeleteAccessPoint && (
+            <Button
+              onClick={() => {
+                setSelectedEntryPointId(row.original.id);
+                setDeleteAccessPoint(true);
+              }}
+              sx={{
+                width: "32px",
+                height: "32px",
+                minWidth: "32px",
+                background: isDark ? "#7f1d1d" : "#FCD8D3",
+                color: isDark ? "#fca5a5" : "#FF1E00",
+                "&:hover": {
+                  background: isDark ? "#991b1b" : "#fac8c3",
+                },
+              }}
+            >
+              <DeleteIcon fontSize="small" />
+            </Button>
+          )}
         </div>
       ),
       enableSorting: false,
@@ -547,18 +569,22 @@ const Index = () => {
             borderColor: border("#d1d5db", "#4b5563"),
           }}
         >
-          <PrimaryButton
-            onClick={() => setCreateAccessPoint(true)}
-            variant="contained"
-          >
-            Создать
-          </PrimaryButton>
+          {canCreateAccessPoint && (
+            <PrimaryButton
+              onClick={() => setCreateAccessPoint(true)}
+              variant="contained"
+            >
+              Создать
+            </PrimaryButton>
+          )}
 
-          <CustomTable
-            data={get(entrypoints, "data", [])}
-            columns={columns}
-            tableClassName={"mt-[10px]"}
-          />
+          {canReadAccessPoint && (
+            <CustomTable
+              data={get(entrypoints, "data", [])}
+              columns={columns}
+              tableClassName={"mt-[10px]"}
+            />
+          )}
         </motion.div>
       )}
       {/* CREATE MODAL */}

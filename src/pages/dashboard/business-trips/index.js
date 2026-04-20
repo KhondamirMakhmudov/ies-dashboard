@@ -70,9 +70,9 @@ const Index = () => {
   const [jobTripSearch, setJobTripSearch] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
 
-  const canCreateJobTrip = canUserDo(session?.user, "job-trips", "create");
-  const canDeleteJobTrip = canUserDo(session?.user, "job-trips", "delete");
-  const canReadJobTrip = canUserDo(session?.user, "job-trips", "read");
+  const canCreateJobTrip = canUserDo(session?.user, "job-trip", "create");
+  const canDeleteJobTrip = canUserDo(session?.user, "job-trip", "delete");
+  const canReadJobTrip = canUserDo(session?.user, "job-trip", "read");
 
   const {
     data: jobTrips,
