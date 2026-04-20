@@ -27,9 +27,9 @@ const Index = () => {
   const router = useRouter();
   const { id } = router.query;
 
-  const canUpdateSchedule = canUserDo(session?.user, "schedules", "update");
-  const canReadSchedule = canUserDo(session?.user, "schedules", "read");
-  const canDeleteSchedule = canUserDo(session?.user, "schedules", "delete");
+  const canUpdateSchedule = canUserDo(session?.user, "schedule", "update");
+  const canReadSchedule = canUserDo(session?.user, "schedule", "read");
+  const canDeleteSchedule = canUserDo(session?.user, "schedule", "delete");
 
   const [editModal, setEditModal] = useState(false);
   const [deleteModal, setDeleteModal] = useState(false);
@@ -99,7 +99,6 @@ const Index = () => {
       >
         <Breadcrumb
           paths={[
-            { label: "Главная", href: "/dashboard" },
             { label: "Расписания", href: "/dashboard/schedule" },
             { label: get(schedule, "data.name", "Подробности"), href: "#" },
           ]}

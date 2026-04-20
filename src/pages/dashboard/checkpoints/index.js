@@ -35,27 +35,10 @@ const Index = () => {
   const [deleteCheckpoints, setDeleteCheckpoints] = useState(false);
   const [selectedCheckpointId, setSelectedCheckpointId] = useState(null);
 
-  const canReadCheckpoints = canUserDo(
-    session?.user,
-    "devices and entrypoints",
-    "read",
-  );
-  const canCreateCheckpoints = canUserDo(
-    session?.user,
-    "devices and entrypoints",
-    "create",
-  );
-  const canUpdateCheckpoints = canUserDo(
-    session?.user,
-    "devices and entrypoints",
-    "update",
-  );
-
-  const canDeleteCheckpoints = canUserDo(
-    session?.user,
-    "devices and entrypoints",
-    "delete",
-  );
+  const canReadCheckpoints = canUserDo(session?.user, "checkpoint", "read");
+  const canCreateCheckpoints = canUserDo(session?.user, "checkpoint", "create");
+  const canUpdateCheckpoints = canUserDo(session?.user, "checkpoint", "update");
+  const canDeleteCheckpoints = canUserDo(session?.user, "checkpoint", "delete");
 
   // checkpoint get
   const {

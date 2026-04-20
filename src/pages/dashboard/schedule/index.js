@@ -22,10 +22,8 @@ const Index = () => {
   const { data: session } = useSession();
   const [createModal, setCreateModal] = useState(false);
 
-  const canCreateSchedule = canUserDo(session?.user, "расписания", "create");
-  const canUpdateSchedule = canUserDo(session?.user, "расписания", "update");
-  const canReadSchedule = canUserDo(session?.user, "расписания", "read");
-  const canDeleteSchedule = canUserDo(session?.user, "расписания", "delete");
+  const canCreateSchedule = canUserDo(session?.user, "schedule", "create");
+  const canReadSchedule = canUserDo(session?.user, "schedule", "read");
 
   const {
     data: allSchedules,
@@ -106,10 +104,12 @@ const Index = () => {
           )}
 
           <div className="my-[30px]">
-            <CustomTable
-              data={get(allSchedules, "data", [])}
-              columns={columns}
-            />
+            {canReadSchedule && (
+              <CustomTable
+                data={get(allSchedules, "data", [])}
+                columns={columns}
+              />
+            )}
           </div>
         </motion.div>
       )}

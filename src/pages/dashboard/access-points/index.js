@@ -20,7 +20,6 @@ import { useSession } from "next-auth/react";
 import { useQueryClient } from "@tanstack/react-query";
 import useGetPythonQuery from "@/hooks/python/useGetQuery";
 import NoData from "@/components/no-data";
-import { useRouter } from "next/router";
 import ReportIcon from "@mui/icons-material/Report";
 import PrimaryButton from "@/components/button/primary-button";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
@@ -40,7 +39,7 @@ const Index = () => {
   const [entryPointShortName, setEntryPointShortName] = useState("");
   const [buildingDescription, setBuildingDescription] = useState("");
   const [unitCodes, setUnitCodes] = useState([]);
-  const [originalData, setOriginalData] = useState(null); // Yangi: original ma'lumotni saqlash
+  const [originalData, setOriginalData] = useState(null);
 
   const [selectedEntryPointId, setSelectedEntryPointId] = useState(null);
   const [selectedEntryPoint, setselectedEntryPoint] = useState(null);
