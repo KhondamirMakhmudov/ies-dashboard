@@ -115,6 +115,11 @@ const allMenuItems = [
         path: "/dashboard/reports/all-employees",
         roles: ["admin", "hr-admin", "hr-moderator", "hr-main-tash-iem"],
       },
+      {
+        text: "отчёты тестовый",
+        path: "/dashboard/reports/new-filter",
+        roles: ["admin", "hr-admin", "hr-moderator", "hr-main-tash-iem"],
+      },
     ],
     roles: ["admin", "hr-admin", "hr-moderator", "hr-main-tash-iem"],
   },

@@ -37,7 +37,7 @@ const getPaginationRange = (currentPage, totalPages, siblingCount = 1) => {
 
   if (showLeftDots && !showRightDots) {
     const rightRange = [...Array(3 + 2 * siblingCount).keys()].map(
-      (n) => totalPages - (3 + 2 * siblingCount) + n + 1
+      (n) => totalPages - (3 + 2 * siblingCount) + n + 1,
     );
     return [1, "...", ...rightRange];
   }
@@ -131,7 +131,7 @@ const CustomTable = ({ data, columns, pagination, tableClassName }) => {
                         <span className="text-sm font-medium tracking-wide">
                           {flexRender(
                             header.column.columnDef.header,
-                            header.getContext()
+                            header.getContext(),
                           )}
                         </span>
                         <div className="flex flex-col">
@@ -177,7 +177,7 @@ const CustomTable = ({ data, columns, pagination, tableClassName }) => {
                         index % 2 === 0
                           ? bg(
                               "rgba(249, 250, 251, 0.3)",
-                              "rgba(42, 42, 42, 0.3)"
+                              "rgba(42, 42, 42, 0.3)",
                             )
                           : bg("#ffffff", "#1e1e1e"),
                     }}
@@ -203,7 +203,7 @@ const CustomTable = ({ data, columns, pagination, tableClassName }) => {
                       >
                         {flexRender(
                           cell.column.columnDef.cell,
-                          cell.getContext()
+                          cell.getContext(),
                         )}
                       </td>
                     ))}
@@ -263,22 +263,22 @@ const CustomTable = ({ data, columns, pagination, tableClassName }) => {
                   if (currentPage !== 1) {
                     e.currentTarget.style.backgroundColor = bg(
                       "#ffffff",
-                      "#333333"
+                      "#333333",
                     );
                     e.currentTarget.style.borderColor = border(
                       "#9ca3af",
-                      "#6b7280"
+                      "#6b7280",
                     );
                   }
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.backgroundColor = bg(
                     "#ffffff",
-                    "#2a2a2a"
+                    "#2a2a2a",
                   );
                   e.currentTarget.style.borderColor = border(
                     "#d1d5db",
-                    "#4b5563"
+                    "#4b5563",
                   );
                 }}
               >
@@ -297,31 +297,31 @@ const CustomTable = ({ data, columns, pagination, tableClassName }) => {
                       p === currentPage
                         ? "#3b82f6"
                         : p === "..."
-                        ? "transparent"
-                        : bg("#ffffff", "#2a2a2a"),
+                          ? "transparent"
+                          : bg("#ffffff", "#2a2a2a"),
                     borderColor:
                       p === currentPage
                         ? "#3b82f6"
                         : p === "..."
-                        ? "transparent"
-                        : border("#d1d5db", "#4b5563"),
+                          ? "transparent"
+                          : border("#d1d5db", "#4b5563"),
                     color:
                       p === currentPage
                         ? "#ffffff"
                         : p === "..."
-                        ? text("#6b7280", "#6b7280")
-                        : text("#6b7280", "#9ca3af"),
+                          ? text("#6b7280", "#6b7280")
+                          : text("#6b7280", "#9ca3af"),
                     cursor: p === "..." ? "default" : "pointer",
                   }}
                   onMouseEnter={(e) => {
                     if (p !== "..." && p !== currentPage) {
                       e.currentTarget.style.backgroundColor = bg(
                         "#ffffff",
-                        "#333333"
+                        "#333333",
                       );
                       e.currentTarget.style.borderColor = border(
                         "#9ca3af",
-                        "#6b7280"
+                        "#6b7280",
                       );
                     }
                   }}
@@ -329,11 +329,11 @@ const CustomTable = ({ data, columns, pagination, tableClassName }) => {
                     if (p !== "..." && p !== currentPage) {
                       e.currentTarget.style.backgroundColor = bg(
                         "#ffffff",
-                        "#2a2a2a"
+                        "#2a2a2a",
                       );
                       e.currentTarget.style.borderColor = border(
                         "#d1d5db",
-                        "#4b5563"
+                        "#4b5563",
                       );
                     }
                   }}
@@ -358,22 +358,22 @@ const CustomTable = ({ data, columns, pagination, tableClassName }) => {
                   if (currentPage !== totalPages) {
                     e.currentTarget.style.backgroundColor = bg(
                       "#ffffff",
-                      "#333333"
+                      "#333333",
                     );
                     e.currentTarget.style.borderColor = border(
                       "#9ca3af",
-                      "#6b7280"
+                      "#6b7280",
                     );
                   }
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.backgroundColor = bg(
                     "#ffffff",
-                    "#2a2a2a"
+                    "#2a2a2a",
                   );
                   e.currentTarget.style.borderColor = border(
                     "#d1d5db",
-                    "#4b5563"
+                    "#4b5563",
                   );
                 }}
               >
