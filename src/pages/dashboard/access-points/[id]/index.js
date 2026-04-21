@@ -225,14 +225,30 @@ const Index = () => {
 
   // connect employees to schedule of the entrypoint
 
-  const { mutate: connectEmployeesToSchedule } = usePostQuery({
+  const {
+    mutate: connectEmployeesToSchedule,
+    isLoading: isConnectingEmployees,
+  } = usePostQuery({
     listKeyId: "connect-employee-to-schedule",
   });
 
+  const isConnectDisabled =
+    !selectedSchedule ||
+    selectedEmployees.size === 0 ||
+    !session?.accessToken ||
+    isConnectingEmployees;
+
   const SubmitConnectionOfEmployeeToSchedule = () => {
+    if (!selectedSchedule) {
+      toast.warning("Пожалуйста, выберите расписание!");
+      return;
+    }
+
     if (selectedEmployees.size === 0) {
       toast.warning("Пожалуйста, выберите хотя бы одного сотрудника!");
+      return;
     }
+
     const selectedEmployeeList = Array.from(selectedEmployees);
     connectEmployeesToSchedule(
       {
@@ -256,7 +272,27 @@ const Index = () => {
           queryClient.invalidateQueries(KEYS.connectScheduleAndEmployee);
         },
         onError: (error) => {
-          toast.error(`Error is ${error}`, { position: "top-right" });
+          const failedAssignments = get(
+            error,
+            "response.data.failedAssignments",
+            [],
+          );
+
+          if (
+            Array.isArray(failedAssignments) &&
+            failedAssignments.length > 0
+          ) {
+            failedAssignments.forEach((item) => {
+              toast.error(get(item, "reason", "Ошибка назначения"), {
+                position: "top-right",
+              });
+            });
+            return;
+          }
+
+          toast.error(get(error, "response.data.message", "Произошла ошибка"), {
+            position: "top-right",
+          });
         },
       },
     );
@@ -872,6 +908,7 @@ const Index = () => {
           <div className="flex items-end justify-end">
             <Button
               onClick={SubmitConnectionOfEmployeeToSchedule}
+              disabled={isConnectDisabled}
               sx={{
                 textTransform: "initial",
                 fontFamily: "DM Sans, sans-serif",
