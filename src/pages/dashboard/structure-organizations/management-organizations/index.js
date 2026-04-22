@@ -37,7 +37,6 @@ import SendIcon from "@mui/icons-material/Send";
 import TransferWorkplacesModal from "@/components/modal/transfer-workplaces-modal";
 import ImprovedTransferModal from "@/components/modal/improved-transfer-modal";
 import TransferActionBar from "@/components/transfer-action-bar";
-import { useMemo } from "react";
 
 const Index = () => {
   const { data: session } = useSession();
