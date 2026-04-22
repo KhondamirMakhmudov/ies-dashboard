@@ -71,6 +71,7 @@ const Index = () => {
   const [selectedFile, setSelectedFile] = useState(null);
 
   const canCreateJobTrip = canUserDo(session?.user, "job-trip", "create");
+  const canUpdateJobTrip = canUserDo(session?.user, "job-trip", "update");
   const canDeleteJobTrip = canUserDo(session?.user, "job-trip", "delete");
   const canReadJobTrip = canUserDo(session?.user, "job-trip", "read");
 
