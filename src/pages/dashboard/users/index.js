@@ -123,6 +123,9 @@ const Index = () => {
       Authorization: `Bearer ${session?.accessToken}`,
       Accept: "application/json",
     },
+    params: {
+      pageSize: 100,
+    },
     enabled: !!session?.accessToken,
   });
 
@@ -150,7 +153,7 @@ const Index = () => {
       Accept: "application/json",
     },
     params: {
-      limit: 1000,
+      limit: 10000,
     },
     enabled: (createModal || editModal) && !!session?.accessToken,
   });
@@ -206,12 +209,7 @@ const Index = () => {
   );
 
   const submitCreateUser = () => {
-    if (
-      !formData.name ||
-      !formData.username ||
-      !formData.password ||
-      !formData.roleId
-    ) {
+    if (!formData.name || !formData.username || !formData.password) {
       toast.error("Пожалуйста, заполните все обязательные поля", {
         position: "top-center",
       });

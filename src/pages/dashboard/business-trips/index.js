@@ -104,7 +104,7 @@ const Index = () => {
       Authorization: `Bearer ${session?.accessToken}`,
     },
     params: {
-      limit: 1000,
+      limit: 10000,
       offset: 0,
     },
     enabled: !!session?.accessToken,
