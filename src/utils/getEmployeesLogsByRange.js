@@ -10,10 +10,14 @@ export const getEmployeesLogsByRange = async ({
   baseUrl = config.JAVA_API_URL, // Allow custom base URL
   endpoint = URLS.logEntersOfEmployeeById, // Allow custom endpoint
   pathSuffix = "/dates/new-output", // Allow custom path suffix
+  throwOnError = false,
+  returnError = false,
 }) => {
   if (!employeeIds || employeeIds.length === 0 || !startDate || !endDate) {
-    return [];
+    return returnError ? { data: [], error: null } : [];
   }
+
+  let requestError = null;
 
   // Create requests for each employee ID
   const requests = employeeIds.map((id) =>
@@ -25,7 +29,7 @@ export const getEmployeesLogsByRange = async ({
             Authorization: `Bearer ${token}`,
             Accept: "application/json",
           },
-        }
+        },
       )
       .then((res) => {
         // Handle both array and object responses
@@ -36,12 +40,25 @@ export const getEmployeesLogsByRange = async ({
       })
       .catch((error) => {
         console.error(`Failed to fetch data for employee ${id}:`, error);
+        if (!requestError) {
+          requestError = error;
+        }
         return [];
-      })
+      }),
   );
 
   const results = await Promise.all(requests);
-  return results.flat();
+  const flatResults = results.flat();
+
+  if (throwOnError && requestError) {
+    throw requestError;
+  }
+
+  if (returnError) {
+    return { data: flatResults, error: requestError };
+  }
+
+  return flatResults;
 };
 
 // Keep this function if you need to support range strings elsewhere

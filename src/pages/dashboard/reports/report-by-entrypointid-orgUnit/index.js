@@ -37,7 +37,7 @@ const Index = () => {
     headers: {
       Authorization: `Bearer ${session?.accessToken}`,
     },
-    params: { limit: 150 },
+    params: { limit: 1500 },
     enabled: !!session?.accessToken,
   });
 
@@ -87,7 +87,7 @@ const Index = () => {
 
   const handleExport = async () => {
     try {
-      const data = await getEmployeesLogsByRange({
+      const { data, error } = await getEmployeesLogsByRange({
         token: session?.accessToken,
         employeeIds: [selectOrgUnitCode],
         startDate: startDateTime,
@@ -95,7 +95,20 @@ const Index = () => {
         endDate: endDateTime,
         endpoint: `${URLS.logsByOrgUnitCodeAndEntrypointId}`,
         pathSuffix: `/entry-point/${selectEntryPointId}/dates`,
+        returnError: true,
       });
+
+      if (error) {
+        const backendMessage =
+          error?.response?.data?.message ||
+          error?.response?.data?.error ||
+          error?.message;
+
+        toast.error(backendMessage || "Ошибка при загрузке Excel файла.", {
+          id: "exporting",
+        });
+        return;
+      }
 
       if (!data || data.length === 0) {
         toast.error("Данные не найдены.", { id: "exporting" });
@@ -105,7 +118,14 @@ const Index = () => {
       exportToExcelStyled(data);
     } catch (error) {
       console.error("Export error:", error);
-      toast.error("Ошибка при загрузке Excel файла.", { id: "exporting" });
+      const backendMessage =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        error?.message;
+
+      toast.error(backendMessage || "Ошибка при загрузке Excel файла.", {
+        id: "exporting",
+      });
     }
   };
 
@@ -195,6 +215,8 @@ const Index = () => {
                     options={optionsOrgUnits}
                     value={selectOrgUnitCode}
                     placeholder="Выберите подразделение"
+                    searchable
+                    searchPlaceholder="Поиск подразделения..."
                     onChange={(val) => setSelectOrgUnitCode(val)}
                   />
                 </div>

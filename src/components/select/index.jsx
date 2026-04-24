@@ -15,13 +15,17 @@ const CustomSelect = ({
   className = "",
   returnObject = false,
   sortOptions = true,
+  searchable = false,
+  searchPlaceholder = "Поиск...",
 }) => {
   const { isDark, bg, text, border } = useAppTheme();
   const [isOpen, setIsOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [dropdownStyle, setDropdownStyle] = useState({});
   const selectRef = useRef(null);
   const buttonRef = useRef(null);
   const dropdownRef = useRef(null);
+  const searchInputRef = useRef(null);
 
   const toggleDropdown = () => {
     if (!isOpen) {
@@ -54,6 +58,7 @@ const CustomSelect = ({
   const handleSelect = (opt) => {
     onChange(returnObject ? opt : opt.value);
     setIsOpen(false);
+    setSearchQuery("");
   };
 
   // Close on outside click
@@ -81,6 +86,17 @@ const CustomSelect = ({
     };
   }, [isOpen, updateDropdownPosition]);
 
+  useEffect(() => {
+    if (!isOpen) {
+      setSearchQuery("");
+      return;
+    }
+
+    if (searchable && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [isOpen, searchable]);
+
   const selectedLabel = returnObject
     ? value?.label
     : options.find((opt) => opt.value === value)?.label;
@@ -90,6 +106,15 @@ const CustomSelect = ({
         a.label?.localeCompare(b.label, "ru", { sensitivity: "base" }),
       )
     : options;
+
+  const filteredOptions = searchable
+    ? finalOptions.filter((opt) =>
+        opt.label
+          ?.toString()
+          .toLowerCase()
+          .includes(searchQuery.trim().toLowerCase()),
+      )
+    : finalOptions;
 
   const dropdown = isOpen
     ? createPortal(
@@ -102,7 +127,28 @@ const CustomSelect = ({
           }}
           className="border rounded-md shadow-lg max-h-60 overflow-auto"
         >
-          {finalOptions.map((opt, idx) => (
+          {searchable && (
+            <li
+              className="p-2 border-b"
+              style={{ borderColor: border("#e5e7eb", "#374151") }}
+            >
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={searchPlaceholder}
+                className="w-full h-9 px-3 rounded-md border text-sm focus:outline-none"
+                style={{
+                  backgroundColor: bg("#ffffff", "#2a2a2a"),
+                  borderColor: border("#d1d5db", "#4b5563"),
+                  color: text("#000000", "#f3f4f6"),
+                }}
+              />
+            </li>
+          )}
+
+          {filteredOptions.map((opt, idx) => (
             <li
               key={idx}
               className={clsx(
@@ -136,6 +182,15 @@ const CustomSelect = ({
               {opt.label}
             </li>
           ))}
+
+          {filteredOptions.length === 0 && (
+            <li
+              className="px-4 py-2 text-sm"
+              style={{ color: text("#6b7280", "#9ca3af") }}
+            >
+              Ничего не найдено
+            </li>
+          )}
         </ul>,
         document.body,
       )
